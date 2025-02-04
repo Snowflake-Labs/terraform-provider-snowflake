@@ -9,10 +9,10 @@ import (
 
 //go:generate go run ./poc/main.go
 
-type DataMetricFuncionRefEntityDomainOption string
+type DataMetricFunctionRefEntityDomainOption string
 
 const (
-	DataMetricFuncionRefEntityDomainView DataMetricFuncionRefEntityDomainOption = "VIEW"
+	DataMetricFunctionRefEntityDomainView DataMetricFunctionRefEntityDomainOption = "VIEW"
 )
 
 type DataMetricScheduleStatusOption string
@@ -100,7 +100,7 @@ var DataMetricFunctionReferenceDef = g.NewInterface(
 		SQL(", ").
 		Assignment(
 			"REF_ENTITY_DOMAIN",
-			g.KindOfT[DataMetricFuncionRefEntityDomainOption](),
+			g.KindOfT[DataMetricFunctionRefEntityDomainOption](),
 			g.ParameterOptions().SingleQuotes().ArrowEquals().Required(),
 		).
 		SQL(")"),

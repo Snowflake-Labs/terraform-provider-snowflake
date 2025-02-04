@@ -9,6 +9,9 @@ across different versions.
 
 ## v1.0.2 ➞ v1.0.3
 
+### Fixed ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES parameter
+ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES account parameter did not work correctly before ([#3344]). This parameter was of incorrect type, and the constructed queries did not provide the parameter's value during altering accounts. It has been fixed in this version.
+
 ### Changed documentation structure
 We added `Preview` and `Stable` categories to the resources and data sources documentation, which clearly separates the preview and stable features in the documentation feature list.
 We moved our technical guides to `guides` directory. This means that all such guides are available natively in the registry, similarly to [Unassigning policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) guide.

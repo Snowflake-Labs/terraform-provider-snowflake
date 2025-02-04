@@ -513,7 +513,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		dataMetricFunctionReferences := testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
+		dataMetricFunctionReferences := testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFunctionRefEntityDomainView)
 		require.Len(t, dataMetricFunctionReferences, 1)
 
 		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
@@ -528,7 +528,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
+		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFunctionRefEntityDomainView)
 		require.NoError(t, err)
 		require.Len(t, dataMetricFunctionReferences, 0)
 
@@ -546,7 +546,7 @@ func TestInt_Views(t *testing.T) {
 		err = client.Views.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
-		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFuncionRefEntityDomainView)
+		dataMetricFunctionReferences = testClientHelper().DataMetricFunctionReferences.GetDataMetricFunctionReferences(t, view.ID(), sdk.DataMetricFunctionRefEntityDomainView)
 		require.Len(t, dataMetricFunctionReferences, 2)
 
 		assertDataMetricFunctionReference(t, dataMetricFunctionReferences[0], view.ID(), cron)
