@@ -9,6 +9,9 @@ across different versions.
 
 ## v1.0.2 ➞ v1.0.3
 
+### Fixed METRIC_LEVEL parameter
+METRIC_LEVEL account parameter did not work correctly before ([#3375](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3375)), but was fixed in this version.
+
 ### Fixed ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES parameter
 ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES account parameter did not work correctly before ([#3344]). This parameter was of incorrect type, and the constructed queries did not provide the parameter's value during altering accounts. It has been fixed in this version.
 

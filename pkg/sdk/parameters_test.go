@@ -95,6 +95,7 @@ func TestToAccountParameter(t *testing.T) {
 		{input: "EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST", want: AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList},
 		{input: "INITIAL_REPLICATION_SIZE_LIMIT_IN_TB", want: AccountParameterInitialReplicationSizeLimitInTB},
 		{input: "MIN_DATA_RETENTION_TIME_IN_DAYS", want: AccountParameterMinDataRetentionTimeInDays},
+		{input: "METRIC_LEVEL", want: AccountParameterMetricLevel},
 		{input: "NETWORK_POLICY", want: AccountParameterNetworkPolicy},
 		{input: "OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST", want: AccountParameterOAuthAddPrivilegedRolesToBlockedList},
 		{input: "PERIODIC_DATA_REKEYING", want: AccountParameterPeriodicDataRekeying},
