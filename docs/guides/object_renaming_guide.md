@@ -14,7 +14,7 @@ In this document, we propose recommendations and solutions for the issues identi
 ## Renaming objects in the hierarchy
 
 This problem relates to renaming objects that are higher in the object hierarchy (e.g. database or schema) and how this affects the lower hierarchy objects created on them (e.g. schema or table) while they are present in the Terraform configuration.
-In our research, we tested different sets of configurations described [here](./object_renaming_research_summary.md#renaming-higher-hierarchy-objects).
+In our research, we tested different sets of configurations described [here](./object_renaming_research_summary#renaming-higher-hierarchy-objects).
 
 ### Recommendations
 
@@ -31,11 +31,11 @@ It will be crucial for accurately determining the appropriate actions a resource
 If you really need to perform, for example, a database rename with other resources referencing its name, you can first remove the dependent objects from the state.
 Then, perform the actual rename, and after that, you can import the dependent objects back to the state, but with a different database.
 This is very time-consuming, so only consider this when the number of objects dependent on the object you want to rename is low.
-To see more or less how this could be implemented, take a look at the [migration guide](./resource_migration.md) we already described which has similar steps of execution.
+To see more or less how this could be implemented, take a look at the [migration guide](./resource_migration) we already described which has similar steps of execution.
 
 ### Future plans
 
-In addition to the plans described in the [research summary](./object_renaming_research_summary.md#renaming-higher-hierarchy-objects), we would like to research what resources will be needed to handle high-level object renames in the future.
+In addition to the plans described in the [research summary](./object_renaming_research_summary#renaming-higher-hierarchy-objects), we would like to research what resources will be needed to handle high-level object renames in the future.
 The problem right now is that lower-level objects have fields that reference higher-level objects with the ForceNew option.
 A solution would be to remove this parameter and handle certain situations differently.
 The new solution should provide an easier way to conclude high-level object renames with our provider.
@@ -65,7 +65,7 @@ After the research, we have some upcoming improvements in handling changes in li
 
 ### Future plans
 
-As mentioned in the [research summary](./object_renaming_research_summary.md#ignoring-list-order-after-creation--updating-list-items-mostly-related-to-table-columns), we plan to improve the table resource with all the findings, which will mostly affect the list of columns and how we detect/plan changes for them.
+As mentioned in the [research summary](./object_renaming_research_summary#ignoring-list-order-after-creation--updating-list-items-mostly-related-to-table-columns), we plan to improve the table resource with all the findings, which will mostly affect the list of columns and how we detect/plan changes for them.
 Once implemented, all the details will be available in the documentation for the table resource and in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md).
 
 ## Summary
