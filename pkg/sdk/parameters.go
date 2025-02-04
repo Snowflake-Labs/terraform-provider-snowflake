@@ -132,6 +132,8 @@ func (parameters *parameters) SetAccountParameter(ctx context.Context, parameter
 			return fmt.Errorf("MIN_DATA_RETENTION_TIME_IN_DAYS session parameter is an integer, got %v", value)
 		}
 		opts.Set.Parameters.AccountParameters.MinDataRetentionTimeInDays = Pointer(v)
+	case AccountParameterMetricLevel:
+		opts.Set.Parameters.AccountParameters.MetricLevel = Pointer(MetricLevel(value))
 	case AccountParameterNetworkPolicy:
 		opts.Set.Parameters.AccountParameters.NetworkPolicy = &value
 	case AccountParameterOAuthAddPrivilegedRolesToBlockedList:
@@ -233,6 +235,8 @@ func (parameters *parameters) UnsetAccountParameter(ctx context.Context, paramet
 		opts.Unset.Parameters.AccountParameters.InitialReplicationSizeLimitInTB = Pointer(true)
 	case AccountParameterMinDataRetentionTimeInDays:
 		opts.Unset.Parameters.AccountParameters.MinDataRetentionTimeInDays = Pointer(true)
+	case AccountParameterMetricLevel:
+		opts.Unset.Parameters.AccountParameters.MetricLevel = Pointer(true)
 	case AccountParameterNetworkPolicy:
 		opts.Unset.Parameters.AccountParameters.NetworkPolicy = Pointer(true)
 	case AccountParameterOAuthAddPrivilegedRolesToBlockedList:
@@ -1191,17 +1195,18 @@ type AccountParameters struct {
 	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool   `ddl:"parameter" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	// InitialReplicationSizeLimitInTB is a string because values like 3.0 get rounded to 3, resulting in an error in Snowflake.
 	// This is still validated below.
-	InitialReplicationSizeLimitInTB            *string `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
-	MinDataRetentionTimeInDays                 *int    `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
-	NetworkPolicy                              *string `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
-	OAuthAddPrivilegedRolesToBlockedList       *bool   `ddl:"parameter" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
-	PeriodicDataRekeying                       *bool   `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
-	PreventLoadFromInlineURL                   *bool   `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
-	PreventUnloadToInlineURL                   *bool   `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
-	PreventUnloadToInternalStages              *bool   `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
-	RequireStorageIntegrationForStageCreation  *bool   `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
-	RequireStorageIntegrationForStageOperation *bool   `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
-	SSOLoginPage                               *bool   `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
+	InitialReplicationSizeLimitInTB            *string      `ddl:"parameter" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
+	MetricLevel                                *MetricLevel `ddl:"parameter" sql:"METRIC_LEVEL"`
+	MinDataRetentionTimeInDays                 *int         `ddl:"parameter" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	NetworkPolicy                              *string      `ddl:"parameter,single_quotes" sql:"NETWORK_POLICY"`
+	OAuthAddPrivilegedRolesToBlockedList       *bool        `ddl:"parameter" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
+	PeriodicDataRekeying                       *bool        `ddl:"parameter" sql:"PERIODIC_DATA_REKEYING"`
+	PreventLoadFromInlineURL                   *bool        `ddl:"parameter" sql:"PREVENT_LOAD_FROM_INLINE_URL"`
+	PreventUnloadToInlineURL                   *bool        `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INLINE_URL"`
+	PreventUnloadToInternalStages              *bool        `ddl:"parameter" sql:"PREVENT_UNLOAD_TO_INTERNAL_STAGES"`
+	RequireStorageIntegrationForStageCreation  *bool        `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_CREATION"`
+	RequireStorageIntegrationForStageOperation *bool        `ddl:"parameter" sql:"REQUIRE_STORAGE_INTEGRATION_FOR_STAGE_OPERATION"`
+	SSOLoginPage                               *bool        `ddl:"parameter" sql:"SSO_LOGIN_PAGE"`
 }
 
 func (v *AccountParameters) validate() error {
@@ -1242,6 +1247,7 @@ type AccountParametersUnset struct {
 	ExternalOAuthAddPrivilegedRolesToBlockedList     *bool `ddl:"keyword" sql:"EXTERNAL_OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	InitialReplicationSizeLimitInTB                  *bool `ddl:"keyword" sql:"INITIAL_REPLICATION_SIZE_LIMIT_IN_TB"`
 	MinDataRetentionTimeInDays                       *bool `ddl:"keyword" sql:"MIN_DATA_RETENTION_TIME_IN_DAYS"`
+	MetricLevel                                      *bool `ddl:"keyword" sql:"METRIC_LEVEL"`
 	NetworkPolicy                                    *bool `ddl:"keyword" sql:"NETWORK_POLICY"`
 	OAuthAddPrivilegedRolesToBlockedList             *bool `ddl:"keyword" sql:"OAUTH_ADD_PRIVILEGED_ROLES_TO_BLOCKED_LIST"`
 	PeriodicDataRekeying                             *bool `ddl:"keyword" sql:"PERIODIC_DATA_REKEYING"`
