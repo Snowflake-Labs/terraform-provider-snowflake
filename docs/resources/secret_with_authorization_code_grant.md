@@ -18,7 +18,7 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
   database                        = "EXAMPLE_DB"
   schema                          = "EXAMPLE_SCHEMA"
   api_authentication              = snowflake_api_authentication_integration_with_authorization_code_grant.example.fully_qualified_name
-  oauth_refresh_token             = "EXAMPLE_TOKEN"
+  oauth_refresh_token             = var.oauth_refresh_token
   oauth_refresh_token_expiry_time = "2025-01-02 15:04:01"
 }
 
@@ -28,9 +28,14 @@ resource "snowflake_secret_with_authorization_code_grant" "test" {
   database                        = "EXAMPLE_DB"
   schema                          = "EXAMPLE_SCHEMA"
   api_authentication              = snowflake_api_authentication_integration_with_authorization_code_grant.example.fully_qualified_name
-  oauth_refresh_token             = "EXAMPLE_TOKEN"
+  oauth_refresh_token             = var.oauth_refresh_token
   oauth_refresh_token_expiry_time = "2025-01-02 15:04:01"
   comment                         = "EXAMPLE_COMMENT"
+}
+
+variable "oauth_refresh_token" {
+  type      = string
+  sensitive = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).

@@ -49,7 +49,12 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -61,12 +66,17 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "Snowflake"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
-### JWT authenticator flow 
+### JWT authenticator flow
 
 To use JWT authentication, you have to firstly generate key-pairs used by Snowflake.
 To correctly generate the necessary keys, follow [this guide](https://docs.snowflake.com/en/user-guide/key-pair-auth#configuring-key-pair-authentication) from the official Snowflake documentation.
@@ -86,20 +96,14 @@ provider "snowflake" {
 To load the private key you can utilize the built-in [file](https://developer.hashicorp.com/terraform/language/functions/file) function.
 If you have any issues with this method, one of the possible root causes could be an additional newline at the end of the file that causes error in the underlying Go Snowflake driver.
 If this doesn't help, you can try other methods of supplying this field:
-- Filling the key directly by using [multi-string notation](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings)
 - Sourcing it from the environment variable:
 ```shell
-export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
-# Alternatively, source from a file.
 export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_private_key.p8)
-
-export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
 ```
 - Using TOML configuration file:
 ```toml
 [default]
 private_key = "..."
-private_key_passphrase = "..."
 ```
 
 In case of any other issues, take a look at related topics:
@@ -117,7 +121,12 @@ provider "snowflake" {
   user                   = "<user_name>"
   authenticator          = "JWT"
   private_key            = file("~/.ssh/snowflake_private_key.p8")
-  private_key_passphrase = "<passphrase>"
+  private_key_passphrase = var.private_key_passphrase
+}
+
+variable "private_key_passphrase" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -168,9 +177,14 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "Okta"
   okta_url          = "https://dev-123456.okta.com"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -196,7 +210,7 @@ The output of this command is your `<account_name>`.
 
 ### Be sure you are passing all the required fields
 
-This point is not only referring to double-checking the fields you are passing, but also to inform you that depending on the account 
+This point is not only referring to double-checking the fields you are passing, but also to inform you that depending on the account
 you want to log into, a different set of parameters may be required.
 
 Whenever you are on a Snowflake deployment that has different url than the default one:

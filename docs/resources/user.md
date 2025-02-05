@@ -28,15 +28,15 @@ resource "snowflake_user" "minimal" {
 # with all attributes set
 resource "snowflake_user" "user" {
   name         = "Snowflake User"
-  login_name   = "snowflake_user"
-  first_name   = "Snowflake"
-  middle_name  = "Middle"
-  last_name    = "User"
+  login_name   = var.login_name
+  first_name   = var.first_name
+  middle_name  = var.middle_name
+  last_name    = var.last_name
   comment      = "User of snowflake."
-  password     = "secret"
+  password     = var.password
   disabled     = "false"
   display_name = "Snowflake User display name"
-  email        = "user@snowflake.example"
+  email        = var.email
 
   default_warehouse              = snowflake_warehouse.example.fully_qualified_name
   default_secondary_roles_option = "ALL"
@@ -116,6 +116,36 @@ resource "snowflake_user" "u" {
   use_cached_result                             = false
   week_of_year_policy                           = 1
   week_start                                    = 1
+}
+
+variable "email" {
+  type      = string
+  sensitive = true
+}
+
+variable "login_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
+}
+
+variable "first_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "middle_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "last_name" {
+  type      = string
+  sensitive = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
