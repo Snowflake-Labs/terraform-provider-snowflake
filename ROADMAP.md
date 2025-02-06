@@ -1,5 +1,133 @@
 # Our roadmap
 
+## (07.02.2025) GA scope and roadmap
+
+### Current focus and goals
+
+Since the last update, we have focused on the following:
+
+* supporting the V1 migration;
+* assessing the scope and timeline for the GA.
+
+The biggest migration challenge (ATM) is transitioning from old grants to new ones
+(e.g. [#3335](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3335)).
+Check the [grants migration](#grants-migration) section for more details.
+
+### GA
+
+We took a long road to stabilize the provider and recently got it to [V1](#13122024-v1-release-update).
+The next essential step in making the provider official and supported by Snowflake is bringing it to GA.
+
+#### What is GA?
+
+Because of the project’s long history, we were asked multiple times about the difference between GA and V1.
+
+The GA of the Snowflake Terraform Provider will mean:
+
+* having official Snowflake support (ability to submit official Support Cases for the Provider);
+* migrating the project to the [snowflakedb](https://github.com/snowflakedb) GitHub organization
+(we are still in [Snowflake-Labs](https://github.com/Snowflake-Labs), reserved for unofficial/experimental projects).
+
+The above will mean changes in the support process and the provider setup
+(most probably the change in the [registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs)).
+We will share the details in the upcoming weeks.
+
+Because of the recent V1 and upcoming GA, we will also clarify our versioning policies (e.g. how long the given version is supported).
+
+**Important**: it will apply to the v1.x.x+ versions of the provider, so it’s essential to upgrade to the v1.0.0 version as soon as possible
+(read more in the [migration](#will-migration-be-needed) section below).
+
+#### What GA is not?
+
+There is a common misconception of what will be supported in the provider’s GA.
+
+The GA of the Snowflake Terraform Provider does NOT mean that:
+
+* all features are stable;
+* all Snowflake GA objects are supported.
+
+Functionally, the provider will offer almost the same set of objects as the [recently released V1](#13122024-v1-release-update).
+Read more about the [feature gap closing](#feature-gap-closing---the-current-approach) below.
+
+#### Timeline
+
+We aim to reach GA by the end of May 2025. We will update the timeline in mid-March.
+
+#### Will migration be needed?
+
+There will be the following migrations involved:
+
+1. Getting to v1.0.0.
+
+    It should already be an ongoing process. The V1 version offers stability and will be the basis for official support.
+    
+    Remember to follow our [migration guide](./MIGRATION_GUIDE.md#migration-guide) closely, as there were many breaking changes between the 0.x.x versions.
+    Reach out to us if you have any problems with it.
+
+2. Getting to v1.x.x.
+
+    As mentioned in the [What is GA](#what-is-ga) section, official support will start with one of the 1.x.x versions (we will announce the precise version later).
+    This migration should be easy because we don’t plan to introduce breaking changes between the 1.0.0 and 1.x.x versions.
+    
+    Remember that enabling [preview features](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs#preview_features_enabled-3)
+    in the provider’s configuration may result in manual migration as these features do not offer stable schemas.
+
+3. Changes in the terraform config files.
+
+    Because we have to migrate the project from [Snowflake-Labs](https://github.com/Snowflake-Labs) to [snowflakedb](https://github.com/snowflakedb),
+    we will also most probably create a new registry instead of the [existing one](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs).
+    This migration should be painless (basically changing the required provider block and running the `terraform state replace-provider`,
+    similar to the [#upgrading-from-czi-provider](./CZI_UPGRADE.md#upgrading-from-czi-provider)).
+    
+    We will share official instructions closer to the GA release date.
+
+### Grants migration
+
+We considered adding small migration helpers before going to GA (check [this discussion](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/3335#discussioncomment-11799443));
+however, we don’t have the resources to work on them in parallel with GA preparations.
+We might be able to publish more helpful examples and pointers instead.
+We encourage [contributing](./CONTRIBUTING.md) to the project.
+
+Our idea would be to create simple scripts that can be reused, or that can at least serve as a base/inspiration for the user-side migration automation.
+They may contain:
+
+* printing the desired config for new grants based on the old grant resource input;
+* printing the desired config for new grants based on the output from the Snowflake query;
+* generating proper import statements (specifically generating correct identifiers).
+
+We will treat this topic as a high-priority nice-to-have before the GA, and an essential topic right after reaching GA.
+
+### Reasons to migrate to v1+
+
+While we can’t make anyone migrate to the newer versions of the provider, we would like to point out a few things:
+
+* Snowflake is not officially supporting the Snowflake Terraform Provider project yet.
+
+    We put the disclaimers everywhere but have learned that it’s not always enough. **It won’t change for the 0.x.x versions after reaching GA**.
+* The old versions (0.x.x) will not be back-fixed (our policy before v1.0.0 was that we were always introducing fixes only in the newest 0.x.x versions; examples: [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2982#issuecomment-2296211672) and [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2739#issuecomment-2071555398)).
+
+    It means that **pre-GA versions can break entirely** when a breaking change is introduced on the Snowflake side
+    (the provider works on SQL statements; if the syntax changes through an official BCR, we won’t provide patches to unsupported versions, basically making them inoperable).
+* New features will only be introduced in the newest versions.
+* Migrating to v1.0.0 may be challenging, but there won’t be any breaking changes in stable resources, and no resource removals are planned until v2.0.0, which is not planned to be released anytime soon.
+* The engineering team handles the current support directly on a best-effort basis. The GA versions, which will be officially supported by Snowflake, will enable quicker triage and response.
+
+### Feature gap closing - the current approach
+
+As part of the V1 release, we have introduced a distinction between stable and preview resources (check [the previous update](#13122024-v1-release-update)).
+In addition to the preview resources that need to be stabilized, some objects have not yet been created in the provider
+(e.g. [iceberg tables](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2249)
+or [listings](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2379)).
+Additionally, the stable resource can also be subject to changes when new attributes are added on the Snowflake side to the object.
+
+We are not backing off the strategy to ultimately support all Snowflake objects.
+However, reaching GA is our highest priority now, and all the feature-related work will be postponed until after GA.
+We will discuss feature priorities after reaching GA.
+Please contact us through your account managers if any feature is critical.
+
+The same applies to the non-critical issues where a workaround exists.
+We will still fix the critical issues as part of our best-effort support.
+
 ## (13.12.2024) V1 release update
 
 We have released a long-awaited [v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/releases/tag/v1.0.0). A few things to know now:
