@@ -673,7 +673,7 @@ func getDriverConfigFromTerraform(s *schema.ResourceData) (*gosnowflake.Config, 
 		handleDurationInSecondsAttribute(s, "client_timeout", &config.ClientTimeout),
 		handleDurationInSecondsAttribute(s, "jwt_client_timeout", &config.JWTClientTimeout),
 		handleDurationInSecondsAttribute(s, "external_browser_timeout", &config.ExternalBrowserTimeout),
-		handleBoolField(s, "insecure_mode", &config.InsecureMode),
+		handleBoolField(s, "insecure_mode", &config.InsecureMode), //nolint:staticcheck
 		// ocsp fail open
 		func() error {
 			if v := s.Get("ocsp_fail_open").(string); v != provider.BooleanDefault {

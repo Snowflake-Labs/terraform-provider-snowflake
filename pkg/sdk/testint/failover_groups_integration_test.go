@@ -1,14 +1,13 @@
 package testint
 
 import (
-	"log"
 	"slices"
 	"testing"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/avast/retry-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -267,27 +266,16 @@ func TestInt_CreateSecondaryReplicationGroup(t *testing.T) {
 
 	// cleanup failover groups with retry (in case of replication delay)
 	cleanupFailoverGroups := func() {
-		err := retry.Do(
-			func() error {
-				return client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
-			},
-			retry.OnRetry(func(n uint, err error) {
-				log.Printf("[DEBUG] Retrying client.FailoverGroups.Drop(): #%d", n+1)
-			}),
-			retry.Delay(1*time.Second),
-			retry.Attempts(3),
-		)
+		dropFailoverGroupOnClient := func() (error, bool) {
+			return client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil), true
+		}
+		err := util.Retry(3, 1*time.Second, dropFailoverGroupOnClient)
 		require.NoError(t, err)
-		err = retry.Do(
-			func() error {
-				return secondaryClient.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
-			},
-			retry.OnRetry(func(n uint, err error) {
-				log.Printf("[DEBUG] Retrying client.FailoverGroups.Drop(): #%d", n+1)
-			}),
-			retry.Delay(1*time.Second),
-			retry.Attempts(3),
-		)
+
+		dropFailoverGroupOnSecondaryClient := func() (error, bool) {
+			return secondaryClient.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil), true
+		}
+		err = util.Retry(3, 1*time.Second, dropFailoverGroupOnSecondaryClient)
 		require.NoError(t, err)
 	}
 	t.Cleanup(cleanupFailoverGroups)
@@ -711,27 +699,16 @@ func TestInt_FailoverGroupsAlterTarget(t *testing.T) {
 
 	// cleanup failover groups with retry (in case of replication delay)
 	cleanupFailoverGroups := func() {
-		err := retry.Do(
-			func() error {
-				return client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
-			},
-			retry.OnRetry(func(n uint, err error) {
-				log.Printf("[DEBUG] Retrying client.FailoverGroups.Drop(): #%d", n+1)
-			}),
-			retry.Delay(1*time.Second),
-			retry.Attempts(3),
-		)
+		dropFailoverGroupOnClient := func() (error, bool) {
+			return client.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil), true
+		}
+		err := util.Retry(3, 1*time.Second, dropFailoverGroupOnClient)
 		require.NoError(t, err)
-		err = retry.Do(
-			func() error {
-				return secondaryClient.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil)
-			},
-			retry.OnRetry(func(n uint, err error) {
-				log.Printf("[DEBUG] Retrying client.FailoverGroups.Drop(): #%d", n+1)
-			}),
-			retry.Delay(1*time.Second),
-			retry.Attempts(3),
-		)
+
+		dropFailoverGroupOnSecondaryClient := func() (error, bool) {
+			return secondaryClient.FailoverGroups.Drop(ctx, failoverGroup.ID(), nil), true
+		}
+		err = util.Retry(3, 1*time.Second, dropFailoverGroupOnSecondaryClient)
 		require.NoError(t, err)
 	}
 	t.Cleanup(cleanupFailoverGroups)

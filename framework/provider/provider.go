@@ -572,7 +572,7 @@ func (p *SnowflakeProvider) Configure(ctx context.Context, req provider.Configur
 	if !data.InsecureMode.IsNull() && !data.InsecureMode.IsUnknown() {
 		insecureMode = data.InsecureMode.ValueBool()
 	}
-	config.InsecureMode = insecureMode
+	config.InsecureMode = insecureMode //nolint:staticcheck
 
 	ocspFailOpen := getBoolEnv("SNOWFLAKE_OCSP_FAIL_OPEN", true)
 	if !data.OCSPFailOpen.IsNull() && !data.OCSPFailOpen.IsUnknown() {
