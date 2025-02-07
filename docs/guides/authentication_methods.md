@@ -58,6 +58,14 @@ variable "password" {
 }
 ```
 
+You can then set Terraform variables like:
+- If a variable does not have any value set, you will be prompted by Terraform to provide the value.
+- Use Terraform VAR environment variables: `TF_VAR_password="<key>" terraform plan`
+- Use Terraform flags: `terraform plan -var="private_key=<key>"`
+- Use Snowflake Terraform Provider flags: `SNOWFLAKE_PRIVATE_KEY="<key>" terraform plan`
+
+Remember to load `<key>` from a secure location, instead of hardcoding the value.
+
 Without passing any authenticator, we depend on the underlying Go Snowflake driver and Snowflake itself to fill this field out.
 This means that we do not provision the default, and it may change at some point, so if you want to be explicit, you can define Snowflake authenticator like so:
 
@@ -88,8 +96,15 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  authenticator     = "JWT"
+  authenticator     = "SNOWFLAKE_JWT"
   private_key       = file("~/.ssh/snowflake_private_key.p8")
+  # Optionally, set it with Terraform variable.
+  private_key       = var.private_key
+}
+
+variable "private_key" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -119,7 +134,7 @@ provider "snowflake" {
   organization_name      = "<organization_name>"
   account_name           = "<account_name>"
   user                   = "<user_name>"
-  authenticator          = "JWT"
+  authenticator          = "SNOWFLAKE_JWT"
   private_key            = file("~/.ssh/snowflake_private_key.p8")
   private_key_passphrase = var.private_key_passphrase
 }
@@ -143,8 +158,13 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "UsernamePasswordMFA"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -155,9 +175,14 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "UsernamePasswordMFA"
   passcode          = "000000"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
