@@ -111,9 +111,12 @@ variable "private_key" {
 To load the private key you can utilize the built-in [file](https://developer.hashicorp.com/terraform/language/functions/file) function.
 If you have any issues with this method, one of the possible root causes could be an additional newline at the end of the file that causes error in the underlying Go Snowflake driver.
 If this doesn't help, you can try other methods of supplying this field:
+- Filling the key directly by using [multi-string notation](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings) (not recommended).
 - Sourcing it from the environment variable:
 ```shell
 export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_private_key.p8)
+# Or inline the value (not recommended).
+export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
 ```
 - Using TOML configuration file:
 ```toml
