@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.3...v1.0.4) (2025-02-07)
+
+
+### 🔧 **Misc**
+
+* Add GA scope to the roadmap ([#3385](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3385)) ([9be2196](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9be21966ca5b1187d5c055026dd5f563900a1aa9))
+
 ## [1.0.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.2...v1.0.3) (2025-02-05)
 
 
