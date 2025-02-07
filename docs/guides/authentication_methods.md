@@ -78,7 +78,7 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  authenticator     = "JWT"
+  authenticator     = "SNOWFLAKE_JWT"
   private_key       = file("~/.ssh/snowflake_private_key.p8")
 }
 ```
@@ -115,7 +115,7 @@ provider "snowflake" {
   organization_name      = "<organization_name>"
   account_name           = "<account_name>"
   user                   = "<user_name>"
-  authenticator          = "JWT"
+  authenticator          = "SNOWFLAKE_JWT"
   private_key            = file("~/.ssh/snowflake_private_key.p8")
   private_key_passphrase = "<passphrase>"
 }
