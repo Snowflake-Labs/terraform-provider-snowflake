@@ -110,12 +110,7 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument{
-				ArgName:        v.ArgName,
-				ArgDataTypeOld: v.ArgDataTypeOld,
-				ArgDataType:    v.ArgDataType,
-				DefaultValue:   v.DefaultValue,
-			}
+			s[i] = FunctionArgument(v)
 		}
 		opts.Arguments = s
 	}
@@ -131,11 +126,7 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn{
-					ColumnName:        v.ColumnName,
-					ColumnDataTypeOld: v.ColumnDataTypeOld,
-					ColumnDataType:    v.ColumnDataType,
-				}
+				s[i] = FunctionColumn(v)
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -143,18 +134,14 @@ func (r *CreateForJavaFunctionRequest) toOpts() *CreateForJavaFunctionOptions {
 	if r.Imports != nil {
 		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImport{
-				Import: v.Import,
-			}
+			s[i] = FunctionImport(v)
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
 		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackage{
-				Package: v.Package,
-			}
+			s[i] = FunctionPackage(v)
 		}
 		opts.Packages = s
 	}
@@ -183,12 +170,7 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument{
-				ArgName:        v.ArgName,
-				ArgDataTypeOld: v.ArgDataTypeOld,
-				ArgDataType:    v.ArgDataType,
-				DefaultValue:   v.DefaultValue,
-			}
+			s[i] = FunctionArgument(v)
 		}
 		opts.Arguments = s
 	}
@@ -204,11 +186,7 @@ func (r *CreateForJavascriptFunctionRequest) toOpts() *CreateForJavascriptFuncti
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn{
-					ColumnName:        v.ColumnName,
-					ColumnDataTypeOld: v.ColumnDataTypeOld,
-					ColumnDataType:    v.ColumnDataType,
-				}
+				s[i] = FunctionColumn(v)
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -245,12 +223,7 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument{
-				ArgName:        v.ArgName,
-				ArgDataTypeOld: v.ArgDataTypeOld,
-				ArgDataType:    v.ArgDataType,
-				DefaultValue:   v.DefaultValue,
-			}
+			s[i] = FunctionArgument(v)
 		}
 		opts.Arguments = s
 	}
@@ -266,11 +239,7 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn{
-					ColumnName:        v.ColumnName,
-					ColumnDataTypeOld: v.ColumnDataTypeOld,
-					ColumnDataType:    v.ColumnDataType,
-				}
+				s[i] = FunctionColumn(v)
 			}
 			opts.Returns.Table.Columns = s
 		}
@@ -278,18 +247,14 @@ func (r *CreateForPythonFunctionRequest) toOpts() *CreateForPythonFunctionOption
 	if r.Imports != nil {
 		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImport{
-				Import: v.Import,
-			}
+			s[i] = FunctionImport(v)
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
 		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackage{
-				Package: v.Package,
-			}
+			s[i] = FunctionPackage(v)
 		}
 		opts.Packages = s
 	}
@@ -326,30 +291,21 @@ func (r *CreateForScalaFunctionRequest) toOpts() *CreateForScalaFunctionOptions 
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument{
-				ArgName:        v.ArgName,
-				ArgDataTypeOld: v.ArgDataTypeOld,
-				ArgDataType:    v.ArgDataType,
-				DefaultValue:   v.DefaultValue,
-			}
+			s[i] = FunctionArgument(v)
 		}
 		opts.Arguments = s
 	}
 	if r.Imports != nil {
 		s := make([]FunctionImport, len(r.Imports))
 		for i, v := range r.Imports {
-			s[i] = FunctionImport{
-				Import: v.Import,
-			}
+			s[i] = FunctionImport(v)
 		}
 		opts.Imports = s
 	}
 	if r.Packages != nil {
 		s := make([]FunctionPackage, len(r.Packages))
 		for i, v := range r.Packages {
-			s[i] = FunctionPackage{
-				Package: v.Package,
-			}
+			s[i] = FunctionPackage(v)
 		}
 		opts.Packages = s
 	}
@@ -378,12 +334,7 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 	if r.Arguments != nil {
 		s := make([]FunctionArgument, len(r.Arguments))
 		for i, v := range r.Arguments {
-			s[i] = FunctionArgument{
-				ArgName:        v.ArgName,
-				ArgDataTypeOld: v.ArgDataTypeOld,
-				ArgDataType:    v.ArgDataType,
-				DefaultValue:   v.DefaultValue,
-			}
+			s[i] = FunctionArgument(v)
 		}
 		opts.Arguments = s
 	}
@@ -399,11 +350,7 @@ func (r *CreateForSQLFunctionRequest) toOpts() *CreateForSQLFunctionOptions {
 		if r.Returns.Table.Columns != nil {
 			s := make([]FunctionColumn, len(r.Returns.Table.Columns))
 			for i, v := range r.Returns.Table.Columns {
-				s[i] = FunctionColumn{
-					ColumnName:        v.ColumnName,
-					ColumnDataTypeOld: v.ColumnDataTypeOld,
-					ColumnDataType:    v.ColumnDataType,
-				}
+				s[i] = FunctionColumn(v)
 			}
 			opts.Returns.Table.Columns = s
 		}
