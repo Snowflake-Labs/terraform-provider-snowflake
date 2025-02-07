@@ -350,7 +350,8 @@ func Provider() *schema.Provider {
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.DisableConsoleLogin, resources.BooleanDefault),
 				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 			},
-			// TODO(SNOW-1761318): handle DisableSamlURLCheck after upgrading the driver to at least 1.10.1
+			// TODO(SNOW-1761318): Add DisableSamlURLCheck.
+			// TODO(SNOW-1917271): Add DisableOCSPChecks.
 			"profile": {
 				Type: schema.TypeString,
 				// TODO(SNOW-1754364): Note that a default file path is already filled on sdk side.
