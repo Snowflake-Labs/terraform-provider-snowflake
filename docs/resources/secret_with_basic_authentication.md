@@ -17,18 +17,29 @@ resource "snowflake_secret_with_basic_authentication" "test" {
   name     = "EXAMPLE_SECRET"
   database = "EXAMPLE_DB"
   schema   = "EXAMPLE_SCHEMA"
-  username = "EXAMPLE_USERNAME"
-  password = "EXAMPLE_PASSWORD"
+  username = var.username
+  password = var.password
 }
+
 
 # resource with all fields set
 resource "snowflake_secret_with_basic_authentication" "test" {
   name     = "EXAMPLE_SECRET"
   database = "EXAMPLE_DB"
   schema   = "EXAMPLE_SCHEMA"
-  username = "EXAMPLE_USERNAME"
-  password = "EXAMPLE_PASSWORD"
+  username = var.username
+  password = var.password
   comment  = "EXAMPLE_COMMENT"
+}
+
+variable "username" {
+  type      = string
+  sensitive = true
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).

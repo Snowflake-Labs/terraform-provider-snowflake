@@ -6,12 +6,12 @@ resource "snowflake_legacy_service_user" "minimal" {
 # with all attributes set
 resource "snowflake_legacy_service_user" "user" {
   name         = "Snowflake Legacy Service User"
-  login_name   = "legacy_service_user"
+  login_name   = var.login_name
   comment      = "A legacy service user of snowflake."
-  password     = "secret"
+  password     = var.password
   disabled     = "false"
   display_name = "Snowflake Legacy Service User display name"
-  email        = "legacy.service.user@snowflake.example"
+  email        = var.email
 
   default_warehouse              = "warehouse"
   default_secondary_roles_option = "ALL"
@@ -89,4 +89,19 @@ resource "snowflake_legacy_service_user" "u" {
   use_cached_result                             = false
   week_of_year_policy                           = 1
   week_start                                    = 1
+}
+
+variable "email" {
+  type      = string
+  sensitive = true
+}
+
+variable "login_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
