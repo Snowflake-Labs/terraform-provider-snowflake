@@ -51,8 +51,14 @@ provider "snowflake" {
   account_name           = "..." # required if not using profile. Can also be set via SNOWFLAKE_ACCOUNT_NAME env var
   user                   = "..." # required if not using profile or token. Can also be set via SNOWFLAKE_USER env var
   authenticator          = "SNOWFLAKE_JWT"
-  private_key            = "-----BEGIN ENCRYPTED PRIVATE KEY-----..."
-  private_key_passphrase = "passphrase"
+  private_key            = file("~/.ssh/snowflake_key.p8")
+  private_key_passphrase = var.private_key_passphrase
+}
+
+# Remember to provide the passphrase securely.
+variable "private_key_passphrase" {
+  type      = string
+  sensitive = true
 }
 
 # By using the `profile` field, missing fields will be populated from ~/.snowflake/config TOML file
@@ -137,6 +143,8 @@ The Snowflake provider support multiple ways to authenticate:
 
 In all cases `organization_name`, `account_name` and `user` are required.
 
+-> **Note** Storing the credentials and other secret values safely is on the users' side. Read more in [Authentication Methods guide](./guides/authentication_methods).
+
 ### Keypair Authentication Environment Variables
 
 You should generate the public and private keys and set up environment variables.
@@ -152,8 +160,6 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
-# Alternatively, source from a file.
 export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 ```
 
@@ -235,7 +241,7 @@ provider "snowflake" {
 
 ```bash
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key"
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 ```
 
 3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.

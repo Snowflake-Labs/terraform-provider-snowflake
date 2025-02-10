@@ -19,9 +19,9 @@ The account resource allows you to create and manage Snowflake accounts. For mor
 ## Minimal
 resource "snowflake_account" "minimal" {
   name                 = "ACCOUNT_NAME"
-  admin_name           = "ADMIN_NAME"
-  admin_password       = "ADMIN_PASSWORD"
-  email                = "admin@email.com"
+  admin_name           = var.admin_name
+  admin_password       = var.admin_password
+  email                = var.email
   edition              = "STANDARD"
   grace_period_in_days = 3
 }
@@ -29,10 +29,10 @@ resource "snowflake_account" "minimal" {
 ## Complete (with SERVICE user type)
 resource "snowflake_account" "complete" {
   name                 = "ACCOUNT_NAME"
-  admin_name           = "ADMIN_NAME"
+  admin_name           = var.admin_name
   admin_rsa_public_key = "<public_key>"
   admin_user_type      = "SERVICE"
-  email                = "admin@email.com"
+  email                = var.email
   edition              = "STANDARD"
   region_group         = "PUBLIC"
   region               = "AWS_US_WEST_2"
@@ -44,12 +44,12 @@ resource "snowflake_account" "complete" {
 ## Complete (with PERSON user type)
 resource "snowflake_account" "complete" {
   name                 = "ACCOUNT_NAME"
-  admin_name           = "ADMIN_NAME"
-  admin_password       = "ADMIN_PASSWORD"
+  admin_name           = var.admin_name
+  admin_password       = var.admin_password
   admin_user_type      = "PERSON"
-  first_name           = "first_name"
-  last_name            = "last_name"
-  email                = "admin@email.com"
+  first_name           = var.first_name
+  last_name            = var.last_name
+  email                = var.email
   must_change_password = "false"
   edition              = "STANDARD"
   region_group         = "PUBLIC"
@@ -57,6 +57,31 @@ resource "snowflake_account" "complete" {
   comment              = "some comment"
   is_org_admin         = "true"
   grace_period_in_days = 3
+}
+
+variable "admin_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "email" {
+  type      = string
+  sensitive = true
+}
+
+variable "admin_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "first_name" {
+  type      = string
+  sensitive = true
+}
+
+variable "last_name" {
+  type      = string
+  sensitive = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
