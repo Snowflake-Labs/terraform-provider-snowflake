@@ -4,7 +4,9 @@ run:
   # skip-dirs:
 
 linters-settings:
-
+  gosimple:
+    # Disable a rule for linting the generated converters in SDK.
+    checks: ["-ST1016"]
   misspell:
     locale: US
   depguard:
@@ -16,6 +18,7 @@ linters-settings:
     rules:
       - name: if-return
         disabled: true
+
 linters:
   disable-all: true
   enable:
