@@ -2,6 +2,12 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -49,6 +55,56 @@ func TestAcc_ManagedAccount(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"admin_name", "admin_password"},
+			},
+		},
+	})
+}
+
+func TestAcc_ManagedAccount_HandleShowOutputChanges_BCR_2024_08(t *testing.T) {
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
+					func() { acc.SetV097CompatibleConfigPathEnv(t) }()
+				},
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.97.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModels(t, userModel),
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
+					func() { acc.UnsetConfigPathEnv(t) }()
+				},
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModels(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assert.AssertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
 			},
 		},
 	})

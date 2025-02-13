@@ -31,8 +31,7 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 	},
 	{
 		name:   "ServiceUser",
-		schema: resources.ServiceUser().Schema,
-	},
+		schema: resources.ServiceUser().Schema},
 	{
 		name:   "LegacyServiceUser",
 		schema: resources.LegacyServiceUser().Schema,
@@ -172,5 +171,9 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 	{
 		name:   "ProcedureSql",
 		schema: resources.ProcedureSql().Schema,
+	},
+	{
+		name:   "ManagedAccount",
+		schema: resources.ManagedAccount().Schema,
 	},
 }

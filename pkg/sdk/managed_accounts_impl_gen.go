@@ -70,17 +70,34 @@ func (r *ShowManagedAccountRequest) toOpts() *ShowManagedAccountOptions {
 
 func (r managedAccountDBRow) convert() *ManagedAccount {
 	managedAccount := &ManagedAccount{
-		Name:              r.Name,
 		Cloud:             r.Cloud,
 		Region:            r.Region,
-		Locator:           r.Locator,
 		CreatedOn:         r.CreatedOn,
-		URL:               r.Url,
 		AccountLocatorURL: r.AccountLocatorUrl,
 		IsReader:          r.IsReader,
 	}
-	if r.Comment.Valid {
-		managedAccount.Comment = r.Comment.String
+
+	if r.Name.Valid {
+		managedAccount.Name = r.Name.String
+	} else if r.AccountName.Valid {
+		managedAccount.Name = r.AccountName.String
 	}
+
+	if r.Locator.Valid {
+		managedAccount.Locator = r.Locator.String
+	} else if r.AccountLocator.Valid {
+		managedAccount.Locator = r.AccountLocator.String
+	}
+
+	if r.Url.Valid {
+		managedAccount.URL = r.Url.String
+	} else if r.AccountUrl.Valid {
+		managedAccount.URL = r.AccountUrl.String
+	}
+
+	if r.Comment.Valid {
+		managedAccount.Comment = &r.Comment.String
+	}
+
 	return managedAccount
 }
