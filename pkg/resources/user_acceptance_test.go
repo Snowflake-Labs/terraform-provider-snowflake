@@ -1194,7 +1194,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 	})
 }
 
-func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
+func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelEmpty := model.UserWithDefaultMeta(userId.Name())
@@ -1216,7 +1216,7 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202407(t *testing.T) {
 			// 1. create without default secondary roles option set (DEFAULT will be used)
 			{
 				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
+					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
 				},
 				Config: config.FromModels(t, userModelEmpty),
 				Check: assert.AssertThat(t,
@@ -1629,91 +1629,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
 // https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
 // https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
 // https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
-func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125_withbcr202407(t *testing.T) {
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	userModel := model.User("w", userId.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionNone)
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-				},
-				Config: config.FromModels(t, userModel),
-				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionNone),
-				),
-			},
-		},
-	})
-}
-
-// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
-// https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
-// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
-func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_enabled(t *testing.T) {
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	userModel := model.User("w", userId.Name())
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
-					func() { acc.SetV097CompatibleConfigPathEnv(t) }()
-				},
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.97.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, userModel),
-				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
-				),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-					func() { acc.UnsetConfigPathEnv(t) }()
-				},
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModels(t, userModel),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
-				),
-			},
-		},
-	})
-}
-
-// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
-// https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
-// https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
-func TestAcc_User_handleChangesToShowUsers_bcr202408_migration_bcr202407_disabled(t *testing.T) {
+func TestAcc_User_handleChangesToShowUsers_bcr202408_migration(t *testing.T) {
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("w", userId.Name())

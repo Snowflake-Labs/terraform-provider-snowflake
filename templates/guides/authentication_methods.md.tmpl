@@ -28,7 +28,7 @@ Read more on Snowflake's password protection: https://docs.snowflake.com/en/user
 
 * [Protecting secret values](#protecting-secret-values)
 * [Snowflake authenticator flow (login + password)](#snowflake-authenticator-flow-login--password)
-* [JWT authenticator flow](#jwt-authenticator-flow-)
+* [JWT authenticator flow](#jwt-authenticator-flow)
   * [JWT authenticator flow using passphrase](#jwt-authenticator-flow-using-passphrase)
 * [MFA authenticator flow](#mfa-authenticator-flow)
   * [MFA token caching](#mfa-token-caching)

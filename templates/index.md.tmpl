@@ -25,6 +25,8 @@ This is an example configuration of the provider in `main.tf` in a configuration
 
 **Warning: these values are passed directly to the gosnowflake library, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
 
+--> **Note: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
+
 {{ .SchemaMarkdown | trimspace }}
 
 ## Authentication
