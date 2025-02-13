@@ -2,13 +2,9 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
@@ -61,49 +57,49 @@ func TestAcc_ManagedAccount(t *testing.T) {
 }
 
 func TestAcc_ManagedAccount_HandleShowOutputChanges_BCR_2024_08(t *testing.T) {
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	// TODO [SNOW-1011985]: unskip the tests
+	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
-	userModel := model.User("w", userId.Name())
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	adminName := acc.TestClient().Ids.Alpha()
+	adminPass := acc.TestClient().Ids.AlphaWithPrefix("ABC_abc_123!!!")
 
 	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		CheckDestroy: acc.CheckDestroy(t, resources.ManagedAccount),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
-					func() { acc.SetV097CompatibleConfigPathEnv(t) }()
-				},
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.97.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, userModel),
-				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				Config: managedAccountConfig(id.Name(), adminName, adminPass),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_name", adminName),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_password", adminPass),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "comment", managedAccountComment),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "type", "READER"),
 				),
 			},
 			{
 				PreConfig: func() {
 					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-					func() { acc.UnsetConfigPathEnv(t) }()
 				},
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModels(t, userModel),
+				Config: managedAccountConfig(id.Name(), adminName, adminPass),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectResourceAction("snowflake_managed_account.test", plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_name", adminName),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_password", adminPass),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "comment", managedAccountComment),
+					resource.TestCheckResourceAttr("snowflake_managed_account.test", "type", "READER"),
 				),
 			},
 		},
