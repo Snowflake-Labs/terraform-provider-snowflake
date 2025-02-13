@@ -42,12 +42,15 @@ type ShowManagedAccountOptions struct {
 }
 
 type managedAccountDBRow struct {
-	Name              string         `db:"name"`
+	Name              sql.NullString `db:"name"`
+	AccountName       sql.NullString `db:"account_name"`
 	Cloud             string         `db:"cloud"`
 	Region            string         `db:"region"`
-	Locator           string         `db:"locator"`
+	Locator           sql.NullString `db:"locator"`
+	AccountLocator    sql.NullString `db:"account_locator"`
 	CreatedOn         string         `db:"created_on"`
-	Url               string         `db:"url"`
+	Url               sql.NullString `db:"url"`
+	AccountUrl        sql.NullString `db:"account_url"`
 	AccountLocatorUrl string         `db:"account_locator_url"`
 	IsReader          bool           `db:"is_reader"`
 	Comment           sql.NullString `db:"comment"`
@@ -62,5 +65,13 @@ type ManagedAccount struct {
 	URL               string
 	AccountLocatorURL string
 	IsReader          bool
-	Comment           string
+	Comment           *string
+}
+
+func (v *ManagedAccount) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
+func (v *ManagedAccount) ObjectType() ObjectType {
+	return ObjectTypeManagedAccount
 }

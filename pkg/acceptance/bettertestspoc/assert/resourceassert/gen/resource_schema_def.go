@@ -173,4 +173,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ProcedureSql",
 		schema: resources.ProcedureSql().Schema,
 	},
+	{
+		name:   "ManagedAccount",
+		schema: resources.ManagedAccount().Schema,
+	},
 }
