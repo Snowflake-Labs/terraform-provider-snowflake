@@ -407,7 +407,7 @@ func ReadContextExternalFunction(ctx context.Context, d *schema.ResourceData, me
 		case "returns":
 			returnType := row.Value
 			// We first check for VARIANT or OBJECT
-			if returnType == "VARIANT" || returnType == "OBJECT" {
+			if returnType == "VARIANT" || returnType == "OBJECT" || returnType == "VARCHAR" {
 				if err := d.Set("return_type", returnType); err != nil {
 					return diag.Errorf("error setting return_type: %v", err)
 				}
