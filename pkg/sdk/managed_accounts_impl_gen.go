@@ -77,22 +77,22 @@ func (r managedAccountDBRow) convert() *ManagedAccount {
 		IsReader:          r.IsReader,
 	}
 
-	if r.Name.Valid {
-		managedAccount.Name = r.Name.String
-	} else if r.AccountName.Valid {
+	if r.AccountName.Valid {
 		managedAccount.Name = r.AccountName.String
+	} else if r.Name.Valid {
+		managedAccount.Name = r.Name.String
 	}
 
-	if r.Locator.Valid {
-		managedAccount.Locator = r.Locator.String
-	} else if r.AccountLocator.Valid {
+	if r.AccountLocator.Valid {
 		managedAccount.Locator = r.AccountLocator.String
+	} else if r.Locator.Valid {
+		managedAccount.Locator = r.Locator.String
 	}
 
-	if r.Url.Valid {
-		managedAccount.URL = r.Url.String
-	} else if r.AccountUrl.Valid {
+	if r.AccountUrl.Valid {
 		managedAccount.URL = r.AccountUrl.String
+	} else if r.Url.Valid {
+		managedAccount.URL = r.Url.String
 	}
 
 	if r.Comment.Valid {
