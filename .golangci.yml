@@ -4,7 +4,9 @@ run:
   # skip-dirs:
 
 linters-settings:
-
+  gosimple:
+    # Disable a rule for linting the generated converters in SDK.
+    checks: ["-ST1016"]
   misspell:
     locale: US
   depguard:
@@ -16,14 +18,13 @@ linters-settings:
     rules:
       - name: if-return
         disabled: true
+
 linters:
   disable-all: true
   enable:
     - whitespace
     # unparam: Checks Go code for unused constants, variables, functions and types
     # - unparam  # todo: enabled
-    # checks for pointers to enclosing loop variables
-    - exportloopref
     - gocritic
     - misspell
     # errcheck: Errcheck is a program for checking for unchecked errors in go programs.

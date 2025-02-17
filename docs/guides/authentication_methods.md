@@ -28,7 +28,7 @@ Read more on Snowflake's password protection: https://docs.snowflake.com/en/user
 
 * [Protecting secret values](#protecting-secret-values)
 * [Snowflake authenticator flow (login + password)](#snowflake-authenticator-flow-login--password)
-* [JWT authenticator flow](#jwt-authenticator-flow-)
+* [JWT authenticator flow](#jwt-authenticator-flow)
   * [JWT authenticator flow using passphrase](#jwt-authenticator-flow-using-passphrase)
 * [MFA authenticator flow](#mfa-authenticator-flow)
   * [MFA token caching](#mfa-token-caching)
@@ -49,9 +49,22 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
+
+You can then set Terraform variables like:
+- If a variable does not have any value set, you will be prompted by Terraform to provide the value.
+- Use Terraform VAR environment variables: `TF_VAR_password="<key>" terraform plan`
+- Use Terraform flags: `terraform plan -var="private_key=<key>"`
+- Use Snowflake Terraform Provider flags: `SNOWFLAKE_PRIVATE_KEY="<key>" terraform plan`
+
+Remember to load `<key>` from a secure location, instead of hardcoding the value.
 
 Without passing any authenticator, we depend on the underlying Go Snowflake driver and Snowflake itself to fill this field out.
 This means that we do not provision the default, and it may change at some point, so if you want to be explicit, you can define Snowflake authenticator like so:
@@ -61,12 +74,17 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "Snowflake"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
-### JWT authenticator flow 
+### JWT authenticator flow
 
 To use JWT authentication, you have to firstly generate key-pairs used by Snowflake.
 To correctly generate the necessary keys, follow [this guide](https://docs.snowflake.com/en/user-guide/key-pair-auth#configuring-key-pair-authentication) from the official Snowflake documentation.
@@ -78,28 +96,32 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  authenticator     = "JWT"
+  authenticator     = "SNOWFLAKE_JWT"
   private_key       = file("~/.ssh/snowflake_private_key.p8")
+  # Optionally, set it with Terraform variable.
+  private_key       = var.private_key
+}
+
+variable "private_key" {
+  type      = string
+  sensitive = true
 }
 ```
 
 To load the private key you can utilize the built-in [file](https://developer.hashicorp.com/terraform/language/functions/file) function.
 If you have any issues with this method, one of the possible root causes could be an additional newline at the end of the file that causes error in the underlying Go Snowflake driver.
 If this doesn't help, you can try other methods of supplying this field:
-- Filling the key directly by using [multi-string notation](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings)
+- Filling the key directly by using [multi-string notation](https://developer.hashicorp.com/terraform/language/expressions/strings#heredoc-strings) (not recommended).
 - Sourcing it from the environment variable:
 ```shell
-export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
-# Alternatively, source from a file.
 export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_private_key.p8)
-
-export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
+# Or inline the value (not recommended).
+export SNOWFLAKE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----..."
 ```
 - Using TOML configuration file:
 ```toml
 [default]
 private_key = "..."
-private_key_passphrase = "..."
 ```
 
 In case of any other issues, take a look at related topics:
@@ -115,9 +137,14 @@ provider "snowflake" {
   organization_name      = "<organization_name>"
   account_name           = "<account_name>"
   user                   = "<user_name>"
-  authenticator          = "JWT"
+  authenticator          = "SNOWFLAKE_JWT"
   private_key            = file("~/.ssh/snowflake_private_key.p8")
-  private_key_passphrase = "<passphrase>"
+  private_key_passphrase = var.private_key_passphrase
+}
+
+variable "private_key_passphrase" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -134,8 +161,13 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "UsernamePasswordMFA"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -146,9 +178,14 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "UsernamePasswordMFA"
   passcode          = "000000"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -168,9 +205,14 @@ provider "snowflake" {
   organization_name = "<organization_name>"
   account_name      = "<account_name>"
   user              = "<user_name>"
-  password          = "<password>"
+  password          = var.password
   authenticator     = "Okta"
   okta_url          = "https://dev-123456.okta.com"
+}
+
+variable "password" {
+  type      = string
+  sensitive = true
 }
 ```
 
@@ -196,7 +238,7 @@ The output of this command is your `<account_name>`.
 
 ### Be sure you are passing all the required fields
 
-This point is not only referring to double-checking the fields you are passing, but also to inform you that depending on the account 
+This point is not only referring to double-checking the fields you are passing, but also to inform you that depending on the account
 you want to log into, a different set of parameters may be required.
 
 Whenever you are on a Snowflake deployment that has different url than the default one:

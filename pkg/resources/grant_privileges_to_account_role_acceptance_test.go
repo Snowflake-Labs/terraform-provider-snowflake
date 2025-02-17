@@ -92,7 +92,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3153(t *testing.T) {
 				PreConfig: func() {
 					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_gh3153"),
 				ConfigVariables: configVariables,
