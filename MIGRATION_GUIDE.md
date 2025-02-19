@@ -7,6 +7,11 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.3 ➞ v1.0.4
+
+### Fixed external_function VARCHAR return_type
+VARCHAR external_function return_type did not work correctly before ([#3392](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3392)) but was fixed in this version.
+
 ## v1.0.2 ➞ v1.0.3
 
 ### Fixed METRIC_LEVEL parameter
