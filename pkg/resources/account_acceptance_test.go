@@ -102,7 +102,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 				ResourceName: configModel.ResourceReference(),
 				Config:       config.FromModels(t, configModel),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedAccountResource(t, helpers.EncodeResourceIdentifier(accountId)).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -212,7 +212,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 				ResourceName: configModel.ResourceReference(),
 				Config:       config.FromModels(t, configModel),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedAccountResource(t, helpers.EncodeResourceIdentifier(accountId)).
 						HasNameString(id).
 						HasFullyQualifiedNameString(sdk.NewAccountIdentifier(organizationName, id).FullyQualifiedName()).

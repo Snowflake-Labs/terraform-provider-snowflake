@@ -181,7 +181,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/single/basic"),
 				ConfigVariables: externalVolume(config.ListVariable(s3StorageLocation), externalVolumeName, "", ""),
 				ResourceName:    "snowflake_external_volume.test",
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedExternalVolumeResource(t, resourceId).
 						HasNameString(externalVolumeName).
 						HasStorageLocationLength(1),
@@ -658,7 +658,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/single/basic"),
 				ConfigVariables: externalVolume(config.ListVariable(gcsStorageLocation), externalVolumeName, "", ""),
 				ResourceName:    "snowflake_external_volume.test",
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedExternalVolumeResource(t, resourceId).
 						HasNameString(externalVolumeName).
 						HasStorageLocationLength(1),
@@ -1076,7 +1076,7 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalVolume/single/basic"),
 				ConfigVariables: externalVolume(config.ListVariable(azureStorageLocation), externalVolumeName, "", ""),
 				ResourceName:    "snowflake_external_volume.test",
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedExternalVolumeResource(t, resourceId).
 						HasNameString(externalVolumeName).
 						HasStorageLocationLength(1),

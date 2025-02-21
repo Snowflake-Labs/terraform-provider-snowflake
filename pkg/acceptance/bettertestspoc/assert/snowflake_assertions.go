@@ -70,10 +70,10 @@ func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T) res
 
 // ToTerraformImportStateCheckFunc implements ImportStateCheckFuncProvider to allow easier creation of new Snowflake object assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
+func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(_ []*terraform.InstanceState) error {
-		return s.runSnowflakeObjectsAssertions(t)
+		return s.runSnowflakeObjectsAssertionsWithTestClient(t, testClient)
 	}
 }
 

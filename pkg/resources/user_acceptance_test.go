@@ -152,7 +152,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password"},
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedUserResource(t, id2.Name()).
 						HasLoginNameString(strings.ToUpper(id.Name())).
 						HasDisplayNameString(id.Name()).
@@ -229,7 +229,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "show_output.0.days_to_expiry"},
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedUserResource(t, id.Name()).
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
 						HasLoginNameString(fmt.Sprintf("%s_OTHER_LOGIN", id.Name())),
@@ -447,7 +447,7 @@ func TestAcc_User_AllParameters(t *testing.T) {
 			{
 				ResourceName: userModel.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceparametersassert.ImportedUserResourceParameters(t, userId.Name()).
 						HasAllDefaults(),
 				),
@@ -580,7 +580,7 @@ func TestAcc_User_AllParameters(t *testing.T) {
 			{
 				ResourceName: userModelWithAllParametersSet.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceparametersassert.ImportedUserResourceParameters(t, userId.Name()).
 						HasAbortDetachedQuery(true).
 						HasAutocommit(false).
@@ -1710,7 +1710,7 @@ func TestAcc_User_importPassword(t *testing.T) {
 				ResourceName:  userModel.ResourceReference(),
 				ImportState:   true,
 				ImportStateId: userId.Name(),
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedUserResource(t, userId.Name()).
 						HasNoPassword().
 						HasFirstNameString(firstName),

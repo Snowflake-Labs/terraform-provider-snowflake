@@ -133,7 +133,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "days_to_expiry", "mins_to_unlock", "login_name", "display_name", "disabled", "must_change_password"},
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedLegacyServiceUserResource(t, id2.Name()).
 						HasLoginNameString(strings.ToUpper(id.Name())).
 						HasDisplayNameString(id.Name()).
@@ -200,7 +200,7 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "days_to_expiry", "mins_to_unlock", "default_namespace", "login_name", "show_output.0.days_to_expiry"},
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedLegacyServiceUserResource(t, id.Name()).
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
 						HasLoginNameString(fmt.Sprintf("%s_OTHER_LOGIN", id.Name())),
@@ -340,7 +340,7 @@ func TestAcc_LegacyServiceUser_AllParameters(t *testing.T) {
 			{
 				ResourceName: userModel.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceparametersassert.ImportedUserResourceParameters(t, userId.Name()).
 						HasAllDefaults(),
 				),
@@ -473,7 +473,7 @@ func TestAcc_LegacyServiceUser_AllParameters(t *testing.T) {
 			{
 				ResourceName: userModelWithAllParametersSet.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceparametersassert.ImportedUserResourceParameters(t, userId.Name()).
 						HasAbortDetachedQuery(true).
 						HasAutocommit(false).

@@ -69,7 +69,7 @@ func TestAcc_ResourceMonitor_Basic(t *testing.T) {
 			{
 				ResourceName: "snowflake_resource_monitor.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedResourceMonitorResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -147,7 +147,7 @@ func TestAcc_ResourceMonitor_Complete(t *testing.T) {
 				ResourceName: "snowflake_resource_monitor.test",
 				ImportState:  true,
 				Config:       config.FromModels(t, configModel),
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedResourceMonitorResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).

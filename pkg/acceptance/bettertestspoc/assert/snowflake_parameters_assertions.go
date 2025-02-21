@@ -109,10 +109,10 @@ func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T) re
 
 // ToTerraformImportStateCheckFunc implements ImportStateCheckFuncProvider to allow easier creation of new Snowflake object parameters assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
+func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(_ []*terraform.InstanceState) error {
-		return s.runSnowflakeParametersAssertions(t)
+		return s.runSnowflakeParametersAssertionsWithTestClient(t, testClient)
 	}
 }
 

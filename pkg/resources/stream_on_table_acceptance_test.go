@@ -113,7 +113,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 				Config:       config.FromModels(t, baseModel),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedStreamOnTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -273,7 +273,7 @@ func TestAcc_StreamOnTable_Basic(t *testing.T) {
 				Config:       config.FromModels(t, modelWithExtraFieldsDefaultMode),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedStreamOnTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -665,7 +665,7 @@ func TestAcc_StreamOnTable_At(t *testing.T) {
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
 				ResourceName:    resourceName,
 				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedStreamOnTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).

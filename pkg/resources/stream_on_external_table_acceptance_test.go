@@ -127,7 +127,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 				Config:       config.FromModels(t, baseModel),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedStreamOnExternalTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -342,7 +342,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 				Config:       config.FromModels(t, modelWithExtraFieldsModified),
 				ResourceName: resourceName,
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedStreamOnExternalTableResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).

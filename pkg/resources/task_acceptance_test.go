@@ -98,7 +98,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 			{
 				ResourceName: configModel.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedTaskResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -203,7 +203,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 				ImportState:     true,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedTaskResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -1296,7 +1296,7 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 				ImportState:     true,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceparametersassert.ImportedTaskResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
 						HasAllDefaults(),
 				),
@@ -1430,7 +1430,7 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 				ImportState:     true,
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithAllParametersSet),
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceparametersassert.ImportedTaskResourceParameters(t, helpers.EncodeResourceIdentifier(id)).
 						HasSuspendTaskAfterNumFailures(15).
 						HasTaskAutoRetryAttempts(15).

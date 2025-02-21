@@ -54,7 +54,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				ResourceName: "snowflake_database_role.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasCommentString(""),
@@ -83,7 +83,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				ResourceName: "snowflake_database_role.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasCommentString(comment),
@@ -112,7 +112,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				ResourceName: "snowflake_database_role.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasCommentString(""),

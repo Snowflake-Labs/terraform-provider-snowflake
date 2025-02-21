@@ -110,7 +110,7 @@ func TestAcc_View_basic(t *testing.T) {
 				Config:       accconfig.ResourceFromModel(t, basicViewModel),
 				ResourceName: basicViewModel.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -320,7 +320,7 @@ func TestAcc_View_basic(t *testing.T) {
 				Config:       accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
 				ResourceName: basicViewModel.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasStatementString(otherStatement).
@@ -422,7 +422,7 @@ func TestAcc_View_recursive(t *testing.T) {
 				ConfigVariables: basicView,
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -593,7 +593,7 @@ end;;
 				ConfigVariables: m(),
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
+				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
 					resourceassert.ImportedViewResource(t, resourceId).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -1273,7 +1273,7 @@ func TestAcc_View_Issue2640(t *testing.T) {
 				},
 				ResourceName: "snowflake_view.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
+				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
 					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasStatementString(statement).

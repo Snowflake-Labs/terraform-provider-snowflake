@@ -71,7 +71,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			{
 				ResourceName: schemaModel.ResourceReference(),
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedSchemaResource(t, id.FullyQualifiedName()).
 						HasCommentString(""),
 					assert.CheckImport(func(states []*terraform.InstanceState) error {

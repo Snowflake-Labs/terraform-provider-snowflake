@@ -58,18 +58,18 @@ func Check(f resource.TestCheckFunc) TestCheckFuncProvider {
 // It allows using it as input the "ImportStateCheck:" in resource.TestStep for import tests.
 // It should be used with AssertThatImport.
 type ImportStateCheckFuncProvider interface {
-	ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc
+	ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc
 }
 
 // AssertThatImport should be used for "ImportStateCheck:" input in resource.TestStep instead of e.g. importchecks.ComposeImportStateCheck.
 // It allows performing all the checks implementing the ImportStateCheckFuncProvider interface.
-func AssertThatImport(t *testing.T, fs ...ImportStateCheckFuncProvider) resource.ImportStateCheckFunc {
+func AssertThatImport(t *testing.T, testClient *helpers.TestClient, fs ...ImportStateCheckFuncProvider) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(s []*terraform.InstanceState) error {
 		var result []error
 
 		for i, f := range fs {
-			if err := f.ToTerraformImportStateCheckFunc(t)(s); err != nil {
+			if err := f.ToTerraformImportStateCheckFunc(t, testClient)(s); err != nil {
 				result = append(result, fmt.Errorf("check %d/%d error:\n%w", i+1, len(fs), err))
 			}
 		}
@@ -84,7 +84,7 @@ type importStateCheckFuncWrapper struct {
 	f resource.ImportStateCheckFunc
 }
 
-func (w *importStateCheckFuncWrapper) ToTerraformImportStateCheckFunc(_ *testing.T) resource.ImportStateCheckFunc {
+func (w *importStateCheckFuncWrapper) ToTerraformImportStateCheckFunc(_ *testing.T, _ *helpers.TestClient) resource.ImportStateCheckFunc {
 	return w.f
 }
 

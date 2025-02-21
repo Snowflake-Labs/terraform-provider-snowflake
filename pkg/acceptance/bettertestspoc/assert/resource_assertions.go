@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -186,7 +187,7 @@ func (r *ResourceAssert) ToTerraformTestCheckFunc(t *testing.T) resource.TestChe
 
 // ToTerraformImportStateCheckFunc implements ImportStateCheckFuncProvider to allow easier creation of new resource assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (r *ResourceAssert) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
+func (r *ResourceAssert) ToTerraformImportStateCheckFunc(t *testing.T, _ *helpers.TestClient) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(s []*terraform.InstanceState) error {
 		var result []error
