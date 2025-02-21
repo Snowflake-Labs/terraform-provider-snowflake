@@ -6,9 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -19,7 +18,9 @@ type UserParametersAssert struct {
 func UserParameters(t *testing.T, id sdk.AccountObjectIdentifier) *UserParametersAssert {
 	t.Helper()
 	return &UserParametersAssert{
-		assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectTypeUser, acc.TestClient().Parameter.ShowUserParameters),
+		assert.NewSnowflakeParametersAssertWithTestClientParametersProvider(id, sdk.ObjectTypeUser, func(testClient *helpers.TestClient) assert.ParametersProvider[sdk.AccountObjectIdentifier] {
+			return testClient.Parameter.ShowUserParameters
+		}),
 	}
 }
 
