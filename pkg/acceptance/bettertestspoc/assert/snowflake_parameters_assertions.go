@@ -24,7 +24,6 @@ type SnowflakeParametersAssert[I sdk.ObjectIdentifier] struct {
 	assertions                   []SnowflakeParameterAssertion
 	id                           I
 	objectType                   sdk.ObjectType
-	provider                     ParametersProvider[I]
 	testClientParametersProvider testClientParametersProvider[I]
 	parameters                   []*sdk.Parameter
 }
@@ -45,18 +44,8 @@ type SnowflakeParameterAssertion struct {
 	assertionType snowflakeParameterAssertionType
 }
 
-// NewSnowflakeParametersAssertWithProvider creates a SnowflakeParametersAssert with id and the provider.
+// NewSnowflakeParametersAssertWithTestClientParametersProvider creates a SnowflakeParametersAssert with id and the test client-varying parameters provider.
 // Object to check is lazily fetched from Snowflake when the checks are being run.
-func NewSnowflakeParametersAssertWithProvider[I sdk.ObjectIdentifier](id I, objectType sdk.ObjectType, provider ParametersProvider[I]) *SnowflakeParametersAssert[I] {
-	return &SnowflakeParametersAssert[I]{
-		assertions: make([]SnowflakeParameterAssertion, 0),
-		id:         id,
-		objectType: objectType,
-		provider:   provider,
-	}
-}
-
-// NewSnowflakeParametersAssertWithTestClientParametersProvider is temporary to show the new assertion setup with the test client.
 func NewSnowflakeParametersAssertWithTestClientParametersProvider[I sdk.ObjectIdentifier](id I, objectType sdk.ObjectType, testClientParametersProvider testClientParametersProvider[I]) *SnowflakeParametersAssert[I] {
 	return &SnowflakeParametersAssert[I]{
 		assertions:                   make([]SnowflakeParameterAssertion, 0),
@@ -147,8 +136,8 @@ func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testi
 
 	var parameters []*sdk.Parameter
 	switch {
-	case s.provider != nil:
-		parameters = s.provider(t, s.id)
+	//case s.provider != nil:
+	//	parameters = s.provider(t, s.id)
 	case s.parameters != nil:
 		parameters = s.parameters
 	default:

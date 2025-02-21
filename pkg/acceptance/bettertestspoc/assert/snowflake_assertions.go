@@ -29,18 +29,8 @@ type SnowflakeObjectAssert[T any, I sdk.ObjectIdentifier] struct {
 	testClientObjectProvider testClientObjectProvider[T, I]
 }
 
-// NewSnowflakeObjectAssertWithProvider creates a SnowflakeObjectAssert with id and the provider.
+// NewSnowflakeObjectAssertWithTestClientObjectProvider creates a SnowflakeObjectAssert with id and the test client-varying parameters provider.
 // Object to check is lazily fetched from Snowflake when the checks are being run.
-func NewSnowflakeObjectAssertWithProvider[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, provider ObjectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
-	return &SnowflakeObjectAssert[T, I]{
-		assertions: make([]assertSdk[*T], 0),
-		id:         id,
-		objectType: objectType,
-		provider:   provider,
-	}
-}
-
-// NewSnowflakeObjectAssertWithTestClientObjectProvider is temporary to show the new assertion setup with the test client.
 func NewSnowflakeObjectAssertWithTestClientObjectProvider[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, testClientObjectProvider testClientObjectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
 	return &SnowflakeObjectAssert[T, I]{
 		assertions:               make([]assertSdk[*T], 0),
@@ -110,11 +100,11 @@ func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T
 	switch {
 	case s.object != nil:
 		sdkObject = s.object
-	case s.provider != nil:
-		sdkObject, err = s.provider(t, s.id)
-		if err != nil {
-			return err
-		}
+	//case s.provider != nil:
+	//	sdkObject, err = s.provider(t, s.id)
+	//	if err != nil {
+	//		return err
+	//	}
 	default:
 		return fmt.Errorf("cannot proceed with object %s[%s] assertion: object or provider must be specified", s.objectType, s.id.FullyQualifiedName())
 	}
