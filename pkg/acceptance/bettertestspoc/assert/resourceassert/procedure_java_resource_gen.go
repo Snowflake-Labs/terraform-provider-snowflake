@@ -285,11 +285,6 @@ func (p *ProcedureJavaResourceAssert) HasCommentEmpty() *ProcedureJavaResourceAs
 	return p
 }
 
-func (p *ProcedureJavaResourceAssert) HasDatabaseEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("database", ""))
-	return p
-}
-
 func (p *ProcedureJavaResourceAssert) HasExecuteAsEmpty() *ProcedureJavaResourceAssert {
 	p.AddAssertion(assert.ValueSet("execute_as", ""))
 	return p
@@ -297,11 +292,6 @@ func (p *ProcedureJavaResourceAssert) HasExecuteAsEmpty() *ProcedureJavaResource
 
 func (p *ProcedureJavaResourceAssert) HasFullyQualifiedNameEmpty() *ProcedureJavaResourceAssert {
 	p.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return p
-}
-
-func (p *ProcedureJavaResourceAssert) HasHandlerEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("handler", ""))
 	return p
 }
 
@@ -320,11 +310,6 @@ func (p *ProcedureJavaResourceAssert) HasMetricLevelEmpty() *ProcedureJavaResour
 	return p
 }
 
-func (p *ProcedureJavaResourceAssert) HasNameEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("name", ""))
-	return p
-}
-
 func (p *ProcedureJavaResourceAssert) HasNullInputBehaviorEmpty() *ProcedureJavaResourceAssert {
 	p.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return p
@@ -337,26 +322,6 @@ func (p *ProcedureJavaResourceAssert) HasProcedureDefinitionEmpty() *ProcedureJa
 
 func (p *ProcedureJavaResourceAssert) HasProcedureLanguageEmpty() *ProcedureJavaResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_language", ""))
-	return p
-}
-
-func (p *ProcedureJavaResourceAssert) HasReturnTypeEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("return_type", ""))
-	return p
-}
-
-func (p *ProcedureJavaResourceAssert) HasRuntimeVersionEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("runtime_version", ""))
-	return p
-}
-
-func (p *ProcedureJavaResourceAssert) HasSchemaEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("schema", ""))
-	return p
-}
-
-func (p *ProcedureJavaResourceAssert) HasSnowparkPackageEmpty() *ProcedureJavaResourceAssert {
-	p.AddAssertion(assert.ValueSet("snowpark_package", ""))
 	return p
 }
 

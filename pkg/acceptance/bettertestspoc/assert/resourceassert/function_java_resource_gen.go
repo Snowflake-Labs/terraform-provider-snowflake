@@ -275,11 +275,6 @@ func (f *FunctionJavaResourceAssert) HasCommentEmpty() *FunctionJavaResourceAsse
 	return f
 }
 
-func (f *FunctionJavaResourceAssert) HasDatabaseEmpty() *FunctionJavaResourceAssert {
-	f.AddAssertion(assert.ValueSet("database", ""))
-	return f
-}
-
 func (f *FunctionJavaResourceAssert) HasFullyQualifiedNameEmpty() *FunctionJavaResourceAssert {
 	f.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return f
@@ -292,11 +287,6 @@ func (f *FunctionJavaResourceAssert) HasFunctionDefinitionEmpty() *FunctionJavaR
 
 func (f *FunctionJavaResourceAssert) HasFunctionLanguageEmpty() *FunctionJavaResourceAssert {
 	f.AddAssertion(assert.ValueSet("function_language", ""))
-	return f
-}
-
-func (f *FunctionJavaResourceAssert) HasHandlerEmpty() *FunctionJavaResourceAssert {
-	f.AddAssertion(assert.ValueSet("handler", ""))
 	return f
 }
 
@@ -315,11 +305,6 @@ func (f *FunctionJavaResourceAssert) HasMetricLevelEmpty() *FunctionJavaResource
 	return f
 }
 
-func (f *FunctionJavaResourceAssert) HasNameEmpty() *FunctionJavaResourceAssert {
-	f.AddAssertion(assert.ValueSet("name", ""))
-	return f
-}
-
 func (f *FunctionJavaResourceAssert) HasNullInputBehaviorEmpty() *FunctionJavaResourceAssert {
 	f.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return f
@@ -330,18 +315,8 @@ func (f *FunctionJavaResourceAssert) HasReturnResultsBehaviorEmpty() *FunctionJa
 	return f
 }
 
-func (f *FunctionJavaResourceAssert) HasReturnTypeEmpty() *FunctionJavaResourceAssert {
-	f.AddAssertion(assert.ValueSet("return_type", ""))
-	return f
-}
-
 func (f *FunctionJavaResourceAssert) HasRuntimeVersionEmpty() *FunctionJavaResourceAssert {
 	f.AddAssertion(assert.ValueSet("runtime_version", ""))
-	return f
-}
-
-func (f *FunctionJavaResourceAssert) HasSchemaEmpty() *FunctionJavaResourceAssert {
-	f.AddAssertion(assert.ValueSet("schema", ""))
 	return f
 }
 

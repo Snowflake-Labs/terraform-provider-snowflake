@@ -800,11 +800,6 @@ func (t *TaskResourceAssert) HasConfigEmpty() *TaskResourceAssert {
 	return t
 }
 
-func (t *TaskResourceAssert) HasDatabaseEmpty() *TaskResourceAssert {
-	t.AddAssertion(assert.ValueSet("database", ""))
-	return t
-}
-
 func (t *TaskResourceAssert) HasDateInputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("date_input_format", ""))
 	return t
@@ -845,11 +840,6 @@ func (t *TaskResourceAssert) HasLogLevelEmpty() *TaskResourceAssert {
 	return t
 }
 
-func (t *TaskResourceAssert) HasNameEmpty() *TaskResourceAssert {
-	t.AddAssertion(assert.ValueSet("name", ""))
-	return t
-}
-
 func (t *TaskResourceAssert) HasQueryTagEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("query_tag", ""))
 	return t
@@ -860,18 +850,8 @@ func (t *TaskResourceAssert) HasS3StageVpceDnsNameEmpty() *TaskResourceAssert {
 	return t
 }
 
-func (t *TaskResourceAssert) HasSchemaEmpty() *TaskResourceAssert {
-	t.AddAssertion(assert.ValueSet("schema", ""))
-	return t
-}
-
 func (t *TaskResourceAssert) HasSearchPathEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("search_path", ""))
-	return t
-}
-
-func (t *TaskResourceAssert) HasSqlStatementEmpty() *TaskResourceAssert {
-	t.AddAssertion(assert.ValueSet("sql_statement", ""))
 	return t
 }
 

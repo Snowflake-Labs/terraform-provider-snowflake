@@ -895,11 +895,6 @@ func (l *LegacyServiceUserResourceAssert) HasMustChangePasswordEmpty() *LegacySe
 	return l
 }
 
-func (l *LegacyServiceUserResourceAssert) HasNameEmpty() *LegacyServiceUserResourceAssert {
-	l.AddAssertion(assert.ValueSet("name", ""))
-	return l
-}
-
 func (l *LegacyServiceUserResourceAssert) HasNetworkPolicyEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("network_policy", ""))
 	return l

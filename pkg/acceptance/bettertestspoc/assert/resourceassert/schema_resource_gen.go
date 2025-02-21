@@ -280,11 +280,6 @@ func (s *SchemaResourceAssert) HasCommentEmpty() *SchemaResourceAssert {
 	return s
 }
 
-func (s *SchemaResourceAssert) HasDatabaseEmpty() *SchemaResourceAssert {
-	s.AddAssertion(assert.ValueSet("database", ""))
-	return s
-}
-
 func (s *SchemaResourceAssert) HasDefaultDdlCollationEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("default_ddl_collation", ""))
 	return s
@@ -307,11 +302,6 @@ func (s *SchemaResourceAssert) HasIsTransientEmpty() *SchemaResourceAssert {
 
 func (s *SchemaResourceAssert) HasLogLevelEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("log_level", ""))
-	return s
-}
-
-func (s *SchemaResourceAssert) HasNameEmpty() *SchemaResourceAssert {
-	s.AddAssertion(assert.ValueSet("name", ""))
 	return s
 }
 

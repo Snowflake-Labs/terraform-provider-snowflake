@@ -150,16 +150,6 @@ func (m *ManagedAccountResourceAssert) HasNoUrl() *ManagedAccountResourceAssert 
 // Attribute empty checks //
 ////////////////////////////
 
-func (m *ManagedAccountResourceAssert) HasAdminNameEmpty() *ManagedAccountResourceAssert {
-	m.AddAssertion(assert.ValueSet("admin_name", ""))
-	return m
-}
-
-func (m *ManagedAccountResourceAssert) HasAdminPasswordEmpty() *ManagedAccountResourceAssert {
-	m.AddAssertion(assert.ValueSet("admin_password", ""))
-	return m
-}
-
 func (m *ManagedAccountResourceAssert) HasCloudEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("cloud", ""))
 	return m
@@ -182,11 +172,6 @@ func (m *ManagedAccountResourceAssert) HasFullyQualifiedNameEmpty() *ManagedAcco
 
 func (m *ManagedAccountResourceAssert) HasLocatorEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("locator", ""))
-	return m
-}
-
-func (m *ManagedAccountResourceAssert) HasNameEmpty() *ManagedAccountResourceAssert {
-	m.AddAssertion(assert.ValueSet("name", ""))
 	return m
 }
 

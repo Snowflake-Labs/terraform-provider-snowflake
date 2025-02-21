@@ -205,11 +205,6 @@ func (p *ProcedureSqlResourceAssert) HasCommentEmpty() *ProcedureSqlResourceAsse
 	return p
 }
 
-func (p *ProcedureSqlResourceAssert) HasDatabaseEmpty() *ProcedureSqlResourceAssert {
-	p.AddAssertion(assert.ValueSet("database", ""))
-	return p
-}
-
 func (p *ProcedureSqlResourceAssert) HasExecuteAsEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("execute_as", ""))
 	return p
@@ -235,33 +230,13 @@ func (p *ProcedureSqlResourceAssert) HasMetricLevelEmpty() *ProcedureSqlResource
 	return p
 }
 
-func (p *ProcedureSqlResourceAssert) HasNameEmpty() *ProcedureSqlResourceAssert {
-	p.AddAssertion(assert.ValueSet("name", ""))
-	return p
-}
-
 func (p *ProcedureSqlResourceAssert) HasNullInputBehaviorEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return p
 }
 
-func (p *ProcedureSqlResourceAssert) HasProcedureDefinitionEmpty() *ProcedureSqlResourceAssert {
-	p.AddAssertion(assert.ValueSet("procedure_definition", ""))
-	return p
-}
-
 func (p *ProcedureSqlResourceAssert) HasProcedureLanguageEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_language", ""))
-	return p
-}
-
-func (p *ProcedureSqlResourceAssert) HasReturnTypeEmpty() *ProcedureSqlResourceAssert {
-	p.AddAssertion(assert.ValueSet("return_type", ""))
-	return p
-}
-
-func (p *ProcedureSqlResourceAssert) HasSchemaEmpty() *ProcedureSqlResourceAssert {
-	p.AddAssertion(assert.ValueSet("schema", ""))
 	return p
 }
 

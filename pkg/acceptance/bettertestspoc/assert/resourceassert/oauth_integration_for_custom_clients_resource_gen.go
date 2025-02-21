@@ -225,11 +225,6 @@ func (o *OauthIntegrationForCustomClientsResourceAssert) HasFullyQualifiedNameEm
 	return o
 }
 
-func (o *OauthIntegrationForCustomClientsResourceAssert) HasNameEmpty() *OauthIntegrationForCustomClientsResourceAssert {
-	o.AddAssertion(assert.ValueSet("name", ""))
-	return o
-}
-
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasNetworkPolicyEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("network_policy", ""))
 	return o
@@ -250,11 +245,6 @@ func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthClientRsaPublic
 	return o
 }
 
-func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthClientTypeEmpty() *OauthIntegrationForCustomClientsResourceAssert {
-	o.AddAssertion(assert.ValueSet("oauth_client_type", ""))
-	return o
-}
-
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthEnforcePkceEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_enforce_pkce", ""))
 	return o
@@ -262,11 +252,6 @@ func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthEnforcePkceEmpt
 
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthIssueRefreshTokensEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_issue_refresh_tokens", ""))
-	return o
-}
-
-func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthRedirectUriEmpty() *OauthIntegrationForCustomClientsResourceAssert {
-	o.AddAssertion(assert.ValueSet("oauth_redirect_uri", ""))
 	return o
 }
 

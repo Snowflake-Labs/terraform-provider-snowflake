@@ -275,11 +275,6 @@ func (p *ProcedurePythonResourceAssert) HasCommentEmpty() *ProcedurePythonResour
 	return p
 }
 
-func (p *ProcedurePythonResourceAssert) HasDatabaseEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("database", ""))
-	return p
-}
-
 func (p *ProcedurePythonResourceAssert) HasExecuteAsEmpty() *ProcedurePythonResourceAssert {
 	p.AddAssertion(assert.ValueSet("execute_as", ""))
 	return p
@@ -287,11 +282,6 @@ func (p *ProcedurePythonResourceAssert) HasExecuteAsEmpty() *ProcedurePythonReso
 
 func (p *ProcedurePythonResourceAssert) HasFullyQualifiedNameEmpty() *ProcedurePythonResourceAssert {
 	p.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return p
-}
-
-func (p *ProcedurePythonResourceAssert) HasHandlerEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("handler", ""))
 	return p
 }
 
@@ -310,11 +300,6 @@ func (p *ProcedurePythonResourceAssert) HasMetricLevelEmpty() *ProcedurePythonRe
 	return p
 }
 
-func (p *ProcedurePythonResourceAssert) HasNameEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("name", ""))
-	return p
-}
-
 func (p *ProcedurePythonResourceAssert) HasNullInputBehaviorEmpty() *ProcedurePythonResourceAssert {
 	p.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return p
@@ -327,26 +312,6 @@ func (p *ProcedurePythonResourceAssert) HasProcedureDefinitionEmpty() *Procedure
 
 func (p *ProcedurePythonResourceAssert) HasProcedureLanguageEmpty() *ProcedurePythonResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_language", ""))
-	return p
-}
-
-func (p *ProcedurePythonResourceAssert) HasReturnTypeEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("return_type", ""))
-	return p
-}
-
-func (p *ProcedurePythonResourceAssert) HasRuntimeVersionEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("runtime_version", ""))
-	return p
-}
-
-func (p *ProcedurePythonResourceAssert) HasSchemaEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("schema", ""))
-	return p
-}
-
-func (p *ProcedurePythonResourceAssert) HasSnowparkPackageEmpty() *ProcedurePythonResourceAssert {
-	p.AddAssertion(assert.ValueSet("snowpark_package", ""))
 	return p
 }
 

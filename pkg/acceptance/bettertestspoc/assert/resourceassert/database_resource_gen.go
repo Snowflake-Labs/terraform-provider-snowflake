@@ -290,11 +290,6 @@ func (d *DatabaseResourceAssert) HasLogLevelEmpty() *DatabaseResourceAssert {
 	return d
 }
 
-func (d *DatabaseResourceAssert) HasNameEmpty() *DatabaseResourceAssert {
-	d.AddAssertion(assert.ValueSet("name", ""))
-	return d
-}
-
 func (d *DatabaseResourceAssert) HasStorageSerializationPolicyEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("storage_serialization_policy", ""))
 	return d

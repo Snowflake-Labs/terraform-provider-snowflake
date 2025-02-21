@@ -200,11 +200,6 @@ func (a *AccountResourceAssert) HasNoRegionGroup() *AccountResourceAssert {
 // Attribute empty checks //
 ////////////////////////////
 
-func (a *AccountResourceAssert) HasAdminNameEmpty() *AccountResourceAssert {
-	a.AddAssertion(assert.ValueSet("admin_name", ""))
-	return a
-}
-
 func (a *AccountResourceAssert) HasAdminPasswordEmpty() *AccountResourceAssert {
 	a.AddAssertion(assert.ValueSet("admin_password", ""))
 	return a
@@ -222,16 +217,6 @@ func (a *AccountResourceAssert) HasAdminUserTypeEmpty() *AccountResourceAssert {
 
 func (a *AccountResourceAssert) HasCommentEmpty() *AccountResourceAssert {
 	a.AddAssertion(assert.ValueSet("comment", ""))
-	return a
-}
-
-func (a *AccountResourceAssert) HasEditionEmpty() *AccountResourceAssert {
-	a.AddAssertion(assert.ValueSet("edition", ""))
-	return a
-}
-
-func (a *AccountResourceAssert) HasEmailEmpty() *AccountResourceAssert {
-	a.AddAssertion(assert.ValueSet("email", ""))
 	return a
 }
 
@@ -257,11 +242,6 @@ func (a *AccountResourceAssert) HasLastNameEmpty() *AccountResourceAssert {
 
 func (a *AccountResourceAssert) HasMustChangePasswordEmpty() *AccountResourceAssert {
 	a.AddAssertion(assert.ValueSet("must_change_password", ""))
-	return a
-}
-
-func (a *AccountResourceAssert) HasNameEmpty() *AccountResourceAssert {
-	a.AddAssertion(assert.ValueSet("name", ""))
 	return a
 }
 

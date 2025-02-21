@@ -230,11 +230,6 @@ func (w *WarehouseResourceAssert) HasFullyQualifiedNameEmpty() *WarehouseResourc
 	return w
 }
 
-func (w *WarehouseResourceAssert) HasNameEmpty() *WarehouseResourceAssert {
-	w.AddAssertion(assert.ValueSet("name", ""))
-	return w
-}
-
 func (w *WarehouseResourceAssert) HasResourceMonitorEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("resource_monitor", ""))
 	return w

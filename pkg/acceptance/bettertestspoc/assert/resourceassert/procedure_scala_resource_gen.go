@@ -285,11 +285,6 @@ func (p *ProcedureScalaResourceAssert) HasCommentEmpty() *ProcedureScalaResource
 	return p
 }
 
-func (p *ProcedureScalaResourceAssert) HasDatabaseEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("database", ""))
-	return p
-}
-
 func (p *ProcedureScalaResourceAssert) HasExecuteAsEmpty() *ProcedureScalaResourceAssert {
 	p.AddAssertion(assert.ValueSet("execute_as", ""))
 	return p
@@ -297,11 +292,6 @@ func (p *ProcedureScalaResourceAssert) HasExecuteAsEmpty() *ProcedureScalaResour
 
 func (p *ProcedureScalaResourceAssert) HasFullyQualifiedNameEmpty() *ProcedureScalaResourceAssert {
 	p.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return p
-}
-
-func (p *ProcedureScalaResourceAssert) HasHandlerEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("handler", ""))
 	return p
 }
 
@@ -320,11 +310,6 @@ func (p *ProcedureScalaResourceAssert) HasMetricLevelEmpty() *ProcedureScalaReso
 	return p
 }
 
-func (p *ProcedureScalaResourceAssert) HasNameEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("name", ""))
-	return p
-}
-
 func (p *ProcedureScalaResourceAssert) HasNullInputBehaviorEmpty() *ProcedureScalaResourceAssert {
 	p.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return p
@@ -337,26 +322,6 @@ func (p *ProcedureScalaResourceAssert) HasProcedureDefinitionEmpty() *ProcedureS
 
 func (p *ProcedureScalaResourceAssert) HasProcedureLanguageEmpty() *ProcedureScalaResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_language", ""))
-	return p
-}
-
-func (p *ProcedureScalaResourceAssert) HasReturnTypeEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("return_type", ""))
-	return p
-}
-
-func (p *ProcedureScalaResourceAssert) HasRuntimeVersionEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("runtime_version", ""))
-	return p
-}
-
-func (p *ProcedureScalaResourceAssert) HasSchemaEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("schema", ""))
-	return p
-}
-
-func (p *ProcedureScalaResourceAssert) HasSnowparkPackageEmpty() *ProcedureScalaResourceAssert {
-	p.AddAssertion(assert.ValueSet("snowpark_package", ""))
 	return p
 }
 

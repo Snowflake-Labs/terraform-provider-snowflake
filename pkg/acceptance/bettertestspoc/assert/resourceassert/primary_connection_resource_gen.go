@@ -100,11 +100,6 @@ func (p *PrimaryConnectionResourceAssert) HasFullyQualifiedNameEmpty() *PrimaryC
 	return p
 }
 
-func (p *PrimaryConnectionResourceAssert) HasNameEmpty() *PrimaryConnectionResourceAssert {
-	p.AddAssertion(assert.ValueSet("name", ""))
-	return p
-}
-
 ///////////////////////////////
 // Attribute presence checks //
 ///////////////////////////////

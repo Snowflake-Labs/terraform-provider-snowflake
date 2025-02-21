@@ -205,11 +205,6 @@ func (p *ProcedureJavascriptResourceAssert) HasCommentEmpty() *ProcedureJavascri
 	return p
 }
 
-func (p *ProcedureJavascriptResourceAssert) HasDatabaseEmpty() *ProcedureJavascriptResourceAssert {
-	p.AddAssertion(assert.ValueSet("database", ""))
-	return p
-}
-
 func (p *ProcedureJavascriptResourceAssert) HasExecuteAsEmpty() *ProcedureJavascriptResourceAssert {
 	p.AddAssertion(assert.ValueSet("execute_as", ""))
 	return p
@@ -235,33 +230,13 @@ func (p *ProcedureJavascriptResourceAssert) HasMetricLevelEmpty() *ProcedureJava
 	return p
 }
 
-func (p *ProcedureJavascriptResourceAssert) HasNameEmpty() *ProcedureJavascriptResourceAssert {
-	p.AddAssertion(assert.ValueSet("name", ""))
-	return p
-}
-
 func (p *ProcedureJavascriptResourceAssert) HasNullInputBehaviorEmpty() *ProcedureJavascriptResourceAssert {
 	p.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return p
 }
 
-func (p *ProcedureJavascriptResourceAssert) HasProcedureDefinitionEmpty() *ProcedureJavascriptResourceAssert {
-	p.AddAssertion(assert.ValueSet("procedure_definition", ""))
-	return p
-}
-
 func (p *ProcedureJavascriptResourceAssert) HasProcedureLanguageEmpty() *ProcedureJavascriptResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_language", ""))
-	return p
-}
-
-func (p *ProcedureJavascriptResourceAssert) HasReturnTypeEmpty() *ProcedureJavascriptResourceAssert {
-	p.AddAssertion(assert.ValueSet("return_type", ""))
-	return p
-}
-
-func (p *ProcedureJavascriptResourceAssert) HasSchemaEmpty() *ProcedureJavascriptResourceAssert {
-	p.AddAssertion(assert.ValueSet("schema", ""))
 	return p
 }
 

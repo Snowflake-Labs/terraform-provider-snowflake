@@ -165,16 +165,6 @@ func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasFullyQualified
 	return o
 }
 
-func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasNameEmpty() *OauthIntegrationForPartnerApplicationsResourceAssert {
-	o.AddAssertion(assert.ValueSet("name", ""))
-	return o
-}
-
-func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasOauthClientEmpty() *OauthIntegrationForPartnerApplicationsResourceAssert {
-	o.AddAssertion(assert.ValueSet("oauth_client", ""))
-	return o
-}
-
 func (o *OauthIntegrationForPartnerApplicationsResourceAssert) HasOauthIssueRefreshTokensEmpty() *OauthIntegrationForPartnerApplicationsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_issue_refresh_tokens", ""))
 	return o

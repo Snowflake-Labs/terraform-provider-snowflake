@@ -870,11 +870,6 @@ func (s *ServiceUserResourceAssert) HasLoginNameEmpty() *ServiceUserResourceAsse
 	return s
 }
 
-func (s *ServiceUserResourceAssert) HasNameEmpty() *ServiceUserResourceAssert {
-	s.AddAssertion(assert.ValueSet("name", ""))
-	return s
-}
-
 func (s *ServiceUserResourceAssert) HasNetworkPolicyEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("network_policy", ""))
 	return s

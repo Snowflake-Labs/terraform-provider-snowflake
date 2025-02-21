@@ -275,11 +275,6 @@ func (f *FunctionScalaResourceAssert) HasCommentEmpty() *FunctionScalaResourceAs
 	return f
 }
 
-func (f *FunctionScalaResourceAssert) HasDatabaseEmpty() *FunctionScalaResourceAssert {
-	f.AddAssertion(assert.ValueSet("database", ""))
-	return f
-}
-
 func (f *FunctionScalaResourceAssert) HasFullyQualifiedNameEmpty() *FunctionScalaResourceAssert {
 	f.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return f
@@ -292,11 +287,6 @@ func (f *FunctionScalaResourceAssert) HasFunctionDefinitionEmpty() *FunctionScal
 
 func (f *FunctionScalaResourceAssert) HasFunctionLanguageEmpty() *FunctionScalaResourceAssert {
 	f.AddAssertion(assert.ValueSet("function_language", ""))
-	return f
-}
-
-func (f *FunctionScalaResourceAssert) HasHandlerEmpty() *FunctionScalaResourceAssert {
-	f.AddAssertion(assert.ValueSet("handler", ""))
 	return f
 }
 
@@ -315,11 +305,6 @@ func (f *FunctionScalaResourceAssert) HasMetricLevelEmpty() *FunctionScalaResour
 	return f
 }
 
-func (f *FunctionScalaResourceAssert) HasNameEmpty() *FunctionScalaResourceAssert {
-	f.AddAssertion(assert.ValueSet("name", ""))
-	return f
-}
-
 func (f *FunctionScalaResourceAssert) HasNullInputBehaviorEmpty() *FunctionScalaResourceAssert {
 	f.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return f
@@ -327,21 +312,6 @@ func (f *FunctionScalaResourceAssert) HasNullInputBehaviorEmpty() *FunctionScala
 
 func (f *FunctionScalaResourceAssert) HasReturnResultsBehaviorEmpty() *FunctionScalaResourceAssert {
 	f.AddAssertion(assert.ValueSet("return_results_behavior", ""))
-	return f
-}
-
-func (f *FunctionScalaResourceAssert) HasReturnTypeEmpty() *FunctionScalaResourceAssert {
-	f.AddAssertion(assert.ValueSet("return_type", ""))
-	return f
-}
-
-func (f *FunctionScalaResourceAssert) HasRuntimeVersionEmpty() *FunctionScalaResourceAssert {
-	f.AddAssertion(assert.ValueSet("runtime_version", ""))
-	return f
-}
-
-func (f *FunctionScalaResourceAssert) HasSchemaEmpty() *FunctionScalaResourceAssert {
-	f.AddAssertion(assert.ValueSet("schema", ""))
 	return f
 }
 

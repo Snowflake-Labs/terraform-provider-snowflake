@@ -130,18 +130,8 @@ func (m *MaskingPolicyResourceAssert) HasNoSchema() *MaskingPolicyResourceAssert
 // Attribute empty checks //
 ////////////////////////////
 
-func (m *MaskingPolicyResourceAssert) HasBodyEmpty() *MaskingPolicyResourceAssert {
-	m.AddAssertion(assert.ValueSet("body", ""))
-	return m
-}
-
 func (m *MaskingPolicyResourceAssert) HasCommentEmpty() *MaskingPolicyResourceAssert {
 	m.AddAssertion(assert.ValueSet("comment", ""))
-	return m
-}
-
-func (m *MaskingPolicyResourceAssert) HasDatabaseEmpty() *MaskingPolicyResourceAssert {
-	m.AddAssertion(assert.ValueSet("database", ""))
 	return m
 }
 
@@ -152,21 +142,6 @@ func (m *MaskingPolicyResourceAssert) HasExemptOtherPoliciesEmpty() *MaskingPoli
 
 func (m *MaskingPolicyResourceAssert) HasFullyQualifiedNameEmpty() *MaskingPolicyResourceAssert {
 	m.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return m
-}
-
-func (m *MaskingPolicyResourceAssert) HasNameEmpty() *MaskingPolicyResourceAssert {
-	m.AddAssertion(assert.ValueSet("name", ""))
-	return m
-}
-
-func (m *MaskingPolicyResourceAssert) HasReturnDataTypeEmpty() *MaskingPolicyResourceAssert {
-	m.AddAssertion(assert.ValueSet("return_data_type", ""))
-	return m
-}
-
-func (m *MaskingPolicyResourceAssert) HasSchemaEmpty() *MaskingPolicyResourceAssert {
-	m.AddAssertion(assert.ValueSet("schema", ""))
 	return m
 }
 

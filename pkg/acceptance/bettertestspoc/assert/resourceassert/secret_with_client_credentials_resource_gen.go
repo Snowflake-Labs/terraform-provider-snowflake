@@ -120,33 +120,13 @@ func (s *SecretWithClientCredentialsResourceAssert) HasNoSecretType() *SecretWit
 // Attribute empty checks //
 ////////////////////////////
 
-func (s *SecretWithClientCredentialsResourceAssert) HasApiAuthenticationEmpty() *SecretWithClientCredentialsResourceAssert {
-	s.AddAssertion(assert.ValueSet("api_authentication", ""))
-	return s
-}
-
 func (s *SecretWithClientCredentialsResourceAssert) HasCommentEmpty() *SecretWithClientCredentialsResourceAssert {
 	s.AddAssertion(assert.ValueSet("comment", ""))
 	return s
 }
 
-func (s *SecretWithClientCredentialsResourceAssert) HasDatabaseEmpty() *SecretWithClientCredentialsResourceAssert {
-	s.AddAssertion(assert.ValueSet("database", ""))
-	return s
-}
-
 func (s *SecretWithClientCredentialsResourceAssert) HasFullyQualifiedNameEmpty() *SecretWithClientCredentialsResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return s
-}
-
-func (s *SecretWithClientCredentialsResourceAssert) HasNameEmpty() *SecretWithClientCredentialsResourceAssert {
-	s.AddAssertion(assert.ValueSet("name", ""))
-	return s
-}
-
-func (s *SecretWithClientCredentialsResourceAssert) HasSchemaEmpty() *SecretWithClientCredentialsResourceAssert {
-	s.AddAssertion(assert.ValueSet("schema", ""))
 	return s
 }
 

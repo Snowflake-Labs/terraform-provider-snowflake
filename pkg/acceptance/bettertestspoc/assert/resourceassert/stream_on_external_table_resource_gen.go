@@ -165,16 +165,6 @@ func (s *StreamOnExternalTableResourceAssert) HasCommentEmpty() *StreamOnExterna
 	return s
 }
 
-func (s *StreamOnExternalTableResourceAssert) HasDatabaseEmpty() *StreamOnExternalTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("database", ""))
-	return s
-}
-
-func (s *StreamOnExternalTableResourceAssert) HasExternalTableEmpty() *StreamOnExternalTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("external_table", ""))
-	return s
-}
-
 func (s *StreamOnExternalTableResourceAssert) HasFullyQualifiedNameEmpty() *StreamOnExternalTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return s
@@ -182,16 +172,6 @@ func (s *StreamOnExternalTableResourceAssert) HasFullyQualifiedNameEmpty() *Stre
 
 func (s *StreamOnExternalTableResourceAssert) HasInsertOnlyEmpty() *StreamOnExternalTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("insert_only", ""))
-	return s
-}
-
-func (s *StreamOnExternalTableResourceAssert) HasNameEmpty() *StreamOnExternalTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("name", ""))
-	return s
-}
-
-func (s *StreamOnExternalTableResourceAssert) HasSchemaEmpty() *StreamOnExternalTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("schema", ""))
 	return s
 }
 

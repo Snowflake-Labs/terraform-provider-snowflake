@@ -155,11 +155,6 @@ func (r *ResourceMonitorResourceAssert) HasFullyQualifiedNameEmpty() *ResourceMo
 	return r
 }
 
-func (r *ResourceMonitorResourceAssert) HasNameEmpty() *ResourceMonitorResourceAssert {
-	r.AddAssertion(assert.ValueSet("name", ""))
-	return r
-}
-
 func (r *ResourceMonitorResourceAssert) HasStartTimestampEmpty() *ResourceMonitorResourceAssert {
 	r.AddAssertion(assert.ValueSet("start_timestamp", ""))
 	return r

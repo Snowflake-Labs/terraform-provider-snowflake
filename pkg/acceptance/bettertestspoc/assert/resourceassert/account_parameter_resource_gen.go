@@ -60,16 +60,6 @@ func (a *AccountParameterResourceAssert) HasNoValue() *AccountParameterResourceA
 // Attribute empty checks //
 ////////////////////////////
 
-func (a *AccountParameterResourceAssert) HasKeyEmpty() *AccountParameterResourceAssert {
-	a.AddAssertion(assert.ValueSet("key", ""))
-	return a
-}
-
-func (a *AccountParameterResourceAssert) HasValueEmpty() *AccountParameterResourceAssert {
-	a.AddAssertion(assert.ValueSet("value", ""))
-	return a
-}
-
 ///////////////////////////////
 // Attribute presence checks //
 ///////////////////////////////

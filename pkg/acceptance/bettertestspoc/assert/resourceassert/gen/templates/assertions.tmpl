@@ -37,7 +37,7 @@
 ////////////////////////////
 
 {{ range .Attributes -}}
-    {{ if eq .AttributeType "TypeString" -}}
+    {{ if and (eq .AttributeType "TypeString") (not .IsRequired) -}}
         func ({{ $assertVar }} *{{ $assertName }}) Has{{ SnakeCaseToCamel .Name }}Empty() *{{ $assertName }} {
             {{ $assertVar }}.AddAssertion(assert.ValueSet("{{ .Name }}", ""))
             return {{ $assertVar }}

@@ -205,18 +205,8 @@ func (f *FunctionJavascriptResourceAssert) HasCommentEmpty() *FunctionJavascript
 	return f
 }
 
-func (f *FunctionJavascriptResourceAssert) HasDatabaseEmpty() *FunctionJavascriptResourceAssert {
-	f.AddAssertion(assert.ValueSet("database", ""))
-	return f
-}
-
 func (f *FunctionJavascriptResourceAssert) HasFullyQualifiedNameEmpty() *FunctionJavascriptResourceAssert {
 	f.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return f
-}
-
-func (f *FunctionJavascriptResourceAssert) HasFunctionDefinitionEmpty() *FunctionJavascriptResourceAssert {
-	f.AddAssertion(assert.ValueSet("function_definition", ""))
 	return f
 }
 
@@ -240,11 +230,6 @@ func (f *FunctionJavascriptResourceAssert) HasMetricLevelEmpty() *FunctionJavasc
 	return f
 }
 
-func (f *FunctionJavascriptResourceAssert) HasNameEmpty() *FunctionJavascriptResourceAssert {
-	f.AddAssertion(assert.ValueSet("name", ""))
-	return f
-}
-
 func (f *FunctionJavascriptResourceAssert) HasNullInputBehaviorEmpty() *FunctionJavascriptResourceAssert {
 	f.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return f
@@ -252,16 +237,6 @@ func (f *FunctionJavascriptResourceAssert) HasNullInputBehaviorEmpty() *Function
 
 func (f *FunctionJavascriptResourceAssert) HasReturnResultsBehaviorEmpty() *FunctionJavascriptResourceAssert {
 	f.AddAssertion(assert.ValueSet("return_results_behavior", ""))
-	return f
-}
-
-func (f *FunctionJavascriptResourceAssert) HasReturnTypeEmpty() *FunctionJavascriptResourceAssert {
-	f.AddAssertion(assert.ValueSet("return_type", ""))
-	return f
-}
-
-func (f *FunctionJavascriptResourceAssert) HasSchemaEmpty() *FunctionJavascriptResourceAssert {
-	f.AddAssertion(assert.ValueSet("schema", ""))
 	return f
 }
 

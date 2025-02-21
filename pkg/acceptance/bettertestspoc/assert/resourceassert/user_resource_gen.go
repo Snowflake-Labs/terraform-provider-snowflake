@@ -965,11 +965,6 @@ func (u *UserResourceAssert) HasMustChangePasswordEmpty() *UserResourceAssert {
 	return u
 }
 
-func (u *UserResourceAssert) HasNameEmpty() *UserResourceAssert {
-	u.AddAssertion(assert.ValueSet("name", ""))
-	return u
-}
-
 func (u *UserResourceAssert) HasNetworkPolicyEmpty() *UserResourceAssert {
 	u.AddAssertion(assert.ValueSet("network_policy", ""))
 	return u

@@ -275,11 +275,6 @@ func (f *FunctionPythonResourceAssert) HasCommentEmpty() *FunctionPythonResource
 	return f
 }
 
-func (f *FunctionPythonResourceAssert) HasDatabaseEmpty() *FunctionPythonResourceAssert {
-	f.AddAssertion(assert.ValueSet("database", ""))
-	return f
-}
-
 func (f *FunctionPythonResourceAssert) HasFullyQualifiedNameEmpty() *FunctionPythonResourceAssert {
 	f.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return f
@@ -292,11 +287,6 @@ func (f *FunctionPythonResourceAssert) HasFunctionDefinitionEmpty() *FunctionPyt
 
 func (f *FunctionPythonResourceAssert) HasFunctionLanguageEmpty() *FunctionPythonResourceAssert {
 	f.AddAssertion(assert.ValueSet("function_language", ""))
-	return f
-}
-
-func (f *FunctionPythonResourceAssert) HasHandlerEmpty() *FunctionPythonResourceAssert {
-	f.AddAssertion(assert.ValueSet("handler", ""))
 	return f
 }
 
@@ -320,11 +310,6 @@ func (f *FunctionPythonResourceAssert) HasMetricLevelEmpty() *FunctionPythonReso
 	return f
 }
 
-func (f *FunctionPythonResourceAssert) HasNameEmpty() *FunctionPythonResourceAssert {
-	f.AddAssertion(assert.ValueSet("name", ""))
-	return f
-}
-
 func (f *FunctionPythonResourceAssert) HasNullInputBehaviorEmpty() *FunctionPythonResourceAssert {
 	f.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return f
@@ -332,21 +317,6 @@ func (f *FunctionPythonResourceAssert) HasNullInputBehaviorEmpty() *FunctionPyth
 
 func (f *FunctionPythonResourceAssert) HasReturnResultsBehaviorEmpty() *FunctionPythonResourceAssert {
 	f.AddAssertion(assert.ValueSet("return_results_behavior", ""))
-	return f
-}
-
-func (f *FunctionPythonResourceAssert) HasReturnTypeEmpty() *FunctionPythonResourceAssert {
-	f.AddAssertion(assert.ValueSet("return_type", ""))
-	return f
-}
-
-func (f *FunctionPythonResourceAssert) HasRuntimeVersionEmpty() *FunctionPythonResourceAssert {
-	f.AddAssertion(assert.ValueSet("runtime_version", ""))
-	return f
-}
-
-func (f *FunctionPythonResourceAssert) HasSchemaEmpty() *FunctionPythonResourceAssert {
-	f.AddAssertion(assert.ValueSet("schema", ""))
 	return f
 }
 

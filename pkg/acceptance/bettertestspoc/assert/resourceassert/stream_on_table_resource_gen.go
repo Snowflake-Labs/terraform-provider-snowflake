@@ -180,23 +180,8 @@ func (s *StreamOnTableResourceAssert) HasCommentEmpty() *StreamOnTableResourceAs
 	return s
 }
 
-func (s *StreamOnTableResourceAssert) HasDatabaseEmpty() *StreamOnTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("database", ""))
-	return s
-}
-
 func (s *StreamOnTableResourceAssert) HasFullyQualifiedNameEmpty() *StreamOnTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
-	return s
-}
-
-func (s *StreamOnTableResourceAssert) HasNameEmpty() *StreamOnTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("name", ""))
-	return s
-}
-
-func (s *StreamOnTableResourceAssert) HasSchemaEmpty() *StreamOnTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("schema", ""))
 	return s
 }
 
@@ -207,11 +192,6 @@ func (s *StreamOnTableResourceAssert) HasShowInitialRowsEmpty() *StreamOnTableRe
 
 func (s *StreamOnTableResourceAssert) HasStreamTypeEmpty() *StreamOnTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("stream_type", ""))
-	return s
-}
-
-func (s *StreamOnTableResourceAssert) HasTableEmpty() *StreamOnTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("table", ""))
 	return s
 }
 
