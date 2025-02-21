@@ -8,9 +8,6 @@ import (
 	"testing"
 	"time"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -21,13 +18,6 @@ type ResourceMonitorAssert struct {
 }
 
 func ResourceMonitor(t *testing.T, id sdk.AccountObjectIdentifier) *ResourceMonitorAssert {
-	t.Helper()
-	return &ResourceMonitorAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeResourceMonitor, id, acc.TestClient().ResourceMonitor.Show),
-	}
-}
-
-func ResourceMonitorWithTestClient(t *testing.T, id sdk.AccountObjectIdentifier) *ResourceMonitorAssert {
 	t.Helper()
 	return &ResourceMonitorAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeResourceMonitor, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.ResourceMonitor, sdk.AccountObjectIdentifier] {

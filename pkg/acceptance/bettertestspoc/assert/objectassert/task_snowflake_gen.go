@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -19,13 +16,6 @@ type TaskAssert struct {
 }
 
 func Task(t *testing.T, id sdk.SchemaObjectIdentifier) *TaskAssert {
-	t.Helper()
-	return &TaskAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeTask, id, acc.TestClient().Task.Show),
-	}
-}
-
-func TaskWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *TaskAssert {
 	t.Helper()
 	return &TaskAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeTask, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Task, sdk.SchemaObjectIdentifier] {

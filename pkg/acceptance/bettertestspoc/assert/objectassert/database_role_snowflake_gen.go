@@ -6,9 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -19,13 +16,6 @@ type DatabaseRoleAssert struct {
 }
 
 func DatabaseRole(t *testing.T, id sdk.DatabaseObjectIdentifier) *DatabaseRoleAssert {
-	t.Helper()
-	return &DatabaseRoleAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeDatabaseRole, id, acc.TestClient().DatabaseRole.Show),
-	}
-}
-
-func DatabaseRoleWithTestClient(t *testing.T, id sdk.DatabaseObjectIdentifier) *DatabaseRoleAssert {
 	t.Helper()
 	return &DatabaseRoleAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeDatabaseRole, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.DatabaseRole, sdk.DatabaseObjectIdentifier] {

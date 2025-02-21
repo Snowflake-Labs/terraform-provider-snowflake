@@ -7,9 +7,6 @@ import (
 	"testing"
 	"time"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,13 +17,6 @@ type UserAssert struct {
 }
 
 func User(t *testing.T, id sdk.AccountObjectIdentifier) *UserAssert {
-	t.Helper()
-	return &UserAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeUser, id, acc.TestClient().User.Show),
-	}
-}
-
-func UserWithTestClient(t *testing.T, id sdk.AccountObjectIdentifier) *UserAssert {
 	t.Helper()
 	return &UserAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeUser, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.User, sdk.AccountObjectIdentifier] {

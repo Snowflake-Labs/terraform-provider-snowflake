@@ -7,9 +7,6 @@ import (
 	"testing"
 	"time"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,13 +17,6 @@ type WarehouseAssert struct {
 }
 
 func Warehouse(t *testing.T, id sdk.AccountObjectIdentifier) *WarehouseAssert {
-	t.Helper()
-	return &WarehouseAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeWarehouse, id, acc.TestClient().Warehouse.Show),
-	}
-}
-
-func WarehouseWithTestClient(t *testing.T, id sdk.AccountObjectIdentifier) *WarehouseAssert {
 	t.Helper()
 	return &WarehouseAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeWarehouse, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Warehouse, sdk.AccountObjectIdentifier] {

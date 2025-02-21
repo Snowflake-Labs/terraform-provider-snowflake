@@ -548,7 +548,7 @@ func TestAcc_StreamOnView_StaleWithExternalChanges(t *testing.T) {
 							MaxDataExtensionTimeInDays: sdk.Int(0),
 						},
 					})
-					assertThatObject(t, objectassert.StreamWithTestClient(t, id).
+					assertThatObject(t, objectassert.Stream(t, id).
 						HasName(id.Name()).
 						HasStale(true),
 					)

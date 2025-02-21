@@ -7,9 +7,6 @@ import (
 	"testing"
 	"time"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,13 +17,6 @@ type StreamAssert struct {
 }
 
 func Stream(t *testing.T, id sdk.SchemaObjectIdentifier) *StreamAssert {
-	t.Helper()
-	return &StreamAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeStream, id, acc.TestClient().Stream.Show),
-	}
-}
-
-func StreamWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *StreamAssert {
 	t.Helper()
 	return &StreamAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeStream, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Stream, sdk.SchemaObjectIdentifier] {

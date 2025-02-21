@@ -7,9 +7,6 @@ import (
 	"testing"
 	"time"
 
-	// TODO [snowflake object assertion rework]: remove
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -20,13 +17,6 @@ type MaskingPolicyAssert struct {
 }
 
 func MaskingPolicy(t *testing.T, id sdk.SchemaObjectIdentifier) *MaskingPolicyAssert {
-	t.Helper()
-	return &MaskingPolicyAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeMaskingPolicy, id, acc.TestClient().MaskingPolicy.Show),
-	}
-}
-
-func MaskingPolicyWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *MaskingPolicyAssert {
 	t.Helper()
 	return &MaskingPolicyAssert{
 		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeMaskingPolicy, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.MaskingPolicy, sdk.SchemaObjectIdentifier] {
