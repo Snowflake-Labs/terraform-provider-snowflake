@@ -3,7 +3,6 @@ on:
   repository_dispatch:
     types: [ok-to-test-command]
   pull_request:
-  workflow_dispatch:
 name: tests
 
 jobs:
@@ -35,7 +34,6 @@ jobs:
           echo \"${{ github.event.client_payload.pull_request.head.ref }}\"
 
 
-      # - uses: actions/checkout@v3
       - name: Checkout Code (Dispatch event)
         if: (github.event_name == 'repository_dispatch')
         uses: actions/checkout@v3
@@ -46,9 +44,6 @@ jobs:
       - name: Checkout Code (PR event)
         if: (github.event_name == 'pull_request')
         uses: actions/checkout@v3
-        with:
-          repository: ${{ github.event.client_payload.pull_request.head.repo.full_name }}
-          ref: ${{ github.head_ref }}
 
       - uses: actions/setup-go@v4
         with:
