@@ -56,7 +56,7 @@ func TestAcc_ProcedureScala_InlineBasic(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureScalaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
@@ -85,7 +85,7 @@ func TestAcc_ProcedureScala_InlineBasic(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureScalaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()),
 				),
@@ -107,7 +107,7 @@ func TestAcc_ProcedureScala_InlineBasic(t *testing.T) {
 			// RENAME
 			{
 				Config: config.FromModels(t, procedureModelRenamed),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureScalaResource(t, procedureModelRenamed.ResourceReference()).
 						HasNameString(idWithChangedNameButTheSameDataType.Name()).
 						HasFullyQualifiedNameString(idWithChangedNameButTheSameDataType.FullyQualifiedName()),
@@ -207,7 +207,7 @@ func TestAcc_ProcedureScala_InlineFull(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureScalaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).
@@ -250,7 +250,7 @@ func TestAcc_ProcedureScala_InlineFull(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, procedureModelUpdateWithoutRecreation),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureScalaResource(t, procedureModelUpdateWithoutRecreation.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).

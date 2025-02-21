@@ -60,7 +60,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			// Create
 			{
 				Config: config.FromModels(t, schemaModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SchemaResource(t, schemaModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasCommentString(""),
@@ -82,7 +82,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			// Update + CustomDiff (parameters) + Read
 			{
 				Config: config.FromModels(t, schemaModelWithComment),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SchemaResource(t, schemaModelWithComment.ResourceReference()).
 						HasNameString(id.Name()).
 						HasCommentString(comment),
@@ -95,7 +95,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 			{
 				Config:  config.FromModels(t, schemaModelWithComment),
 				Destroy: true,
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(assertQueryMetadataExists(t, tracking.DeleteOperation, fmt.Sprintf(`DROP SCHEMA IF EXISTS %s`, id.FullyQualifiedName()))),
 				),
 			},

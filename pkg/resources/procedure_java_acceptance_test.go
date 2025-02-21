@@ -58,7 +58,7 @@ func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
@@ -87,7 +87,7 @@ func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()),
 				),
@@ -109,7 +109,7 @@ func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
 			// RENAME
 			{
 				Config: config.FromModels(t, procedureModelRenamed),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModelRenamed.ResourceReference()).
 						HasNameString(idWithChangedNameButTheSameDataType.Name()).
 						HasFullyQualifiedNameString(idWithChangedNameButTheSameDataType.FullyQualifiedName()),
@@ -142,7 +142,7 @@ func TestAcc_ProcedureJava_InlineEmptyArgs(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasProcedureDefinitionString(definition).
@@ -180,7 +180,7 @@ func TestAcc_ProcedureJava_InlineBasicDefaultArg(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasProcedureDefinitionString(definition).
@@ -285,7 +285,7 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).
@@ -328,7 +328,7 @@ func TestAcc_ProcedureJava_InlineFull(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, procedureModelUpdateWithoutRecreation),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModelUpdateWithoutRecreation.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).
@@ -384,7 +384,7 @@ func TestAcc_ProcedureJava_StagedBasic(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
@@ -433,7 +433,7 @@ func TestAcc_ProcedureJava_AllParameters(t *testing.T) {
 			// create with default values for all the parameters
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.ProcedureParameters(t, id).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
@@ -453,7 +453,7 @@ func TestAcc_ProcedureJava_AllParameters(t *testing.T) {
 			// set all parameters
 			{
 				Config: config.FromModels(t, procedureModelWithAllParametersSet),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.ProcedureParameters(t, id).
 						HasEnableConsoleOutput(true).
 						HasLogLevel(sdk.LogLevelWarn).
@@ -481,7 +481,7 @@ func TestAcc_ProcedureJava_AllParameters(t *testing.T) {
 			// unset all the parameters
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.ProcedureParameters(t, id).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
@@ -497,7 +497,7 @@ func TestAcc_ProcedureJava_AllParameters(t *testing.T) {
 			// create with all parameters set
 			{
 				Config: config.FromModels(t, procedureModelWithAllParametersSet),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.ProcedureParameters(t, id).
 						HasEnableConsoleOutput(true).
 						HasLogLevel(sdk.LogLevelWarn).
@@ -539,7 +539,7 @@ func TestAcc_ProcedureJava_handleExternalLanguageChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, procedureModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).HasNameString(id.Name()).HasProcedureLanguageString("JAVA"),
 				),
 			},
@@ -555,7 +555,7 @@ func TestAcc_ProcedureJava_handleExternalLanguageChange(t *testing.T) {
 						plancheck.ExpectResourceAction(procedureModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ProcedureJavaResource(t, procedureModel.ResourceReference()).HasNameString(id.Name()).HasProcedureLanguageString("JAVA"),
 				),
 			},

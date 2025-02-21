@@ -96,7 +96,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// without optionals
 			{
 				Config: accconfig.ResourceFromModel(t, basicViewModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -133,7 +133,7 @@ func TestAcc_View_basic(t *testing.T) {
 					})))
 				},
 				Config: accconfig.ResourceFromModel(t, basicViewModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -153,7 +153,7 @@ func TestAcc_View_basic(t *testing.T) {
 						plancheck.ExpectResourceAction(basicViewModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -179,7 +179,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// change policies and dmfs
 			{
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -206,7 +206,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// change dmf status
 			{
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy2.ID(), aggregationPolicy2, function2Id, statement, cron2, sdk.DataMetricScheduleStatusSuspended)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -233,7 +233,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// change statement and policies
 			{
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -262,7 +262,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.RecreateView(t, id, statement)
 				},
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -292,7 +292,7 @@ func TestAcc_View_basic(t *testing.T) {
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetAggregationPolicy(*sdk.NewViewUnsetAggregationPolicyRequest()))
 				},
 				Config: accconfig.ResourceFromModel(t, updatedViewModel(rowAccessPolicy.ID(), aggregationPolicy, functionId, otherStatement, cron, sdk.DataMetricScheduleStatusStarted)),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -344,7 +344,7 @@ func TestAcc_View_basic(t *testing.T) {
 			{
 				Config:       accconfig.ResourceFromModel(t, viewModelWithOtherStatement),
 				ResourceName: basicViewModel.ResourceReference(),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -359,7 +359,7 @@ func TestAcc_View_basic(t *testing.T) {
 			// recreate - change is_recursive
 			{
 				Config: accconfig.ResourceFromModel(t, viewModelRecursiveWithOtherStatement),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.ViewResource(t, basicViewModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStatementString(otherStatement).
 					HasDatabaseString(id.DatabaseName()).
@@ -410,7 +410,7 @@ func TestAcc_View_recursive(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic_is_recursive"),
 				ConfigVariables: basicView,
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -452,7 +452,7 @@ func TestAcc_View_temporary(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: accconfig.FromModels(t, viewModel.WithIsTemporary("true")),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -545,7 +545,7 @@ end;;
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/complete"),
 				ConfigVariables: m(),
-				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
+				Check: assertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
 					HasDatabaseString(id.DatabaseName()).
@@ -696,7 +696,7 @@ end;;
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/basic"),
 				ConfigVariables: basicView("ID", "FOO"),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -718,7 +718,7 @@ end;;
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetMaskingPolicyOnColumn(*sdk.NewViewSetColumnMaskingPolicyRequest("ID", maskingPolicy.ID()).WithUsing([]sdk.Column{{Value: "ID"}})))
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithSetProjectionPolicyOnColumn(*sdk.NewViewSetProjectionPolicyRequest("ID", projectionPolicy).WithForce(true)))
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -734,7 +734,7 @@ end;;
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
 				ConfigVariables: basicViewWithPolicies(),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -754,7 +754,7 @@ end;;
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetMaskingPolicyOnColumn(*sdk.NewViewUnsetColumnMaskingPolicyRequest("ID")))
 					acc.TestClient().View.Alter(t, sdk.NewAlterViewRequest(id).WithUnsetProjectionPolicyOnColumn(*sdk.NewViewUnsetProjectionPolicyRequest("ID")))
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -829,7 +829,7 @@ end;;
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_View/columns"),
 				ConfigVariables: viewWithPolicies(),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
 						HasStatementString(statement).
@@ -854,7 +854,7 @@ end;;
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ViewResource(t, "snowflake_view.test").
 						HasNameString(id.Name()).
 						HasStatementString(statement).

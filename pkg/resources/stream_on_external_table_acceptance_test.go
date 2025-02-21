@@ -79,7 +79,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 			// without optionals
 			{
 				Config: config.FromModels(t, baseModel),
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -141,7 +141,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithExtraFields),
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -193,7 +193,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -242,7 +242,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -291,7 +291,7 @@ func TestAcc_StreamOnExternalTable_Basic(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -383,7 +383,7 @@ func TestAcc_StreamOnExternalTable_CopyGrants(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model.WithCopyGrants(true)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						createdOn = value
@@ -393,7 +393,7 @@ func TestAcc_StreamOnExternalTable_CopyGrants(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, model.WithCopyGrants(false)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
@@ -405,7 +405,7 @@ func TestAcc_StreamOnExternalTable_CopyGrants(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, model.WithCopyGrants(true)),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
@@ -530,7 +530,7 @@ func TestAcc_StreamOnExternalTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanTrue),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
@@ -551,7 +551,7 @@ func TestAcc_StreamOnExternalTable_PermadiffWhenIsStaleAndHasNoRetentionTime(t *
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanTrue),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "true")),
@@ -603,7 +603,7 @@ func TestAcc_StreamOnExternalTable_StaleWithExternalChanges(t *testing.T) {
 			// initial creation does not lead to stale stream
 			{
 				Config: config.FromModels(t, model),
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
@@ -638,7 +638,7 @@ func TestAcc_StreamOnExternalTable_StaleWithExternalChanges(t *testing.T) {
 					)
 				},
 				Config: config.FromModels(t, model),
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
 					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
@@ -693,7 +693,7 @@ func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -737,7 +737,7 @@ func TestAcc_StreamOnExternalTable_At(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/at"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
@@ -785,7 +785,7 @@ func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithOffset),
-				Check: assert.AssertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnExternalTableResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -829,7 +829,7 @@ func TestAcc_StreamOnExternalTable_Before(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_StreamOnExternalTable/before"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, modelWithStream),
-				Check: assert.AssertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
 					HasNameString(id.Name()),
 				),
 			},
@@ -915,7 +915,7 @@ func TestAcc_StreamOnExternalTable_ExternalStreamTypeChange(t *testing.T) {
 			{
 				Config: config.FromModels(t, model),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.StreamOnExternalTableResource(t, model.ResourceReference()).
 							HasStreamTypeString(string(sdk.StreamSourceTypeExternalTable)),
 						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
@@ -940,7 +940,7 @@ func TestAcc_StreamOnExternalTable_ExternalStreamTypeChange(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.StreamOnExternalTableResource(t, model.ResourceReference()).
 							HasStreamTypeString(string(sdk.StreamSourceTypeExternalTable)),
 						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).

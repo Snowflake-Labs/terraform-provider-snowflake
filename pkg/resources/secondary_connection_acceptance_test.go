@@ -51,7 +51,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, secondartyConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -79,7 +79,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, secondartyConnectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModelWithComment.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -104,7 +104,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, secondartyConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
 							HasCommentString(""),
 
@@ -125,7 +125,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
 							HasIsPrimaryString("false"),
 

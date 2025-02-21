@@ -52,7 +52,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -155,7 +155,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -266,7 +266,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, basicConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -316,7 +316,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						plancheck.ExpectResourceAction(completeConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -365,7 +365,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -462,7 +462,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, basicConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
 						HasDatabaseString(child3Id.DatabaseName()).
@@ -483,7 +483,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 			// Update some fields in child3
 			{
 				Config: config.FromModels(t, basicConfigModelAfterUpdate),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, basicConfigModelAfterUpdate.ResourceReference()).
 						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
 						HasDatabaseString(child3Id.DatabaseName()).
@@ -530,7 +530,7 @@ func TestAcc_Task_StatementSpaces(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -548,7 +548,7 @@ func TestAcc_Task_StatementSpaces(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, configModelWithSpacesInStatements),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -609,7 +609,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, completeConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -671,7 +671,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, completeConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, completeConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -715,7 +715,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 			// Unset optional values
 			{
 				Config: config.FromModels(t, basicConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -777,7 +777,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, basicConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -842,7 +842,7 @@ func TestAcc_Task_CallingProcedure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -889,7 +889,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -908,7 +908,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -927,7 +927,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -946,7 +946,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -965,7 +965,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -984,7 +984,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1026,7 +1026,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1046,7 +1046,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1066,7 +1066,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithoutSchedule),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithoutSchedule.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1083,7 +1083,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1103,7 +1103,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithMinutes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithMinutes.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1120,7 +1120,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1137,7 +1137,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithCron),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelWithCron.ResourceReference()).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -1282,7 +1282,7 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.TaskParameters(t, id).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
@@ -1305,7 +1305,7 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelWithAllParametersSet),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.TaskParameters(t, id).
 						HasSuspendTaskAfterNumFailures(15).
 						HasTaskAutoRetryAttempts(15).
@@ -1495,7 +1495,7 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.TaskParameters(t, id).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
@@ -1529,7 +1529,7 @@ func TestAcc_Task_Enabled(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelDisabled),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse),
 					resourceshowoutputassert.TaskShowOutput(t, configModelDisabled.ResourceReference()).
@@ -1539,7 +1539,7 @@ func TestAcc_Task_Enabled(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelEnabled),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelEnabled.ResourceReference()).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, configModelEnabled.ResourceReference()).
@@ -1549,7 +1549,7 @@ func TestAcc_Task_Enabled(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, configModelDisabled),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse),
 					resourceshowoutputassert.TaskShowOutput(t, configModelDisabled.ResourceReference()).
@@ -1598,7 +1598,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModel, secondTaskStandaloneModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue).
@@ -1618,7 +1618,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskModel, childTaskModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanTrue).
@@ -1638,7 +1638,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(5).
 						HasStartedString(r.BooleanFalse).
@@ -1697,7 +1697,7 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModel, secondTaskStandaloneModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue).
@@ -1719,7 +1719,7 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskModel, childTaskModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue).
@@ -1741,7 +1741,7 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskStandaloneModelDisabled, childTaskStandaloneModelDisabled),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse).
@@ -1798,7 +1798,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
@@ -1813,7 +1813,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModelAfterSuspendFailuresUpdate, childTaskConfigModelWithAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModelAfterSuspendFailuresUpdate.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
@@ -1828,7 +1828,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule).
@@ -1843,7 +1843,7 @@ func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModelDisabled, childTaskConfigModelDisabled),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModelDisabled.ResourceReference()).
 						HasStartedString(r.BooleanFalse).
 						HasScheduleMinutes(schedule).
@@ -1894,7 +1894,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
@@ -1906,7 +1906,7 @@ func TestAcc_Task_WithAfter(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
@@ -1954,7 +1954,7 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
@@ -1966,7 +1966,7 @@ func TestAcc_Task_WithFinalizer(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
@@ -2031,7 +2031,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(""),
@@ -2044,7 +2044,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(rootId.FullyQualifiedName()),
@@ -2067,7 +2067,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithFinalizer),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(rootId.FullyQualifiedName()),
@@ -2080,7 +2080,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutFinalizer),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasFinalizeString(""),
@@ -2145,7 +2145,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfter(),
@@ -2158,7 +2158,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfter(rootId),
@@ -2181,7 +2181,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfter(rootId),
@@ -2194,7 +2194,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithoutAfter),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasAfter(),
@@ -2244,7 +2244,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
@@ -2263,7 +2263,7 @@ func TestAcc_Task_issue2207(t *testing.T) {
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
 				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskConfigModel, childTaskConfigModelWithDifferentComment),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, rootTaskConfigModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasScheduleMinutes(schedule),
@@ -2307,7 +2307,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, taskConfigModelWithoutWhen),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasWhenString(""),
@@ -2317,7 +2317,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, taskConfigModelWithWhen),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, taskConfigModelWithWhen.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasWhenString("TRUE"),
@@ -2327,7 +2327,7 @@ func TestAcc_Task_issue2036(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, taskConfigModelWithoutWhen),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, taskConfigModelWithoutWhen.ResourceReference()).
 						HasStartedString(r.BooleanTrue).
 						HasWhenString(""),
@@ -2378,7 +2378,7 @@ func TestAcc_Task_issue3113(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasErrorIntegrationString(errorNotificationIntegration.ID().Name()),
 				),
@@ -2419,7 +2419,7 @@ func TestAcc_Task_StateUpgrade_NoOptionalFields(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -2475,7 +2475,7 @@ func TestAcc_Task_StateUpgrade(t *testing.T) {
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_Task/basic"),
 				ConfigVariables:          config.ConfigVariablesFromModel(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).
@@ -2541,7 +2541,7 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
 						HasDatabaseString(id.DatabaseName()).

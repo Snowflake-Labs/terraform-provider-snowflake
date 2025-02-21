@@ -56,7 +56,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -99,7 +99,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -138,7 +138,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_BasicFlow(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -203,7 +203,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			{
 				Config: config.FromModels(t, secretModelDateOnly),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelDateOnly.ResourceReference()).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryDateOnly),
 						assert.Check(resource.TestCheckResourceAttrSet(secretModelDateOnly.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
@@ -214,7 +214,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			{
 				Config: config.FromModels(t, secretModelWithoutSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelWithoutSeconds.ResourceReference()).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryWithoutSeconds),
 						assert.Check(resource.TestCheckResourceAttrSet(secretModelWithoutSeconds.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
@@ -225,7 +225,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			{
 				Config: config.FromModels(t, secretModelDateTime),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelDateTime.ResourceReference()).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryDateTime),
 						assert.Check(resource.TestCheckResourceAttrSet(secretModelDateTime.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
@@ -236,7 +236,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_DifferentTimeFormats(t *testing.T)
 			{
 				Config: config.FromModels(t, secretModelWithPDT),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModelWithPDT.ResourceReference()).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryWithPDT),
 						assert.Check(resource.TestCheckResourceAttrSet(secretModelWithPDT.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
@@ -275,7 +275,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalRefreshTokenExpiryTimeChan
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -314,7 +314,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalRefreshTokenExpiryTimeChan
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasOauthRefreshTokenExpiryTimeString(refreshTokenExpiryDateTime),
 						assert.Check(resource.TestCheckResourceAttrSet(secretModel.ResourceReference(), "describe_output.0.oauth_refresh_token_expiry_time")),
@@ -349,7 +349,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChange(t *testin
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -371,7 +371,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChange(t *testin
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -408,7 +408,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChangeToOAuthCli
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -432,7 +432,7 @@ func TestAcc_SecretWithAuthorizationCodeGrant_ExternalSecretTypeChangeToOAuthCli
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithAuthorizationCodeGrantResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).

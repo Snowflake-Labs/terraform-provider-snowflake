@@ -9,7 +9,6 @@ import (
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -50,7 +49,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -160,7 +159,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(sdk.NewAccountIdentifier(organizationName, id).FullyQualifiedName()).
@@ -266,7 +265,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -283,7 +282,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, newConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
 						HasNameString(newId).
 						HasFullyQualifiedNameString(newAccountId.FullyQualifiedName()).
@@ -333,7 +332,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 			// Create with ORGADMIN enabled
 			{
 				Config: config.FromModels(t, configModelWithOrgAdminTrue),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModelWithOrgAdminTrue.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -353,7 +352,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, configModelWithOrgAdminFalse),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModelWithOrgAdminFalse.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -373,7 +372,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, configModelWithoutOrgAdmin),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -401,7 +400,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, configModelWithoutOrgAdmin),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -459,7 +458,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -479,7 +478,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, newConfigModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
 						HasNameString(id).
 						HasFullyQualifiedNameString(accountId.FullyQualifiedName()).
@@ -612,7 +611,7 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(name).
 						HasAdminNameString(adminName).

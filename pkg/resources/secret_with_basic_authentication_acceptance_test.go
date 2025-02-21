@@ -46,7 +46,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -81,7 +81,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModelDifferentCredentialsWithComment),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretName).
 							HasNameString(name).
@@ -125,7 +125,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, secretModelDifferentCredentialsWithComment),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithBasicAuthenticationResource(t, secretName).
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
@@ -158,7 +158,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretName).
 						HasCommentString(""),
 				),
@@ -181,7 +181,7 @@ func TestAcc_SecretWithBasicAuthentication_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModelEmptyCredentials),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -212,7 +212,7 @@ func TestAcc_SecretWithBasicAuthentication_CreateWithEmptyCredentials(t *testing
 			{
 				Config: config.FromModels(t, secretModelEmptyCredentials),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretModelEmptyCredentials.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -244,7 +244,7 @@ func TestAcc_SecretWithBasicAuthentication_ExternalSecretTypeChange(t *testing.T
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypePassword)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -266,7 +266,7 @@ func TestAcc_SecretWithBasicAuthentication_ExternalSecretTypeChange(t *testing.T
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithBasicAuthenticationResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypePassword)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).

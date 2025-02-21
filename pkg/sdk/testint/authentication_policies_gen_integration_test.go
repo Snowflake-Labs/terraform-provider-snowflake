@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -19,7 +18,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 	assertAuthenticationPolicy := func(t *testing.T, id sdk.SchemaObjectIdentifier, expectedComment string) {
 		t.Helper()
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.AuthenticationPolicy(t, id).
 				HasCreatedOnNotEmpty().
 				HasName(id.Name()).

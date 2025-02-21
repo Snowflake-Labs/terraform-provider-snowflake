@@ -100,10 +100,10 @@ func SnowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.Pa
 
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new Snowflake object parameters assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
+func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc {
 	t.Helper()
 	return func(_ *terraform.State) error {
-		return s.runSnowflakeParametersAssertions(t)
+		return s.runSnowflakeParametersAssertionsWithTestClient(t, testClient)
 	}
 }
 

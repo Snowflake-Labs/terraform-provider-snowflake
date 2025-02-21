@@ -44,7 +44,7 @@ func TestAcc_Streams(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streams/optionals_set"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, streamOnTable),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
 
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
@@ -83,7 +83,7 @@ func TestAcc_Streams(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streams/optionals_unset"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, streamOnTable),
 
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
 
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
@@ -131,7 +131,7 @@ func TestAcc_StreamOnTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, streamOnTable) + streamsDatasource(id.Name(), resourceName),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
 						HasCreatedOnNotEmpty().
@@ -196,7 +196,7 @@ func TestAcc_StreamOnExternalTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model) + streamsDatasource(id.Name(), resourceName),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
 						HasCreatedOnNotEmpty().
@@ -255,7 +255,7 @@ func TestAcc_StreamOnDirectoryTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model) + streamsDatasource(id.Name(), resourceName),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
 						HasCreatedOnNotEmpty().
@@ -318,7 +318,7 @@ func TestAcc_StreamOnView(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model) + streamsDatasource(id.Name(), resourceName),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
 						HasCreatedOnNotEmpty().

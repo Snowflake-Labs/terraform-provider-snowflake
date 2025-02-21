@@ -37,7 +37,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, databaseRoleModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -66,7 +66,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			// set comment
 			{
 				Config: config.FromModels(t, databaseRoleModelWithComment),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -95,7 +95,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			// unset comment
 			{
 				Config: config.FromModels(t, databaseRoleModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -129,7 +129,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, databaseRoleModel.WithName(newId.Name())),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(newId.Name()).
 						HasDatabaseString(newId.DatabaseName()).

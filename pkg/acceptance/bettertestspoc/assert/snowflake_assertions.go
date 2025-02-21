@@ -61,10 +61,10 @@ func (s *SnowflakeObjectAssert[T, I]) GetId() I {
 
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new Snowflake object assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
+func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc {
 	t.Helper()
 	return func(_ *terraform.State) error {
-		return s.runSnowflakeObjectsAssertions(t)
+		return s.runSnowflakeObjectsAssertionsWithTestClient(t, testClient)
 	}
 }
 

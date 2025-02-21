@@ -83,7 +83,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			// CREATE WITHOUT ATTRIBUTES
 			{
 				Config: config.FromModels(t, userModelNoAttributes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
 						HasNoLoginName().
@@ -108,7 +108,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			// RENAME AND CHANGE ONE PROP
 			{
 				Config: config.FromModels(t, userModelNoAttributesRenamed),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id2.Name()).
 						HasCommentString(newComment),
@@ -139,7 +139,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			// CREATE WITH ALL ATTRIBUTES
 			{
 				Config: config.FromModels(t, userModelAllAttributes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModelAllAttributes.ResourceReference()).
 						HasNameString(id.Name()).
 						HasLoginNameString(fmt.Sprintf("%s_login", id.Name())).
@@ -161,7 +161,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			// CHANGE PROPERTIES
 			{
 				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
 						HasLoginNameString(fmt.Sprintf("%s_other_login", id.Name())).
@@ -207,7 +207,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			// UNSET ALL
 			{
 				Config: config.FromModels(t, userModelNoAttributes),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModelNoAttributes.ResourceReference()).
 						HasNameString(id.Name()).
 						HasLoginNameString("").
@@ -312,7 +312,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 			// create with default values for all the parameters
 			{
 				Config: config.FromModels(t, userModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
@@ -332,7 +332,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 			// set all parameters
 			{
 				Config: config.FromModels(t, userModelWithAllParametersSet),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAbortDetachedQuery(true).
 						HasAutocommit(false).
@@ -522,7 +522,7 @@ func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 			// unset all the parameters
 			{
 				Config: config.FromModels(t, userModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					objectparametersassert.UserParameters(t, userId).
 						HasAllDefaults().
 						HasAllDefaultsExplicit(),
@@ -549,7 +549,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, userModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("SERVICE"),
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("SERVICE"),
 				),
@@ -565,7 +565,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("SERVICE"),
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("SERVICE"),
 				),
@@ -581,7 +581,7 @@ func TestAcc_ServiceUser_handleExternalTypeChange(t *testing.T) {
 						plancheck.ExpectResourceAction(userModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).HasNameString(userId.Name()).HasUserTypeString("SERVICE"),
 					resourceshowoutputassert.UserShowOutput(t, userModel.ResourceReference()).HasType("SERVICE"),
 				),

@@ -52,7 +52,7 @@ func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, functionModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionPythonResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
@@ -79,7 +79,7 @@ func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, functionModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionPythonResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()),
 				),
@@ -101,7 +101,7 @@ func TestAcc_FunctionPython_InlineBasic(t *testing.T) {
 			// RENAME
 			{
 				Config: config.FromModels(t, functionModelRenamed),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionPythonResource(t, functionModelRenamed.ResourceReference()).
 						HasNameString(idWithChangedNameButTheSameDataType.Name()).
 						HasFullyQualifiedNameString(idWithChangedNameButTheSameDataType.FullyQualifiedName()),
@@ -188,7 +188,7 @@ func TestAcc_FunctionPython_InlineFull(t *testing.T) {
 			// CREATE WITH ALL
 			{
 				Config: config.FromModels(t, functionModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionPythonResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).
@@ -226,7 +226,7 @@ func TestAcc_FunctionPython_InlineFull(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, functionModelUpdateWithoutRecreation),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionPythonResource(t, functionModelUpdateWithoutRecreation.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).

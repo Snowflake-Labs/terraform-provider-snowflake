@@ -44,7 +44,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -82,7 +82,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 				),
 
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretName).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -115,7 +115,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, sdk.String("test_comment"), sdk.String(comment)),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithGenericStringResource(t, secretName).
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
@@ -146,7 +146,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretModelEmptySecretString.ResourceReference()).
 						HasCommentString(""),
 				),
@@ -173,7 +173,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModelEmptySecretString),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModelEmptySecretString.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -204,7 +204,7 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeGenericString)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -226,7 +226,7 @@ func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithGenericStringResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeGenericString)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).

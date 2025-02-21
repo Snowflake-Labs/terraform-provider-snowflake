@@ -18,18 +18,18 @@ import (
 // It allows using it as input the "Check:" in resource.TestStep.
 // It should be used with AssertThat.
 type TestCheckFuncProvider interface {
-	ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc
+	ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc
 }
 
 // AssertThat should be used for "Check:" input in resource.TestStep instead of e.g. resource.ComposeTestCheckFunc.
 // It allows performing all the checks implementing the TestCheckFuncProvider interface.
-func AssertThat(t *testing.T, fs ...TestCheckFuncProvider) resource.TestCheckFunc {
+func AssertThat(t *testing.T, testClient *helpers.TestClient, fs ...TestCheckFuncProvider) resource.TestCheckFunc {
 	t.Helper()
 	return func(s *terraform.State) error {
 		var result []error
 
 		for i, f := range fs {
-			if err := f.ToTerraformTestCheckFunc(t)(s); err != nil {
+			if err := f.ToTerraformTestCheckFunc(t, testClient)(s); err != nil {
 				result = append(result, fmt.Errorf("check %d/%d error:\n%w", i+1, len(fs), err))
 			}
 		}
@@ -44,7 +44,7 @@ type testCheckFuncWrapper struct {
 	f resource.TestCheckFunc
 }
 
-func (w *testCheckFuncWrapper) ToTerraformTestCheckFunc(_ *testing.T) resource.TestCheckFunc {
+func (w *testCheckFuncWrapper) ToTerraformTestCheckFunc(_ *testing.T, _ *helpers.TestClient) resource.TestCheckFunc {
 	return w.f
 }
 
