@@ -150,10 +150,13 @@ func (w *UserAssert) HasDaysToExpiryEmpty() *UserAssert {
 	return w
 }
 
-// TODO [SNOW-1501905]: the current User func assumes acceptance test client helper, we should paramterize it and change this in the generators
-func UserForIntegrationTests(t *testing.T, id sdk.AccountObjectIdentifier, testHelper *helpers.TestClient) *UserAssert {
+// UserWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
+// It will be generated later.
+func UserWithTestClient(t *testing.T, id sdk.AccountObjectIdentifier) *UserAssert {
 	t.Helper()
 	return &UserAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeUser, id, testHelper.User.Show),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeUser, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.User, sdk.AccountObjectIdentifier] {
+			return testClient.User.Show
+		}),
 	}
 }

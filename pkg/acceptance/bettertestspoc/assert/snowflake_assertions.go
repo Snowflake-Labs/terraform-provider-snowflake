@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -12,28 +13,40 @@ import (
 )
 
 type (
-	assertSdk[T any]                              func(*testing.T, T) error
-	objectProvider[T any, I sdk.ObjectIdentifier] func(*testing.T, I) (*T, error)
+	assertSdk[T any]                                        func(*testing.T, T) error
+	ObjectProvider[T any, I sdk.ObjectIdentifier]           func(*testing.T, I) (*T, error)
+	testClientObjectProvider[T any, I sdk.ObjectIdentifier] func(client *helpers.TestClient) ObjectProvider[T, I]
 )
 
 // SnowflakeObjectAssert is an embeddable struct that should be used to construct new Snowflake object assertions.
 // It implements both TestCheckFuncProvider and ImportStateCheckFuncProvider which makes it easy to create new resource assertions.
 type SnowflakeObjectAssert[T any, I sdk.ObjectIdentifier] struct {
-	assertions []assertSdk[*T]
-	id         I
-	objectType sdk.ObjectType
-	object     *T
-	provider   objectProvider[T, I]
+	assertions               []assertSdk[*T]
+	id                       I
+	objectType               sdk.ObjectType
+	object                   *T
+	provider                 ObjectProvider[T, I]
+	testClientObjectProvider testClientObjectProvider[T, I]
 }
 
 // NewSnowflakeObjectAssertWithProvider creates a SnowflakeObjectAssert with id and the provider.
 // Object to check is lazily fetched from Snowflake when the checks are being run.
-func NewSnowflakeObjectAssertWithProvider[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, provider objectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
+func NewSnowflakeObjectAssertWithProvider[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, provider ObjectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
 	return &SnowflakeObjectAssert[T, I]{
 		assertions: make([]assertSdk[*T], 0),
 		id:         id,
 		objectType: objectType,
 		provider:   provider,
+	}
+}
+
+// NewSnowflakeObjectAssertWithTestClientObjectProvider is temporary to show the new assertion setup with the test client.
+func NewSnowflakeObjectAssertWithTestClientObjectProvider[T any, I sdk.ObjectIdentifier](objectType sdk.ObjectType, id I, testClientObjectProvider testClientObjectProvider[T, I]) *SnowflakeObjectAssert[T, I] {
+	return &SnowflakeObjectAssert[T, I]{
+		assertions:               make([]assertSdk[*T], 0),
+		id:                       id,
+		objectType:               objectType,
+		testClientObjectProvider: testClientObjectProvider,
 	}
 }
 
@@ -82,6 +95,13 @@ func (s *SnowflakeObjectAssert[_, _]) VerifyAll(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// VerifyAllWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
+func (s *SnowflakeObjectAssert[_, _]) VerifyAllWithTestClient(t *testing.T, testClient *helpers.TestClient) {
+	t.Helper()
+	err := s.runSnowflakeObjectsAssertionsWithTestClient(t, testClient)
+	require.NoError(t, err)
+}
+
 func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
 	t.Helper()
 
@@ -92,6 +112,39 @@ func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T
 		sdkObject = s.object
 	case s.provider != nil:
 		sdkObject, err = s.provider(t, s.id)
+		if err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("cannot proceed with object %s[%s] assertion: object or provider must be specified", s.objectType, s.id.FullyQualifiedName())
+	}
+
+	var result []error
+
+	for i, assertion := range s.assertions {
+		if err = assertion(t, sdkObject); err != nil {
+			result = append(result, fmt.Errorf("object %s[%s] assertion [%d/%d]: failed with error: %w", s.objectType, s.id.FullyQualifiedName(), i+1, len(s.assertions), err))
+		}
+	}
+
+	return errors.Join(result...)
+}
+
+// runSnowflakeObjectsAssertionsWithTestClient is temporary until all assertion have the way to pass the test client used;
+// should be renamed back to runSnowflakeObjectsAssertions when ready; its logic will be also adjusted.
+func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertionsWithTestClient(t *testing.T, testClient *helpers.TestClient) error {
+	t.Helper()
+
+	var sdkObject *T
+	var err error
+	switch {
+	case s.object != nil:
+		sdkObject = s.object
+	case s.testClientObjectProvider != nil:
+		if testClient == nil {
+			return errors.New("testClient must not be nil")
+		}
+		sdkObject, err = s.testClientObjectProvider(testClient)(t, s.id)
 		if err != nil {
 			return err
 		}

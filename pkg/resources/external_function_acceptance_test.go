@@ -543,7 +543,6 @@ resource "snowflake_external_function" "f" {
 }
 
 func externalFunctionConfigWithReturnType(database string, schema string, name string, returnType string) string {
-
 	return fmt.Sprintf(`
 resource "snowflake_api_integration" "test_api_int" {
  name                 = "%[3]s"

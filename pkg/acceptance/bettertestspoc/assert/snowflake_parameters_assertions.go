@@ -123,6 +123,13 @@ func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// VerifyAllWithTestClient is temporary (currently, added only to fulfill the interface)
+func (s *SnowflakeParametersAssert[_]) VerifyAllWithTestClient(t *testing.T, _ *helpers.TestClient) {
+	t.Helper()
+	err := s.runSnowflakeParametersAssertions(t)
+	require.NoError(t, err)
+}
+
 func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testing.T) error {
 	t.Helper()
 
