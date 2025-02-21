@@ -64,7 +64,7 @@ func (s *SnowflakeObjectAssert[T, I]) GetId() I {
 func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc {
 	t.Helper()
 	return func(_ *terraform.State) error {
-		return s.runSnowflakeObjectsAssertionsWithTestClient(t, testClient)
+		return s.runSnowflakeObjectsAssertions(t, testClient)
 	}
 }
 
@@ -73,7 +73,7 @@ func (s *SnowflakeObjectAssert[_, _]) ToTerraformTestCheckFunc(t *testing.T, tes
 func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(_ []*terraform.InstanceState) error {
-		return s.runSnowflakeObjectsAssertionsWithTestClient(t, testClient)
+		return s.runSnowflakeObjectsAssertions(t, testClient)
 	}
 }
 
@@ -81,41 +81,11 @@ func (s *SnowflakeObjectAssert[_, _]) ToTerraformImportStateCheckFunc(t *testing
 // It verifies all the assertions accumulated earlier and gathers the results of the checks.
 func (s *SnowflakeObjectAssert[_, _]) VerifyAll(t *testing.T, testClient *helpers.TestClient) {
 	t.Helper()
-	err := s.runSnowflakeObjectsAssertionsWithTestClient(t, testClient)
+	err := s.runSnowflakeObjectsAssertions(t, testClient)
 	require.NoError(t, err)
 }
 
-func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T) error {
-	t.Helper()
-
-	var sdkObject *T
-	var err error
-	switch {
-	case s.object != nil:
-		sdkObject = s.object
-	//case s.provider != nil:
-	//	sdkObject, err = s.provider(t, s.id)
-	//	if err != nil {
-	//		return err
-	//	}
-	default:
-		return fmt.Errorf("cannot proceed with object %s[%s] assertion: object or provider must be specified", s.objectType, s.id.FullyQualifiedName())
-	}
-
-	var result []error
-
-	for i, assertion := range s.assertions {
-		if err = assertion(t, sdkObject); err != nil {
-			result = append(result, fmt.Errorf("object %s[%s] assertion [%d/%d]: failed with error: %w", s.objectType, s.id.FullyQualifiedName(), i+1, len(s.assertions), err))
-		}
-	}
-
-	return errors.Join(result...)
-}
-
-// runSnowflakeObjectsAssertionsWithTestClient is temporary until all assertion have the way to pass the test client used;
-// should be renamed back to runSnowflakeObjectsAssertions when ready; its logic will be also adjusted.
-func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertionsWithTestClient(t *testing.T, testClient *helpers.TestClient) error {
+func (s *SnowflakeObjectAssert[T, _]) runSnowflakeObjectsAssertions(t *testing.T, testClient *helpers.TestClient) error {
 	t.Helper()
 
 	var sdkObject *T

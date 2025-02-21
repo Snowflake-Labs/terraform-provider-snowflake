@@ -103,7 +103,7 @@ func SnowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.Pa
 func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc {
 	t.Helper()
 	return func(_ *terraform.State) error {
-		return s.runSnowflakeParametersAssertionsWithTestClient(t, testClient)
+		return s.runSnowflakeParametersAssertions(t, testClient)
 	}
 }
 
@@ -112,7 +112,7 @@ func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T, te
 func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(_ []*terraform.InstanceState) error {
-		return s.runSnowflakeParametersAssertionsWithTestClient(t, testClient)
+		return s.runSnowflakeParametersAssertions(t, testClient)
 	}
 }
 
@@ -120,64 +120,11 @@ func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testin
 // It verifies all the assertions accumulated earlier and gathers the results of the checks.
 func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T, testClient *helpers.TestClient) {
 	t.Helper()
-	err := s.runSnowflakeParametersAssertionsWithTestClient(t, testClient)
+	err := s.runSnowflakeParametersAssertions(t, testClient)
 	require.NoError(t, err)
 }
 
-func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testing.T) error {
-	t.Helper()
-
-	var parameters []*sdk.Parameter
-	switch {
-	//case s.provider != nil:
-	//	parameters = s.provider(t, s.id)
-	case s.parameters != nil:
-		parameters = s.parameters
-	default:
-		return fmt.Errorf("cannot proceed with parameters assertion for object %s[%s]: parameters or parameters provider must be specified", s.objectType, s.id.FullyQualifiedName())
-	}
-
-	var result []error
-
-	for i, assertion := range s.assertions {
-		switch assertion.assertionType {
-		case snowflakeParameterAssertionTypeExpectedValue:
-			if v := helpers.FindParameter(t, parameters, assertion.parameterName).Value; assertion.expectedValue != v {
-				result = append(result, fmt.Errorf(
-					"parameter assertion for %s[%s][%s][%d/%d] failed: expected value %s, got %s",
-					s.objectType, s.id.FullyQualifiedName(), assertion.parameterName, i+1, len(s.assertions), assertion.expectedValue, v,
-				))
-			}
-		case snowflakeParameterAssertionTypeDefaultValue:
-			if p := helpers.FindParameter(t, parameters, assertion.parameterName); p.Default != p.Value {
-				result = append(result, fmt.Errorf(
-					"parameter assertion for %s[%s][%s][%d/%d] failed: expected default value %s, got %s",
-					s.objectType, s.id.FullyQualifiedName(), assertion.parameterName, i+1, len(s.assertions), p.Default, p.Value,
-				))
-			}
-		case snowflakeParameterAssertionTypeDefaultValueOnLevel:
-			if p := helpers.FindParameter(t, parameters, assertion.parameterName); p.Default != p.Value || p.Level != assertion.parameterType {
-				result = append(result, fmt.Errorf(
-					"parameter assertion for %s[%s][%s][%d/%d] failed: expected default value %s on level %s, got %s and level %s",
-					s.objectType, s.id.FullyQualifiedName(), assertion.parameterName, i+1, len(s.assertions), p.Default, assertion.parameterType, p.Value, p.Level,
-				))
-			}
-		case snowflakeParameterAssertionTypeLevel:
-			if p := helpers.FindParameter(t, parameters, assertion.parameterName); p.Level != assertion.parameterType {
-				result = append(result, fmt.Errorf(
-					"parameter assertion for %s[%s][%s][%d/%d] failed: expected level %s, got %s",
-					s.objectType, s.id.FullyQualifiedName(), assertion.parameterName, i+1, len(s.assertions), assertion.parameterType, p.Level,
-				))
-			}
-		default:
-			return fmt.Errorf("cannot proceed with parameters assertion for object %s[%s]: assertion type must be specified", s.objectType, s.id.FullyQualifiedName())
-		}
-	}
-
-	return errors.Join(result...)
-}
-
-func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertionsWithTestClient(t *testing.T, testClient *helpers.TestClient) error {
+func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testing.T, testClient *helpers.TestClient) error {
 	t.Helper()
 
 	var parameters []*sdk.Parameter
