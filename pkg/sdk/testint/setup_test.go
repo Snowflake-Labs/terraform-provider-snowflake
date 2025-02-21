@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/measurement"
 	"log"
 	"os"
 	"testing"
@@ -33,8 +34,16 @@ var (
 
 var itc integrationTestContext
 
+var testMeasurements = measurement.NewTestMeasurements()
+
+func measureTest(t *testing.T) {
+	t.Helper()
+	measurement.MeasureTestTime(testMeasurements, t)
+}
+
 func TestMain(m *testing.M) {
 	exitVal := execute(m)
+	measurement.PrintMeasurementSummary(testMeasurements, time.Millisecond)
 	os.Exit(exitVal)
 }
 
@@ -43,6 +52,7 @@ func execute(m *testing.M) int {
 	setup()
 	exitVal := m.Run()
 	cleanup()
+	//measurement.PrintMeasurementSummary(measurements)
 	return exitVal
 }
 

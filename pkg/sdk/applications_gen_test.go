@@ -5,6 +5,7 @@ import (
 )
 
 func TestApplications_Create(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 	pid := randomAccountObjectIdentifier()
 
@@ -91,6 +92,7 @@ func TestApplications_Create(t *testing.T) {
 }
 
 func TestApplications_Alter(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *AlterApplicationOptions {
@@ -228,6 +230,7 @@ func TestApplications_Alter(t *testing.T) {
 }
 
 func TestApplications_Drop(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *DropApplicationOptions {
@@ -255,6 +258,7 @@ func TestApplications_Drop(t *testing.T) {
 }
 
 func TestApplications_Describe(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *DescribeApplicationOptions {
@@ -281,6 +285,7 @@ func TestApplications_Describe(t *testing.T) {
 }
 
 func TestApplications_Show(t *testing.T) {
+	measureTest(t)
 	defaultOpts := func() *ShowApplicationOptions {
 		return &ShowApplicationOptions{}
 	}

@@ -7,6 +7,7 @@ import (
 )
 
 func TestIsStringType(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  bool

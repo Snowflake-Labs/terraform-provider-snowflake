@@ -7,6 +7,7 @@ import (
 )
 
 func Test_ToColumnConstraintType(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  ColumnConstraintType
@@ -52,6 +53,7 @@ func Test_ToColumnConstraintType(t *testing.T) {
 }
 
 func Test_ToMatchType(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  MatchType
@@ -97,6 +99,7 @@ func Test_ToMatchType(t *testing.T) {
 }
 
 func Test_ToForeignKeyAction(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  ForeignKeyAction

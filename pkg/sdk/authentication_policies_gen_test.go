@@ -3,6 +3,7 @@ package sdk
 import "testing"
 
 func TestAuthenticationPolicies_Create(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 	// Minimal valid CreateAuthenticationPolicyOptions
 	defaultOpts := func() *CreateAuthenticationPolicyOptions {
@@ -62,6 +63,7 @@ func TestAuthenticationPolicies_Create(t *testing.T) {
 }
 
 func TestAuthenticationPolicies_Alter(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 	// Minimal valid AlterAuthenticationPolicyOptions
 	defaultOpts := func() *AlterAuthenticationPolicyOptions {
@@ -166,6 +168,7 @@ func TestAuthenticationPolicies_Alter(t *testing.T) {
 }
 
 func TestAuthenticationPolicies_Drop(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 	// Minimal valid DropAuthenticationPolicyOptions
 	defaultOpts := func() *DropAuthenticationPolicyOptions {
@@ -192,6 +195,7 @@ func TestAuthenticationPolicies_Drop(t *testing.T) {
 }
 
 func TestAuthenticationPolicies_Show(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 	// Minimal valid ShowAuthenticationPolicyOptions
 	defaultOpts := func() *ShowAuthenticationPolicyOptions {
@@ -226,6 +230,7 @@ func TestAuthenticationPolicies_Show(t *testing.T) {
 }
 
 func TestAuthenticationPolicies_Describe(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 	// Minimal valid DescribeAuthenticationPolicyOptions
 	defaultOpts := func() *DescribeAuthenticationPolicyOptions {

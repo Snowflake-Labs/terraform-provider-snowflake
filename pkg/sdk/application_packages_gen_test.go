@@ -3,6 +3,7 @@ package sdk
 import "testing"
 
 func TestApplicationPackages_Create(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *CreateApplicationPackageOptions {
@@ -42,6 +43,7 @@ func TestApplicationPackages_Create(t *testing.T) {
 }
 
 func TestApplicationPackages_Alter(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *AlterApplicationPackageOptions {
@@ -210,6 +212,7 @@ func TestApplicationPackages_Alter(t *testing.T) {
 }
 
 func TestApplicationPackages_Drop(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	defaultOpts := func() *DropApplicationPackageOptions {
@@ -237,6 +240,7 @@ func TestApplicationPackages_Drop(t *testing.T) {
 }
 
 func TestApplicationPackages_Show(t *testing.T) {
+	measureTest(t)
 	defaultOpts := func() *ShowApplicationPackageOptions {
 		return &ShowApplicationPackageOptions{}
 	}

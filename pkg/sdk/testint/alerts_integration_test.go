@@ -12,6 +12,7 @@ import (
 )
 
 func TestInt_AlertsShow(t *testing.T) {
+	measureTest(t)
 	client := testClient(t)
 	ctx := testContext(t)
 
@@ -22,12 +23,14 @@ func TestInt_AlertsShow(t *testing.T) {
 	t.Cleanup(alert2Cleanup)
 
 	t.Run("without show options", func(t *testing.T) {
+		measureTest(t)
 		alerts, err := client.Alerts.Show(ctx, nil)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(alerts))
 	})
 
 	t.Run("with show options", func(t *testing.T) {
+		measureTest(t)
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
 				Schema: testClientHelper().Ids.SchemaId(),
@@ -41,6 +44,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("with show options and like", func(t *testing.T) {
+		measureTest(t)
 		showOptions := &sdk.ShowAlertOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String(alertTest.Name),
@@ -56,6 +60,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("when searching a non-existent alert", func(t *testing.T) {
+		measureTest(t)
 		showOptions := &sdk.ShowAlertOptions{
 			Like: &sdk.Like{
 				Pattern: sdk.String("non-existent"),
@@ -67,6 +72,7 @@ func TestInt_AlertsShow(t *testing.T) {
 	})
 
 	t.Run("when limiting the number of results", func(t *testing.T) {
+		measureTest(t)
 		showOptions := &sdk.ShowAlertOptions{
 			In: &sdk.In{
 				Schema: testClientHelper().Ids.SchemaId(),
@@ -80,10 +86,12 @@ func TestInt_AlertsShow(t *testing.T) {
 }
 
 func TestInt_AlertCreate(t *testing.T) {
+	measureTest(t)
 	client := testClient(t)
 	ctx := testContext(t)
 
 	t.Run("test complete case", func(t *testing.T) {
+		measureTest(t)
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		name := id.Name()
 		schedule := "USING CRON * * * * TUE,THU UTC"
@@ -120,6 +128,7 @@ func TestInt_AlertCreate(t *testing.T) {
 	})
 
 	t.Run("test if_not_exists", func(t *testing.T) {
+		measureTest(t)
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		name := id.Name()
 		schedule := "USING CRON * * * * TUE,THU UTC"
@@ -156,6 +165,7 @@ func TestInt_AlertCreate(t *testing.T) {
 	})
 
 	t.Run("test no options", func(t *testing.T) {
+		measureTest(t)
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		name := id.Name()
 		schedule := "USING CRON * * * * TUE,THU UTC"
@@ -186,6 +196,7 @@ func TestInt_AlertCreate(t *testing.T) {
 	})
 
 	t.Run("test multiline action", func(t *testing.T) {
+		measureTest(t)
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		name := id.Name()
 		schedule := "USING CRON * * * * TUE,THU UTC"
@@ -225,6 +236,7 @@ func TestInt_AlertCreate(t *testing.T) {
 }
 
 func TestInt_AlertDescribe(t *testing.T) {
+	measureTest(t)
 	client := testClient(t)
 	ctx := testContext(t)
 
@@ -232,22 +244,26 @@ func TestInt_AlertDescribe(t *testing.T) {
 	t.Cleanup(alertCleanup)
 
 	t.Run("when alert exists", func(t *testing.T) {
+		measureTest(t)
 		alertDetails, err := client.Alerts.Describe(ctx, alert.ID())
 		require.NoError(t, err)
 		assert.Equal(t, alert.Name, alertDetails.Name)
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
+		measureTest(t)
 		_, err := client.Alerts.Describe(ctx, NonExistingSchemaObjectIdentifier)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
 func TestInt_AlertAlter(t *testing.T) {
+	measureTest(t)
 	client := testClient(t)
 	ctx := testContext(t)
 
 	t.Run("when setting and unsetting a value", func(t *testing.T) {
+		measureTest(t)
 		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 		newSchedule := "USING CRON * * * * TUE,FRI GMT"
@@ -274,6 +290,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("when modifying condition and action", func(t *testing.T) {
+		measureTest(t)
 		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 		newCondition := "select * from DUAL where false"
@@ -318,6 +335,7 @@ func TestInt_AlertAlter(t *testing.T) {
 	})
 
 	t.Run("resume and then suspend", func(t *testing.T) {
+		measureTest(t)
 		alert, alertCleanup := testClientHelper().Alert.CreateAlert(t)
 		t.Cleanup(alertCleanup)
 
@@ -360,10 +378,12 @@ func TestInt_AlertAlter(t *testing.T) {
 }
 
 func TestInt_AlertDrop(t *testing.T) {
+	measureTest(t)
 	client := testClient(t)
 	ctx := testContext(t)
 
 	t.Run("when alert exists", func(t *testing.T) {
+		measureTest(t)
 		alert, _ := testClientHelper().Alert.CreateAlert(t)
 		id := alert.ID()
 		err := client.Alerts.Drop(ctx, id, &sdk.DropAlertOptions{})
@@ -373,12 +393,14 @@ func TestInt_AlertDrop(t *testing.T) {
 	})
 
 	t.Run("when alert does not exist", func(t *testing.T) {
+		measureTest(t)
 		err := client.Alerts.Drop(ctx, NonExistingSchemaObjectIdentifier, &sdk.DropAlertOptions{})
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 }
 
 func TestInt_AlertsShowByID(t *testing.T) {
+	measureTest(t)
 	client := testClient(t)
 	ctx := testContext(t)
 
@@ -404,6 +426,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	}
 
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
+		measureTest(t)
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
 
@@ -423,6 +446,7 @@ func TestInt_AlertsShowByID(t *testing.T) {
 	})
 
 	t.Run("show by id: check fields", func(t *testing.T) {
+		measureTest(t)
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		createAlertHandle(t, id)
 

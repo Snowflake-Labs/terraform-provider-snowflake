@@ -5,6 +5,7 @@ import (
 )
 
 func TestConnections_Create(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *CreateConnectionOptions {
 		return &CreateConnectionOptions{
@@ -64,6 +65,7 @@ func TestConnections_Create(t *testing.T) {
 }
 
 func TestConnections_Alter(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *AlterConnectionOptions {
 		return &AlterConnectionOptions{
@@ -148,6 +150,7 @@ func TestConnections_Alter(t *testing.T) {
 }
 
 func TestConnections_Drop(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 	defaultOpts := func() *DropConnectionOptions {
 		return &DropConnectionOptions{
@@ -178,6 +181,7 @@ func TestConnections_Drop(t *testing.T) {
 }
 
 func TestConnections_Show(t *testing.T) {
+	measureTest(t)
 	defaultOpts := func() *ShowConnectionOptions {
 		return &ShowConnectionOptions{}
 	}

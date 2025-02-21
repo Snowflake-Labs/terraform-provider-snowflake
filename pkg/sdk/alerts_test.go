@@ -7,6 +7,7 @@ import (
 )
 
 func TestAlertCreate(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	t.Run("with complete options", func(t *testing.T) {
@@ -31,6 +32,7 @@ func TestAlertCreate(t *testing.T) {
 }
 
 func TestAlertAlter(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	t.Run("fail without alter action specified", func(t *testing.T) {
@@ -115,6 +117,7 @@ func TestAlertAlter(t *testing.T) {
 }
 
 func TestAlertDrop(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
@@ -139,6 +142,7 @@ func TestAlertDrop(t *testing.T) {
 }
 
 func TestAlertShow(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {
@@ -212,6 +216,7 @@ func TestAlertShow(t *testing.T) {
 }
 
 func TestAlertDescribe(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	t.Run("empty options", func(t *testing.T) {

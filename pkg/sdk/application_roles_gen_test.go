@@ -3,6 +3,7 @@ package sdk
 import "testing"
 
 func TestApplicationRoles_Grant(t *testing.T) {
+	measureTest(t)
 	id := randomDatabaseObjectIdentifier()
 
 	// Minimal valid GrantApplicationRoleOptions
@@ -59,6 +60,7 @@ func TestApplicationRoles_Grant(t *testing.T) {
 }
 
 func TestApplicationRoles_Revoke(t *testing.T) {
+	measureTest(t)
 	id := randomDatabaseObjectIdentifier()
 
 	// Minimal valid RevokeApplicationRoleOptions
@@ -110,6 +112,7 @@ func TestApplicationRoles_Revoke(t *testing.T) {
 }
 
 func TestApplicationRoles_Show(t *testing.T) {
+	measureTest(t)
 	appId := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowApplicationRoleOptions
