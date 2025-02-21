@@ -6,9 +6,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 )
 
-var (
-	ObjectsSuffix = acceptanceTestsSuffix()
-)
+var ObjectsSuffix = acceptanceTestsSuffix()
 
 func acceptanceTestsSuffix() string {
 	suffix := "AT_" + random.ObjectSuffix()
