@@ -33,6 +33,7 @@ var (
 	buildersTemplateContent string
 	BuildersTemplate, _     = template.New("buildersTemplate").Funcs(genhelpers.BuildTemplateFuncMap(
 		genhelpers.FirstLetterLowercase,
+		genhelpers.TransformRestrictedKeywords,
 		genhelpers.FirstLetter,
 		genhelpers.SnakeCaseToCamel,
 	)).Parse(buildersTemplateContent)

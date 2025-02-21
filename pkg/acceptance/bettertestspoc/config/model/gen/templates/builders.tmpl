@@ -10,8 +10,9 @@
 {{ range .Attributes -}}
     {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
     {{ if .AttributeType }}
-        func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }}) *{{ $modelName }} {
-            {{ $modelVar }}.{{ $attributeNameCamel }} = {{ .MethodImport }}.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
+        {{ $safeAttributeName := TransformRestrictedKeywords (FirstLetterLowercase $attributeNameCamel) }}
+        func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ $safeAttributeName }} {{ .AttributeType }}) *{{ $modelName }} {
+            {{ $modelVar }}.{{ $attributeNameCamel }} = {{ .MethodImport }}.{{ .VariableMethod }}({{ $safeAttributeName }})
             return {{ $modelVar }}
         }
     {{ else }}

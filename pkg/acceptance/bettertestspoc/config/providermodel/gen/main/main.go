@@ -2,6 +2,7 @@ package main
 
 import (
 	resourcemodelgen "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model/gen"
+	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel/gen"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
@@ -10,7 +11,13 @@ import (
 func main() {
 	genhelpers.NewGenerator(
 		gen.GetProviderSchemaDetails,
-		resourcemodelgen.ModelFromResourceSchemaDetails,
+		func() func(genhelpers.ResourceSchemaDetails) resourcemodelgen.ResourceConfigBuilderModel {
+			return func(resourceSchemaDetails genhelpers.ResourceSchemaDetails) resourcemodelgen.ResourceConfigBuilderModel {
+				details := resourcemodelgen.ModelFromResourceSchemaDetails(resourceSchemaDetails)
+				details.AdditionalStandardImports = slices.DeleteFunc(details.AdditionalStandardImports, func(dep string) bool { return dep == "encoding/json" })
+				return details
+			}
+		}(),
 		getFilename,
 		gen.AllTemplates,
 	).

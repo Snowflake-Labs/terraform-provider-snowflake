@@ -1,6 +1,7 @@
 package genhelpers
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
@@ -12,6 +13,15 @@ import (
 
 func FirstLetterLowercase(in string) string {
 	return strings.ToLower(in[:1]) + in[1:]
+}
+
+func TransformRestrictedKeywords(in string) string {
+	switch in {
+	case "type":
+		return fmt.Sprintf("_%s", in)
+	default:
+		return in
+	}
 }
 
 func FirstLetter(in string) string {

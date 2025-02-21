@@ -72,3 +72,10 @@ func (c *ExternalVolumeClient) DropFunc(t *testing.T, id sdk.AccountObjectIdenti
 		require.NoError(t, err)
 	}
 }
+
+func (c *ExternalVolumeClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.ExternalVolume, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}
