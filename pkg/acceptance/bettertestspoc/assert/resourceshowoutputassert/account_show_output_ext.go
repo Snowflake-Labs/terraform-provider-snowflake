@@ -16,13 +16,6 @@ func AccountDatasourceShowOutput(t *testing.T, name string) *AccountShowOutputAs
 	return &a
 }
 
-// TODO: Why those are not duplicates
-
-func (a *AccountShowOutputAssert) HasAccountUrlNotEmpty() *AccountShowOutputAssert {
-	a.AddAssertion(assert.ResourceShowOutputValuePresent("account_url"))
-	return a
-}
-
 func (a *AccountShowOutputAssert) HasAccountOldUrlSavedOnEmpty() *AccountShowOutputAssert {
 	a.AddAssertion(assert.ResourceShowOutputValueSet("account_old_url_saved_on", ""))
 	return a

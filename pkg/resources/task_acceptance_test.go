@@ -90,7 +90,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
 						HasAllDefaults(),
 				),
@@ -193,7 +193,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
 						HasAllDefaults(),
 				),
@@ -304,7 +304,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// Set
@@ -354,7 +354,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// Unset
@@ -403,7 +403,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -647,7 +647,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// External change - unset all optional fields and expect no change
@@ -709,7 +709,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// Unset optional values
@@ -753,7 +753,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// External change - set all optional fields and expect no change
@@ -815,7 +815,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -1704,14 +1704,14 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 						HasSuspendTaskAfterNumFailuresString("1"),
 					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelations(sdk.TaskRelations{}).
+						HasTaskRelationsObject(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelations(sdk.TaskRelations{}).
+						HasTaskRelationsObject(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
@@ -1733,7 +1733,7 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
-						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootTaskId}).
+						HasTaskRelationsObject(sdk.TaskRelations{FinalizedRootTask: &rootTaskId}).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
@@ -1748,14 +1748,14 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 						HasSuspendTaskAfterNumFailuresString("10"),
 					resourceshowoutputassert.TaskShowOutput(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelations(sdk.TaskRelations{}).
+						HasTaskRelationsObject(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
 					resourceassert.TaskResource(t, childTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelations(sdk.TaskRelations{}).
+						HasTaskRelationsObject(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
 				),
 			},
@@ -2037,7 +2037,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(""),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// Set finalizer in config
@@ -2050,7 +2050,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(rootId.FullyQualifiedName()),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootId}),
+						HasTaskRelationsObject(sdk.TaskRelations{FinalizedRootTask: &rootId}),
 				),
 			},
 			// Unset finalizer externally
@@ -2073,7 +2073,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(rootId.FullyQualifiedName()),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootId}),
+						HasTaskRelationsObject(sdk.TaskRelations{FinalizedRootTask: &rootId}),
 				),
 			},
 			// Unset finalizer in config
@@ -2086,7 +2086,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(""),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -2151,7 +2151,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 			// Set after in config
@@ -2164,7 +2164,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
+						HasTaskRelationsObject(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
 				),
 			},
 			// Unset after externally
@@ -2187,7 +2187,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
+						HasTaskRelationsObject(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
 				),
 			},
 			// Unset after in config
@@ -2200,7 +2200,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelations(sdk.TaskRelations{}),
+						HasTaskRelationsObject(sdk.TaskRelations{}),
 				),
 			},
 		},

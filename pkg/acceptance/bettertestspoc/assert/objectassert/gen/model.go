@@ -38,7 +38,7 @@ func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) SnowflakeO
 	containsSliceField := false
 	for idx, field := range sdkObject.Fields {
 		fields[idx] = MapToSnowflakeObjectFieldAssertion(field)
-		if !containsSliceField && field.IsSlice() {
+		if field.IsSlice() {
 			containsSliceField = true
 		}
 	}

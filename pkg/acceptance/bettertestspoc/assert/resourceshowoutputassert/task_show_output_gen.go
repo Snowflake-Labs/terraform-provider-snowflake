@@ -86,7 +86,7 @@ func (t *TaskShowOutputAssert) HasSchedule(expected string) *TaskShowOutputAsser
 	return t
 }
 
-func (t *TaskShowOutputAssert) HasPredecessors(expected []sdk.SchemaObjectIdentifier) *TaskShowOutputAssert {
+func (t *TaskShowOutputAssert) HasPredecessors(expected ...sdk.SchemaObjectIdentifier) *TaskShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("predecessors", fmt.Sprintf("%v", expected)))
 	return t
 }
