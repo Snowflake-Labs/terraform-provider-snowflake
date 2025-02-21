@@ -490,11 +490,7 @@ func ToDriverLogLevel(s string) (DriverLogLevel, error) {
 	case string(DriverLogLevelTrace),
 		string(DriverLogLevelDebug),
 		string(DriverLogLevelInfo),
-		string(DriverLogLevelPrint),
-		string(DriverLogLevelWarning),
-		string(DriverLogLevelError),
-		string(DriverLogLevelFatal),
-		string(DriverLogLevelPanic):
+		string(DriverLogLevelPrint):
 		return DriverLogLevel(lowerCase), nil
 	default:
 		return "", fmt.Errorf("invalid driver log level: %s", s)
