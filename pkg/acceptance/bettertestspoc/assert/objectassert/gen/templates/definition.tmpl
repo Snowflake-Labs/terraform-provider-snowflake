@@ -13,6 +13,15 @@ func {{ .Name }}(t *testing.T, id {{ .IdType }}) *{{ $assertName }} {
     }
 }
 
+func {{ .Name }}WithTestClient(t *testing.T, id {{ .IdType }}) *{{ $assertName }} {
+    t.Helper()
+    return &{{ $assertName }}{
+        assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectType{{ .Name }}, id, func(testClient *helpers.TestClient) assert.ObjectProvider[{{ .SdkType }}, {{ .IdType }}] {
+            return testClient.{{ .Name }}.Show
+        }),
+    }
+}
+
 func {{ .Name }}FromObject(t *testing.T, {{ $nameLowerCase }} *{{ .SdkType }}) *{{ $assertName }} {
     t.Helper()
     return &{{ $assertName }}{
