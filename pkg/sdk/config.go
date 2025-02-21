@@ -488,7 +488,6 @@ func ToDriverLogLevel(s string) (DriverLogLevel, error) {
 	lowerCase := strings.ToLower(s)
 	switch lowerCase {
 	case string(DriverLogLevelTrace),
-		string(DriverLogLevelDebug),
 		string(DriverLogLevelInfo),
 		string(DriverLogLevelPrint),
 		string(DriverLogLevelWarning),
