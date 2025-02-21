@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/exp/maps"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"golang.org/x/exp/maps"
 )
 
 // TestCheckFuncProvider is an interface with just one method providing resource.TestCheckFunc.
@@ -98,6 +98,8 @@ func CheckImport(f resource.ImportStateCheckFunc) ImportStateCheckFuncProvider {
 // It does not return function like TestCheckFuncProvider or ImportStateCheckFuncProvider; it runs all the assertions in place instead.
 type InPlaceAssertionVerifier interface {
 	VerifyAll(t *testing.T)
+	// VerifyAllWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
+	VerifyAllWithTestClient(t *testing.T, testClient *helpers.TestClient)
 }
 
 // AssertThatObject should be used in the SDK tests for created object validation.
@@ -105,6 +107,13 @@ type InPlaceAssertionVerifier interface {
 func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
 	t.Helper()
 	objectAssert.VerifyAll(t)
+}
+
+// AssertThatObjectWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
+// It should be replaced back to AssertThatObject.
+func AssertThatObjectWithTestClient(t *testing.T, objectAssert InPlaceAssertionVerifier, testClient *helpers.TestClient) {
+	t.Helper()
+	objectAssert.VerifyAllWithTestClient(t, testClient)
 }
 
 func ContainsExactlyInAnyOrder(resourceKey string, attributePath string, expectedItems []map[string]string) resource.TestCheckFunc {
