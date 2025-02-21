@@ -1,6 +1,6 @@
 module github.com/Snowflake-Labs/terraform-provider-snowflake
 
-go 1.22.10
+go 1.23.0
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
