@@ -8,7 +8,9 @@ type {{ $assertName }} struct {
 func {{ .Name }}Parameters(t *testing.T, id {{ .IdType }}) *{{ $assertName }} {
     t.Helper()
     return &{{ $assertName }}{
-        assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectType{{ .Name }}, acc.TestClient().Parameter.Show{{ .Name }}Parameters),
+        assert.NewSnowflakeObjectAssertWithTestClientParametersProvider(id, sdk.ObjectType{{ .Name }}, func(testClient *helpers.TestClient) assert.ParametersProvider[{{ .IdType }}] {
+            return testClient.Parameter.Show{{ .Name }}Parameters
+        }),
     }
 }
 
