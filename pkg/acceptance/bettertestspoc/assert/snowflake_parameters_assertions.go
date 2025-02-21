@@ -118,14 +118,7 @@ func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testin
 
 // VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake parameters assertions.
 // It verifies all the assertions accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T) {
-	t.Helper()
-	err := s.runSnowflakeParametersAssertions(t)
-	require.NoError(t, err)
-}
-
-// VerifyAllWithTestClient is temporary (currently, added only to fulfill the interface)
-func (s *SnowflakeParametersAssert[_]) VerifyAllWithTestClient(t *testing.T, testClient *helpers.TestClient) {
+func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T, testClient *helpers.TestClient) {
 	t.Helper()
 	err := s.runSnowflakeParametersAssertionsWithTestClient(t, testClient)
 	require.NoError(t, err)
