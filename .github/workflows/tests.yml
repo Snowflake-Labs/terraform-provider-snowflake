@@ -31,10 +31,8 @@ jobs:
           else echo "shas are equal"
           fi
           echo ========
-          echo \"${{ github.event_name }}\"
           echo \"${{ github.event.client_payload.pull_request.head.repo.full_name }}\"
           echo \"${{ github.event.client_payload.pull_request.head.ref }}\"
-
 
       - name: Checkout Code (Repository Dispatch Event)
         if: (github.event_name == 'repository_dispatch')
