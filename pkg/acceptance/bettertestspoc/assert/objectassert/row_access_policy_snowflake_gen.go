@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"testing"
 
+	// TODO [snowflake object assertion rework]: remove
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -20,6 +22,15 @@ func RowAccessPolicy(t *testing.T, id sdk.SchemaObjectIdentifier) *RowAccessPoli
 	t.Helper()
 	return &RowAccessPolicyAssert{
 		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeRowAccessPolicy, id, acc.TestClient().RowAccessPolicy.Show),
+	}
+}
+
+func RowAccessPolicyWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *RowAccessPolicyAssert {
+	t.Helper()
+	return &RowAccessPolicyAssert{
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeRowAccessPolicy, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.RowAccessPolicy, sdk.SchemaObjectIdentifier] {
+			return testClient.RowAccessPolicy.Show
+		}),
 	}
 }
 

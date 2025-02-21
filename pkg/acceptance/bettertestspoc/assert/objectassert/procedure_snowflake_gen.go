@@ -8,9 +8,11 @@ import (
 	"slices"
 	"testing"
 
+	// TODO [snowflake object assertion rework]: remove
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -22,6 +24,15 @@ func Procedure(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *Proced
 	t.Helper()
 	return &ProcedureAssert{
 		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeProcedure, id, acc.TestClient().Procedure.Show),
+	}
+}
+
+func ProcedureWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *ProcedureAssert {
+	t.Helper()
+	return &ProcedureAssert{
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeProcedure, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Procedure, sdk.SchemaObjectIdentifierWithArguments] {
+			return testClient.Procedure.Show
+		}),
 	}
 }
 

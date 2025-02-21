@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	// TODO [snowflake object assertion rework]: remove
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -21,6 +23,15 @@ func Tag(t *testing.T, id sdk.SchemaObjectIdentifier) *TagAssert {
 	t.Helper()
 	return &TagAssert{
 		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeTag, id, acc.TestClient().Tag.Show),
+	}
+}
+
+func TagWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *TagAssert {
+	t.Helper()
+	return &TagAssert{
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeTag, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Tag, sdk.SchemaObjectIdentifier] {
+			return testClient.Tag.Show
+		}),
 	}
 }
 

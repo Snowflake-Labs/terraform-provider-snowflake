@@ -8,9 +8,11 @@ import (
 	"testing"
 	"time"
 
+	// TODO [snowflake object assertion rework]: remove
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -22,6 +24,15 @@ func Secret(t *testing.T, id sdk.SchemaObjectIdentifier) *SecretAssert {
 	t.Helper()
 	return &SecretAssert{
 		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeSecret, id, acc.TestClient().Secret.Show),
+	}
+}
+
+func SecretWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *SecretAssert {
+	t.Helper()
+	return &SecretAssert{
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeSecret, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Secret, sdk.SchemaObjectIdentifier] {
+			return testClient.Secret.Show
+		}),
 	}
 }
 
