@@ -5,12 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/stretchr/testify/require"
-
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/stretchr/testify/require"
 )
 
 const ConnectionFailoverToAccountInSameRegionErrorMessage = "The connection cannot be failed over to an account in the same region"
@@ -36,7 +34,7 @@ func TestInt_Connections(t *testing.T) {
 		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
 
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
-		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		assertThatObject(t, objectassert.Connection(t, id).
 			HasSnowflakeRegion(sessionDetails.Region).
 			HasAccountName(sessionDetails.AccountName).
 			HasName(id.Name()).
@@ -63,7 +61,7 @@ func TestInt_Connections(t *testing.T) {
 		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
 
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
-		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		assertThatObject(t, objectassert.Connection(t, id).
 			HasSnowflakeRegion(sessionDetails.Region).
 			HasAccountName(sessionDetails.AccountName).
 			HasName(id.Name()).
@@ -98,7 +96,7 @@ func TestInt_Connections(t *testing.T) {
 		require.ErrorContains(t, err, ConnectionFailoverToAccountInSameRegionErrorMessage)
 
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
-		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		assertThatObject(t, objectassert.Connection(t, id).
 			HasSnowflakeRegion(sessionDetails.Region).
 			HasAccountName(sessionDetails.AccountName).
 			HasName(id.Name()).
@@ -141,7 +139,7 @@ func TestInt_Connections(t *testing.T) {
 		t.Cleanup(testClientHelper().Connection.DropFunc(t, id))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		assertThatObject(t, objectassert.Connection(t, id).
 			HasSnowflakeRegion(sessionDetails.Region).
 			HasAccountName(sessionDetails.AccountName).
 			HasName(id.Name()).
@@ -186,7 +184,7 @@ func TestInt_Connections(t *testing.T) {
 
 		// Assert that promotion for other account has been disabled
 		externalObjectIdentifier := sdk.NewExternalObjectIdentifier(accountId, id)
-		assertions.AssertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
+		assertThatObject(t, objectassert.Connection(t, primaryConn.ID()).
 			HasPrimaryIdentifier(externalObjectIdentifier).
 			HasFailoverAllowedToAccounts(accountId),
 		)
@@ -207,7 +205,7 @@ func TestInt_Connections(t *testing.T) {
 				WithComment("new integration test comment")))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		assertThatObject(t, objectassert.Connection(t, id).
 			HasName(id.Name()).
 			HasComment("new integration test comment"),
 		)
@@ -218,7 +216,7 @@ func TestInt_Connections(t *testing.T) {
 				WithComment(true)))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Connection(t, id).
+		assertThatObject(t, objectassert.Connection(t, id).
 			HasName(id.Name()).
 			HasNoComment(),
 		)
