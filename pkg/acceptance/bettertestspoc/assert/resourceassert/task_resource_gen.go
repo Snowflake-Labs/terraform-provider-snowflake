@@ -774,142 +774,177 @@ func (t *TaskResourceAssert) HasAllowOverlappingExecutionEmpty() *TaskResourceAs
 	t.AddAssertion(assert.ValueSet("allow_overlapping_execution", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasBinaryInputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("binary_input_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasBinaryOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("binary_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasClientTimestampTypeMappingEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("client_timestamp_type_mapping", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasCommentEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("comment", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasConfigEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("config", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasDatabaseEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("database", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasDateInputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("date_input_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasDateOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("date_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasErrorIntegrationEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("error_integration", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasFinalizeEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("finalize", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasFullyQualifiedNameEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasGeographyOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("geography_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasGeometryOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("geometry_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasLogLevelEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("log_level", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasNameEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("name", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasQueryTagEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("query_tag", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasS3StageVpceDnsNameEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("s3_stage_vpce_dns_name", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasSchemaEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("schema", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasSearchPathEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("search_path", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasSqlStatementEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("sql_statement", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimeInputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("time_input_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimeOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("time_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimestampInputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timestamp_input_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimestampLtzOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timestamp_ltz_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimestampNtzOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timestamp_ntz_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimestampOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timestamp_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimestampTypeMappingEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timestamp_type_mapping", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimestampTzOutputFormatEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timestamp_tz_output_format", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTimezoneEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("timezone", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTraceLevelEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("trace_level", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasTransactionDefaultIsolationLevelEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("transaction_default_isolation_level", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasUnsupportedDdlActionEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("unsupported_ddl_action", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasUserTaskManagedInitialWarehouseSizeEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("user_task_managed_initial_warehouse_size", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasWarehouseEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("warehouse", ""))
 	return t
 }
+
 func (t *TaskResourceAssert) HasWhenEmpty() *TaskResourceAssert {
 	t.AddAssertion(assert.ValueSet("when", ""))
 	return t

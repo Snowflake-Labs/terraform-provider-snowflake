@@ -94,10 +94,12 @@ func (p *PrimaryConnectionResourceAssert) HasCommentEmpty() *PrimaryConnectionRe
 	p.AddAssertion(assert.ValueSet("comment", ""))
 	return p
 }
+
 func (p *PrimaryConnectionResourceAssert) HasFullyQualifiedNameEmpty() *PrimaryConnectionResourceAssert {
 	p.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return p
 }
+
 func (p *PrimaryConnectionResourceAssert) HasNameEmpty() *PrimaryConnectionResourceAssert {
 	p.AddAssertion(assert.ValueSet("name", ""))
 	return p

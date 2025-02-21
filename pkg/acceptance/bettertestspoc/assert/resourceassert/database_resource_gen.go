@@ -264,38 +264,47 @@ func (d *DatabaseResourceAssert) HasCatalogEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("catalog", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasCommentEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("comment", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasDefaultDdlCollationEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("default_ddl_collation", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasExternalVolumeEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("external_volume", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasFullyQualifiedNameEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasLogLevelEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("log_level", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasNameEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("name", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasStorageSerializationPolicyEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("storage_serialization_policy", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasTraceLevelEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("trace_level", ""))
 	return d
 }
+
 func (d *DatabaseResourceAssert) HasUserTaskManagedInitialWarehouseSizeEmpty() *DatabaseResourceAssert {
 	d.AddAssertion(assert.ValueSet("user_task_managed_initial_warehouse_size", ""))
 	return d

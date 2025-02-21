@@ -134,26 +134,32 @@ func (s *StreamOnDirectoryTableResourceAssert) HasCommentEmpty() *StreamOnDirect
 	s.AddAssertion(assert.ValueSet("comment", ""))
 	return s
 }
+
 func (s *StreamOnDirectoryTableResourceAssert) HasDatabaseEmpty() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("database", ""))
 	return s
 }
+
 func (s *StreamOnDirectoryTableResourceAssert) HasFullyQualifiedNameEmpty() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return s
 }
+
 func (s *StreamOnDirectoryTableResourceAssert) HasNameEmpty() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("name", ""))
 	return s
 }
+
 func (s *StreamOnDirectoryTableResourceAssert) HasSchemaEmpty() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("schema", ""))
 	return s
 }
+
 func (s *StreamOnDirectoryTableResourceAssert) HasStageEmpty() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("stage", ""))
 	return s
 }
+
 func (s *StreamOnDirectoryTableResourceAssert) HasStreamTypeEmpty() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueSet("stream_type", ""))
 	return s

@@ -64,6 +64,7 @@ func (a *AccountParameterResourceAssert) HasKeyEmpty() *AccountParameterResource
 	a.AddAssertion(assert.ValueSet("key", ""))
 	return a
 }
+
 func (a *AccountParameterResourceAssert) HasValueEmpty() *AccountParameterResourceAssert {
 	a.AddAssertion(assert.ValueSet("value", ""))
 	return a

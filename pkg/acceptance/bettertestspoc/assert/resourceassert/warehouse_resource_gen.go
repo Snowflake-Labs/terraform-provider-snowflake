@@ -214,34 +214,42 @@ func (w *WarehouseResourceAssert) HasAutoResumeEmpty() *WarehouseResourceAssert 
 	w.AddAssertion(assert.ValueSet("auto_resume", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasCommentEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("comment", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasEnableQueryAccelerationEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("enable_query_acceleration", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasFullyQualifiedNameEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasNameEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("name", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasResourceMonitorEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("resource_monitor", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasScalingPolicyEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("scaling_policy", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasWarehouseSizeEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("warehouse_size", ""))
 	return w
 }
+
 func (w *WarehouseResourceAssert) HasWarehouseTypeEmpty() *WarehouseResourceAssert {
 	w.AddAssertion(assert.ValueSet("warehouse_type", ""))
 	return w

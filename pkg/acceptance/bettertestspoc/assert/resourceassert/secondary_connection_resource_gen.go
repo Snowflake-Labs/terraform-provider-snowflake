@@ -94,14 +94,17 @@ func (s *SecondaryConnectionResourceAssert) HasAsReplicaOfEmpty() *SecondaryConn
 	s.AddAssertion(assert.ValueSet("as_replica_of", ""))
 	return s
 }
+
 func (s *SecondaryConnectionResourceAssert) HasCommentEmpty() *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueSet("comment", ""))
 	return s
 }
+
 func (s *SecondaryConnectionResourceAssert) HasFullyQualifiedNameEmpty() *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return s
 }
+
 func (s *SecondaryConnectionResourceAssert) HasNameEmpty() *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueSet("name", ""))
 	return s

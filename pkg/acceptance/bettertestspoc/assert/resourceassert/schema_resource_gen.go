@@ -274,50 +274,62 @@ func (s *SchemaResourceAssert) HasCatalogEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("catalog", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasCommentEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("comment", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasDatabaseEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("database", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasDefaultDdlCollationEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("default_ddl_collation", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasExternalVolumeEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("external_volume", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasFullyQualifiedNameEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasIsTransientEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("is_transient", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasLogLevelEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("log_level", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasNameEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("name", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasStorageSerializationPolicyEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("storage_serialization_policy", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasTraceLevelEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("trace_level", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasUserTaskManagedInitialWarehouseSizeEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("user_task_managed_initial_warehouse_size", ""))
 	return s
 }
+
 func (s *SchemaResourceAssert) HasWithManagedAccessEmpty() *SchemaResourceAssert {
 	s.AddAssertion(assert.ValueSet("with_managed_access", ""))
 	return s

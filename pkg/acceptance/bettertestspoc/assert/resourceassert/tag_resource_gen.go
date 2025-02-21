@@ -114,18 +114,22 @@ func (t *TagResourceAssert) HasCommentEmpty() *TagResourceAssert {
 	t.AddAssertion(assert.ValueSet("comment", ""))
 	return t
 }
+
 func (t *TagResourceAssert) HasDatabaseEmpty() *TagResourceAssert {
 	t.AddAssertion(assert.ValueSet("database", ""))
 	return t
 }
+
 func (t *TagResourceAssert) HasFullyQualifiedNameEmpty() *TagResourceAssert {
 	t.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return t
 }
+
 func (t *TagResourceAssert) HasNameEmpty() *TagResourceAssert {
 	t.AddAssertion(assert.ValueSet("name", ""))
 	return t
 }
+
 func (t *TagResourceAssert) HasSchemaEmpty() *TagResourceAssert {
 	t.AddAssertion(assert.ValueSet("schema", ""))
 	return t

@@ -194,50 +194,62 @@ func (f *FunctionSqlResourceAssert) HasCommentEmpty() *FunctionSqlResourceAssert
 	f.AddAssertion(assert.ValueSet("comment", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasDatabaseEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("database", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasFullyQualifiedNameEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasFunctionDefinitionEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("function_definition", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasFunctionLanguageEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("function_language", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasIsSecureEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("is_secure", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasLogLevelEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("log_level", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasMetricLevelEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("metric_level", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasNameEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("name", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasReturnResultsBehaviorEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("return_results_behavior", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasReturnTypeEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("return_type", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasSchemaEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("schema", ""))
 	return f
 }
+
 func (f *FunctionSqlResourceAssert) HasTraceLevelEmpty() *FunctionSqlResourceAssert {
 	f.AddAssertion(assert.ValueSet("trace_level", ""))
 	return f

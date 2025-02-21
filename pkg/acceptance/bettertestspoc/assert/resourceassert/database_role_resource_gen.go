@@ -84,14 +84,17 @@ func (d *DatabaseRoleResourceAssert) HasCommentEmpty() *DatabaseRoleResourceAsse
 	d.AddAssertion(assert.ValueSet("comment", ""))
 	return d
 }
+
 func (d *DatabaseRoleResourceAssert) HasDatabaseEmpty() *DatabaseRoleResourceAssert {
 	d.AddAssertion(assert.ValueSet("database", ""))
 	return d
 }
+
 func (d *DatabaseRoleResourceAssert) HasFullyQualifiedNameEmpty() *DatabaseRoleResourceAssert {
 	d.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return d
 }
+
 func (d *DatabaseRoleResourceAssert) HasNameEmpty() *DatabaseRoleResourceAssert {
 	d.AddAssertion(assert.ValueSet("name", ""))
 	return d

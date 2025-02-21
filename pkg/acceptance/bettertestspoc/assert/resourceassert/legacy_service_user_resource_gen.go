@@ -804,162 +804,202 @@ func (l *LegacyServiceUserResourceAssert) HasBinaryInputFormatEmpty() *LegacySer
 	l.AddAssertion(assert.ValueSet("binary_input_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasBinaryOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("binary_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasClientTimestampTypeMappingEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("client_timestamp_type_mapping", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasCommentEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("comment", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDateInputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("date_input_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDateOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("date_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDefaultNamespaceEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("default_namespace", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDefaultRoleEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("default_role", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDefaultSecondaryRolesOptionEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("default_secondary_roles_option", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDefaultWarehouseEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("default_warehouse", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDisabledEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("disabled", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasDisplayNameEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("display_name", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasEmailEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("email", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasFullyQualifiedNameEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasGeographyOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("geography_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasGeometryOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("geometry_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasLogLevelEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("log_level", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasLoginNameEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("login_name", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasMustChangePasswordEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("must_change_password", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasNameEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("name", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasNetworkPolicyEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("network_policy", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasPasswordEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("password", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasQueryTagEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("query_tag", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasRsaPublicKeyEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("rsa_public_key", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasRsaPublicKey2Empty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("rsa_public_key_2", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasS3StageVpceDnsNameEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("s3_stage_vpce_dns_name", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasSearchPathEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("search_path", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasSimulatedDataSharingConsumerEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("simulated_data_sharing_consumer", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimeInputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("time_input_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimeOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("time_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimestampInputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timestamp_input_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimestampLtzOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timestamp_ltz_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimestampNtzOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timestamp_ntz_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimestampOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timestamp_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimestampTypeMappingEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timestamp_type_mapping", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimestampTzOutputFormatEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timestamp_tz_output_format", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTimezoneEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("timezone", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTraceLevelEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("trace_level", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasTransactionDefaultIsolationLevelEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("transaction_default_isolation_level", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasUnsupportedDdlActionEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("unsupported_ddl_action", ""))
 	return l
 }
+
 func (l *LegacyServiceUserResourceAssert) HasUserTypeEmpty() *LegacyServiceUserResourceAssert {
 	l.AddAssertion(assert.ValueSet("user_type", ""))
 	return l

@@ -154,42 +154,52 @@ func (m *ManagedAccountResourceAssert) HasAdminNameEmpty() *ManagedAccountResour
 	m.AddAssertion(assert.ValueSet("admin_name", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasAdminPasswordEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("admin_password", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasCloudEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("cloud", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasCommentEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("comment", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasCreatedOnEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("created_on", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasFullyQualifiedNameEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasLocatorEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("locator", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasNameEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("name", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasRegionEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("region", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasTypeEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("type", ""))
 	return m
 }
+
 func (m *ManagedAccountResourceAssert) HasUrlEmpty() *ManagedAccountResourceAssert {
 	m.AddAssertion(assert.ValueSet("url", ""))
 	return m

@@ -214,50 +214,62 @@ func (o *OauthIntegrationForCustomClientsResourceAssert) HasCommentEmpty() *Oaut
 	o.AddAssertion(assert.ValueSet("comment", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasEnabledEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("enabled", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasFullyQualifiedNameEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasNameEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("name", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasNetworkPolicyEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("network_policy", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthAllowNonTlsRedirectUriEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_allow_non_tls_redirect_uri", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthClientRsaPublicKeyEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_client_rsa_public_key", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthClientRsaPublicKey2Empty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_client_rsa_public_key_2", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthClientTypeEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_client_type", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthEnforcePkceEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_enforce_pkce", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthIssueRefreshTokensEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_issue_refresh_tokens", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthRedirectUriEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_redirect_uri", ""))
 	return o
 }
+
 func (o *OauthIntegrationForCustomClientsResourceAssert) HasOauthUseSecondaryRolesEmpty() *OauthIntegrationForCustomClientsResourceAssert {
 	o.AddAssertion(assert.ValueSet("oauth_use_secondary_roles", ""))
 	return o

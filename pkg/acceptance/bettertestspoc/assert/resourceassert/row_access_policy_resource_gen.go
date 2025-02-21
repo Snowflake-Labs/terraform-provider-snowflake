@@ -114,22 +114,27 @@ func (r *RowAccessPolicyResourceAssert) HasBodyEmpty() *RowAccessPolicyResourceA
 	r.AddAssertion(assert.ValueSet("body", ""))
 	return r
 }
+
 func (r *RowAccessPolicyResourceAssert) HasCommentEmpty() *RowAccessPolicyResourceAssert {
 	r.AddAssertion(assert.ValueSet("comment", ""))
 	return r
 }
+
 func (r *RowAccessPolicyResourceAssert) HasDatabaseEmpty() *RowAccessPolicyResourceAssert {
 	r.AddAssertion(assert.ValueSet("database", ""))
 	return r
 }
+
 func (r *RowAccessPolicyResourceAssert) HasFullyQualifiedNameEmpty() *RowAccessPolicyResourceAssert {
 	r.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return r
 }
+
 func (r *RowAccessPolicyResourceAssert) HasNameEmpty() *RowAccessPolicyResourceAssert {
 	r.AddAssertion(assert.ValueSet("name", ""))
 	return r
 }
+
 func (r *RowAccessPolicyResourceAssert) HasSchemaEmpty() *RowAccessPolicyResourceAssert {
 	r.AddAssertion(assert.ValueSet("schema", ""))
 	return r

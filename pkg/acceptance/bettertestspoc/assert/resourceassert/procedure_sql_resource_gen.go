@@ -204,54 +204,67 @@ func (p *ProcedureSqlResourceAssert) HasCommentEmpty() *ProcedureSqlResourceAsse
 	p.AddAssertion(assert.ValueSet("comment", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasDatabaseEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("database", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasExecuteAsEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("execute_as", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasFullyQualifiedNameEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasIsSecureEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("is_secure", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasLogLevelEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("log_level", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasMetricLevelEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("metric_level", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasNameEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("name", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasNullInputBehaviorEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("null_input_behavior", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasProcedureDefinitionEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_definition", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasProcedureLanguageEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("procedure_language", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasReturnTypeEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("return_type", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasSchemaEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("schema", ""))
 	return p
 }
+
 func (p *ProcedureSqlResourceAssert) HasTraceLevelEmpty() *ProcedureSqlResourceAssert {
 	p.AddAssertion(assert.ValueSet("trace_level", ""))
 	return p

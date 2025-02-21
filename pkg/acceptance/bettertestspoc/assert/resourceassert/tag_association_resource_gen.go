@@ -94,10 +94,12 @@ func (t *TagAssociationResourceAssert) HasObjectTypeEmpty() *TagAssociationResou
 	t.AddAssertion(assert.ValueSet("object_type", ""))
 	return t
 }
+
 func (t *TagAssociationResourceAssert) HasTagIdEmpty() *TagAssociationResourceAssert {
 	t.AddAssertion(assert.ValueSet("tag_id", ""))
 	return t
 }
+
 func (t *TagAssociationResourceAssert) HasTagValueEmpty() *TagAssociationResourceAssert {
 	t.AddAssertion(assert.ValueSet("tag_value", ""))
 	return t

@@ -204,38 +204,47 @@ func (v *ViewResourceAssert) HasChangeTrackingEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("change_tracking", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasCommentEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("comment", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasDatabaseEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("database", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasFullyQualifiedNameEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasIsRecursiveEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("is_recursive", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasIsSecureEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("is_secure", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasIsTemporaryEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("is_temporary", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasNameEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("name", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasSchemaEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("schema", ""))
 	return v
 }
+
 func (v *ViewResourceAssert) HasStatementEmpty() *ViewResourceAssert {
 	v.AddAssertion(assert.ValueSet("statement", ""))
 	return v

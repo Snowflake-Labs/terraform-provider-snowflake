@@ -784,154 +784,192 @@ func (s *ServiceUserResourceAssert) HasBinaryInputFormatEmpty() *ServiceUserReso
 	s.AddAssertion(assert.ValueSet("binary_input_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasBinaryOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("binary_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasClientTimestampTypeMappingEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("client_timestamp_type_mapping", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasCommentEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("comment", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDateInputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("date_input_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDateOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("date_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDefaultNamespaceEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("default_namespace", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDefaultRoleEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("default_role", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDefaultSecondaryRolesOptionEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("default_secondary_roles_option", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDefaultWarehouseEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("default_warehouse", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDisabledEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("disabled", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasDisplayNameEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("display_name", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasEmailEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("email", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasFullyQualifiedNameEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasGeographyOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("geography_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasGeometryOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("geometry_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasLogLevelEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("log_level", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasLoginNameEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("login_name", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasNameEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("name", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasNetworkPolicyEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("network_policy", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasQueryTagEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("query_tag", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasRsaPublicKeyEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("rsa_public_key", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasRsaPublicKey2Empty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("rsa_public_key_2", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasS3StageVpceDnsNameEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("s3_stage_vpce_dns_name", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasSearchPathEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("search_path", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasSimulatedDataSharingConsumerEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("simulated_data_sharing_consumer", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimeInputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("time_input_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimeOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("time_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimestampInputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timestamp_input_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimestampLtzOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timestamp_ltz_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimestampNtzOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timestamp_ntz_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimestampOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timestamp_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimestampTypeMappingEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timestamp_type_mapping", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimestampTzOutputFormatEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timestamp_tz_output_format", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTimezoneEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("timezone", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTraceLevelEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("trace_level", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasTransactionDefaultIsolationLevelEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("transaction_default_isolation_level", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasUnsupportedDdlActionEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("unsupported_ddl_action", ""))
 	return s
 }
+
 func (s *ServiceUserResourceAssert) HasUserTypeEmpty() *ServiceUserResourceAssert {
 	s.AddAssertion(assert.ValueSet("user_type", ""))
 	return s
