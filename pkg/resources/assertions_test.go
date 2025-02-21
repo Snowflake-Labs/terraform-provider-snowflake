@@ -10,5 +10,5 @@ import (
 
 func assertThatObject(t *testing.T, objectAssert assert.InPlaceAssertionVerifier) {
 	t.Helper()
-	assert.AssertThatObjectWithTestClient(t, objectAssert, acc.TestClient())
+	assert.AssertThatObject(t, objectAssert, acc.TestClient())
 }

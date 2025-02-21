@@ -8,5 +8,5 @@ import (
 
 func assertThatObject(t *testing.T, objectAssert assert.InPlaceAssertionVerifier) {
 	t.Helper()
-	assert.AssertThatObjectWithTestClient(t, objectAssert, testClientHelper())
+	assert.AssertThatObject(t, objectAssert, testClientHelper())
 }

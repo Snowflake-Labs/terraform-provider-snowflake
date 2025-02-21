@@ -104,14 +104,7 @@ type InPlaceAssertionVerifier interface {
 
 // AssertThatObject should be used in the SDK tests for created object validation.
 // It verifies all the prepared assertions in place.
-func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
-	t.Helper()
-	objectAssert.VerifyAll(t)
-}
-
-// AssertThatObjectWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
-// It should be replaced back to AssertThatObject.
-func AssertThatObjectWithTestClient(t *testing.T, objectAssert InPlaceAssertionVerifier, testClient *helpers.TestClient) {
+func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier, testClient *helpers.TestClient) {
 	t.Helper()
 	objectAssert.VerifyAllWithTestClient(t, testClient)
 }
