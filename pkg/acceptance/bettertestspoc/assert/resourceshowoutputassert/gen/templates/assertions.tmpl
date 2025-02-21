@@ -9,7 +9,6 @@
 ////////////////////////////
 
 {{ range .Attributes -}}
-    {{/* TODO: jeśli nie znasz typu -> defaultuj do stringa */}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ .ConcreteType }}) *{{ $assertName }} {
         {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Set("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
         return {{ $assertVar }}

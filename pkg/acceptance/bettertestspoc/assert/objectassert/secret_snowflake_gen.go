@@ -3,6 +3,7 @@
 package objectassert
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"testing"
@@ -112,13 +113,21 @@ func (s *SecretAssert) HasSecretType(expected string) *SecretAssert {
 	return s
 }
 
-func (s *SecretAssert) HasOauthScopes(expected []string) *SecretAssert {
+func (s *SecretAssert) HasOauthScopes(expected ...string) *SecretAssert {
 	s.AddAssertion(func(t *testing.T, o *sdk.Secret) error {
 		t.Helper()
-		if !slices.Equal(o.OauthScopes, expected) {
-			return fmt.Errorf("expected oauth scopes: %v; got: %v", expected, o.OauthScopes)
+		if len(o.OauthScopes) != len(expected) {
+			return fmt.Errorf("expected oauth scopes length: %v; got: %v", len(expected), len(o.OauthScopes))
 		}
-		return nil
+		var errs []error
+		for _, want := range expected {
+			if !slices.ContainsFunc(o.OauthScopes, func(got string) bool {
+				return want == got
+			}) {
+				errs = append(errs, fmt.Errorf("expected: %v, to be in the list: %v", want, o.OauthScopes))
+			}
+		}
+		return errors.Join(errs...)
 	})
 	return s
 }

@@ -4,19 +4,45 @@
 {{ $sdkType := .SdkType }}
 {{ $nameLowerCase := FirstLetterLowercase .Name }}
 {{ $assertVar := FirstLetter $nameLowerCase }}
+
 {{- range .Fields }}
-    func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ TypeWithoutPointer .ConcreteType }}) *{{ $assertName }} {
+    {{ $functionParameterType := "" }}
+    {{ if .IsOriginalTypeSlice }}
+        {{ $functionParameterType = printf "...%s" (TypeWithoutSlice .ConcreteType) }}
+    {{ else }}
+        {{ $functionParameterType = TypeWithoutPointer .ConcreteType  }}
+    {{end}}
+
+    func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ $functionParameterType }}) *{{ $assertName }} {
         {{ $assertVar }}.AddAssertion(func(t *testing.T, o *{{ $sdkType }}) error {
             t.Helper()
             {{ if .IsOriginalTypePointer -}}
-            if o.{{ .Name }} == nil {
-                return fmt.Errorf("expected {{ CamelToWords .Name }} to have value; got: nil")
-            }
+                if o.{{ .Name }} == nil {
+                    return fmt.Errorf("expected {{ CamelToWords .Name }} to have value; got: nil")
+                }
+                if *{{ RunMapper .Mapper "o." .Name }} != {{ RunMapper .Mapper "expected" }} {
+                    return fmt.Errorf("expected {{ CamelToWords .Name }}: %v; got: %v", {{ RunMapper .Mapper "expected" }}, *{{ RunMapper .Mapper "o." .Name }})
+                }
+                return nil
+            {{ else if .IsOriginalTypeSlice -}}
+                if len(o.{{ .Name }}) != len(expected) {
+                    return fmt.Errorf("expected {{ CamelToWords .Name }} length: %v; got: %v", len(expected), len(o.{{ .Name }}))
+                }
+                var errs []error
+                for _, want := range expected {
+                    if !slices.ContainsFunc(o.{{ .Name }}, func(got {{ TypeWithoutSlice .ConcreteType }}) bool {
+                        return {{ RunMapper .Mapper "want" }} == {{ RunMapper .Mapper "got" }}
+                    }) {
+                        errs = append(errs, fmt.Errorf("expected: %v, to be in the list: %v", want, o.{{ .Name }}))
+                    }
+                }
+                return errors.Join(errs...)
+            {{ else -}}
+                if {{ RunMapper .Mapper "o." .Name }} != {{ RunMapper .Mapper "expected" }} {
+                    return fmt.Errorf("expected {{ CamelToWords .Name }}: %v; got: %v", {{ RunMapper .Mapper "expected" }}, {{ RunMapper .Mapper "o." .Name }})
+                }
+                return nil
             {{ end -}}
-            if {{ if .IsOriginalTypePointer }}*{{ end }}{{ RunMapper .Mapper "o." .Name }} != {{ RunMapper .Mapper "expected" }} {
-                return fmt.Errorf("expected {{ CamelToWords .Name }}: %v; got: %v", {{ RunMapper .Mapper "expected" }}, {{ if .IsOriginalTypePointer }}*{{ end }}{{ RunMapper .Mapper "o." .Name }})
-            }
-            return nil
         })
         return {{ $assertVar }}
     }

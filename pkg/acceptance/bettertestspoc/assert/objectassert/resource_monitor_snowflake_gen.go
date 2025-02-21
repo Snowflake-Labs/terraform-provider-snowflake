@@ -3,6 +3,7 @@
 package objectassert
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"testing"
@@ -123,13 +124,21 @@ func (r *ResourceMonitorAssert) HasEndTime(expected string) *ResourceMonitorAsse
 	return r
 }
 
-func (r *ResourceMonitorAssert) HasNotifyAt(expected []int) *ResourceMonitorAssert {
+func (r *ResourceMonitorAssert) HasNotifyAt(expected ...int) *ResourceMonitorAssert {
 	r.AddAssertion(func(t *testing.T, o *sdk.ResourceMonitor) error {
 		t.Helper()
-		if !slices.Equal(o.NotifyAt, expected) {
-			return fmt.Errorf("expected notify at: %v; got: %v", expected, o.NotifyAt)
+		if len(o.NotifyAt) != len(expected) {
+			return fmt.Errorf("expected notify at length: %v; got: %v", len(expected), len(o.NotifyAt))
 		}
-		return nil
+		var errs []error
+		for _, want := range expected {
+			if !slices.ContainsFunc(o.NotifyAt, func(got int) bool {
+				return want == got
+			}) {
+				errs = append(errs, fmt.Errorf("expected: %v, to be in the list: %v", want, o.NotifyAt))
+			}
+		}
+		return errors.Join(errs...)
 	})
 	return r
 }
@@ -195,13 +204,21 @@ func (r *ResourceMonitorAssert) HasComment(expected string) *ResourceMonitorAsse
 	return r
 }
 
-func (r *ResourceMonitorAssert) HasNotifyUsers(expected []string) *ResourceMonitorAssert {
+func (r *ResourceMonitorAssert) HasNotifyUsers(expected ...string) *ResourceMonitorAssert {
 	r.AddAssertion(func(t *testing.T, o *sdk.ResourceMonitor) error {
 		t.Helper()
-		if !slices.Equal(o.NotifyUsers, expected) {
-			return fmt.Errorf("expected notify users: %v; got: %v", expected, o.NotifyUsers)
+		if len(o.NotifyUsers) != len(expected) {
+			return fmt.Errorf("expected notify users length: %v; got: %v", len(expected), len(o.NotifyUsers))
 		}
-		return nil
+		var errs []error
+		for _, want := range expected {
+			if !slices.ContainsFunc(o.NotifyUsers, func(got string) bool {
+				return want == got
+			}) {
+				errs = append(errs, fmt.Errorf("expected: %v, to be in the list: %v", want, o.NotifyUsers))
+			}
+		}
+		return errors.Join(errs...)
 	})
 	return r
 }

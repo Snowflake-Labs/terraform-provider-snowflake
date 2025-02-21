@@ -27,6 +27,15 @@ func TypeWithoutPointer(t string) string {
 	return without
 }
 
+func TypeWithoutSlice(t string) string {
+	without, _ := strings.CutPrefix(t, "[]")
+	return without
+}
+
+func HasComparableSliceValue(value []any) bool {
+	return reflect.TypeOf(value).Elem().Comparable()
+}
+
 func SnakeCase(name string) string {
 	return ToSnakeCase(name)
 }

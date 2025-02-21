@@ -3,7 +3,9 @@
 package objectassert
 
 import (
+	"errors"
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -121,6 +123,25 @@ func (c *ConnectionAssert) HasPrimary(expected sdk.ExternalObjectIdentifier) *Co
 			return fmt.Errorf("expected primary: %v; got: %v", expected, o.Primary)
 		}
 		return nil
+	})
+	return c
+}
+
+func (c *ConnectionAssert) HasFailoverAllowedToAccounts(expected ...sdk.AccountIdentifier) *ConnectionAssert {
+	c.AddAssertion(func(t *testing.T, o *sdk.Connection) error {
+		t.Helper()
+		if len(o.FailoverAllowedToAccounts) != len(expected) {
+			return fmt.Errorf("expected failover allowed to accounts length: %v; got: %v", len(expected), len(o.FailoverAllowedToAccounts))
+		}
+		var errs []error
+		for _, want := range expected {
+			if !slices.ContainsFunc(o.FailoverAllowedToAccounts, func(got sdk.AccountIdentifier) bool {
+				return want == got
+			}) {
+				errs = append(errs, fmt.Errorf("expected: %v, to be in the list: %v", want, o.FailoverAllowedToAccounts))
+			}
+		}
+		return errors.Join(errs...)
 	})
 	return c
 }

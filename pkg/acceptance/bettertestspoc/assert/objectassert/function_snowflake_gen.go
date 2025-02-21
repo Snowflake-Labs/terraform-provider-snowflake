@@ -2,8 +2,8 @@
 
 package objectassert
 
-// imports modified manually
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"testing"
@@ -120,14 +120,21 @@ func (f *FunctionAssert) HasMaxNumArguments(expected int) *FunctionAssert {
 	return f
 }
 
-func (f *FunctionAssert) HasArgumentsOld(expected []sdk.DataType) *FunctionAssert {
+func (f *FunctionAssert) HasArgumentsOld(expected ...sdk.DataType) *FunctionAssert {
 	f.AddAssertion(func(t *testing.T, o *sdk.Function) error {
 		t.Helper()
-		// edited manually
-		if !slices.Equal(o.ArgumentsOld, expected) {
-			return fmt.Errorf("expected arguments old: %v; got: %v", expected, o.ArgumentsOld)
+		if len(o.ArgumentsOld) != len(expected) {
+			return fmt.Errorf("expected arguments old length: %v; got: %v", len(expected), len(o.ArgumentsOld))
 		}
-		return nil
+		var errs []error
+		for _, want := range expected {
+			if !slices.ContainsFunc(o.ArgumentsOld, func(got sdk.DataType) bool {
+				return want == got
+			}) {
+				errs = append(errs, fmt.Errorf("expected: %v, to be in the list: %v", want, o.ArgumentsOld))
+			}
+		}
+		return errors.Join(errs...)
 	})
 	return f
 }

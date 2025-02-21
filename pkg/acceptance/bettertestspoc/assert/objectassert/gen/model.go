@@ -28,17 +28,26 @@ type SnowflakeObjectFieldAssertion struct {
 	Name                  string
 	ConcreteType          string
 	IsOriginalTypePointer bool
+	IsOriginalTypeSlice   bool
 	Mapper                genhelpers.Mapper
 }
 
 func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) SnowflakeObjectAssertionsModel {
 	name, _ := strings.CutPrefix(sdkObject.Name, "sdk.")
 	fields := make([]SnowflakeObjectFieldAssertion, len(sdkObject.Fields))
+	containsSliceField := false
 	for idx, field := range sdkObject.Fields {
 		fields[idx] = MapToSnowflakeObjectFieldAssertion(field)
+		if !containsSliceField && field.IsSlice() {
+			containsSliceField = true
+		}
 	}
 
 	packageWithGenerateDirective := os.Getenv("GOPACKAGE")
+	additionalImports := genhelpers.AdditionalStandardImports(sdkObject.Fields)
+	if containsSliceField {
+		additionalImports = append(additionalImports, "slices", "errors")
+	}
 	return SnowflakeObjectAssertionsModel{
 		Name:    name,
 		SdkType: sdkObject.Name,
@@ -46,7 +55,7 @@ func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) SnowflakeO
 		Fields:  fields,
 		PreambleModel: PreambleModel{
 			PackageName:               packageWithGenerateDirective,
-			AdditionalStandardImports: genhelpers.AdditionalStandardImports(sdkObject.Fields),
+			AdditionalStandardImports: additionalImports,
 		},
 	}
 }
@@ -64,6 +73,7 @@ func MapToSnowflakeObjectFieldAssertion(field genhelpers.Field) SnowflakeObjectF
 		Name:                  field.Name,
 		ConcreteType:          field.ConcreteType,
 		IsOriginalTypePointer: field.IsPointer(),
+		IsOriginalTypeSlice:   field.IsSlice(),
 		Mapper:                mapper,
 	}
 }
