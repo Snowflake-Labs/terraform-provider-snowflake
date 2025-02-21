@@ -38,7 +38,9 @@ func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRe
 }
 
 func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
-	networkPolicies, err := v.Show(ctx, NewShowNetworkPolicyRequest().WithLike(Like{Pattern: String(id.Name())}))
+	request := NewShowNetworkPolicyRequest().
+		WithLike(Like{Pattern: String(id.Name())})
+	networkPolicies, err := v.Show(ctx, request)
 	if err != nil {
 		return nil, err
 	}

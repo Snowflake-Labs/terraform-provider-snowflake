@@ -29,11 +29,11 @@ func TestInt_DataMetricFunctionReferences(t *testing.T) {
 		}})))
 		require.NoError(t, err)
 
-		dmfs, err := client.DataMetricFunctionReferences.GetForEntity(ctx, sdk.NewGetForEntityDataMetricFunctionReferenceRequest(view.ID(), sdk.DataMetricFuncionRefEntityDomainView))
+		dmfs, err := client.DataMetricFunctionReferences.GetForEntity(ctx, sdk.NewGetForEntityDataMetricFunctionReferenceRequest(view.ID(), sdk.DataMetricFunctionRefEntityDomainView))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(dmfs))
 		dmf := dmfs[0]
-		assert.Equal(t, string(sdk.DataMetricFuncionRefEntityDomainView), strings.ToUpper(dmf.RefEntityDomain))
+		assert.Equal(t, string(sdk.DataMetricFunctionRefEntityDomainView), strings.ToUpper(dmf.RefEntityDomain))
 		assert.Equal(t, functionId.DatabaseName(), dmf.MetricDatabaseName)
 		assert.Equal(t, functionId.SchemaName(), dmf.MetricSchemaName)
 		assert.Equal(t, functionId.Name(), dmf.MetricName)

@@ -100,13 +100,13 @@ func NewShowRowAccessPolicyRequest() *ShowRowAccessPolicyRequest {
 	return &ShowRowAccessPolicyRequest{}
 }
 
-func (s *ShowRowAccessPolicyRequest) WithLike(Like *Like) *ShowRowAccessPolicyRequest {
-	s.Like = Like
+func (s *ShowRowAccessPolicyRequest) WithLike(Like Like) *ShowRowAccessPolicyRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowRowAccessPolicyRequest) WithIn(In *ExtendedIn) *ShowRowAccessPolicyRequest {
-	s.In = In
+func (s *ShowRowAccessPolicyRequest) WithIn(In ExtendedIn) *ShowRowAccessPolicyRequest {
+	s.In = &In
 	return s
 }
 

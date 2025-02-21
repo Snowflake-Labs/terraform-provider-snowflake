@@ -1507,3 +1507,89 @@ resource "snowflake_grant_ownership" "test" {
 }
 `, databaseName, schemaName, tableName, roleName, fullTableName)
 }
+
+// confirms addition of resource monitor as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3318
+func TestAcc_GrantOwnership_OnObject_ResourceMonitor_ToAccountRole(t *testing.T) {
+	resourceMonitorId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	resourceMonitorName := resourceMonitorId.Name()
+	resourceMonitorIdFullyQualifiedName := resourceMonitorId.FullyQualifiedName()
+
+	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	accountRoleName := accountRoleId.Name()
+	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
+
+	configVariables := config.Variables{
+		"account_role_name":     config.StringVariable(accountRoleName),
+		"resource_monitor_name": config.StringVariable(resourceMonitorName),
+	}
+	resourceName := "snowflake_grant_ownership.test"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_ResourceMonitor_ToAccountRole"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleName),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", "RESOURCE MONITOR"),
+					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", resourceMonitorName),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|RESOURCE MONITOR|%s", accountRoleFullyQualifiedName, resourceMonitorIdFullyQualifiedName)),
+					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
+						To: &sdk.ShowGrantsTo{
+							Role: accountRoleId,
+						},
+					}, sdk.ObjectTypeResourceMonitor, accountRoleName, resourceMonitorIdFullyQualifiedName),
+				),
+			},
+			{
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_ResourceMonitor_ToAccountRole"),
+				ConfigVariables:   configVariables,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// This test proves that managing grants on HYBRID TABLE is not supported in Snowflake. TABLE should be used instead.
+func TestAcc_GrantOwnership_OnObject_HybridTable_ToAccountRole_Fails(t *testing.T) {
+	acc.TestAccPreCheck(t)
+	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
+	t.Cleanup(hybridTableCleanup)
+
+	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	accountRoleName := accountRoleId.Name()
+
+	configVariables := func(objectType sdk.ObjectType) config.Variables {
+		cfg := config.Variables{
+			"account_role_name":                 config.StringVariable(accountRoleName),
+			"hybrid_table_fully_qualified_name": config.StringVariable(hybridTableId.FullyQualifiedName()),
+			"object_type":                       config.StringVariable(string(objectType)),
+		}
+		return cfg
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_HybridTable_ToAccountRole"),
+				ConfigVariables: configVariables(sdk.ObjectTypeHybridTable),
+				ExpectError:     regexp.MustCompile("syntax error line 1 at position 26 unexpected 'TABLE"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_HybridTable_ToAccountRole"),
+				ConfigVariables: configVariables(sdk.ObjectTypeTable),
+			},
+		},
+	})
+}

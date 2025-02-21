@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -38,7 +36,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.DatabaseRole),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, databaseRoleModel),
+				Config: config.FromModels(t, databaseRoleModel),
 				Check: assert.AssertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
@@ -67,7 +65,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			},
 			// set comment
 			{
-				Config: config.FromModel(t, databaseRoleModelWithComment),
+				Config: config.FromModels(t, databaseRoleModelWithComment),
 				Check: assert.AssertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
@@ -96,7 +94,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			},
 			// unset comment
 			{
-				Config: config.FromModel(t, databaseRoleModel),
+				Config: config.FromModels(t, databaseRoleModel),
 				Check: assert.AssertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
@@ -130,7 +128,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, databaseRoleModel.WithName(newId.Name())),
+				Config: config.FromModels(t, databaseRoleModel.WithName(newId.Name())),
 				Check: assert.AssertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(newId.Name()).
@@ -168,7 +166,7 @@ func TestAcc_DatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: config.FromModel(t, databaseRoleModelWithComment),
+				Config: config.FromModels(t, databaseRoleModelWithComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database_role.test", "id", fmt.Sprintf(`%s|%s`, id.DatabaseName(), id.Name())),
 				),
@@ -176,7 +174,7 @@ func TestAcc_DatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, databaseRoleModelWithComment),
+				Config:                   config.FromModels(t, databaseRoleModelWithComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionNoop),
@@ -214,7 +212,7 @@ func TestAcc_DatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Config:             config.FromModel(t, databaseRoleModelWithComment),
+				Config:             config.FromModels(t, databaseRoleModelWithComment),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_database_role.test", "database", id.DatabaseName()),
 					resource.TestCheckResourceAttr("snowflake_database_role.test", "name", id.Name()),
@@ -224,7 +222,7 @@ func TestAcc_DatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, databaseRoleModelWithComment),
+				Config:                   config.FromModels(t, databaseRoleModelWithComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_database_role.test", plancheck.ResourceActionNoop),

@@ -1,25 +1,12 @@
 package model
 
 import (
-	"encoding/json"
-
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
-
-func (f *ProcedurePythonModel) MarshalJSON() ([]byte, error) {
-	type Alias ProcedurePythonModel
-	return json.Marshal(&struct {
-		*Alias
-		DependsOn []string `json:"depends_on,omitempty"`
-	}{
-		Alias:     (*Alias)(f),
-		DependsOn: f.DependsOn(),
-	})
-}
 
 func ProcedurePythonBasicInline(
 	resourceName string,

@@ -29,12 +29,24 @@ type ResourceConfigBuilderAttributeModel struct {
 	AttributeType  string
 	Required       bool
 	VariableMethod string
+	MethodImport   string
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSchemaDetails) ResourceConfigBuilderModel {
 	attributes := make([]ResourceConfigBuilderAttributeModel, 0)
 	for _, attr := range resourceSchemaDetails.Attributes {
 		if slices.Contains([]string{resources.ShowOutputAttributeName, resources.ParametersAttributeName, resources.DescribeOutputAttributeName}, attr.Name) {
+			continue
+		}
+
+		if v, ok := multilineAttributesOverrides[resourceSchemaDetails.Name]; ok && slices.Contains(v, attr.Name) && attr.AttributeType == schema.TypeString {
+			attributes = append(attributes, ResourceConfigBuilderAttributeModel{
+				Name:           attr.Name,
+				AttributeType:  "string",
+				Required:       attr.Required,
+				VariableMethod: "MultilineWrapperVariable",
+				MethodImport:   "config",
+			})
 			continue
 		}
 
@@ -61,6 +73,7 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSch
 			AttributeType:  attributeType,
 			Required:       attr.Required,
 			VariableMethod: variableMethod,
+			MethodImport:   "tfconfig",
 		})
 	}
 
@@ -70,7 +83,7 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSch
 		Attributes: attributes,
 		PreambleModel: PreambleModel{
 			PackageName:               packageWithGenerateDirective,
-			AdditionalStandardImports: []string{},
+			AdditionalStandardImports: []string{"encoding/json"},
 		},
 	}
 }

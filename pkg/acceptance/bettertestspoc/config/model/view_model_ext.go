@@ -1,28 +1,10 @@
 package model
 
 import (
-	"encoding/json"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 )
-
-func (v *ViewModel) MarshalJSON() ([]byte, error) {
-	type Alias ViewModel
-	return json.Marshal(&struct {
-		*Alias
-		DependsOn []string `json:"depends_on,omitempty"`
-	}{
-		Alias:     (*Alias)(v),
-		DependsOn: v.DependsOn(),
-	})
-}
-
-func (v *ViewModel) WithDependsOn(values ...string) *ViewModel {
-	v.SetDependsOn(values...)
-	return v
-}
 
 func (v *ViewModel) WithColumnNames(columnNames ...string) *ViewModel {
 	return v.WithColumnValue(config.TupleVariable(

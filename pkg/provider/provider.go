@@ -29,6 +29,7 @@ func init() {
 	// useful links:
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/10#issuecomment-767682837
 	// - https://github.com/hashicorp/terraform-plugin-docs/issues/156#issuecomment-1600427216
+	// TODO(SNOW-1901053): Rework handling deprecated objects' descriptions.
 	schema.ResourceDescriptionBuilder = func(r *schema.Resource) string {
 		desc := r.Description
 		if r.DeprecationMessage != "" {
@@ -349,7 +350,8 @@ func Provider() *schema.Provider {
 				DefaultFunc:      schema.EnvDefaultFunc(snowflakeenvs.DisableConsoleLogin, resources.BooleanDefault),
 				ValidateDiagFunc: validators.ValidateBooleanStringWithDefault,
 			},
-			// TODO(SNOW-1761318): handle DisableSamlURLCheck after upgrading the driver to at least 1.10.1
+			// TODO(SNOW-1761318): Add DisableSamlURLCheck.
+			// TODO(SNOW-1917271): Add DisableOCSPChecks.
 			"profile": {
 				Type: schema.TypeString,
 				// TODO(SNOW-1754364): Note that a default file path is already filled on sdk side.
@@ -672,7 +674,7 @@ func getDriverConfigFromTerraform(s *schema.ResourceData) (*gosnowflake.Config, 
 		handleDurationInSecondsAttribute(s, "client_timeout", &config.ClientTimeout),
 		handleDurationInSecondsAttribute(s, "jwt_client_timeout", &config.JWTClientTimeout),
 		handleDurationInSecondsAttribute(s, "external_browser_timeout", &config.ExternalBrowserTimeout),
-		handleBoolField(s, "insecure_mode", &config.InsecureMode),
+		handleBoolField(s, "insecure_mode", &config.InsecureMode), //nolint:staticcheck
 		// ocsp fail open
 		func() error {
 			if v := s.Get("ocsp_fail_open").(string); v != provider.BooleanDefault {

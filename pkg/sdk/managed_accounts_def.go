@@ -5,12 +5,15 @@ import g "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/poc/gen
 //go:generate go run ./poc/main.go
 
 var managedAccountDbRow = g.DbStruct("managedAccountDBRow").
-	Text("name").
+	OptionalText("name").
+	OptionalText("account_name").
 	Text("cloud").
 	Text("region").
-	Text("locator").
+	OptionalText("locator").
+	OptionalText("account_locator").
 	Text("created_on").
-	Text("url").
+	OptionalText("url").
+	OptionalText("account_url").
 	Text("account_locator_url").
 	Bool("is_reader").
 	OptionalText("comment")
@@ -67,4 +70,6 @@ var ManagedAccountsDef = g.NewInterface(
 			SQL("MANAGED ACCOUNTS").
 			OptionalLike(),
 	).
-	ShowByIdOperation()
+	ShowByIdOperationWithFiltering(
+		g.ShowByIDLikeFiltering,
+	)

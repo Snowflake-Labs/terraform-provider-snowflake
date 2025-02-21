@@ -123,7 +123,7 @@ func TestInt_ApplicationPackages(t *testing.T) {
 	t.Run("show application package for SQL: with like", func(t *testing.T) {
 		e := createApplicationPackageHandle(t)
 
-		packages, err := client.ApplicationPackages.Show(ctx, sdk.NewShowApplicationPackageRequest().WithLike(&sdk.Like{Pattern: &e.Name}))
+		packages, err := client.ApplicationPackages.Show(ctx, sdk.NewShowApplicationPackageRequest().WithLike(sdk.Like{Pattern: &e.Name}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(packages))
 		require.Equal(t, *e, packages[0])

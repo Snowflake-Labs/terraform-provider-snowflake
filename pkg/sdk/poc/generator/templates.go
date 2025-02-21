@@ -24,6 +24,14 @@ var (
 	structTemplateContent string
 	StructTemplate, _     = template.New("structTemplate").Parse(structTemplateContent)
 
+	//go:embed templates/show_object_id_method.tmpl
+	showObjectIdMethodTemplateContent string
+	ShowObjectIdMethodTemplate, _     = template.New("showObjectIdMethodTemplate").Parse(showObjectIdMethodTemplateContent)
+
+	//go:embed templates/show_object_type_method.tmpl
+	showObjectTypeMethodTemplateContent string
+	ShowObjectTypeMethodTemplate, _     = template.New("showObjectTypeMethodTemplate").Parse(showObjectTypeMethodTemplateContent)
+
 	//go:embed templates/dto_declarations.tmpl
 	dtoDeclarationsTemplateContent string
 	DtoTemplate, _                 = template.New("dtoTemplate").Parse(dtoDeclarationsTemplateContent)
@@ -31,10 +39,6 @@ var (
 	//go:embed templates/dto_structs.tmpl
 	dtoStructsTemplateContent string
 	DtoDeclTemplate, _        = template.New("dtoTemplate").Parse(dtoStructsTemplateContent)
-
-	//go:embed templates/integration_tests.tmpl
-	integrationTestTemplateContent string
-	IntegrationTestsTemplate, _    = template.New("integrationTestsTemplate").Parse(integrationTestTemplateContent)
 
 	//go:embed templates/implementation.tmpl
 	implementationTemplateContent string

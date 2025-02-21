@@ -125,12 +125,33 @@ func TestInt_ManagedAccounts(t *testing.T) {
 		managedAccount2 := createManagedAccount(t)
 
 		showRequest := sdk.NewShowManagedAccountRequest().
-			WithLike(&sdk.Like{Pattern: &managedAccount1.Name})
+			WithLike(sdk.Like{Pattern: &managedAccount1.Name})
 		returnedManagedAccounts, err := client.ManagedAccounts.Show(ctx, showRequest)
 
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(returnedManagedAccounts))
 		assert.Contains(t, returnedManagedAccounts, *managedAccount1)
 		assert.NotContains(t, returnedManagedAccounts, *managedAccount2)
+	})
+
+	// proves https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1738 is supported (column renames)
+	t.Run("show managed account: before and after BCR 2024_08", func(t *testing.T) {
+		managedAccount := createManagedAccount(t)
+
+		returnedManagedAccounts, err := client.ManagedAccounts.ShowByID(ctx, managedAccount.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, managedAccount.Name, returnedManagedAccounts.Name)
+		assert.Equal(t, managedAccount.Locator, returnedManagedAccounts.Locator)
+		assert.Equal(t, managedAccount.URL, returnedManagedAccounts.URL)
+
+		testClientHelper().BcrBundles.EnableBcrBundle(t, "2024_08")
+
+		returnedManagedAccounts, err = client.ManagedAccounts.ShowByID(ctx, managedAccount.ID())
+		require.NoError(t, err)
+
+		assert.Equal(t, managedAccount.Name, returnedManagedAccounts.Name)
+		assert.Equal(t, managedAccount.Locator, returnedManagedAccounts.Locator)
+		assert.Equal(t, managedAccount.URL, returnedManagedAccounts.URL)
 	})
 }

@@ -92,7 +92,6 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3153(t *testing.T) {
 				PreConfig: func() {
 					_, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 					t.Cleanup(roleCleanup)
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_07")
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_gh3153"),
 				ConfigVariables: configVariables,
@@ -1954,4 +1953,44 @@ resource "snowflake_grant_privileges_to_account_role" "test" {
   }
 }
 `, accountRoleName, strings.Join(collections.Map(privileges, strconv.Quote), ","), objectTypePlural, databaseName)
+}
+
+// This test proves that managing grants on HYBRID TABLE is not supported in Snowflake. TABLE should be used instead.
+func TestAcc_GrantPrivileges_OnObject_HybridTable_ToAccountRole_Fails(t *testing.T) {
+	acc.TestAccPreCheck(t)
+	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
+	t.Cleanup(hybridTableCleanup)
+
+	accountRole, accountRoleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(accountRoleCleanup)
+
+	configVariables := func(objectType sdk.ObjectType) config.Variables {
+		cfg := config.Variables{
+			"account_role_name": config.StringVariable(accountRole.ID().FullyQualifiedName()),
+			"privileges": config.ListVariable(
+				config.StringVariable(string(sdk.SchemaObjectPrivilegeApplyBudget)),
+			),
+			"hybrid_table_fully_qualified_name": config.StringVariable(hybridTableId.FullyQualifiedName()),
+			"object_type":                       config.StringVariable(string(objectType)),
+		}
+		return cfg
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject_HybridTable"),
+				ConfigVariables: configVariables(sdk.ObjectTypeHybridTable),
+				ExpectError:     regexp.MustCompile("syntax error line 1 at position 28 unexpected 'TABLE"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnSchemaObject_OnObject_HybridTable"),
+				ConfigVariables: configVariables(sdk.ObjectTypeTable),
+			},
+		},
+	})
 }

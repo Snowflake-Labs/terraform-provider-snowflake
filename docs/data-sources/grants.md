@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_grants Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   
 ---

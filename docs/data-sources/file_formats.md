@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_file_formats Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

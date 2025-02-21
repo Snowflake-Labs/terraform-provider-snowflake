@@ -2,12 +2,12 @@ package providermodel
 
 import (
 	"encoding/json"
-	"fmt"
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -40,7 +40,7 @@ func (m *SnowflakeModel) WithAuthenticatorType(authenticationType sdk.Authentica
 }
 
 func (m *SnowflakeModel) WithPrivateKeyMultiline(privateKey string) *SnowflakeModel {
-	return m.WithPrivateKey(fmt.Sprintf(`%[1]s%[2]s%[1]s`, config.SnowflakeProviderConfigPrivateKey, privateKey))
+	return m.WithPrivateKeyValue(config.MultilineWrapperVariable(privateKey))
 }
 
 func (m *SnowflakeModel) WithClientStoreTemporaryCredentialBool(clientStoreTemporaryCredential bool) *SnowflakeModel {
@@ -71,7 +71,7 @@ func (m *SnowflakeModel) AllFields(tmpConfig *helpers.TmpTomlConfig, tmpUser *he
 		WithValidateDefaultParameters("true").
 		WithClientIp("3.3.3.3").
 		WithAuthenticatorType(sdk.AuthenticationTypeJwt).
-		WithOktaUrl("https://example-tf.com").
+		WithOktaUrl(testvars.ExampleOktaUrlString).
 		WithLoginTimeout(101).
 		WithRequestTimeout(201).
 		WithJwtExpireTimeout(301).

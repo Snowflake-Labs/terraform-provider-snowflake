@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"strings"
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
@@ -10,17 +9,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 )
-
-func (f *FunctionJavaModel) MarshalJSON() ([]byte, error) {
-	type Alias FunctionJavaModel
-	return json.Marshal(&struct {
-		*Alias
-		DependsOn []string `json:"depends_on,omitempty"`
-	}{
-		Alias:     (*Alias)(f),
-		DependsOn: f.DependsOn(),
-	})
-}
 
 func FunctionJavaBasicInline(
 	resourceName string,

@@ -1,5 +1,62 @@
 # Changelog
 
+## [1.0.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.2...v1.0.3) (2025-02-05)
+
+
+### 🔧 **Misc**
+
+* Add basic performance tests ([#3349](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3349)) ([c57346b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c57346bc9fdcc263ed0c6d8dd34b51ff0a753968))
+* Add notes about managing grants on hybrid table ([#3368](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3368)) ([e5e98bd](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e5e98bd59a25eae994f389c4e4c940d3aa1958ca))
+* Add preview and stable categories to resources and data sources in docs ([#3370](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3370)) ([b061434](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b061434f9f67e54bdd32c783d01ec4d4b74e3bf8))
+* Fix docs and update the protected users list ([#3365](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3365)) ([f23e8cb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f23e8cbcc5326ca60bb8f759c6970ecf4b0d64d6))
+* Grant ownership common use cases ([#3356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3356)) ([97813b6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/97813b6308651071f05d8d4e8697f3a34e0f531a))
+* Metric level fix with object renaming guide ([#3376](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3376)) ([629ff92](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/629ff92623a3d7a74eea970134291a84a9fec6a3))
+* Move technical guides to the guide directory ([#3371](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3371)) ([2b95809](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2b95809bc7619cb589eb08fd4e3a9dcbf1fcfbc4))
+* Prepare authentication methods guide ([#3364](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3364)) ([c4a1c5f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c4a1c5ff882686377682cb6828549868b4efc909))
+* Publish Performance tests summary ([#3359](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3359)) ([d30d002](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/d30d0024668e8825e4cb85a393d085a7a5423734))
+* Resolve issues and document account resource ([#3360](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3360)) ([46b7a9d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/46b7a9d75426734bdc14edc3161070e84744f702))
+* Upgrade tfplugindocs ([#3361](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3361)) ([89f2b0a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/89f2b0abdacf86dcb4f2e47e4119dea993e749f6))
+
+
+### 🐛 **Bug fixes:**
+
+* change EnforceNetworkRulesForInternalStages ddl to parameter ([#3343](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3343)) ([beb01c7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/beb01c7bbedeb888d8c3af1460669ad3c8194d32))
+
+## [1.0.2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.1...v1.0.2) (2025-01-20)
+
+
+### 🔧 **Misc**
+
+* Generate ID and ObjectType Show Object Methods ([#3292](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3292)) ([f7ff70a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f7ff70ab0fe571d1fc616a6b202501533d132d43))
+* Generate multiline by default ([#3315](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3315)) ([520bb4c](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/520bb4c57b8ec26d6a6284e219e45133ffb6be9f))
+* Overview of the grant ownership resource ([#3342](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3342)) ([9f891d6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9f891d64692fbe357ba96369fbed2629c665c402))
+* Update docs and migration guide ([#3313](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3313)) ([59e333a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/59e333aeaf188760e35c1e14a40433af9b79d8ca))
+
+
+### 🐛 **Bug fixes:**
+
+* Fixes in account parameters ([#3310](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3310)) ([96a1f17](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/96a1f17ce839288566b9c4b58d168e2cfe1fac89))
+* Handle optional account fields in the state upgrader correctly ([#3330](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3330)) ([4eae4c8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4eae4c8a3f27e81286479e0522513c745c83d41c)), closes [#3332](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332)
+* Small fixes ([#3337](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3337)) ([8807839](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8807839f14b0757071ac62dfff50774cb144b4ac))
+
+## [1.0.1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.0...v1.0.1) (2024-12-20)
+
+
+### 🔧 **Misc**
+
+* Add external removal tests to functions and procedures ([#3305](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3305)) ([e2d0705](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e2d07055015803b86f3c165851a63350beba350f))
+* Add holidays note, change the disclaimer, and fix an example ([#3288](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3288)) ([39a0cb7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/39a0cb76a1e64f2c4b5ee5923223d6e0df0ddb46))
+* Adjust GitHub templates to the new development branch ([#3286](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3286)) ([fc10672](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fc10672318af90ab6d879dfa63b8efaf93589e62))
+* Fix tests after v1 release ([#3306](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3306)) ([32983fe](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/32983fe0d3ff502117b9c81d0d2c49b9d18958ba))
+* Generate marshal json for each model ([#3307](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3307)) ([7ebbe36](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/7ebbe364c5829546a70843d249629f8fcc3cdcf6))
+* remove generating integration tests placeholder file ([#3256](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3256)) ([e0ed15b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e0ed15b09017ddfc89c727a6f5a8e4bdaf7aa34d))
+* Update docs and migration guide ([#3313](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3313)) ([c98e449](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c98e44922a090495feb7b5c31c23b01d07f31bfc))
+
+
+### 🐛 **Bug fixes:**
+
+* Fixes in account parameters ([#3310](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3310)) ([0de5733](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0de57338fe32200a44bdd89730eb8bccaeeac3d5))
+
 ## [1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v0.100.0...v1.0.0) (2024-12-12)
 
 

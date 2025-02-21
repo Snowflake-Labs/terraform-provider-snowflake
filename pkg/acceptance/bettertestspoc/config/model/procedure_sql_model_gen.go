@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -67,6 +69,26 @@ func ProcedureSqlWithDefaultMeta(
 	return p
 }
 
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (p *ProcedureSqlModel) MarshalJSON() ([]byte, error) {
+	type Alias ProcedureSqlModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(p),
+		DependsOn: p.DependsOn(),
+	})
+}
+
+func (p *ProcedureSqlModel) WithDependsOn(values ...string) *ProcedureSqlModel {
+	p.SetDependsOn(values...)
+	return p
+}
+
 /////////////////////////////////
 // below all the proper values //
 /////////////////////////////////
@@ -124,7 +146,7 @@ func (p *ProcedureSqlModel) WithNullInputBehavior(nullInputBehavior string) *Pro
 }
 
 func (p *ProcedureSqlModel) WithProcedureDefinition(procedureDefinition string) *ProcedureSqlModel {
-	p.ProcedureDefinition = tfconfig.StringVariable(procedureDefinition)
+	p.ProcedureDefinition = config.MultilineWrapperVariable(procedureDefinition)
 	return p
 }
 

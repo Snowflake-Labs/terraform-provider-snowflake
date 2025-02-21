@@ -5,6 +5,8 @@ import (
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -16,7 +18,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -51,7 +52,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecretWithClientCredentials),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
@@ -88,7 +89,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 			},
 			// set oauth_scopes and comment in config
 			{
-				Config: config.FromModel(t, secretModelTestInScopes),
+				Config: config.FromModels(t, secretModelTestInScopes),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
@@ -131,7 +132,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 					)
 					acc.TestClient().Secret.Alter(t, req)
 				},
-				Config: config.FromModel(t, secretModelFooInScopesWithComment),
+				Config: config.FromModels(t, secretModelFooInScopesWithComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -153,7 +154,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 			},
 			// unset comment
 			{
-				Config: config.FromModel(t, secretModelFooInScopes),
+				Config: config.FromModels(t, secretModelFooInScopes),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModelFooInScopes.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -171,7 +172,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 					req := sdk.NewAlterSecretRequest(id).WithSet(*sdk.NewSecretSetRequest().WithComment(comment))
 					acc.TestClient().Secret.Alter(t, req)
 				},
-				Config: config.FromModel(t, secretModelWithoutComment),
+				Config: config.FromModels(t, secretModelWithoutComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -185,7 +186,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 			},
 			// create without comment
 			{
-				Config: config.FromModel(t, secretModelWithoutComment.WithOauthScopes([]string{"foo", "bar"})),
+				Config: config.FromModels(t, secretModelWithoutComment.WithOauthScopes([]string{"foo", "bar"})),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
@@ -243,7 +244,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create secret without providing oauth_scopes value
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
@@ -258,7 +259,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 			},
 			// Set oauth_scopes
 			{
-				Config: config.FromModel(t, secretModel.
+				Config: config.FromModels(t, secretModel.
 					WithOauthScopes([]string{"foo"}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -279,7 +280,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 			},
 			// Set empty oauth_scopes
 			{
-				Config: config.FromModel(t, secretModelEmptyScopes),
+				Config: config.FromModels(t, secretModelEmptyScopes),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -322,7 +323,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
@@ -339,7 +340,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 					_, cleanup := acc.TestClient().Secret.CreateWithGenericString(t, id, "test_secret_string")
 					t.Cleanup(cleanup)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
@@ -381,7 +382,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 		Steps: []resource.TestStep{
 			// create
 			{
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
 					assert.AssertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
@@ -402,7 +403,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 					_, cleanup := acc.TestClient().Secret.CreateWithOAuthAuthorizationCodeFlow(t, id, integrationId, "test_refresh_token", time.Now().Add(24*time.Hour).Format(time.DateOnly))
 					t.Cleanup(cleanup)
 				},
-				Config: config.FromModel(t, secretModel),
+				Config: config.FromModels(t, secretModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),

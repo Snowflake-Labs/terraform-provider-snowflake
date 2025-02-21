@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_system_generate_scim_access_token Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

@@ -5,25 +5,24 @@ import (
 	"regexp"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -50,7 +49,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
@@ -101,7 +100,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 			},
 			{
 				ResourceName: configModel.ResourceReference(),
-				Config:       config.FromModel(t, configModel),
+				Config:       config.FromModels(t, configModel),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedAccountResource(t, helpers.EncodeResourceIdentifier(accountId)).
@@ -160,7 +159,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
@@ -211,7 +210,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 			},
 			{
 				ResourceName: configModel.ResourceReference(),
-				Config:       config.FromModel(t, configModel),
+				Config:       config.FromModels(t, configModel),
 				ImportState:  true,
 				ImportStateCheck: assert.AssertThatImport(t,
 					resourceassert.ImportedAccountResource(t, helpers.EncodeResourceIdentifier(accountId)).
@@ -266,7 +265,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
@@ -283,7 +282,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 						plancheck.ExpectResourceAction(newConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, newConfigModel),
+				Config: config.FromModels(t, newConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
 						HasNameString(newId).
@@ -333,7 +332,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create with ORGADMIN enabled
 			{
-				Config: config.FromModel(t, configModelWithOrgAdminTrue),
+				Config: config.FromModels(t, configModelWithOrgAdminTrue),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModelWithOrgAdminTrue.ResourceReference()).
 						HasNameString(id).
@@ -353,7 +352,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 						plancheck.ExpectResourceAction(configModelWithOrgAdminFalse.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, configModelWithOrgAdminFalse),
+				Config: config.FromModels(t, configModelWithOrgAdminFalse),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModelWithOrgAdminFalse.ResourceReference()).
 						HasNameString(id).
@@ -373,7 +372,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 						plancheck.ExpectResourceAction(configModelWithoutOrgAdmin.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, configModelWithoutOrgAdmin),
+				Config: config.FromModels(t, configModelWithoutOrgAdmin),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasNameString(id).
@@ -401,7 +400,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 						plancheck.ExpectResourceAction(configModelWithoutOrgAdmin.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, configModelWithoutOrgAdmin),
+				Config: config.FromModels(t, configModelWithoutOrgAdmin),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModelWithoutOrgAdmin.ResourceReference()).
 						HasNameString(id).
@@ -459,7 +458,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(id).
@@ -479,7 +478,7 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 						plancheck.ExpectResourceAction(newConfigModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Config: config.FromModel(t, newConfigModel),
+				Config: config.FromModels(t, newConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
 						HasNameString(id).
@@ -521,7 +520,7 @@ func TestAcc_Account_TryToCreateWithoutOrgadmin(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				Config:      config.FromModel(t, configModel),
+				Config:      config.FromModels(t, configModel),
 				ExpectError: regexp.MustCompile("Error: current user doesn't have the orgadmin role in session"),
 			},
 		},
@@ -557,15 +556,15 @@ func TestAcc_Account_InvalidValues(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				Config:      config.FromModel(t, configModelInvalidUserType),
+				Config:      config.FromModels(t, configModelInvalidUserType),
 				ExpectError: regexp.MustCompile("invalid user type: invalid_user_type"),
 			},
 			{
-				Config:      config.FromModel(t, configModelInvalidAccountEdition),
+				Config:      config.FromModels(t, configModelInvalidAccountEdition),
 				ExpectError: regexp.MustCompile("unknown account edition: invalid_account_edition"),
 			},
 			{
-				Config:      config.FromModel(t, configModelInvalidGracePeriodInDays),
+				Config:      config.FromModels(t, configModelInvalidGracePeriodInDays),
 				ExpectError: regexp.MustCompile(`Error: expected grace_period_in_days to be at least \(3\), got 2`),
 			},
 		},
@@ -612,7 +611,7 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				Config:                   config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
 						HasNameString(name).
@@ -657,7 +656,7 @@ resource "snowflake_account" "test" {
 	last_name = "%[7]s"
 	must_change_password = %[8]t
 	region = "%[9]s"
-	grace_period_in_days = %[10]d 
+	grace_period_in_days = %[10]d
 	comment = "%[11]s"
 }
 `,
@@ -674,3 +673,5 @@ resource "snowflake_account" "test" {
 		comment,
 	)
 }
+
+// TODO(SNOW-1875369): add a state upgrader test for an imported account with optional parameters

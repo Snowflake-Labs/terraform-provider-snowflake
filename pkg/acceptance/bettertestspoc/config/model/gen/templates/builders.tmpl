@@ -11,7 +11,7 @@
     {{- $attributeNameCamel := SnakeCaseToCamel .Name -}}
     {{ if .AttributeType }}
         func ({{ $modelVar }} *{{ $modelName }}) With{{ $attributeNameCamel }}({{ FirstLetterLowercase $attributeNameCamel }} {{ .AttributeType }}) *{{ $modelName }} {
-            {{ $modelVar }}.{{ $attributeNameCamel }} = tfconfig.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
+            {{ $modelVar }}.{{ $attributeNameCamel }} = {{ .MethodImport }}.{{ .VariableMethod }}({{ FirstLetterLowercase $attributeNameCamel }})
             return {{ $modelVar }}
         }
     {{ else }}

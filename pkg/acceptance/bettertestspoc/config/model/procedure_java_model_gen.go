@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -83,6 +85,26 @@ func ProcedureJavaWithDefaultMeta(
 	return p
 }
 
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (p *ProcedureJavaModel) MarshalJSON() ([]byte, error) {
+	type Alias ProcedureJavaModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(p),
+		DependsOn: p.DependsOn(),
+	})
+}
+
+func (p *ProcedureJavaModel) WithDependsOn(values ...string) *ProcedureJavaModel {
+	p.SetDependsOn(values...)
+	return p
+}
+
 /////////////////////////////////
 // below all the proper values //
 /////////////////////////////////
@@ -151,7 +173,7 @@ func (p *ProcedureJavaModel) WithNullInputBehavior(nullInputBehavior string) *Pr
 // packages attribute type is not yet supported, so WithPackages can't be generated
 
 func (p *ProcedureJavaModel) WithProcedureDefinition(procedureDefinition string) *ProcedureJavaModel {
-	p.ProcedureDefinition = tfconfig.StringVariable(procedureDefinition)
+	p.ProcedureDefinition = config.MultilineWrapperVariable(procedureDefinition)
 	return p
 }
 

@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -64,6 +66,26 @@ func AccountWithDefaultMeta(
 	a.WithEmail(email)
 	a.WithGracePeriodInDays(gracePeriodInDays)
 	a.WithName(name)
+	return a
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (a *AccountModel) MarshalJSON() ([]byte, error) {
+	type Alias AccountModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(a),
+		DependsOn: a.DependsOn(),
+	})
+}
+
+func (a *AccountModel) WithDependsOn(values ...string) *AccountModel {
+	a.SetDependsOn(values...)
 	return a
 }
 

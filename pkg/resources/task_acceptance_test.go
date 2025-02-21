@@ -7,24 +7,26 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	configvariable "github.com/hashicorp/terraform-plugin-testing/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -49,7 +51,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -76,8 +78,8 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasScheduleEmpty().
-						HasPredecessorsList().
+						HasNoSchedule().
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
@@ -88,7 +90,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
 						HasAllDefaults(),
 				),
@@ -180,7 +182,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasComment(comment).
 						HasWarehouse(acc.TestClient().Ids.WarehouseId()).
 						HasScheduleMinutes(10).
-						HasPredecessorsList().
+						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
 						HasCondition(condition).
@@ -191,7 +193,7 @@ func TestAcc_Task_Complete(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 					resourceparametersassert.TaskResourceParameters(t, configModel.ResourceReference()).
 						HasAllDefaults(),
 				),
@@ -263,7 +265,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -290,8 +292,8 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasScheduleEmpty().
-						HasPredecessorsList().
+						HasNoSchedule().
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
@@ -302,7 +304,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Set
@@ -341,7 +343,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasWarehouse(warehouse.ID()).
 						HasComment(comment).
 						HasScheduleMinutes(5).
-						HasPredecessorsList().
+						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(newStatement).
 						HasCondition(condition).
@@ -352,12 +354,12 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Unset
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
@@ -389,8 +391,8 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasScheduleEmpty().
-						HasPredecessorsList().
+						HasNoSchedule().
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
@@ -401,7 +403,7 @@ func TestAcc_Task_Updates(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -459,7 +461,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
@@ -480,7 +482,7 @@ func TestAcc_Task_UpdatesInComplexDAG(t *testing.T) {
 			},
 			// Update some fields in child3
 			{
-				Config: config.FromModel(t, basicConfigModelAfterUpdate),
+				Config: config.FromModels(t, basicConfigModelAfterUpdate),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModelAfterUpdate.ResourceReference()).
 						HasFullyQualifiedNameString(child3Id.FullyQualifiedName()).
@@ -527,7 +529,7 @@ func TestAcc_Task_StatementSpaces(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -545,7 +547,7 @@ func TestAcc_Task_StatementSpaces(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, configModelWithSpacesInStatements),
+				Config: config.FromModels(t, configModelWithSpacesInStatements),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -634,7 +636,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasWarehouse(warehouse.ID()).
 						HasComment(comment).
 						HasScheduleMinutes(5).
-						HasPredecessorsList().
+						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
 						HasCondition(condition).
@@ -645,7 +647,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// External change - unset all optional fields and expect no change
@@ -696,7 +698,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasWarehouse(warehouse.ID()).
 						HasComment(comment).
 						HasScheduleMinutes(5).
-						HasPredecessorsList().
+						HasPredecessors().
 						HasState(sdk.TaskStateStarted).
 						HasDefinition(statement).
 						HasCondition(condition).
@@ -707,12 +709,12 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig(taskConfig).
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Unset optional values
 			{
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -739,8 +741,8 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasScheduleEmpty().
-						HasPredecessorsList().
+						HasNoSchedule().
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
@@ -751,7 +753,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// External change - set all optional fields and expect no change
@@ -774,7 +776,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						plancheck.ExpectResourceAction(basicConfigModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Config: config.FromModel(t, basicConfigModel),
+				Config: config.FromModels(t, basicConfigModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, basicConfigModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -801,8 +803,8 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwner(currentRole.Name()).
 						HasComment("").
 						HasWarehouse(sdk.NewAccountObjectIdentifier("")).
-						HasScheduleEmpty().
-						HasPredecessorsList().
+						HasNoSchedule().
+						HasPredecessors().
 						HasState(sdk.TaskStateSuspended).
 						HasDefinition(statement).
 						HasCondition("").
@@ -813,7 +815,7 @@ func TestAcc_Task_ExternalChanges(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -839,7 +841,7 @@ func TestAcc_Task_CallingProcedure(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, configModel),
+				Config: config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -918,7 +920,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasScheduleEmpty(),
+						HasNoSchedule(),
 				),
 			},
 			// Create with cron
@@ -994,7 +996,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasScheduleEmpty(),
+						HasNoSchedule(),
 				),
 			},
 		},
@@ -1034,7 +1036,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasScheduleEmpty(),
+						HasNoSchedule(),
 				),
 			},
 			// External change - set minutes
@@ -1054,7 +1056,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasScheduleEmpty(),
+						HasNoSchedule(),
 				),
 			},
 			// External change - set cron
@@ -1074,7 +1076,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasScheduleEmpty(),
+						HasNoSchedule(),
 				),
 			},
 			// Set minutes schedule
@@ -1628,7 +1630,7 @@ func TestAcc_Task_ConvertStandaloneTaskToSubtask(t *testing.T) {
 						HasAfter(id).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
-						HasPredecessorsList(id).
+						HasPredecessors(id).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
@@ -1678,11 +1680,11 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 		WithFinalize(rootTaskId.FullyQualifiedName())
 	childTaskModel.SetDependsOn(rootTaskModel.ResourceReference())
 
-	firstTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
+	rootTaskStandaloneModelDisabled := model.TaskWithId("root", rootTaskId, false, statement).
 		WithScheduleMinutes(schedule)
-	secondTaskStandaloneModelDisabled := model.TaskWithId("child", finalizerTaskId, false, statement).
+	childTaskStandaloneModelDisabled := model.TaskWithId("child", finalizerTaskId, false, statement).
 		WithScheduleMinutes(schedule)
-	secondTaskStandaloneModelDisabled.SetDependsOn(firstTaskStandaloneModelDisabled.ResourceReference())
+	childTaskStandaloneModelDisabled.SetDependsOn(rootTaskStandaloneModelDisabled.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1702,14 +1704,14 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 						HasSuspendTaskAfterNumFailuresString("1"),
 					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelationsObject(sdk.TaskRelations{}).
+						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
 					resourceassert.TaskResource(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelationsObject(sdk.TaskRelations{}).
+						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
@@ -1724,35 +1726,36 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 						HasSuspendTaskAfterNumFailuresString("2"),
 					resourceshowoutputassert.TaskShowOutput(t, rootTaskModel.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						// TODO(SNOW-1843489): Create ticket and report; this field in task relations seems to have mixed chances of appearing (needs deeper digging, doesn't affect the resource; could be removed for now)
-						// HasTaskRelationsObject(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}).
 						HasState(sdk.TaskStateStarted),
+					// For task relations to be present, in show_output we would have to modify the root task in a way that would
+					// trigger show_output recomputing by our custom diff.
+					objectassert.Task(t, rootTaskId).HasTaskRelations(sdk.TaskRelations{FinalizerTask: &finalizerTaskId}),
 					resourceassert.TaskResource(t, childTaskModel.ResourceReference()).
 						HasStartedString(r.BooleanTrue),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskModel.ResourceReference()).
-						HasTaskRelationsObject(sdk.TaskRelations{FinalizedRootTask: &rootTaskId}).
+						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootTaskId}).
 						HasState(sdk.TaskStateStarted),
 				),
 			},
 			// Change tasks in DAG to standalone tasks (disabled to check if resuming/suspending works correctly)
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
-				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", firstTaskStandaloneModelDisabled, secondTaskStandaloneModelDisabled),
+				ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootTaskStandaloneModelDisabled, childTaskStandaloneModelDisabled),
 				Check: assert.AssertThat(t,
-					resourceassert.TaskResource(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+					resourceassert.TaskResource(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse).
 						HasSuspendTaskAfterNumFailuresString("10"),
-					resourceshowoutputassert.TaskShowOutput(t, firstTaskStandaloneModelDisabled.ResourceReference()).
+					resourceshowoutputassert.TaskShowOutput(t, rootTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelationsObject(sdk.TaskRelations{}).
+						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
-					resourceassert.TaskResource(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+					resourceassert.TaskResource(t, childTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
 						HasStartedString(r.BooleanFalse),
-					resourceshowoutputassert.TaskShowOutput(t, secondTaskStandaloneModelDisabled.ResourceReference()).
+					resourceshowoutputassert.TaskShowOutput(t, childTaskStandaloneModelDisabled.ResourceReference()).
 						HasScheduleMinutes(schedule).
-						HasTaskRelationsObject(sdk.TaskRelations{}).
+						HasTaskRelations(sdk.TaskRelations{}).
 						HasState(sdk.TaskStateSuspended),
 				),
 			},
@@ -2034,7 +2037,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(""),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Set finalizer in config
@@ -2047,7 +2050,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(rootId.FullyQualifiedName()),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{FinalizedRootTask: &rootId}),
+						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootId}),
 				),
 			},
 			// Unset finalizer externally
@@ -2070,7 +2073,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(rootId.FullyQualifiedName()),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{FinalizedRootTask: &rootId}),
+						HasTaskRelations(sdk.TaskRelations{FinalizedRootTask: &rootId}),
 				),
 			},
 			// Unset finalizer in config
@@ -2083,7 +2086,7 @@ func TestAcc_Task_UpdateFinalizerExternally(t *testing.T) {
 						HasFinalizeString(""),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutFinalizer.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -2148,7 +2151,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 			// Set after in config
@@ -2161,7 +2164,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
+						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
 				),
 			},
 			// Unset after externally
@@ -2184,7 +2187,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(rootId),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
+						HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
 				),
 			},
 			// Unset after in config
@@ -2197,7 +2200,7 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 						HasAfter(),
 					resourceshowoutputassert.TaskShowOutput(t, childTaskConfigModelWithoutAfter.ResourceReference()).
 						HasState(sdk.TaskStateStarted).
-						HasTaskRelationsObject(sdk.TaskRelations{}),
+						HasTaskRelations(sdk.TaskRelations{}),
 				),
 			},
 		},
@@ -2537,7 +2540,7 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModel(t, configModel),
+				Config:                   config.FromModels(t, configModel),
 				Check: assert.AssertThat(t,
 					resourceassert.TaskResource(t, configModel.ResourceReference()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()).

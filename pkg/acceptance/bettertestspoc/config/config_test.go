@@ -25,6 +25,25 @@ resource "snowflake_share" "test" {
 		require.Equal(t, expectedOutput, result)
 	})
 
+	// TODO [SNOW-1501905]: replace \t characters with actual tabs
+	t.Run("test tabs in multiline", func(t *testing.T) {
+		someModel := Some("test", "Some Name").
+			WithMultilineField("some\n\tmulti\tline\n\t\t\tcontent")
+		expectedOutput := strings.TrimPrefix(`
+resource "snowflake_share" "test" {
+  name = "Some Name"
+  multiline_field = <<EOT
+some
+\tmulti\tline
+\t\t\tcontent
+EOT
+}
+`, "\n")
+		result := config.ResourceFromModel(t, someModel)
+
+		require.Equal(t, expectedOutput, result)
+	})
+
 	t.Run("test full", func(t *testing.T) {
 		someModel := Some("test", "Some Name").
 			WithComment("Some Comment").
@@ -35,6 +54,9 @@ resource "snowflake_share" "test" {
 				Item{IntField: 2, StringField: "second item"},
 			).
 			WithSingleObject("one", 2).
+			WithTextFieldExplicitNull().
+			WithListFieldEmpty().
+			WithMultilineField("some\nmultiline\ncontent").
 			WithDependsOn("some_other_resource.some_name", "other_resource.some_other_name", "third_resource.third_name")
 		expectedOutput := strings.TrimPrefix(`
 resource "snowflake_share" "test" {
@@ -54,6 +76,13 @@ resource "snowflake_share" "test" {
     a = "one"
     b = 2
   }
+  text_field = null
+  list_field = []
+  multiline_field = <<EOT
+some
+multiline
+content
+EOT
   depends_on = [some_other_resource.some_name, other_resource.some_other_name, third_resource.third_name]
 }
 `, "\n")

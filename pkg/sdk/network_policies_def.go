@@ -143,7 +143,9 @@ var (
 				SQL("NETWORK POLICIES").
 				OptionalLike(),
 		).
-		ShowByIdOperation().
+		ShowByIdOperationWithFiltering(
+			g.ShowByIDLikeFiltering,
+		).
 		DescribeOperation(
 			g.DescriptionMappingKindSlice,
 			"https://docs.snowflake.com/en/sql-reference/sql/desc-network-policy",

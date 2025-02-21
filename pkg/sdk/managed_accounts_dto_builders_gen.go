@@ -41,7 +41,7 @@ func NewShowManagedAccountRequest() *ShowManagedAccountRequest {
 	return &ShowManagedAccountRequest{}
 }
 
-func (s *ShowManagedAccountRequest) WithLike(Like *Like) *ShowManagedAccountRequest {
-	s.Like = Like
+func (s *ShowManagedAccountRequest) WithLike(Like Like) *ShowManagedAccountRequest {
+	s.Like = &Like
 	return s
 }

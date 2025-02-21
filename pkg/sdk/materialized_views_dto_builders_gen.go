@@ -222,13 +222,13 @@ func NewShowMaterializedViewRequest() *ShowMaterializedViewRequest {
 	return &ShowMaterializedViewRequest{}
 }
 
-func (s *ShowMaterializedViewRequest) WithLike(Like *Like) *ShowMaterializedViewRequest {
-	s.Like = Like
+func (s *ShowMaterializedViewRequest) WithLike(Like Like) *ShowMaterializedViewRequest {
+	s.Like = &Like
 	return s
 }
 
-func (s *ShowMaterializedViewRequest) WithIn(In *In) *ShowMaterializedViewRequest {
-	s.In = In
+func (s *ShowMaterializedViewRequest) WithIn(In In) *ShowMaterializedViewRequest {
+	s.In = &In
 	return s
 }
 

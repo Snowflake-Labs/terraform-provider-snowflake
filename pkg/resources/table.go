@@ -153,6 +153,7 @@ var tableSchema = map[string]*schema.Schema{
 					Computed:    true,
 					Description: "Record of schema evolution.",
 				},
+				// TODO(SNOW-1348114): Consider adding fully_qualified_name for columns. Update the examples of referencing columns from other resources.
 			},
 		},
 	},

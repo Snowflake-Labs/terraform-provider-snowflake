@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(SNOW-1920887): Some of the account features cannot be currently tested as they require two Snowflake organizations
 // TODO(SNOW-1342761): Adjust the tests, so they can be run in their own pipeline
 // For now, those tests should be run manually. The account/admin user running those tests is required to:
 // - Be privileged with ORGADMIN and ACCOUNTADMIN roles.
@@ -195,7 +196,7 @@ func TestInt_Account(t *testing.T) {
 			RegionGroup:        sdk.String("PUBLIC"),
 			Region:             sdk.String(currentRegion.SnowflakeRegion),
 			Comment:            sdk.String(comment),
-			// TODO(SNOW-1844776): with polaris Snowflake returns an error saying: "invalid property polaris for account"
+			// TODO(SNOW-1895880): with polaris Snowflake returns an error saying: "invalid property polaris for account"
 			// Polaris: sdk.Bool(true),
 		})
 		require.NoError(t, err)
@@ -333,8 +334,6 @@ func TestInt_Account(t *testing.T) {
 		require.Empty(t, acc.OldAccountURL)
 	})
 
-	// TODO(SNOW-1844776): This cannot be tested as it requires capabilities of moving accounts between organizations.
-
 	t.Run("drop: without options", func(t *testing.T) {
 		err := client.Accounts.Drop(ctx, sdk.NewAccountObjectIdentifier("non-existing-account"), 3, &sdk.DropAccountOptions{})
 		require.Error(t, err)
@@ -423,7 +422,7 @@ func TestInt_Account(t *testing.T) {
 }
 
 func TestInt_Account_SelfAlter(t *testing.T) {
-	t.Skip("TODO(SNOW-1844776): Adjust the test so that self alters will be done on newly created account - not the main test one")
+	t.Skip("TODO(SNOW-1920881): Adjust the test so that self alters will be done on newly created account - not the main test one")
 	testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	// This client should be operating on a different account than the "main" one (because it will be altered here).
@@ -457,7 +456,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NotEmpty(t, parameters)
 
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterMinDataRetentionTimeInDays))
-		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJSONIndent))
+		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJsonIndent))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterUserTaskTimeoutMs))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError))
 
@@ -468,7 +467,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 						MinDataRetentionTimeInDays: sdk.Int(15), // default is 0
 					},
 					SessionParameters: &sdk.SessionParameters{
-						JSONIndent: sdk.Int(8), // default is 2
+						JsonIndent: sdk.Int(8), // default is 2
 					},
 					ObjectParameters: &sdk.ObjectParameters{
 						UserTaskTimeoutMs: sdk.Int(100), // default is 3600000
@@ -486,7 +485,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NotEmpty(t, parameters)
 
 		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterMinDataRetentionTimeInDays), "15")
-		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterJSONIndent), "8")
+		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterJsonIndent), "8")
 		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterUserTaskTimeoutMs), "100")
 		assertParameterValueSetOnAccount(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError), "true")
 
@@ -497,7 +496,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 						MinDataRetentionTimeInDays: sdk.Bool(true),
 					},
 					SessionParameters: &sdk.SessionParametersUnset{
-						JSONIndent: sdk.Bool(true),
+						JsonIndent: sdk.Bool(true),
 					},
 					ObjectParameters: &sdk.ObjectParametersUnset{
 						UserTaskTimeoutMs: sdk.Bool(true),
@@ -515,7 +514,7 @@ func TestInt_Account_SelfAlter(t *testing.T) {
 		require.NotEmpty(t, parameters)
 
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterMinDataRetentionTimeInDays))
-		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJSONIndent))
+		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterJsonIndent))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterUserTaskTimeoutMs))
 		assertParameterIsDefault(t, parameters, string(sdk.AccountParameterEnableUnredactedQuerySyntaxError))
 	})

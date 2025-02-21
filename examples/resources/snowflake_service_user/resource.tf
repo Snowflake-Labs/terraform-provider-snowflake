@@ -6,11 +6,11 @@ resource "snowflake_service_user" "minimal" {
 # with all attributes set
 resource "snowflake_service_user" "service_user" {
   name         = "Snowflake Service User"
-  login_name   = "service_user"
+  login_name   = var.login_name
   comment      = "A service user of snowflake."
   disabled     = "false"
   display_name = "Snowflake Service User"
-  email        = "service_user@snowflake.example"
+  email        = var.email
 
   default_warehouse              = "warehouse"
   default_secondary_roles_option = "ALL"
@@ -86,4 +86,14 @@ resource "snowflake_service_user" "u" {
   use_cached_result                             = false
   week_of_year_policy                           = 1
   week_start                                    = 1
+}
+
+variable "email" {
+  type      = string
+  sensitive = true
+}
+
+variable "login_name" {
+  type      = string
+  sensitive = true
 }

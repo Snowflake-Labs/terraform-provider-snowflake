@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -108,6 +110,26 @@ func LegacyServiceUserWithDefaultMeta(
 ) *LegacyServiceUserModel {
 	l := &LegacyServiceUserModel{ResourceModelMeta: config.DefaultMeta(resources.LegacyServiceUser)}
 	l.WithName(name)
+	return l
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (l *LegacyServiceUserModel) MarshalJSON() ([]byte, error) {
+	type Alias LegacyServiceUserModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(l),
+		DependsOn: l.DependsOn(),
+	})
+}
+
+func (l *LegacyServiceUserModel) WithDependsOn(values ...string) *LegacyServiceUserModel {
+	l.SetDependsOn(values...)
 	return l
 }
 
@@ -361,12 +383,12 @@ func (l *LegacyServiceUserModel) WithRowsPerResultset(rowsPerResultset int) *Leg
 }
 
 func (l *LegacyServiceUserModel) WithRsaPublicKey(rsaPublicKey string) *LegacyServiceUserModel {
-	l.RsaPublicKey = tfconfig.StringVariable(rsaPublicKey)
+	l.RsaPublicKey = config.MultilineWrapperVariable(rsaPublicKey)
 	return l
 }
 
 func (l *LegacyServiceUserModel) WithRsaPublicKey2(rsaPublicKey2 string) *LegacyServiceUserModel {
-	l.RsaPublicKey2 = tfconfig.StringVariable(rsaPublicKey2)
+	l.RsaPublicKey2 = config.MultilineWrapperVariable(rsaPublicKey2)
 	return l
 }
 

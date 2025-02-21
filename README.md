@@ -2,11 +2,9 @@
 
 > ⚠️ **Please note**: If you believe you have found a security issue, _please responsibly disclose_ by contacting us at [triage-terraformprovider-dl@snowflake.com](mailto:triage-terraformprovider-dl@snowflake.com).
 
-> ⚠️ **Disclaimer**: the project is still in the 0.x.x version, which means it’s still in the experimental phase (check [Go module versioning](https://go.dev/doc/modules/version-numbers#v0-number) for more details). It can be used in production but makes no stability or backward compatibility guarantees. We do not provide backward bug fixes and, therefore, always suggest using the newest version. We are providing only limited support for the provider; priorities will be assigned on a case-by-case basis.
->
-> Our main current goals are stabilization, addressing existing issues, and providing the missing features (prioritizing the GA features; supporting PrPr and PuPr features are not high priorities now).
->
-> With all that in mind, we aim to reach V1 with a stable, reliable, and functional provider. V1 will be free of all the above limitations.
+> ⚠️ **Disclaimer**: The project is in v1 version, but some features are in preview. Such resources and data sources are considered preview features in the provider, regardless of their state in Snowflake. We do not guarantee their stability. They will be reworked and marked as a stable feature in future releases. Breaking changes in these features are expected, even without bumping the major version. They are disabled by default. To use them, add the relevant feature name to `preview_features_enabled` field in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). The list of preview features is available below. Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
+> 
+> Keep in mind that V1 does not mean we have an official Snowflake support. Please follow [creating issues guidelines](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md).
 
 ----
 
@@ -39,16 +37,17 @@ terraform {
   required_providers {
     snowflake = {
       source  = "Snowflake-Labs/snowflake"
-      version = "~> 0.61"
+      version = ">= 1.0.0"
     }
   }
 }
 
 provider "snowflake" {
-  account  = "abc12345" # the Snowflake account identifier
-  user     = "johndoe"
-  password = "v3ry$3cr3t"
-  role     = "ACCOUNTADMIN"
+  organization_name = "organization_name"
+  account_name      = "account_name"
+  user              = "johndoe"
+  password          = "v3ry$3cr3t"
+  role              = "ACCOUNTADMIN"
 }
 ```
 

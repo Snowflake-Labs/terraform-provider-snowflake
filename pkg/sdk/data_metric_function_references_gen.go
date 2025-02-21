@@ -21,8 +21,8 @@ type dataMetricFunctionReferenceParameters struct {
 	arguments                  *dataMetricFunctionReferenceFunctionArguments `ddl:"list,parentheses"`
 }
 type dataMetricFunctionReferenceFunctionArguments struct {
-	refEntityName   []ObjectIdentifier                      `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_NAME"`
-	refEntityDomain *DataMetricFuncionRefEntityDomainOption `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_DOMAIN"`
+	refEntityName   []ObjectIdentifier                       `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_NAME"`
+	refEntityDomain *DataMetricFunctionRefEntityDomainOption `ddl:"parameter,single_quotes,arrow_equals" sql:"REF_ENTITY_DOMAIN"`
 }
 
 type dataMetricFunctionReferencesRow struct {

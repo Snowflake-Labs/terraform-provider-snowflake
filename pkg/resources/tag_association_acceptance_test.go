@@ -7,16 +7,16 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -186,7 +186,7 @@ func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model12),
+				Config: config.FromModels(t, model12),
 				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
@@ -197,7 +197,7 @@ func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model123),
+				Config: config.FromModels(t, model123),
 				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
@@ -209,7 +209,7 @@ func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, model13),
+				Config: config.FromModels(t, model13),
 				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model13.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
@@ -248,7 +248,7 @@ func TestAcc_TagAssociation_objectType(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, baseModel),
+				Config: config.FromModels(t, baseModel),
 				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
@@ -257,7 +257,7 @@ func TestAcc_TagAssociation_objectType(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModel(t, modelWithDifferentObjectType),
+				Config: config.FromModels(t, modelWithDifferentObjectType),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(modelWithDifferentObjectType.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
@@ -332,7 +332,7 @@ func TestAcc_TagAssociation_lowercaseObjectType(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModel(t, model),
+				Config: config.FromModels(t, model),
 				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model.ResourceReference()).
 					HasIdString(helpers.EncodeSnowflakeID(tag.ID().FullyQualifiedName(), "foo", string(sdk.ObjectTypeSchema))).
 					HasObjectTypeString(string(sdk.ObjectTypeSchema)).

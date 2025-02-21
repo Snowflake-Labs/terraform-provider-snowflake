@@ -21,7 +21,27 @@ func GenerateInterface(writer io.Writer, def *Interface) {
 		if o.OptsField != nil {
 			generateOptionsStruct(writer, o)
 		}
+
+		if o.Name == string(OperationKindShow) {
+			idKind, err := toObjectIdentifierKind(def.IdentifierKind)
+			if err != nil {
+				log.Printf("[WARN] for showObjectIdMethod: %v", err)
+			}
+			if checkRequiredFieldsForIdMethod(def.NameSingular, o.HelperStructs, idKind) {
+				generateShowObjectIdMethod(writer, newShowObjectIDMethod(def.NameSingular, idKind))
+			}
+
+			generateShowObjectTypeMethod(writer, newShowObjectTypeMethod(def.NameSingular))
+		}
 	}
+}
+
+func generateShowObjectIdMethod(writer io.Writer, m *ShowObjectIdMethod) {
+	printTo(writer, ShowObjectIdMethodTemplate, m)
+}
+
+func generateShowObjectTypeMethod(writer io.Writer, m *ShowObjectTypeMethod) {
+	printTo(writer, ShowObjectTypeMethodTemplate, m)
 }
 
 func generateOptionsStruct(writer io.Writer, operation *Operation) {
@@ -90,11 +110,6 @@ func GenerateUnitTests(writer io.Writer, def *Interface) {
 func GenerateValidations(writer io.Writer, def *Interface) {
 	generatePackageDirective(writer)
 	printTo(writer, ValidationsTemplate, def)
-}
-
-func GenerateIntegrationTests(writer io.Writer, def *Interface) {
-	generatePackageDirective(writer)
-	printTo(writer, IntegrationTestsTemplate, def)
 }
 
 func generatePackageDirective(writer io.Writer) {

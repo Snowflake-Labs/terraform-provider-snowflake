@@ -182,7 +182,7 @@ func TestInt_Applications(t *testing.T) {
 	t.Run("show application: with like", func(t *testing.T) {
 		version, patch := "V001", 0
 		_, e, _ := createApplicationHandle(t, version, patch, false, true, false)
-		packages, err := client.Applications.Show(ctx, sdk.NewShowApplicationRequest().WithLike(&sdk.Like{Pattern: &e.Name}))
+		packages, err := client.Applications.Show(ctx, sdk.NewShowApplicationRequest().WithLike(sdk.Like{Pattern: &e.Name}))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(packages))
 		require.Equal(t, *e, packages[0])

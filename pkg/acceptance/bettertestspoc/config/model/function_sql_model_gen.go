@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -21,7 +23,6 @@ type FunctionSqlModel struct {
 	LogLevel              tfconfig.Variable `json:"log_level,omitempty"`
 	MetricLevel           tfconfig.Variable `json:"metric_level,omitempty"`
 	Name                  tfconfig.Variable `json:"name,omitempty"`
-	NullInputBehavior     tfconfig.Variable `json:"null_input_behavior,omitempty"`
 	ReturnResultsBehavior tfconfig.Variable `json:"return_results_behavior,omitempty"`
 	ReturnType            tfconfig.Variable `json:"return_type,omitempty"`
 	Schema                tfconfig.Variable `json:"schema,omitempty"`
@@ -67,6 +68,26 @@ func FunctionSqlWithDefaultMeta(
 	return f
 }
 
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (f *FunctionSqlModel) MarshalJSON() ([]byte, error) {
+	type Alias FunctionSqlModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(f),
+		DependsOn: f.DependsOn(),
+	})
+}
+
+func (f *FunctionSqlModel) WithDependsOn(values ...string) *FunctionSqlModel {
+	f.SetDependsOn(values...)
+	return f
+}
+
 /////////////////////////////////
 // below all the proper values //
 /////////////////////////////////
@@ -94,7 +115,7 @@ func (f *FunctionSqlModel) WithFullyQualifiedName(fullyQualifiedName string) *Fu
 }
 
 func (f *FunctionSqlModel) WithFunctionDefinition(functionDefinition string) *FunctionSqlModel {
-	f.FunctionDefinition = tfconfig.StringVariable(functionDefinition)
+	f.FunctionDefinition = config.MultilineWrapperVariable(functionDefinition)
 	return f
 }
 
@@ -120,11 +141,6 @@ func (f *FunctionSqlModel) WithMetricLevel(metricLevel string) *FunctionSqlModel
 
 func (f *FunctionSqlModel) WithName(name string) *FunctionSqlModel {
 	f.Name = tfconfig.StringVariable(name)
-	return f
-}
-
-func (f *FunctionSqlModel) WithNullInputBehavior(nullInputBehavior string) *FunctionSqlModel {
-	f.NullInputBehavior = tfconfig.StringVariable(nullInputBehavior)
 	return f
 }
 
@@ -204,11 +220,6 @@ func (f *FunctionSqlModel) WithMetricLevelValue(value tfconfig.Variable) *Functi
 
 func (f *FunctionSqlModel) WithNameValue(value tfconfig.Variable) *FunctionSqlModel {
 	f.Name = value
-	return f
-}
-
-func (f *FunctionSqlModel) WithNullInputBehaviorValue(value tfconfig.Variable) *FunctionSqlModel {
-	f.NullInputBehavior = value
 	return f
 }
 

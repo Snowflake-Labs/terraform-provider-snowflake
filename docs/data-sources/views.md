@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_views Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered views. Filtering is aligned with the current possibilities for SHOW VIEWS https://docs.snowflake.com/en/sql-reference/sql/show-views query (only like is supported). The results of SHOW and DESCRIBE are encapsulated in one output collection views.
 ---
@@ -51,14 +51,22 @@ output "limit_output" {
 }
 
 # Filtering (in)
-data "snowflake_views" "in" {
+data "snowflake_views" "in_account" {
   in {
-    database = "database"
+    account = true
   }
 }
 
-output "in_output" {
-  value = data.snowflake_views.in.views
+data "snowflake_views" "in_database" {
+  in {
+    database = "<database_name>"
+  }
+}
+
+data "snowflake_views" "in_schema" {
+  in {
+    schema = "<database_name>.<schema_name>"
+  }
 }
 
 # Without additional data (to limit the number of calls make for every found view)

@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_account_roles Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Stable"
 description: |-
   Data source used to get details of filtered account roles. Filtering is aligned with the current possibilities for SHOW ROLES https://docs.snowflake.com/en/sql-reference/sql/show-roles query (like and in_class are all supported). The results of SHOW are encapsulated in one output collection.
 ---

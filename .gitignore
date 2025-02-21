@@ -17,6 +17,7 @@ terraform-provider-snowflake*
 .DS_Store
 *tfstate*
 .terraform
+.terraform.lock.hcl
 crash.log
 .envrc
 bin

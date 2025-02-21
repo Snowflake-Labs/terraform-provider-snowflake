@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -41,6 +43,26 @@ func SecondaryConnectionWithDefaultMeta(
 	s := &SecondaryConnectionModel{ResourceModelMeta: config.DefaultMeta(resources.SecondaryConnection)}
 	s.WithAsReplicaOf(asReplicaOf)
 	s.WithName(name)
+	return s
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (s *SecondaryConnectionModel) MarshalJSON() ([]byte, error) {
+	type Alias SecondaryConnectionModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(s),
+		DependsOn: s.DependsOn(),
+	})
+}
+
+func (s *SecondaryConnectionModel) WithDependsOn(values ...string) *SecondaryConnectionModel {
+	s.SetDependsOn(values...)
 	return s
 }
 

@@ -25,6 +25,8 @@ This is an example configuration of the provider in `main.tf` in a configuration
 
 **Warning: these values are passed directly to the gosnowflake library, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
 
+--> **Note: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
+
 {{ .SchemaMarkdown | trimspace }}
 
 ## Authentication
@@ -39,6 +41,8 @@ The Snowflake provider support multiple ways to authenticate:
 * Config File
 
 In all cases `organization_name`, `account_name` and `user` are required.
+
+-> **Note** Storing the credentials and other secret values safely is on the users' side. Read more in [Authentication Methods guide](./guides/authentication_methods).
 
 ### Keypair Authentication Environment Variables
 
@@ -55,7 +59,7 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key"
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 ```
 
 ### Keypair Authentication Passphrase
@@ -77,7 +81,7 @@ To export the variables into your provider:
 
 ```shell
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key.p8"
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 export SNOWFLAKE_PRIVATE_KEY_PASSPHRASE="..."
 ```
 
@@ -136,7 +140,7 @@ provider "snowflake" {
 
 ```bash
 export SNOWFLAKE_USER="..."
-export SNOWFLAKE_PRIVATE_KEY="~/.ssh/snowflake_key"
+export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 ```
 
 3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
@@ -173,6 +177,8 @@ Provider uses an established hierarchy of sources. The current behavior is that 
 1. Check if it is present in the provider configuration. If yes, use this value. If not, go to step 2.
 1. Check if it is present in the environment variables. If yes, use this value. If not, go to step 3.
 1. Check if it is present in the TOML config file (specifically, use the profile name configured in one of the steps above). If yes, use this value. If not, the value is considered empty.
+
+-> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332). This will be fixed in the future.
 
 An example TOML file contents:
 

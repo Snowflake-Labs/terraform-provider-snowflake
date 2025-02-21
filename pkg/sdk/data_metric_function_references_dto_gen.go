@@ -5,6 +5,6 @@ package sdk
 var _ optionsProvider[GetForEntityDataMetricFunctionReferenceOptions] = new(GetForEntityDataMetricFunctionReferenceRequest)
 
 type GetForEntityDataMetricFunctionReferenceRequest struct {
-	refEntityName   ObjectIdentifier                       // required
-	RefEntityDomain DataMetricFuncionRefEntityDomainOption // required
+	refEntityName   ObjectIdentifier                        // required
+	RefEntityDomain DataMetricFunctionRefEntityDomainOption // required
 }

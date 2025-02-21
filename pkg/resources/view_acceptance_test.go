@@ -451,7 +451,7 @@ func TestAcc_View_temporary(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel.WithIsTemporary("true")),
+				Config: accconfig.FromModels(t, viewModel.WithIsTemporary("true")),
 				Check: assert.AssertThat(t, resourceassert.ViewResource(t, "snowflake_view.test").
 					HasNameString(id.Name()).
 					HasStatementString(statement).
@@ -949,7 +949,7 @@ func TestAcc_View_Issue3073(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModels(t, viewModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
@@ -973,7 +973,7 @@ func TestAcc_View_Issue3073(t *testing.T) {
 				),
 			},
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModels(t, viewModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
@@ -1007,7 +1007,7 @@ func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.View),
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModel(t, viewModel),
+				Config: accconfig.FromModels(t, viewModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_view.test", plancheck.ResourceActionNoop),
@@ -1022,7 +1022,7 @@ func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
 			},
 			// use columns without quotes in the statement
 			{
-				Config: accconfig.FromModel(t, viewLowercaseStatementModel),
+				Config: accconfig.FromModels(t, viewLowercaseStatementModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "2"),
@@ -1032,7 +1032,7 @@ func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
 			},
 			// add a new column to the statement
 			{
-				Config: accconfig.FromModel(t, viewLowercaseStatementModel3),
+				Config: accconfig.FromModels(t, viewLowercaseStatementModel3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_view.test", "column.#", "3"),

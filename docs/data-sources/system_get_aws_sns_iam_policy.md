@@ -1,6 +1,6 @@
 ---
 page_title: "snowflake_system_get_aws_sns_iam_policy Data Source - terraform-provider-snowflake"
-subcategory: ""
+subcategory: "Preview"
 description: |-
   
 ---

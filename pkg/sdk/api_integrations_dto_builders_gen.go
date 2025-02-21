@@ -243,8 +243,8 @@ func NewShowApiIntegrationRequest() *ShowApiIntegrationRequest {
 	return &ShowApiIntegrationRequest{}
 }
 
-func (s *ShowApiIntegrationRequest) WithLike(Like *Like) *ShowApiIntegrationRequest {
-	s.Like = Like
+func (s *ShowApiIntegrationRequest) WithLike(Like Like) *ShowApiIntegrationRequest {
+	s.Like = &Like
 	return s
 }
 

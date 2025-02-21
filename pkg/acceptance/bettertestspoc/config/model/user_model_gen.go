@@ -3,6 +3,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -113,6 +115,26 @@ func UserWithDefaultMeta(
 ) *UserModel {
 	u := &UserModel{ResourceModelMeta: config.DefaultMeta(resources.User)}
 	u.WithName(name)
+	return u
+}
+
+///////////////////////////////////////////////////////
+// set proper json marshalling and handle depends on //
+///////////////////////////////////////////////////////
+
+func (u *UserModel) MarshalJSON() ([]byte, error) {
+	type Alias UserModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(u),
+		DependsOn: u.DependsOn(),
+	})
+}
+
+func (u *UserModel) WithDependsOn(values ...string) *UserModel {
+	u.SetDependsOn(values...)
 	return u
 }
 
@@ -391,12 +413,12 @@ func (u *UserModel) WithRowsPerResultset(rowsPerResultset int) *UserModel {
 }
 
 func (u *UserModel) WithRsaPublicKey(rsaPublicKey string) *UserModel {
-	u.RsaPublicKey = tfconfig.StringVariable(rsaPublicKey)
+	u.RsaPublicKey = config.MultilineWrapperVariable(rsaPublicKey)
 	return u
 }
 
 func (u *UserModel) WithRsaPublicKey2(rsaPublicKey2 string) *UserModel {
-	u.RsaPublicKey2 = tfconfig.StringVariable(rsaPublicKey2)
+	u.RsaPublicKey2 = config.MultilineWrapperVariable(rsaPublicKey2)
 	return u
 }
 
