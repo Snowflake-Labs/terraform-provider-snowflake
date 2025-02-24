@@ -13,18 +13,21 @@ import (
 // TODO [SNOW-1827331]: Move the rest of the tests to testint package
 
 func TestClient_ping(t *testing.T) {
+	measureTest(t)
 	client := defaultTestClient(t)
 	err := client.Ping()
 	require.NoError(t, err)
 }
 
 func TestClient_close(t *testing.T) {
+	measureTest(t)
 	client := defaultTestClient(t)
 	err := client.Close()
 	require.NoError(t, err)
 }
 
 func TestClient_exec(t *testing.T) {
+	measureTest(t)
 	client := defaultTestClient(t)
 	ctx := context.Background()
 	_, err := client.exec(ctx, "SELECT 1")
@@ -32,6 +35,7 @@ func TestClient_exec(t *testing.T) {
 }
 
 func TestClient_query(t *testing.T) {
+	measureTest(t)
 	client := defaultTestClient(t)
 	ctx := context.Background()
 	rows := []struct {
@@ -45,6 +49,7 @@ func TestClient_query(t *testing.T) {
 }
 
 func TestClient_queryOne(t *testing.T) {
+	measureTest(t)
 	client := defaultTestClient(t)
 	ctx := context.Background()
 	row := struct {
@@ -56,6 +61,7 @@ func TestClient_queryOne(t *testing.T) {
 }
 
 func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
+	measureTest(t)
 	t.Run("get default gosnowflake driver logging level", func(t *testing.T) {
 		config := DefaultConfig()
 		_, err := NewClient(config)

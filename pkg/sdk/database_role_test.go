@@ -5,6 +5,7 @@ import (
 )
 
 func TestDatabaseRoleCreate(t *testing.T) {
+	measureTest(t)
 	id := randomDatabaseObjectIdentifier()
 
 	defaultOpts := func() *createDatabaseRoleOptions {

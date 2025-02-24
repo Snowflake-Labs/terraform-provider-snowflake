@@ -10,8 +10,64 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestATest(t *testing.T) {
+	measureTest(t)
+	// TODO: TestTest not found; add it to the map
+
+	t.Run("level one", func(t *testing.T) {
+		measureTest(t)
+		// TODO: TestTest/level_one (TestTest found; add level_one as sub-measurement)
+
+		t.Run("level two", func(t *testing.T) {
+			measureTest(t)
+			// TODO: TestTest/level_one/level_two (TestTest found;
+
+			t.Run("level three", func(t *testing.T) {
+				measureTest(t)
+			})
+		})
+
+		t.Run("2nd level two", func(t *testing.T) {
+			measureTest(t)
+
+			t.Run("2nd level three", func(t *testing.T) {
+				measureTest(t)
+			})
+		})
+	})
+
+	t.Run("2nd level one", func(t *testing.T) {
+		measureTest(t)
+		// TODO: TestTest/level_one (TestTest found; add level_one as sub-measurement)
+
+		t.Run("level two", func(t *testing.T) {
+			measureTest(t)
+			// TODO: TestTest/level_one/level_two (TestTest found;
+
+			t.Run("level three", func(t *testing.T) {
+				measureTest(t)
+
+				t.Run("level four", func(t *testing.T) {
+					measureTest(t)
+
+					t.Run("level five", func(t *testing.T) {
+						measureTest(t)
+					})
+
+					t.Run("2nd level five", func(t *testing.T) {
+						measureTest(t)
+					})
+				})
+			})
+		})
+	})
+}
+
 func TestAccountCreate(t *testing.T) {
+	measureTest(t)
+
 	t.Run("simplest case", func(t *testing.T) {
+		measureTest(t)
 		id := randomAccountObjectIdentifier()
 		password := random.Password()
 		opts := &CreateAccountOptions{
@@ -25,6 +81,7 @@ func TestAccountCreate(t *testing.T) {
 	})
 
 	t.Run("every option", func(t *testing.T) {
+		measureTest(t)
 		id := randomAccountObjectIdentifier()
 		key := random.Password()
 		opts := &CreateAccountOptions{
@@ -46,6 +103,7 @@ func TestAccountCreate(t *testing.T) {
 	})
 
 	t.Run("static password", func(t *testing.T) {
+		measureTest(t)
 		id := randomAccountObjectIdentifier()
 		password := random.Password()
 		opts := &CreateAccountOptions{
@@ -66,6 +124,8 @@ func TestAccountCreate(t *testing.T) {
 }
 
 func TestAccountAlter(t *testing.T) {
+	measureTest(t)
+
 	t.Run("validation: exactly one value set in AccountSet - nothing set", func(t *testing.T) {
 		opts := &AlterAccountOptions{
 			Set: &AccountSet{},
@@ -357,6 +417,8 @@ func TestAccountAlter(t *testing.T) {
 }
 
 func TestAccountDrop(t *testing.T) {
+	measureTest(t)
+
 	t.Run("validate: empty options", func(t *testing.T) {
 		opts := &DropAccountOptions{}
 		assertOptsInvalidJoinedErrors(t, opts, ErrInvalidObjectIdentifier)
@@ -383,6 +445,8 @@ func TestAccountDrop(t *testing.T) {
 }
 
 func TestAccountShow(t *testing.T) {
+	measureTest(t)
+
 	t.Run("empty options", func(t *testing.T) {
 		opts := &ShowAccountOptions{}
 		assertOptsValidAndSQLEquals(t, opts, `SHOW ACCOUNTS`)
@@ -409,6 +473,8 @@ func TestAccountShow(t *testing.T) {
 }
 
 func TestToAccountCreateResponse(t *testing.T) {
+	measureTest(t)
+
 	testCases := []struct {
 		Name           string
 		RawInput       string
@@ -522,6 +588,8 @@ func TestToAccountCreateResponse(t *testing.T) {
 }
 
 func TestToAccountEdition(t *testing.T) {
+	measureTest(t)
+
 	type test struct {
 		input string
 		want  AccountEdition

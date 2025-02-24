@@ -3,6 +3,7 @@ package sdk
 import "testing"
 
 func TestCortexSearchServices_Create(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid CreateCortexSearchServiceOptions
@@ -72,6 +73,7 @@ func TestCortexSearchServices_Create(t *testing.T) {
 }
 
 func TestCortexSearchServices_Alter(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid AlterCortexSearchServiceOptions
@@ -125,6 +127,7 @@ func TestCortexSearchServices_Alter(t *testing.T) {
 }
 
 func TestCortexSearchServices_Show(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid ShowCortexSearchServiceOptions
@@ -199,6 +202,7 @@ func TestCortexSearchServices_Show(t *testing.T) {
 }
 
 func TestCortexSearchServices_Describe(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DescribeCortexSearchServiceOptions
@@ -226,6 +230,7 @@ func TestCortexSearchServices_Describe(t *testing.T) {
 }
 
 func TestCortexSearchServices_Drop(t *testing.T) {
+	measureTest(t)
 	id := randomSchemaObjectIdentifier()
 
 	// Minimal valid DropCortexSearchServiceOptions

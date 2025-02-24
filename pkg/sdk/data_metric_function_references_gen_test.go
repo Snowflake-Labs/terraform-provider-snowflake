@@ -3,6 +3,7 @@ package sdk
 import "testing"
 
 func TestDataMetricFunctionReferences_GetForEntity(t *testing.T) {
+	measureTest(t)
 	t.Run("validation: nil options", func(t *testing.T) {
 		var opts *GetForEntityDataMetricFunctionReferenceOptions
 		assertOptsInvalidJoinedErrors(t, opts, ErrNilOptions)

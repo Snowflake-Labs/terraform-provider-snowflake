@@ -14,6 +14,7 @@ const (
 )
 
 func TestApiIntegrations_Create(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid CreateApiIntegrationOptions for AWS
@@ -123,6 +124,7 @@ func TestApiIntegrations_Create(t *testing.T) {
 }
 
 func TestApiIntegrations_Alter(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid AlterApiIntegrationOptions
@@ -303,6 +305,7 @@ func TestApiIntegrations_Alter(t *testing.T) {
 }
 
 func TestApiIntegrations_Drop(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DropApiIntegrationOptions
@@ -331,6 +334,7 @@ func TestApiIntegrations_Drop(t *testing.T) {
 }
 
 func TestApiIntegrations_Show(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid ShowApiIntegrationOptions
@@ -358,6 +362,7 @@ func TestApiIntegrations_Show(t *testing.T) {
 }
 
 func TestApiIntegrations_Describe(t *testing.T) {
+	measureTest(t)
 	id := randomAccountObjectIdentifier()
 
 	// Minimal valid DescribeApiIntegrationOptions

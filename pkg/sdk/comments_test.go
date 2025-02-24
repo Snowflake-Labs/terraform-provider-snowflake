@@ -5,6 +5,7 @@ import (
 )
 
 func TestComments(t *testing.T) {
+	measureTest(t)
 	t.Run("set on schema", func(t *testing.T) {
 		id := randomDatabaseObjectIdentifier()
 		opts := &SetCommentOptions{

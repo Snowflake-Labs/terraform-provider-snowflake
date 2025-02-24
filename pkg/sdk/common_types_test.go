@@ -9,6 +9,7 @@ import (
 )
 
 func Test_ToStringProperty(t *testing.T) {
+	measureTest(t)
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -35,6 +36,7 @@ func Test_ToStringProperty(t *testing.T) {
 }
 
 func Test_ToIntProperty(t *testing.T) {
+	measureTest(t)
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -106,6 +108,7 @@ func Test_ToIntProperty(t *testing.T) {
 }
 
 func Test_ToBoolProperty(t *testing.T) {
+	measureTest(t)
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -132,6 +135,7 @@ func Test_ToBoolProperty(t *testing.T) {
 }
 
 func Test_ToFloatProperty(t *testing.T) {
+	measureTest(t)
 	t.Run("with empty property row", func(t *testing.T) {
 		row := &propertyRow{
 			Value:        "null",
@@ -194,6 +198,7 @@ func Test_ToFloatProperty(t *testing.T) {
 }
 
 func TestToStorageSerializationPolicy(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name     string
 		Input    string
@@ -226,6 +231,7 @@ func TestToStorageSerializationPolicy(t *testing.T) {
 }
 
 func TestToLogLevel(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name     string
 		Input    string
@@ -263,6 +269,7 @@ func TestToLogLevel(t *testing.T) {
 }
 
 func Test_ToExecuteAs(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name     string
 		Input    string
@@ -295,6 +302,7 @@ func Test_ToExecuteAs(t *testing.T) {
 }
 
 func Test_ToNullInputBehavior(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name     string
 		Input    string
@@ -328,6 +336,7 @@ func Test_ToNullInputBehavior(t *testing.T) {
 }
 
 func Test_ToReturnResultsBehavior(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name     string
 		Input    string
@@ -360,6 +369,7 @@ func Test_ToReturnResultsBehavior(t *testing.T) {
 }
 
 func TestToTraceLevel(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name     string
 		Input    string
@@ -393,6 +403,7 @@ func TestToTraceLevel(t *testing.T) {
 }
 
 func Test_ToMetricLevel(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name          string
 		Input         string
@@ -426,6 +437,7 @@ func Test_ToMetricLevel(t *testing.T) {
 }
 
 func Test_ToAutoEventLogging(t *testing.T) {
+	measureTest(t)
 	testCases := []struct {
 		Name          string
 		Input         string

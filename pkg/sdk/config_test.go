@@ -19,6 +19,7 @@ import (
 
 // TODO [SNOW-1827309]: use toml config builder instead of hardcoding
 func TestLoadConfigFile(t *testing.T) {
+	measureTest(t)
 	c := `
 	[default]
 	accountname='TEST_ACCOUNT'
@@ -51,6 +52,7 @@ func TestLoadConfigFile(t *testing.T) {
 }
 
 func TestLoadConfigFileWithUnknownFields(t *testing.T) {
+	measureTest(t)
 	c := `
 	[default]
 	unknown='TEST_ACCOUNT'
@@ -68,6 +70,7 @@ func TestLoadConfigFileWithUnknownFields(t *testing.T) {
 }
 
 func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
+	measureTest(t)
 	c := `
 	[default]
 	accountname=42
@@ -79,6 +82,7 @@ func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
 }
 
 func TestProfileConfig(t *testing.T) {
+	measureTest(t)
 	unencryptedKey, encryptedKey := random.GenerateRSAPrivateKeyEncrypted(t, "password")
 
 	c := fmt.Sprintf(`
@@ -199,6 +203,7 @@ func TestProfileConfig(t *testing.T) {
 }
 
 func Test_MergeConfig(t *testing.T) {
+	measureTest(t)
 	config1 := &gosnowflake.Config{
 		Account:                   "account1",
 		User:                      "user1",
@@ -306,6 +311,7 @@ func Test_MergeConfig(t *testing.T) {
 }
 
 func Test_ToAuthenticationType(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  gosnowflake.AuthType
@@ -347,6 +353,7 @@ func Test_ToAuthenticationType(t *testing.T) {
 }
 
 func Test_ToExtendedAuthenticatorType(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  gosnowflake.AuthType
@@ -390,6 +397,7 @@ func Test_ToExtendedAuthenticatorType(t *testing.T) {
 }
 
 func Test_Provider_toDriverLogLevel(t *testing.T) {
+	measureTest(t)
 	type test struct {
 		input string
 		want  DriverLogLevel
