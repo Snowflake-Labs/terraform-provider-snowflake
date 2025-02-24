@@ -6,12 +6,7 @@
 {{ $assertVar := FirstLetter $nameLowerCase }}
 
 {{- range .Fields }}
-    {{ $functionParameterType := "" }}
-    {{ if .IsOriginalTypeSlice }}
-        {{ $functionParameterType = printf "...%s" (TypeWithoutSlice .ConcreteType) }}
-    {{ else }}
-        {{ $functionParameterType = TypeWithoutPointer .ConcreteType  }}
-    {{end}}
+    {{ $functionParameterType := TypeToFunctionParameter .ConcreteType }}
 
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ $functionParameterType }}) *{{ $assertName }} {
         {{ $assertVar }}.AddAssertion(func(t *testing.T, o *{{ $sdkType }}) error {

@@ -26,6 +26,7 @@ var (
 		genhelpers.FirstLetter,
 		genhelpers.TypeWithoutPointer,
 		genhelpers.TypeWithoutSlice,
+		genhelpers.TypeToFunctionParameter,
 		genhelpers.CamelToWords,
 		genhelpers.RunMapper,
 	)).Parse(assertionsTemplateContent)

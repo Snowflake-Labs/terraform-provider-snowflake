@@ -33,8 +33,8 @@ func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) ResourceSh
 	attributes := make([]ResourceShowOutputAssertionModel, len(sdkObject.Fields))
 	includeFmt := false
 	for idx, field := range sdkObject.Fields {
-		showOutputAssertions, inFmt := MapToResourceShowOutputAssertion(field)
-		if !includeFmt && inFmt {
+		showOutputAssertions, includesFmt := MapToResourceShowOutputAssertion(field)
+		if includesFmt {
 			includeFmt = true
 		}
 		attributes[idx] = showOutputAssertions
@@ -56,7 +56,7 @@ func ModelFromSdkObjectDetails(sdkObject genhelpers.SdkObjectDetails) ResourceSh
 	}
 }
 
-func MapToResourceShowOutputAssertion(field genhelpers.Field) (ResourceShowOutputAssertionModel, bool) { // TODO: Temporary
+func MapToResourceShowOutputAssertion(field genhelpers.Field) (ResourceShowOutputAssertionModel, bool) {
 	isPrimitive := true
 	includeFmt := false
 
@@ -91,7 +91,7 @@ func MapToResourceShowOutputAssertion(field genhelpers.Field) (ResourceShowOutpu
 		mapper = genhelpers.ToString
 	default:
 		if !isPrimitive {
-			mapper = genhelpers.PrintToString
+			mapper = genhelpers.ConvertToString
 			includeFmt = true
 		}
 	}

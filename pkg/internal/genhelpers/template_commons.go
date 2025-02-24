@@ -42,6 +42,13 @@ func TypeWithoutSlice(t string) string {
 	return without
 }
 
+func TypeToFunctionParameter(t string) string {
+	if sliceType, isSlice := strings.CutPrefix(t, "[]"); isSlice {
+		return fmt.Sprintf("...%s", sliceType)
+	}
+	return TypeWithoutPointer(t)
+}
+
 func HasComparableSliceValue(value []any) bool {
 	return reflect.TypeOf(value).Elem().Comparable()
 }

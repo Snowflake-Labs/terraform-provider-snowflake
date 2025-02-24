@@ -12,6 +12,7 @@ import (
 func main() {
 	genhelpers.NewGenerator(
 		gen.GetProviderSchemaDetails,
+		// TODO(SNOW-1501905): Decouple provider's model provider from the resource model provider (genhelpers.ModelFromResourceSchemaDetails)
 		func() func(genhelpers.ResourceSchemaDetails) resourcemodelgen.ResourceConfigBuilderModel {
 			return func(resourceSchemaDetails genhelpers.ResourceSchemaDetails) resourcemodelgen.ResourceConfigBuilderModel {
 				details := resourcemodelgen.ModelFromResourceSchemaDetails(resourceSchemaDetails)
