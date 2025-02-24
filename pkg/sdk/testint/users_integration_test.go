@@ -1671,7 +1671,7 @@ func TestInt_Users(t *testing.T) {
 		disabledUser, disabledUserCleanup := testClientHelper().User.CreateUserWithOptions(t, testClientHelper().Ids.RandomAccountObjectIdentifier(), &sdk.CreateUserOptions{ObjectProperties: &sdk.UserObjectProperties{Disable: sdk.Bool(true)}})
 		t.Cleanup(disabledUserCleanup)
 
-		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, disabledUser.ID(), testClientHelper()).
+		assertThatObject(t, objectassert.UserWithTestClient(t, disabledUser.ID()).
 			HasDisabled(true),
 		)
 
@@ -1681,7 +1681,7 @@ func TestInt_Users(t *testing.T) {
 		revertRole := testClientHelper().Role.UseRole(t, role.ID())
 		t.Cleanup(revertRole)
 
-		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, disabledUser.ID(), testClientHelper()).
+		assertThatObject(t, objectassert.UserWithTestClient(t, disabledUser.ID()).
 			HasDisabled(false),
 		)
 	})
@@ -1805,7 +1805,7 @@ func TestInt_Users(t *testing.T) {
 		// Describe won't work and parameters are not affected by that fact
 		assertParametersSet(objectparametersassert.UserParameters(t, id))
 
-		assertions.AssertThatObject(t, objectassert.UserForIntegrationTests(t, id, testClientHelper()).
+		assertThatObject(t, objectassert.UserWithTestClient(t, id).
 			HasName(id.Name()).
 			HasCreatedOnNotEmpty().
 			HasLoginName("").

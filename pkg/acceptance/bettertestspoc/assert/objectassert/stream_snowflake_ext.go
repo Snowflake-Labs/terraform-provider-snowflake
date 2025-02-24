@@ -6,6 +6,8 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -56,4 +58,15 @@ func (s *StreamAssert) HasBaseTablesPartiallyQualified(expected ...string) *Stre
 		return errors.Join(errs...)
 	})
 	return s
+}
+
+// StreamWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
+// It will be generated later.
+func StreamWithTestClient(t *testing.T, id sdk.SchemaObjectIdentifier) *StreamAssert {
+	t.Helper()
+	return &StreamAssert{
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeStream, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Stream, sdk.SchemaObjectIdentifier] {
+			return testClient.Stream.Show
+		}),
+	}
 }
