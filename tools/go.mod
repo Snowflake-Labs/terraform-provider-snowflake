@@ -1,6 +1,6 @@
 module tools
 
-go 1.22.10
+go 1.23.6
 
 require (
 	github.com/hashicorp/terraform-plugin-docs v0.20.1
