@@ -5,6 +5,8 @@ description: |-
   Resource used to manage user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management.
 ---
 
+!> **Caution** Use `network_policy` attribute instead of the [`snowflake_network_policy_attachment`](./network_policy_attachment) resource. `snowflake_network_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
+
 -> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
