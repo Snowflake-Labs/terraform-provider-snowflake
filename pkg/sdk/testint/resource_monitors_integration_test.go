@@ -166,8 +166,8 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 				HasEndTime("").
 				HasNotifyUsers([]string{}).
 				HasNotifyAt([]int{}).
-				HasSuspendAt(0).
-				HasSuspendImmediateAt(0),
+				HasSuspendAtNil().
+				HasSuspendImmediateAtNil(),
 		)
 	})
 }
