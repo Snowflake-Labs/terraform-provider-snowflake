@@ -10,53 +10,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestATest(t *testing.T) {
-	measureTest(t)
-	// TODO: TestTest not found; add it to the map
+func TestATest(tt *testing.T) {
+	t := measureTest(tt)
 
-	t.Run("level one", func(t *testing.T) {
-		measureTest(t)
-		// TODO: TestTest/level_one (TestTest found; add level_one as sub-measurement)
-
-		t.Run("level two", func(t *testing.T) {
-			measureTest(t)
-			// TODO: TestTest/level_one/level_two (TestTest found;
-
-			t.Run("level three", func(t *testing.T) {
-				measureTest(t)
+	t.Run("level one", func(t *T) {
+		t.Run("level two", func(t *T) {
+			t.Run("level three", func(t *T) {
+				assert.Equal(t, 1, 1)
 			})
 		})
 
-		t.Run("2nd level two", func(t *testing.T) {
-			measureTest(t)
-
-			t.Run("2nd level three", func(t *testing.T) {
-				measureTest(t)
-			})
+		t.Run("2nd level two", func(t *T) {
+			t.Run("2nd level three", func(t *T) {})
 		})
 	})
 
-	t.Run("2nd level one", func(t *testing.T) {
-		measureTest(t)
-		// TODO: TestTest/level_one (TestTest found; add level_one as sub-measurement)
-
-		t.Run("level two", func(t *testing.T) {
-			measureTest(t)
-			// TODO: TestTest/level_one/level_two (TestTest found;
-
-			t.Run("level three", func(t *testing.T) {
-				measureTest(t)
-
-				t.Run("level four", func(t *testing.T) {
-					measureTest(t)
-
-					t.Run("level five", func(t *testing.T) {
-						measureTest(t)
-					})
-
-					t.Run("2nd level five", func(t *testing.T) {
-						measureTest(t)
-					})
+	t.Run("2nd level one", func(t *T) {
+		t.Run("level two", func(t *T) {
+			t.Run("level three", func(t *T) {
+				t.Run("level four", func(t *T) {
+					t.Run("level five", func(t *T) {})
+					t.Run("2nd level five", func(t *T) {})
 				})
 			})
 		})
