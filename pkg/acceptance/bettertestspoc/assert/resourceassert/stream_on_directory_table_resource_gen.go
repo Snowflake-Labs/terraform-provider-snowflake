@@ -72,9 +72,14 @@ func (s *StreamOnDirectoryTableResourceAssert) HasStaleString(expected string) *
 	return s
 }
 
-////////////////////////////
-// Attribute empty checks //
-////////////////////////////
+func (s *StreamOnDirectoryTableResourceAssert) HasStreamTypeString(expected string) *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stream_type", expected))
+	return s
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
 
 func (s *StreamOnDirectoryTableResourceAssert) HasNoComment() *StreamOnDirectoryTableResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("comment"))
@@ -116,7 +121,75 @@ func (s *StreamOnDirectoryTableResourceAssert) HasNoStale() *StreamOnDirectoryTa
 	return s
 }
 
-func (s *StreamOnDirectoryTableResourceAssert) HasStreamTypeString(expected string) *StreamOnDirectoryTableResourceAssert {
-	s.AddAssertion(assert.ValueSet("stream_type", expected))
+func (s *StreamOnDirectoryTableResourceAssert) HasNoStreamType() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueNotSet("stream_type"))
+	return s
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (s *StreamOnDirectoryTableResourceAssert) HasCommentEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("comment", ""))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasFullyQualifiedNameEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasStreamTypeEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValueSet("stream_type", ""))
+	return s
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (s *StreamOnDirectoryTableResourceAssert) HasCommentNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("comment"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasCopyGrantsNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("copy_grants"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasDatabaseNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("database"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasFullyQualifiedNameNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("fully_qualified_name"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasNameNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("name"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasSchemaNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("schema"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasStageNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("stage"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasStaleNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("stale"))
+	return s
+}
+
+func (s *StreamOnDirectoryTableResourceAssert) HasStreamTypeNotEmpty() *StreamOnDirectoryTableResourceAssert {
+	s.AddAssertion(assert.ValuePresent("stream_type"))
 	return s
 }

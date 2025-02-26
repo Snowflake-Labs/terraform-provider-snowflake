@@ -19,21 +19,21 @@ type TaskShowOutputAssert struct {
 func TaskShowOutput(t *testing.T, name string) *TaskShowOutputAssert {
 	t.Helper()
 
-	task := TaskShowOutputAssert{
+	taskAssert := TaskShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	task.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &task
+	taskAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &taskAssert
 }
 
 func ImportedTaskShowOutput(t *testing.T, id string) *TaskShowOutputAssert {
 	t.Helper()
 
-	task := TaskShowOutputAssert{
+	taskAssert := TaskShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	task.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &task
+	taskAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &taskAssert
 }
 
 ////////////////////////////

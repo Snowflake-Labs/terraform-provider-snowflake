@@ -63,7 +63,7 @@ func TestAcc_Accounts_Complete(t *testing.T) {
 						HasSnowflakeRegion(account.SnowflakeRegion).
 						HasRegionGroup("").
 						HasEdition(sdk.EditionStandard).
-						HasAccountUrlNotEmpty().
+						HasAccountURLNotEmpty().
 						HasCreatedOnNotEmpty().
 						HasComment("SNOWFLAKE").
 						HasAccountLocatorNotEmpty().

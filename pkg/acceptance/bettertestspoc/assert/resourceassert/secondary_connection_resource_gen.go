@@ -57,9 +57,9 @@ func (s *SecondaryConnectionResourceAssert) HasNameString(expected string) *Seco
 	return s
 }
 
-////////////////////////////
-// Attribute empty checks //
-////////////////////////////
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
 
 func (s *SecondaryConnectionResourceAssert) HasNoAsReplicaOf() *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("as_replica_of"))
@@ -83,5 +83,48 @@ func (s *SecondaryConnectionResourceAssert) HasNoIsPrimary() *SecondaryConnectio
 
 func (s *SecondaryConnectionResourceAssert) HasNoName() *SecondaryConnectionResourceAssert {
 	s.AddAssertion(assert.ValueNotSet("name"))
+	return s
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (s *SecondaryConnectionResourceAssert) HasCommentEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValueSet("comment", ""))
+	return s
+}
+
+func (s *SecondaryConnectionResourceAssert) HasFullyQualifiedNameEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
+	return s
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (s *SecondaryConnectionResourceAssert) HasAsReplicaOfNotEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValuePresent("as_replica_of"))
+	return s
+}
+
+func (s *SecondaryConnectionResourceAssert) HasCommentNotEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValuePresent("comment"))
+	return s
+}
+
+func (s *SecondaryConnectionResourceAssert) HasFullyQualifiedNameNotEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValuePresent("fully_qualified_name"))
+	return s
+}
+
+func (s *SecondaryConnectionResourceAssert) HasIsPrimaryNotEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValuePresent("is_primary"))
+	return s
+}
+
+func (s *SecondaryConnectionResourceAssert) HasNameNotEmpty() *SecondaryConnectionResourceAssert {
+	s.AddAssertion(assert.ValuePresent("name"))
 	return s
 }

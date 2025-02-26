@@ -6,9 +6,10 @@ type Mapper func(string) string
 
 var (
 	Identity           = func(field string) string { return field }
-	ToString           = func(field string) string { return fmt.Sprintf("%s.String()", field) }
-	FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.FullyQualifiedName()", field) }
 	Name               = func(field string) string { return fmt.Sprintf("%s.Name()", field) }
+	FullyQualifiedName = func(field string) string { return fmt.Sprintf("%s.FullyQualifiedName()", field) }
+	ToString           = func(field string) string { return fmt.Sprintf("%s.String()", field) }
+	ConvertToString    = func(field string) string { return fmt.Sprintf(`fmt.Sprintf("%%v", %s)`, field) }
 	CastToString       = func(field string) string { return fmt.Sprintf("string(%s)", field) }
 	CastToInt          = func(field string) string { return fmt.Sprintf("int(%s)", field) }
 )

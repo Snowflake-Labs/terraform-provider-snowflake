@@ -2,8 +2,8 @@
 
 package resourceshowoutputassert
 
-// imports edited manually
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -20,21 +20,21 @@ type ProcedureShowOutputAssert struct {
 func ProcedureShowOutput(t *testing.T, name string) *ProcedureShowOutputAssert {
 	t.Helper()
 
-	p := ProcedureShowOutputAssert{
+	procedureAssert := ProcedureShowOutputAssert{
 		ResourceAssert: assert.NewResourceAssert(name, "show_output"),
 	}
-	p.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &p
+	procedureAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &procedureAssert
 }
 
 func ImportedProcedureShowOutput(t *testing.T, id string) *ProcedureShowOutputAssert {
 	t.Helper()
 
-	p := ProcedureShowOutputAssert{
+	procedureAssert := ProcedureShowOutputAssert{
 		ResourceAssert: assert.NewImportedResourceAssert(id, "show_output"),
 	}
-	p.AddAssertion(assert.ValueSet("show_output.#", "1"))
-	return &p
+	procedureAssert.AddAssertion(assert.ValueSet("show_output.#", "1"))
+	return &procedureAssert
 }
 
 ////////////////////////////
@@ -81,7 +81,10 @@ func (p *ProcedureShowOutputAssert) HasMaxNumArguments(expected int) *ProcedureS
 	return p
 }
 
-// HasArgumentsOld removed manually
+func (p *ProcedureShowOutputAssert) HasArgumentsOld(expected []sdk.DataType) *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("arguments_old", fmt.Sprintf("%v", expected)))
+	return p
+}
 
 func (p *ProcedureShowOutputAssert) HasArgumentsRaw(expected string) *ProcedureShowOutputAssert {
 	p.AddAssertion(assert.ResourceShowOutputValueSet("arguments_raw", expected))
@@ -120,5 +123,227 @@ func (p *ProcedureShowOutputAssert) HasSecrets(expected string) *ProcedureShowOu
 
 func (p *ProcedureShowOutputAssert) HasExternalAccessIntegrations(expected string) *ProcedureShowOutputAssert {
 	p.AddAssertion(assert.ResourceShowOutputValueSet("external_access_integrations", expected))
+	return p
+}
+
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
+
+func (p *ProcedureShowOutputAssert) HasNoCreatedOn() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("created_on"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoName() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("name"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoSchemaName() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("schema_name"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoIsBuiltin() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_builtin"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoIsAggregate() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_aggregate"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoIsAnsi() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_ansi"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoMinNumArguments() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputIntValueNotSet("min_num_arguments"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoMaxNumArguments() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputIntValueNotSet("max_num_arguments"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoArgumentsOld() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("arguments_old"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoArgumentsRaw() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("arguments_raw"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoDescription() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("description"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoCatalogName() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("catalog_name"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoIsTableFunction() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_table_function"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoValidForClustering() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("valid_for_clustering"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoIsSecure() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValueNotSet("is_secure"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoSecrets() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("secrets"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNoExternalAccessIntegrations() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueNotSet("external_access_integrations"))
+	return p
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (p *ProcedureShowOutputAssert) HasCreatedOnEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("created_on", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNameEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("name", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasSchemaNameEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("schema_name", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasArgumentsRawEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("arguments_raw", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasDescriptionEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("description", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasCatalogNameEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("catalog_name", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasSecretsEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("secrets", ""))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasExternalAccessIntegrationsEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValueSet("external_access_integrations", ""))
+	return p
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (p *ProcedureShowOutputAssert) HasCreatedOnNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("created_on"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasNameNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("name"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasSchemaNameNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("schema_name"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasIsBuiltinNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_builtin"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasIsAggregateNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_aggregate"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasIsAnsiNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_ansi"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasMinNumArgumentsNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputIntValuePresent("min_num_arguments"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasMaxNumArgumentsNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputIntValuePresent("max_num_arguments"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasArgumentsOldNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("arguments_old"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasArgumentsRawNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("arguments_raw"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasDescriptionNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("description"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasCatalogNameNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("catalog_name"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasIsTableFunctionNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_table_function"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasValidForClusteringNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValuePresent("valid_for_clustering"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasIsSecureNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputBoolValuePresent("is_secure"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasSecretsNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("secrets"))
+	return p
+}
+
+func (p *ProcedureShowOutputAssert) HasExternalAccessIntegrationsNotEmpty() *ProcedureShowOutputAssert {
+	p.AddAssertion(assert.ResourceShowOutputValuePresent("external_access_integrations"))
 	return p
 }

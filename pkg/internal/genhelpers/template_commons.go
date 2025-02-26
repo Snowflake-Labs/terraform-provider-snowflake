@@ -1,6 +1,7 @@
 package genhelpers
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
@@ -14,6 +15,15 @@ func FirstLetterLowercase(in string) string {
 	return strings.ToLower(in[:1]) + in[1:]
 }
 
+func TransformRestrictedKeywords(in string) string {
+	switch in {
+	case "type":
+		return fmt.Sprintf("_%s", in)
+	default:
+		return in
+	}
+}
+
 func FirstLetter(in string) string {
 	return in[:1]
 }
@@ -25,6 +35,27 @@ func RunMapper(mapper Mapper, in ...string) string {
 func TypeWithoutPointer(t string) string {
 	without, _ := strings.CutPrefix(t, "*")
 	return without
+}
+
+func TypeWithoutSlice(t string) string {
+	without, _ := strings.CutPrefix(t, "[]")
+	return without
+}
+
+func IsTypeSlice(t string) bool {
+	_, ok := strings.CutPrefix(t, "[]")
+	return ok
+}
+
+func TypeToFunctionParameter(t string) string {
+	if sliceType, isSlice := strings.CutPrefix(t, "[]"); isSlice {
+		return fmt.Sprintf("...%s", sliceType)
+	}
+	return TypeWithoutPointer(t)
+}
+
+func HasComparableSliceValue(value []any) bool {
+	return reflect.TypeOf(value).Elem().Comparable()
 }
 
 func SnakeCase(name string) string {

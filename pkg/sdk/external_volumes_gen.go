@@ -122,6 +122,10 @@ type ExternalVolume struct {
 	Comment     string
 }
 
+func (v *ExternalVolume) ID() AccountObjectIdentifier {
+	return NewAccountObjectIdentifier(v.Name)
+}
+
 // Returns a copy of the given storage location with a set name
 func CopySentinelStorageLocation(
 	storageLocation ExternalVolumeStorageLocation,

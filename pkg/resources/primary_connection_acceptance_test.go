@@ -70,7 +70,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 							HasComment("").
 							HasIsPrimary(true).
 							HasPrimaryIdentifier(primaryConnectionAsExternalId).
-							HasFailoverAllowedToAccounts(accountId).
+							HasFailoverAllowedToAccountsList(accountId).
 							HasConnectionUrl(
 								acc.TestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), id.Name()),
 							),
@@ -128,7 +128,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
-							HasFailoverAllowedToAccounts(accountId, secondaryAccountId),
+							HasFailoverAllowedToAccountsList(accountId, secondaryAccountId),
 					),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 							HasCommentString(""),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
-							HasFailoverAllowedToAccounts(accountId),
+							HasFailoverAllowedToAccountsList(accountId),
 					),
 				),
 			},
@@ -195,7 +195,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 							HasComment("config comment").
 							HasIsPrimary(true).
 							HasPrimaryIdentifier(primaryConnectionAsExternalId).
-							HasFailoverAllowedToAccounts(accountId),
+							HasFailoverAllowedToAccountsList(accountId),
 					),
 				),
 			},
@@ -248,7 +248,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNoEnableFailoverToAccounts(),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
-							HasFailoverAllowedToAccounts(accountId),
+							HasFailoverAllowedToAccountsList(accountId),
 					),
 				),
 			},
@@ -275,7 +275,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 						resourceassert.PrimaryConnectionResource(t, connectionModelWithFailover.ResourceReference()).
 							HasExactlyFailoverToAccountsInOrder(secondaryAccountId),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).
-							HasFailoverAllowedToAccounts(accountId, secondaryAccountId),
+							HasFailoverAllowedToAccountsList(accountId, secondaryAccountId),
 					),
 				),
 			},

@@ -52,9 +52,9 @@ func (d *DatabaseRoleResourceAssert) HasNameString(expected string) *DatabaseRol
 	return d
 }
 
-////////////////////////////
-// Attribute empty checks //
-////////////////////////////
+///////////////////////////////
+// Attribute no value checks //
+///////////////////////////////
 
 func (d *DatabaseRoleResourceAssert) HasNoComment() *DatabaseRoleResourceAssert {
 	d.AddAssertion(assert.ValueNotSet("comment"))
@@ -73,5 +73,43 @@ func (d *DatabaseRoleResourceAssert) HasNoFullyQualifiedName() *DatabaseRoleReso
 
 func (d *DatabaseRoleResourceAssert) HasNoName() *DatabaseRoleResourceAssert {
 	d.AddAssertion(assert.ValueNotSet("name"))
+	return d
+}
+
+////////////////////////////
+// Attribute empty checks //
+////////////////////////////
+
+func (d *DatabaseRoleResourceAssert) HasCommentEmpty() *DatabaseRoleResourceAssert {
+	d.AddAssertion(assert.ValueSet("comment", ""))
+	return d
+}
+
+func (d *DatabaseRoleResourceAssert) HasFullyQualifiedNameEmpty() *DatabaseRoleResourceAssert {
+	d.AddAssertion(assert.ValueSet("fully_qualified_name", ""))
+	return d
+}
+
+///////////////////////////////
+// Attribute presence checks //
+///////////////////////////////
+
+func (d *DatabaseRoleResourceAssert) HasCommentNotEmpty() *DatabaseRoleResourceAssert {
+	d.AddAssertion(assert.ValuePresent("comment"))
+	return d
+}
+
+func (d *DatabaseRoleResourceAssert) HasDatabaseNotEmpty() *DatabaseRoleResourceAssert {
+	d.AddAssertion(assert.ValuePresent("database"))
+	return d
+}
+
+func (d *DatabaseRoleResourceAssert) HasFullyQualifiedNameNotEmpty() *DatabaseRoleResourceAssert {
+	d.AddAssertion(assert.ValuePresent("fully_qualified_name"))
+	return d
+}
+
+func (d *DatabaseRoleResourceAssert) HasNameNotEmpty() *DatabaseRoleResourceAssert {
+	d.AddAssertion(assert.ValuePresent("name"))
 	return d
 }

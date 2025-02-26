@@ -26,6 +26,7 @@ func (m ResourceAssertionsModel) SomeFunc() {
 type ResourceAttributeAssertionModel struct {
 	Name          string
 	AttributeType string
+	IsRequired    bool
 }
 
 func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSchemaDetails) ResourceAssertionsModel {
@@ -37,7 +38,8 @@ func ModelFromResourceSchemaDetails(resourceSchemaDetails genhelpers.ResourceSch
 		attributes = append(attributes, ResourceAttributeAssertionModel{
 			Name: attr.Name,
 			// TODO [SNOW-1501905]: add attribute type logic; allow type safe assertions, not only strings
-			AttributeType: "string",
+			AttributeType: attr.AttributeType.String(),
+			IsRequired:    attr.Required,
 		})
 	}
 
