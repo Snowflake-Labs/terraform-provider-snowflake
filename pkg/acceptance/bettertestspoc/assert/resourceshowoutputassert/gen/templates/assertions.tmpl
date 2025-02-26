@@ -9,10 +9,12 @@
 ////////////////////////////
 
 {{ range .Attributes -}}
+    {{ if not (IsTypeSlice .ConcreteType) -}}
     func ({{ $assertVar }} *{{ $assertName }}) Has{{ .Name }}(expected {{ .ConcreteType }}) *{{ $assertName }} {
         {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Set("{{ SnakeCase .Name }}", {{ RunMapper .Mapper "expected" }}))
         return {{ $assertVar }}
     }
+    {{ end }}
 
 {{ end -}}
 
@@ -21,10 +23,18 @@
 ///////////////////////////////
 
 {{ range .Attributes -}}
+
+    {{ if (IsTypeSlice .ConcreteType) -}}
     func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ .Name }}() *{{ $assertName }} {
-    {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}NotSet("{{ SnakeCase .Name }}"))
-    return {{ $assertVar }}
+        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}Set("{{ SnakeCase .Name }}.#", "0"))
+        return {{ $assertVar }}
     }
+    {{ else -}}
+    func ({{ $assertVar }} *{{ $assertName }}) HasNo{{ .Name }}() *{{ $assertName }} {
+        {{ $assertVar }}.AddAssertion(assert.{{ .AssertionCreator }}NotSet("{{ SnakeCase .Name }}"))
+        return {{ $assertVar }}
+    }
+    {{ end }}
 
 {{ end -}}
 

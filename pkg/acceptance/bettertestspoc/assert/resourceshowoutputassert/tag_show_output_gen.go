@@ -3,7 +3,6 @@
 package resourceshowoutputassert
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -72,11 +71,6 @@ func (t *TagShowOutputAssert) HasComment(expected string) *TagShowOutputAssert {
 	return t
 }
 
-func (t *TagShowOutputAssert) HasAllowedValues(expected []string) *TagShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values", fmt.Sprintf("%v", expected)))
-	return t
-}
-
 func (t *TagShowOutputAssert) HasOwnerRoleType(expected string) *TagShowOutputAssert {
 	t.AddAssertion(assert.ResourceShowOutputValueSet("owner_role_type", expected))
 	return t
@@ -117,7 +111,7 @@ func (t *TagShowOutputAssert) HasNoComment() *TagShowOutputAssert {
 }
 
 func (t *TagShowOutputAssert) HasNoAllowedValues() *TagShowOutputAssert {
-	t.AddAssertion(assert.ResourceShowOutputValueNotSet("allowed_values"))
+	t.AddAssertion(assert.ResourceShowOutputValueSet("allowed_values.#", "0"))
 	return t
 }
 

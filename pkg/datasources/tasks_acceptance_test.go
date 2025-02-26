@@ -58,7 +58,7 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 						HasComment("some comment").
 						HasWarehouse(acc.TestClient().Ids.WarehouseId()).
 						HasSchedule("1 MINUTE").
-						HasPredecessorsList().
+						HasPredecessors().
 						HasDefinition("SELECT 1").
 						HasCondition("").
 						HasAllowOverlappingExecution(true).
@@ -68,7 +68,7 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 						HasOwnerRoleType("ROLE").
 						HasConfig("").
 						HasBudget("").
-						HasTaskRelationsObject(sdk.TaskRelations{}).
+						HasTaskRelations(sdk.TaskRelations{}).
 						HasLastSuspendedReason(""),
 					resourceparametersassert.TaskDatasourceParameters(t, "snowflake_tasks.test").
 						HasAllDefaults(),

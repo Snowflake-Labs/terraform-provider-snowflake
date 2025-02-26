@@ -42,6 +42,11 @@ func TypeWithoutSlice(t string) string {
 	return without
 }
 
+func IsTypeSlice(t string) bool {
+	_, ok := strings.CutPrefix(t, "[]")
+	return ok
+}
+
 func TypeToFunctionParameter(t string) string {
 	if sliceType, isSlice := strings.CutPrefix(t, "[]"); isSlice {
 		return fmt.Sprintf("...%s", sliceType)
