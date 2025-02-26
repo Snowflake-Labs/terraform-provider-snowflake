@@ -8,9 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -21,7 +20,9 @@ type ProcedureAssert struct {
 func Procedure(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *ProcedureAssert {
 	t.Helper()
 	return &ProcedureAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeProcedure, id, acc.TestClient().Procedure.Show),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeProcedure, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Procedure, sdk.SchemaObjectIdentifierWithArguments] {
+			return testClient.Procedure.Show
+		}),
 	}
 }
 

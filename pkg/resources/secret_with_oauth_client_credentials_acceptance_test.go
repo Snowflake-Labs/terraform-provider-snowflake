@@ -54,7 +54,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -97,7 +97,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -140,7 +140,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[bar]"), sdk.String("[foo]")),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
@@ -161,7 +161,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretModelFooInScopes.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(newComment), nil),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretModelFooInScopes.ResourceReference()).
 						HasCommentString(""),
 				),
@@ -179,7 +179,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 						planchecks.ExpectChange(secretModelWithoutComment.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(comment), nil),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretModelWithoutComment.ResourceReference()).
 						HasCommentString(""),
 				),
@@ -188,7 +188,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModelWithoutComment.WithOauthScopes([]string{"foo", "bar"})),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -246,7 +246,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
@@ -268,7 +268,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
@@ -287,7 +287,7 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[foo]"), sdk.String("[]")),
 					},
 				},
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
@@ -325,7 +325,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -347,7 +347,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -384,7 +384,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 			{
 				Config: config.FromModels(t, secretModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).
@@ -410,7 +410,7 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, secretModel.ResourceReference()).
 							HasSecretTypeString(string(sdk.SecretTypeOAuth2)),
 						resourceshowoutputassert.SecretShowOutput(t, secretModel.ResourceReference()).

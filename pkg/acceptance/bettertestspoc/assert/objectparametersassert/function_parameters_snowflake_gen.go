@@ -5,9 +5,8 @@ package objectparametersassert
 import (
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -18,7 +17,9 @@ type FunctionParametersAssert struct {
 func FunctionParameters(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *FunctionParametersAssert {
 	t.Helper()
 	return &FunctionParametersAssert{
-		assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectTypeFunction, acc.TestClient().Parameter.ShowFunctionParameters),
+		assert.NewSnowflakeParametersAssertWithTestClientParametersProvider(id, sdk.ObjectTypeFunction, func(testClient *helpers.TestClient) assert.ParametersProvider[sdk.SchemaObjectIdentifierWithArguments] {
+			return testClient.Parameter.ShowFunctionParameters
+		}),
 	}
 }
 

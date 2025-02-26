@@ -36,7 +36,7 @@ func TestAcc_ResourceMonitors(t *testing.T) {
 			// Filter by exact name (expect 1 item)
 			{
 				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), resourceMonitorName.Name()),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_resource_monitors.test", "resource_monitors.#", "1")),
 					resourceshowoutputassert.ResourceMonitorDatasourceShowOutput(t, "snowflake_resource_monitors.test").
 						HasName(resourceMonitorName.Name()).

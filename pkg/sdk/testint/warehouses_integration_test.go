@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -117,7 +115,7 @@ func TestInt_Warehouses(t *testing.T) {
 		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 
 		// we can use the same assertion builder in the SDK tests
-		assertions.AssertThatObject(t, objectassert.Warehouse(t, id).
+		assertThatObject(t, objectassert.Warehouse(t, id).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).
@@ -149,7 +147,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, 90, warehouse.QueryAccelerationMaxScaleFactor)
 
 		// we can also use the read object to initialize:
-		assertions.AssertThatObject(t, objectassert.WarehouseFromObject(t, warehouse).
+		assertThatObject(t, objectassert.WarehouseFromObject(t, warehouse).
 			HasName(id.Name()).
 			HasType(sdk.WarehouseTypeStandard).
 			HasSize(sdk.WarehouseSizeSmall).

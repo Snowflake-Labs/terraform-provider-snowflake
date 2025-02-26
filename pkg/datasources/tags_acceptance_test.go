@@ -41,7 +41,7 @@ func TestAcc_Tags(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tags/basic"),
 				ConfigVariables: config.ConfigVariablesFromModel(t, model),
 
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "tags.#", "1")),
 
 					resourceshowoutputassert.TagsDatasourceShowOutput(t, "snowflake_tags.test").

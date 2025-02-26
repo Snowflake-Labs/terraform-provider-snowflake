@@ -46,7 +46,7 @@ func TestAcc_FunctionSql_InlineBasic(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, functionModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionSqlResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanDefault).
@@ -72,7 +72,7 @@ func TestAcc_FunctionSql_InlineBasic(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, functionModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionSqlResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()),
 				),
@@ -83,7 +83,7 @@ func TestAcc_FunctionSql_InlineBasic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"is_secure"},
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedFunctionSqlResource(t, id.FullyQualifiedName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_name", argName)),
@@ -94,7 +94,7 @@ func TestAcc_FunctionSql_InlineBasic(t *testing.T) {
 			// RENAME
 			{
 				Config: config.FromModels(t, functionModelRenamed),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionSqlResource(t, functionModelRenamed.ResourceReference()).
 						HasNameString(idWithChangedNameButTheSameDataType.Name()).
 						HasFullyQualifiedNameString(idWithChangedNameButTheSameDataType.FullyQualifiedName()),
@@ -136,7 +136,7 @@ func TestAcc_FunctionSql_InlineFull(t *testing.T) {
 			// CREATE BASIC
 			{
 				Config: config.FromModels(t, functionModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionSqlResource(t, functionModel.ResourceReference()).
 						HasNameString(id.Name()).
 						HasIsSecureString(r.BooleanFalse).
@@ -158,7 +158,7 @@ func TestAcc_FunctionSql_InlineFull(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"return_results_behavior"},
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedFunctionSqlResource(t, id.FullyQualifiedName()).
 						HasFullyQualifiedNameString(id.FullyQualifiedName()),
 					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "arguments.0.arg_name", argName)),
@@ -169,7 +169,7 @@ func TestAcc_FunctionSql_InlineFull(t *testing.T) {
 			// RENAME
 			{
 				Config: config.FromModels(t, functionModelRenamed),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.FunctionSqlResource(t, functionModelRenamed.ResourceReference()).
 						HasNameString(idWithChangedNameButTheSameDataType.Name()).
 						HasFullyQualifiedNameString(idWithChangedNameButTheSameDataType.FullyQualifiedName()).

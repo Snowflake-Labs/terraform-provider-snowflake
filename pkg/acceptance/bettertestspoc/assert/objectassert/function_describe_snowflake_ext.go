@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	assert2 "github.com/stretchr/testify/assert"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -22,7 +22,9 @@ type FunctionDetailsAssert struct {
 func FunctionDetails(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *FunctionDetailsAssert {
 	t.Helper()
 	return &FunctionDetailsAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectType("FUNCTION_DETAILS"), id, acc.TestClient().Function.DescribeDetails),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectType("FUNCTION_DETAILS"), id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.FunctionDetails, sdk.SchemaObjectIdentifierWithArguments] {
+			return testClient.Function.DescribeDetails
+		}),
 	}
 }
 

@@ -10,8 +10,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
@@ -31,7 +29,7 @@ func TestInt_Views(t *testing.T) {
 
 	assertViewWithOptions := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier, isSecure bool, comment string) {
 		t.Helper()
-		assertions.AssertThatObject(t, objectassert.ViewFromObject(t, view).
+		assertThatObject(t, objectassert.ViewFromObject(t, view).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasKind("").
@@ -54,7 +52,7 @@ func TestInt_Views(t *testing.T) {
 
 	assertViewTerse := func(t *testing.T, view *sdk.View, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
-		assertions.AssertThatObject(t, objectassert.ViewFromObject(t, view).
+		assertThatObject(t, objectassert.ViewFromObject(t, view).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasKind("VIEW").

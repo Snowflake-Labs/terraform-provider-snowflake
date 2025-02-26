@@ -4,11 +4,8 @@ import (
 	"testing"
 	"time"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -99,7 +96,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 
 		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.ResourceMonitor(t, id).
 				HasName(name).
 				HasFrequency(frequency).
@@ -160,7 +157,7 @@ func TestInt_ResourceMonitorCreate(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.ResourceMonitor(t, id).
 				HasName(name).
 				HasFrequency(sdk.FrequencyMonthly).
@@ -330,7 +327,7 @@ func TestInt_ResourceMonitorAlter(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.ResourceMonitor(t, resourceMonitor.ID()).
 				HasCreditQuota(float64(creditQuota)).
 				HasNotifyUsers([]string{"JAN_CIESLAK"}).

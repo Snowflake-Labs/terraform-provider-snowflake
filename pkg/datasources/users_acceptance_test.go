@@ -61,7 +61,7 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.User),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
@@ -123,7 +123,7 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.User),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
@@ -218,7 +218,7 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.ServiceUser),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
@@ -280,7 +280,7 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.ServiceUser),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
@@ -378,7 +378,7 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.LegacyServiceUser),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
@@ -440,7 +440,7 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.LegacyServiceUser),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).

@@ -55,7 +55,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, schemaModel) + schemaDatasourceConfigWithDependency(schemaModel.ResourceReference(), id),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.SchemaResource(t, schemaModel.ResourceReference()).
 						HasNameString(id.Name()),
 					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`SHOW SCHEMAS LIKE '%s' IN DATABASE "%s"`, id.Name(), id.DatabaseName()))),

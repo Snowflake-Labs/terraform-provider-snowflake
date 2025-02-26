@@ -9,7 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random/acceptancetests"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random/integrationtests"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,16 +25,16 @@ func TestSweepAll(t *testing.T) {
 		client := defaultTestClient(t)
 		secondaryClient := secondaryTestClient(t)
 
-		err := SweepAfterIntegrationTests(client, random.IntegrationTestsSuffix)
+		err := SweepAfterIntegrationTests(client, integrationtests.ObjectsSuffix)
 		assert.NoError(t, err)
 
-		err = SweepAfterIntegrationTests(secondaryClient, random.IntegrationTestsSuffix)
+		err = SweepAfterIntegrationTests(secondaryClient, integrationtests.ObjectsSuffix)
 		assert.NoError(t, err)
 
-		err = SweepAfterAcceptanceTests(client, random.AcceptanceTestsSuffix)
+		err = SweepAfterAcceptanceTests(client, acceptancetests.ObjectsSuffix)
 		assert.NoError(t, err)
 
-		err = SweepAfterAcceptanceTests(secondaryClient, random.AcceptanceTestsSuffix)
+		err = SweepAfterAcceptanceTests(secondaryClient, acceptancetests.ObjectsSuffix)
 		assert.NoError(t, err)
 	})
 }

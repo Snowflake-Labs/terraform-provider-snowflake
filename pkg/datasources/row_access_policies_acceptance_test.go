@@ -47,7 +47,7 @@ func TestAcc_RowAccessPolicies(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicies/optionals_set"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.#", "1")),
 
 					resourceshowoutputassert.RowAccessPoliciesDatasourceShowOutput(t, "snowflake_row_access_policies.test").
@@ -75,7 +75,7 @@ func TestAcc_RowAccessPolicies(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicies/optionals_unset"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
 
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "row_access_policies.#", "1")),
 
 					resourceshowoutputassert.RowAccessPoliciesDatasourceShowOutput(t, "snowflake_row_access_policies.test").

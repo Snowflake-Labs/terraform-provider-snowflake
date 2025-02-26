@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -54,7 +52,7 @@ func TestInt_Functions(t *testing.T) {
 
 	assertParametersSet := func(t *testing.T, functionParametersAssert *objectparametersassert.FunctionParametersAssert) {
 		t.Helper()
-		assertions.AssertThatObject(t, functionParametersAssert.
+		assertThatObject(t, functionParametersAssert.
 			HasEnableConsoleOutput(true).
 			HasLogLevel(sdk.LogLevelWarn).
 			HasMetricLevel(sdk.MetricLevelAll).
@@ -86,7 +84,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -110,7 +108,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -134,7 +132,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -186,7 +184,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -210,7 +208,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -236,7 +234,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -264,7 +262,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -288,7 +286,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -314,7 +312,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -354,7 +352,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -378,7 +376,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -405,7 +403,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -438,7 +436,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaFunctionDifferentStage.JarName)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: stage.ID().FullyQualifiedName(), PathOnStage: tmpJavaFunctionDifferentStage.JarName,
@@ -474,11 +472,11 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
@@ -503,7 +501,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -527,7 +525,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -551,7 +549,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -582,7 +580,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -606,7 +604,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -630,7 +628,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -657,7 +655,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -681,7 +679,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
 			HasReturnDataType(dataType).
@@ -705,7 +703,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregate(false),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -745,7 +743,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -769,7 +767,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
 			HasReturnDataType(dataType).
@@ -796,7 +794,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregate(false),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -821,7 +819,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -845,7 +843,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
 			HasReturnDataType(dataType).
@@ -871,7 +869,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregate(false),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -908,7 +906,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -932,7 +930,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
 			HasReturnDataType(dataType).
@@ -959,7 +957,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregate(false),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -987,7 +985,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1011,7 +1009,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1035,7 +1033,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1084,7 +1082,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1108,7 +1106,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -1135,7 +1133,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1161,7 +1159,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1185,7 +1183,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1211,7 +1209,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1248,7 +1246,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1272,7 +1270,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -1299,7 +1297,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1324,7 +1322,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1348,7 +1346,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1372,7 +1370,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1398,11 +1396,11 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
@@ -1432,7 +1430,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1456,7 +1454,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -1482,7 +1480,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1504,7 +1502,7 @@ func TestInt_Functions(t *testing.T) {
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1528,7 +1526,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsDataMetric(false),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
+		assertThatObject(t, objectassert.FunctionDetails(t, function.ID()).
 			HasSignature("()").
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1552,7 +1550,7 @@ func TestInt_Functions(t *testing.T) {
 			HasIsAggregateNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1574,7 +1572,7 @@ func TestInt_Functions(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters).
+		assertThatObject(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1583,7 +1581,7 @@ func TestInt_Functions(t *testing.T) {
 		parameters, err = client.Functions.ShowParameters(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters).
+		assertThatObject(t, objectparametersassert.FunctionParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1612,18 +1610,18 @@ func TestInt_Functions(t *testing.T) {
 		t.Cleanup(fCleanup)
 		id := f.ID()
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultFunctionComment),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+		assertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExternalAccessIntegrationsNil().
 			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1641,12 +1639,12 @@ func TestInt_Functions(t *testing.T) {
 		err := client.Functions.Alter(ctx, request)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasName(id.Name()).
 			HasDescription("new comment"),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+		assertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -1668,21 +1666,21 @@ func TestInt_Functions(t *testing.T) {
 		err = client.Functions.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultFunctionComment).
 			HasExactlyExternalAccessIntegrations().
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+		assertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasExternalAccessIntegrationsNil().
 			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			// TODO [SNOW-1850370]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1694,7 +1692,7 @@ func TestInt_Functions(t *testing.T) {
 		err = client.Functions.Alter(ctx, unsetSecretsRequest)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+		assertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasSecretsNil(),
 		)
 	})
@@ -1704,7 +1702,7 @@ func TestInt_Functions(t *testing.T) {
 		t.Cleanup(fCleanup)
 		id := f.ID()
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1720,7 +1718,7 @@ func TestInt_Functions(t *testing.T) {
 		err := client.Functions.Alter(ctx, request)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasName(id.Name()).
 			HasDescription("new comment"),
 		)
@@ -1738,13 +1736,13 @@ func TestInt_Functions(t *testing.T) {
 		err = client.Functions.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultFunctionComment),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.FunctionParameters(t, id).
+		assertThatObject(t, objectparametersassert.FunctionParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1755,21 +1753,21 @@ func TestInt_Functions(t *testing.T) {
 		t.Cleanup(fCleanup)
 		id := f.ID()
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, f).
+		assertThatObject(t, objectassert.FunctionFromObject(t, f).
 			HasIsSecure(false),
 		)
 
 		err := client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithSetSecure(true))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasIsSecure(true),
 		)
 
 		err = client.Functions.Alter(ctx, sdk.NewAlterFunctionRequest(id).WithUnsetSecure(true))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Function(t, id).
+		assertThatObject(t, objectassert.Function(t, id).
 			HasIsSecure(false),
 		)
 	})
@@ -2073,14 +2071,14 @@ SELECT 2.2::float, 'abc');` // the ending parenthesis has to be there (otherwise
 		function, err := client.Functions.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.FunctionFromObject(t, function).
+		assertThatObject(t, objectassert.FunctionFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
 			HasArgumentsRawContains(strings.ReplaceAll(returnDataType.ToLegacyDataTypeSql(), "TABLE(", "TABLE (")),
 		)
 
-		assertions.AssertThatObject(t, objectassert.FunctionDetails(t, id).
+		assertThatObject(t, objectassert.FunctionDetails(t, id).
 			HasReturnDataType(returnDataType),
 		)
 	})

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -48,7 +47,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, sdk.Pointer("v1"), tag1Value)
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
@@ -125,7 +124,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
@@ -146,7 +145,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
@@ -174,7 +173,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Stream.DropFunc(t, id))
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
@@ -200,7 +199,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Stream.DropFunc(t, cloneId))
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
@@ -317,7 +316,7 @@ func TestInt_Streams(t *testing.T) {
 		_, err = collections.FindFirst[sdk.Stream](s, func(stream sdk.Stream) bool { return id.Name() == stream.Name })
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).
@@ -408,7 +407,7 @@ func TestInt_Streams(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, s)
 
-		assertions.AssertThatObject(t, objectassert.Stream(t, id).
+		assertThatObject(t, objectassert.Stream(t, id).
 			HasName(id.Name()).
 			HasDatabaseName(id.DatabaseName()).
 			HasSchemaName(id.SchemaName()).

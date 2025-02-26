@@ -5,9 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -18,8 +17,11 @@ type DatabaseDescribeAssert struct {
 
 func DatabaseDescribe(t *testing.T, id sdk.AccountObjectIdentifier) *DatabaseDescribeAssert {
 	t.Helper()
+
 	return &DatabaseDescribeAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectType("DATABASE_DETAILS"), id, acc.TestClient().Database.Describe),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectType("DATABASE_DETAILS"), id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.DatabaseDetails, sdk.AccountObjectIdentifier] {
+			return testClient.Database.Describe
+		}),
 	}
 }
 

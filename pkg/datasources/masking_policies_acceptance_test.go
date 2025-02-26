@@ -47,7 +47,7 @@ func TestAcc_MaskingPolicies(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicies/optionals_set"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "masking_policies.#", "1")),
 
 					resourceshowoutputassert.MaskingPoliciesDatasourceShowOutput(t, "snowflake_masking_policies.test").
@@ -75,7 +75,7 @@ func TestAcc_MaskingPolicies(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicies/optionals_unset"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
 
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "masking_policies.#", "1")),
 
 					resourceshowoutputassert.MaskingPoliciesDatasourceShowOutput(t, "snowflake_masking_policies.test").
