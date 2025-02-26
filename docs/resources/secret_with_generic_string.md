@@ -17,7 +17,7 @@ resource "snowflake_secret_with_generic_string" "test" {
   name          = "EXAMPLE_SECRET"
   database      = "EXAMPLE_DB"
   schema        = "EXAMPLE_SCHEMA"
-  secret_string = "EXAMPLE_SECRET_STRING"
+  secret_string = var.secret_string
 }
 
 # resource with all fields set
@@ -25,8 +25,13 @@ resource "snowflake_secret_with_generic_string" "test" {
   name          = "EXAMPLE_SECRET"
   database      = "EXAMPLE_DB"
   schema        = "EXAMPLE_SCHEMA"
-  secret_string = "EXAMPLE_SECRET_STRING"
+  secret_string = var.secret_string
   comment       = "EXAMPLE_COMMENT"
+}
+
+variable "secret_string" {
+  type      = string
+  sensitive = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).

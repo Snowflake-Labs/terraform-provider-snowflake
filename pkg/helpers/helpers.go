@@ -142,16 +142,6 @@ func DecodeSnowflakeAccountIdentifier(identifier string) (sdk.AccountIdentifier,
 	}
 }
 
-// ConcatSlices is a temporary replacement for slices.Concat that will be available after we migrate to Go 1.22.
-// TODO [SNOW-1844769]: use slices.Concat
-func ConcatSlices[T any](slices ...[]T) []T {
-	var tmp []T
-	for _, s := range slices {
-		tmp = append(tmp, s...)
-	}
-	return tmp
-}
-
 type StorageLocation struct {
 	Name                 string `json:"NAME"`
 	StorageProvider      string `json:"STORAGE_PROVIDER"`

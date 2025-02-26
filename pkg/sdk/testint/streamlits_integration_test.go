@@ -89,7 +89,6 @@ func TestInt_Streamlits(t *testing.T) {
 		require.ErrorContains(t, err, fmt.Sprintf("The specified warehouse %s does not exist", strings.ToUpper(warehouse.ID().Name())))
 	})
 
-	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
 	t.Run("grant privilege to streamlits to role", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
@@ -140,8 +139,7 @@ func TestInt_Streamlits(t *testing.T) {
 			},
 		}
 		err = client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, role.ID(), nil)
-		require.Error(t, err)
-		require.ErrorContains(t, err, "Unsupported feature 'STREAMLIT'")
+		require.NoError(t, err)
 
 		on = &sdk.AccountRoleGrantOn{
 			SchemaObject: &sdk.GrantOnSchemaObject{
@@ -155,7 +153,6 @@ func TestInt_Streamlits(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
 	t.Run("grant privilege to streamlits to database role", func(t *testing.T) {
 		stage, cleanupStage := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(cleanupStage)
@@ -207,8 +204,7 @@ func TestInt_Streamlits(t *testing.T) {
 			},
 		}
 		err = client.Grants.GrantPrivilegesToDatabaseRole(ctx, privileges, on, databaseRoleId, nil)
-		require.Error(t, err)
-		require.ErrorContains(t, err, "Unsupported feature 'STREAMLIT'")
+		require.NoError(t, err)
 
 		on = &sdk.DatabaseRoleGrantOn{
 			SchemaObject: &sdk.GrantOnSchemaObject{

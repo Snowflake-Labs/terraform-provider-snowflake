@@ -404,6 +404,54 @@ func TestAcc_ExternalFunction_issue2528(t *testing.T) {
 	})
 }
 
+func TestAcc_ExternalFunction_issue3392_returnVarchar(t *testing.T) {
+	accName := acc.TestClient().Ids.Alpha()
+
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
+		Steps: []resource.TestStep{
+			{
+				Config: externalFunctionConfigWithReturnType(acc.TestDatabaseName, acc.TestSchemaName, accName, "VARCHAR"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "return_type", "VARCHAR"),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_ExternalFunction_issue3392_returnVarcharWithSize(t *testing.T) {
+	accName := acc.TestClient().Ids.Alpha()
+
+	resourceName := "snowflake_external_function.f"
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
+		Steps: []resource.TestStep{
+			{
+				Config: externalFunctionConfigWithReturnType(acc.TestDatabaseName, acc.TestSchemaName, accName, "VARCHAR(10)"),
+				Check: resource.ComposeTestCheckFunc(
+					// Snowflake drops the size from VARCHAR when it's specified
+					resource.TestCheckResourceAttr(resourceName, "return_type", "VARCHAR"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 // Proves that header parsing handles values wrapped in curly braces, e.g. `value = "{1}"`
 func TestAcc_ExternalFunction_HeaderParsing(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -492,6 +540,37 @@ resource "snowflake_external_function" "f" {
 }
 
 `, database, schema, name, returnNullAllowedText)
+}
+
+func externalFunctionConfigWithReturnType(database string, schema string, name string, returnType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_api_integration" "test_api_int" {
+ name                 = "%[3]s"
+ api_provider         = "aws_api_gateway"
+ api_aws_role_arn     = "arn:aws:iam::000000000001:/role/test"
+ api_allowed_prefixes = ["https://123456.execute-api.us-west-2.amazonaws.com/prod/"]
+ enabled              = true
+}
+
+resource "snowflake_external_function" "f" {
+ name     = "%[3]s"
+ database = "%[1]s"
+ schema   = "%[2]s"
+ arg {
+   name = "ARG1"
+   type = "VARCHAR"
+ }
+ arg {
+   name = "ARG2"
+   type = "VARCHAR"
+ }
+ return_type               = "%[4]s"
+ return_behavior           = "IMMUTABLE"
+ api_integration           = snowflake_api_integration.test_api_int.name
+ url_of_proxy_and_resource = "https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"
+}
+
+`, database, schema, name, returnType)
 }
 
 func externalFunctionConfigIssue2528(database string, schema string, name string, schema2 string) string {

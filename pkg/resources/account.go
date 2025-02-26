@@ -204,10 +204,15 @@ func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*sc
 		}
 	}
 
+	var comment string
+	if account.Comment != nil {
+		comment = *account.Comment
+	}
+
 	if err := errors.Join(
 		d.Set("edition", string(*account.Edition)),
 		d.Set("region", account.SnowflakeRegion),
-		d.Set("comment", *account.Comment),
+		d.Set("comment", comment),
 		d.Set("is_org_admin", booleanStringFromBool(*account.IsOrgAdmin)),
 	); err != nil {
 		return nil, err
@@ -336,12 +341,17 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 					regionGroup = parts[0]
 				}
 			}
+			var comment string
+			if account.Comment != nil {
+				comment = *account.Comment
+			}
+
 			if err = handleExternalChangesToObjectInShow(d,
 				outputMapping{"edition", "edition", *account.Edition, *account.Edition, nil},
 				outputMapping{"is_org_admin", "is_org_admin", *account.IsOrgAdmin, booleanStringFromBool(*account.IsOrgAdmin), nil},
 				outputMapping{"region_group", "region_group", regionGroup, regionGroup, nil},
 				outputMapping{"snowflake_region", "region", account.SnowflakeRegion, account.SnowflakeRegion, nil},
-				outputMapping{"comment", "comment", *account.Comment, *account.Comment, nil},
+				outputMapping{"comment", "comment", comment, comment, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}

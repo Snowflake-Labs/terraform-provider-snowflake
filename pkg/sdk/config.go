@@ -143,8 +143,8 @@ func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config
 	if baseConfig.MaxRetryCount == 0 {
 		baseConfig.MaxRetryCount = mergeConfig.MaxRetryCount
 	}
-	if !baseConfig.InsecureMode {
-		baseConfig.InsecureMode = mergeConfig.InsecureMode
+	if !baseConfig.InsecureMode { //nolint:staticcheck
+		baseConfig.InsecureMode = mergeConfig.InsecureMode //nolint:staticcheck
 	}
 	if baseConfig.OCSPFailOpen == 0 {
 		baseConfig.OCSPFailOpen = mergeConfig.OCSPFailOpen
@@ -290,7 +290,7 @@ func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
 		}
 		driverCfg.Authenticator = authenticator
 	}
-	pointerAttributeSet(c.InsecureMode, &driverCfg.InsecureMode)
+	pointerAttributeSet(c.InsecureMode, &driverCfg.InsecureMode) //nolint:staticcheck
 	if c.OcspFailOpen != nil {
 		if *c.OcspFailOpen {
 			driverCfg.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue

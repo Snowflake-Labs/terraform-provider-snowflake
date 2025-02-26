@@ -5,6 +5,8 @@ description: |-
   Resource used to manage service user objects. For more information, check user documentation https://docs.snowflake.com/en/sql-reference/commands-user-role#user-management.
 ---
 
+!> **Caution** Use `network_policy` attribute instead of the [`snowflake_network_policy_attachment`](./network_policy_attachment) resource. `snowflake_network_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
+
 -> **Note** `snowflake_user_password_policy_attachment` will be reworked in the following versions of the provider which may still affect this resource.
 
 -> **Note** Attaching user policies will be handled in the following versions of the provider which may still affect this resource.
@@ -28,11 +30,11 @@ resource "snowflake_service_user" "minimal" {
 # with all attributes set
 resource "snowflake_service_user" "service_user" {
   name         = "Snowflake Service User"
-  login_name   = "service_user"
+  login_name   = var.login_name
   comment      = "A service user of snowflake."
   disabled     = "false"
   display_name = "Snowflake Service User"
-  email        = "service_user@snowflake.example"
+  email        = var.email
 
   default_warehouse              = "warehouse"
   default_secondary_roles_option = "ALL"
@@ -108,6 +110,16 @@ resource "snowflake_service_user" "u" {
   use_cached_result                             = false
   week_of_year_policy                           = 1
   week_start                                    = 1
+}
+
+variable "email" {
+  type      = string
+  sensitive = true
+}
+
+variable "login_name" {
+  type      = string
+  sensitive = true
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).

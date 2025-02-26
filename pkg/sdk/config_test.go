@@ -164,7 +164,7 @@ func TestProfileConfig(t *testing.T) {
 		assert.Equal(t, 50*time.Second, config.JWTExpireTimeout)
 		assert.Equal(t, 60*time.Second, config.ExternalBrowserTimeout)
 		assert.Equal(t, 1, config.MaxRetryCount)
-		assert.Equal(t, true, config.InsecureMode)
+		assert.Equal(t, true, config.InsecureMode) //nolint:staticcheck
 		assert.Equal(t, "token", config.Token)
 		assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
 		assert.Equal(t, true, config.KeepSessionAlive)

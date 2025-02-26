@@ -5,7 +5,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -19,7 +18,7 @@ var (
 		DescribeSaml2IntegrationSchema,
 		DescribeScimSecurityIntegrationSchema,
 	)
-	allSecurityIntegrationPropertiesNames = helpers.ConcatSlices(
+	allSecurityIntegrationPropertiesNames = slices.Concat(
 		ApiAuthenticationPropertiesNames,
 		ExternalOauthPropertiesNames,
 		OauthIntegrationForCustomClientsPropertiesNames,

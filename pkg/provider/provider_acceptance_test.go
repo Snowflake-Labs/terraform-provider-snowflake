@@ -272,7 +272,7 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 					assert.Equal(t, 60*time.Second, config.ExternalBrowserTimeout)
 					assert.Equal(t, 1, config.MaxRetryCount)
 					assert.Equal(t, "terraform-provider-snowflake", config.Application)
-					assert.Equal(t, true, config.InsecureMode)
+					assert.Equal(t, true, config.InsecureMode) //nolint:staticcheck
 					assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
 					assert.Equal(t, "token", config.Token)
 					assert.Equal(t, true, config.KeepSessionAlive)
@@ -380,7 +380,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 					assert.Equal(t, 600*time.Second, config.ExternalBrowserTimeout)
 					assert.Equal(t, 2, config.MaxRetryCount)
 					assert.Equal(t, "terraform-provider-snowflake", config.Application)
-					assert.Equal(t, true, config.InsecureMode)
+					assert.Equal(t, true, config.InsecureMode) //nolint:staticcheck
 					assert.Equal(t, gosnowflake.OCSPFailOpenFalse, config.OCSPFailOpen)
 					assert.Equal(t, "token", config.Token)
 					assert.Equal(t, true, config.KeepSessionAlive)
@@ -489,7 +489,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 					assert.Equal(t, 601*time.Second, config.ExternalBrowserTimeout)
 					assert.Equal(t, 3, config.MaxRetryCount)
 					assert.Equal(t, "terraform-provider-snowflake", config.Application)
-					assert.Equal(t, true, config.InsecureMode)
+					assert.Equal(t, true, config.InsecureMode) //nolint:staticcheck
 					assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
 					assert.Equal(t, "token", config.Token)
 					assert.Equal(t, true, config.KeepSessionAlive)
