@@ -43,7 +43,7 @@ lint-fix: ## Run static code analysis, check formatting and try to fix findings
 	./bin/golangci-lint run ./... -v --fix
 
 mod: ## add missing and remove unused modules
-	go mod tidy -compat=1.22
+	go mod tidy -compat=1.23.6
 
 mod-check: mod ## check if there are any missing/unused modules
 	git diff --exit-code -- go.mod go.sum

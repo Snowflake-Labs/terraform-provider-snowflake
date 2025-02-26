@@ -11,6 +11,7 @@ Here's the list of cases we currently cannot reproduce and write acceptance test
     - `upgrade_cloned_database`
     - `upgrade_secondary_database`
     - `upgrade_shared_database`
+- Creating an object externally in Snowflake using SQL then import it into the state as a first step of the test (check [handling account null comment](./handling_account_null_comment/handling_account_null_comment.md) for more details).
 
 ## How to use manual tests
 - Choose the test you want to run and go into the test folder.
