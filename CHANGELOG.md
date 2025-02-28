@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.3...v1.0.4) (2025-02-26)
+
+
+### 🔧 **Misc**
+
+* Add GA scope to the roadmap ([#3385](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3385)) ([9be2196](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9be21966ca5b1187d5c055026dd5f563900a1aa9))
+* Adjust saml2_integration documentation ([#3415](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3415)) ([b8c127d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b8c127d3e19f27a541010c08a94c8289166e00a5))
+* Bump Go version ([#3408](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3408)) ([902670e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/902670e2eb7fa38033e5348cb403bc57dc6c4862))
+* Bump provider version ([#3419](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3419)) ([552e44b](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/552e44b3505a3db343bee1bbe240d6b30e61c3b9))
+* Remove hardcoded values from documentation ([#3381](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3381)) ([cb1d6e2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cb1d6e22af5584ec6d25e3c440dcc2275fab6544))
+* Update user docs ([#3416](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3416)) ([9d5224f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/9d5224f01762104de67187e3f47662af528fd365)), closes [#3404](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3404)
+* Upgrade deps ([#3389](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3389)) ([086bf15](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/086bf152e97c1873b9f1c55a1d1f2e223d05a56e))
+
+
+### 🐛 **Bug fixes:**
+
+* account for null comment ([#3417](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3417)) ([2f7f80f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2f7f80f7d35c02e0e3ad56b3bb77faee385601c4))
+* external function varchar return type validation ([#3400](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3400)) ([abf5883](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/abf58839374281cbe66ee4430b73a501de01cc63))
+* Fix managed account and adjust account ticket numbers ([#3395](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3395)) ([a7cb5cb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a7cb5cb42a522ce3787129b3923ca6a83d34368a))
+* Propose changes to assertions setup with varying test client ([#3406](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3406)) ([fb27f6a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/fb27f6a9d42be8e2f148f3f78b401cfa09012fcc))
+
 ## [1.0.3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.2...v1.0.3) (2025-02-05)
 
 
