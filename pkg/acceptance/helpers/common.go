@@ -22,7 +22,6 @@ func EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(client *sdk.Client, ctx conte
 		return fmt.Errorf("parameter QUOTED_IDENTIFIERS_IGNORE_CASE has value %s, expected: false", param.Value)
 	}
 	return nil
-
 }
 
 func EnsureScimProvisionerRolesExist(client *sdk.Client, ctx context.Context) error {
