@@ -16,7 +16,7 @@ VARCHAR external_function return_type did not work correctly before ([#3392](htt
 In this version we bumped our underlying Go version to v1.23.6.
 Based on issue [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
 it seems it introduces changes to the standard library that may not be supported by other third party software.
-The issue presents one of those changes that seem to be introduced in Golang's network package.
+The issue presents one of those changes that seem to be introduced in Golang's `crypto/tls` package.
 One thing that is valuable in such cases is to check the [GODEBUG](https://go.dev/doc/godebug)
 documentation page (especially [history section](https://go.dev/doc/godebug#history)).
 It specifies a set of parameters which can be turned on/off depending on
