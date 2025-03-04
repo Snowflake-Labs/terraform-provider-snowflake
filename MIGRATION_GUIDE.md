@@ -12,6 +12,17 @@ across different versions.
 ### Fixed external_function VARCHAR return_type
 VARCHAR external_function return_type did not work correctly before ([#3392](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3392)) but was fixed in this version.
 
+### New Go version and conflicts with Suricata-based firewalls (like AWS Network Firewall)
+In this version we bumped our underlying Go version to v1.23.6.
+Based on issue [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
+it seems it introduces changes to the standard library that may not be supported by other third party software.
+The issue presents one of those changes that seem to be introduced in Golang's `crypto/tls` package.
+One thing that is valuable in such cases is to check the [GODEBUG](https://go.dev/doc/godebug)
+documentation page (especially [history section](https://go.dev/doc/godebug#history)).
+It specifies a set of parameters which can be turned on/off depending on
+what features of Go would you like to use or resign from. The solution for this issue was to set
+the GODEBUG environment variable to `GODEBUG=tlskyber=0`.
+
 ## v1.0.2 ➞ v1.0.3
 
 ### Fixed METRIC_LEVEL parameter

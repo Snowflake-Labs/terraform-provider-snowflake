@@ -25,6 +25,7 @@
   * [Granting PUBLIC role fails](#granting-public-role-fails)
   * [Issues with grant_ownership resource](#issues-with-grant_ownership)
   * [Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider](#using-quoted_identifiers_ignore_case-with-the-provider)
+  * [Experiencing Go related issues (e.g., using Suricata-based firewalls, like AWS Network Firewall, with >=v1.0.4 version of the provider)](#experiencing-go-related-issues-eg-using-suricata-based-firewalls-like-aws-network-firewall-with-v104-version-of-the-provider)
 
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible.
 To correctly report the issue, we suggest going through the following steps.
@@ -128,6 +129,9 @@ Please refer to [this document](https://github.com/Snowflake-Labs/terraform-prov
 │ Error: open snowflake connection: 390144 (08004): JWT token is invalid.
 │
 ```
+
+**Related issues**: [Experiencing Go related issues (e.g., using Suricata-based firewalls, like AWS Network Firewall, with >=v1.0.4 version of the provider)](#experiencing-go-related-issues-eg-using-suricata-based-firewalls-like-aws-network-firewall-with-v104-version-of-the-provider)
+
 **Solution**: Go to the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth-troubleshooting#list-of-errors) and search by error code (390144 in this case).
 
 [GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
@@ -292,3 +296,11 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 **Related issues:** [#2967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2967)
 
 **Solution:** Either turn off the parameter or adjust your configurations to use only upper-cased names for identifiers and import back the resources.
+
+### Experiencing Go related issues (e.g., using Suricata-based firewalls, like AWS Network Firewall, with >=v1.0.4 version of the provider)
+
+**Problem:** The communication from the provider is dropped, because of the firewalls that are incompatible with the `tlskyber` setting introduced in [Go v1.23](https://go.dev/doc/godebug#go-123).
+
+**Related issues:** [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
+
+**Solution:** [Solution described in the migration guide for v1.0.3 to v1.0.4 upgrade](./MIGRATION_GUIDE.md#new-go-version-and-conflicts-with-suricata-based-firewalls-like-aws-network-firewall).
