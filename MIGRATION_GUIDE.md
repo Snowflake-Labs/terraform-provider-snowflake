@@ -7,6 +7,10 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.4 ➞ v1.0.5
+
+### Tracking remote changes 
+
 ## v1.0.3 ➞ v1.0.4
 
 ### Fixed external_function VARCHAR return_type

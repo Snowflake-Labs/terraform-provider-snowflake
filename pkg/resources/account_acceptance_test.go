@@ -39,7 +39,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 	region := acc.TestClient().Context.CurrentRegion(t)
 
 	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -142,7 +142,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 
 	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypePerson).
-		WithAdminRsaPublicKeyMultiline(key).
+		WithAdminRsaPublicKey(key).
 		WithFirstName(firstName).
 		WithLastName(lastName).
 		WithMustChangePassword(r.BooleanTrue).
@@ -252,10 +252,10 @@ func TestAcc_Account_Rename(t *testing.T) {
 
 	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 	newConfigModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, newId).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -311,17 +311,17 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 
 	configModelWithOrgAdminTrue := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key).
+		WithAdminRsaPublicKey(key).
 		WithIsOrgAdmin(r.BooleanTrue)
 
 	configModelWithOrgAdminFalse := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key).
+		WithAdminRsaPublicKey(key).
 		WithIsOrgAdmin(r.BooleanFalse)
 
 	configModelWithoutOrgAdmin := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -510,7 +510,7 @@ func TestAcc_Account_TryToCreateWithoutOrgadmin(t *testing.T) {
 
 	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -538,15 +538,15 @@ func TestAcc_Account_InvalidValues(t *testing.T) {
 
 	configModelInvalidUserType := model.Account("test", name, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserType("invalid_user_type").
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	configModelInvalidAccountEdition := model.Account("test", name, "invalid_account_edition", email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	configModelInvalidGracePeriodInDays := model.Account("test", name, string(sdk.EditionStandard), email, 2, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
-		WithAdminRsaPublicKeyMultiline(key)
+		WithAdminRsaPublicKey(key)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
