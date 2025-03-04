@@ -226,10 +226,10 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 		t.Run("starts_with", func(t *testing.T) {
 			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
-				WithStartsWith("test_auth_policy").
+				WithStartsWith("test_auth_policy_").
 				WithIn(sdk.In{Schema: id.SchemaId()}))
 			require.NoError(t, err)
-			assert.Len(t, authenticationPolicies, 3)
+			assert.Len(t, authenticationPolicies, 2)
 		})
 
 		t.Run("in_account", func(t *testing.T) {
@@ -260,11 +260,11 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 		t.Run("limit from", func(t *testing.T) {
 			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
-				WithLimit(sdk.LimitFrom{Rows: sdk.Int(1), From: sdk.String("test_auth_policy")}).
+				WithLimit(sdk.LimitFrom{Rows: sdk.Int(1), From: sdk.String("test_auth_policy_")}).
 				WithIn(sdk.In{Schema: id.SchemaId()}))
 			require.NoError(t, err)
 			require.Len(t, authenticationPolicies, 1)
-			require.True(t, strings.HasPrefix(authenticationPolicies[0].Name, "test_auth_policy"))
+			require.True(t, strings.HasPrefix(authenticationPolicies[0].Name, "test_auth_policy_2"))
 		})
 	})
 
