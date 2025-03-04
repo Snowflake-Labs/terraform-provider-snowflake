@@ -14,4 +14,5 @@ var multilineAttributesOverrides = map[string][]string{
 	"ProcedurePython":     {"procedure_definition"},
 	"ProcedureScala":      {"procedure_definition"},
 	"ProcedureSql":        {"procedure_definition"},
+	"Account":             {"admin_rsa_public_key"},
 }

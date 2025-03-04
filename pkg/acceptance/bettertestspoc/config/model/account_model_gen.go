@@ -104,7 +104,7 @@ func (a *AccountModel) WithAdminPassword(adminPassword string) *AccountModel {
 }
 
 func (a *AccountModel) WithAdminRsaPublicKey(adminRsaPublicKey string) *AccountModel {
-	a.AdminRsaPublicKey = tfconfig.StringVariable(adminRsaPublicKey)
+	a.AdminRsaPublicKey = config.MultilineWrapperVariable(adminRsaPublicKey)
 	return a
 }
 
