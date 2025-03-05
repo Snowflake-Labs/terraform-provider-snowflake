@@ -390,11 +390,12 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 				return diag.FromErr(err)
 			}
 
-			oauthRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+			// This has to be handled differently as OAUTH_REDIRECT_URI is only visible for a given OAUTH_CLIENT type.
+			var oauthRedirectUri string
+			if oauthRedirectUriProp, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
 				return property.Name == "OAUTH_REDIRECT_URI"
-			})
-			if err != nil {
-				return diag.FromErr(err)
+			}); err == nil {
+				oauthRedirectUri = oauthRedirectUriProp.Value
 			}
 
 			if err = handleExternalChangesToObjectInDescribe(d,
@@ -402,7 +403,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidity.Value, oauthRefreshTokenValidityValue, nil},
 				describeMapping{"oauth_use_secondary_roles", "oauth_use_secondary_roles", oauthUseSecondaryRoles.Value, oauthUseSecondaryRoles.Value, nil},
 				describeMapping{"blocked_roles_list", "blocked_roles_list", blockedRolesList.Value, sdk.ParseCommaSeparatedStringArray(blockedRolesList.Value, false), nil},
-				describeMapping{"oauth_redirect_uri", "oauth_redirect_uri", oauthRedirectUri.Value, oauthRedirectUri.Value, nil},
+				describeMapping{"oauth_redirect_uri", "oauth_redirect_uri", oauthRedirectUri, oauthRedirectUri, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
