@@ -14,6 +14,8 @@ From this version, the snowflake_oauth_integration_for_partner_applications reso
 detect changes on the Snowflake side and apply appropriate action from the provider level. This may produce
 changes after running `terraform plan`, as before the configuration could contain different value than on the Snowflake side.
 
+[//]: # (TODO: removal of [instrumentedsql]&#40;https://github.com/luna-duclos/instrumentedsql&#41;)
+
 ## v1.0.3 ➞ v1.0.4
 
 ### Fixed external_function VARCHAR return_type

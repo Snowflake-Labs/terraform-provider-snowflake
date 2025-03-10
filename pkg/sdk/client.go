@@ -5,22 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
-	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/jmoiron/sqlx"
-	"github.com/luna-duclos/instrumentedsql"
 	"github.com/snowflakedb/gosnowflake"
 )
-
-var instrumentedSQL bool
-
-func init() {
-	instrumentedSQL = os.Getenv(snowflakeenvs.NoInstrumentedSql) == ""
-}
 
 type Client struct {
 	config         *gosnowflake.Config
@@ -124,37 +113,17 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 		cfg = DefaultConfig()
 	}
 
-	var client *Client
-	// register the snowflake driver if it hasn't been registered yet
-
-	driverName := "snowflake"
-	if instrumentedSQL {
-		if !slices.Contains(sql.Drivers(), "snowflake-instrumented") {
-			log.Println("[DEBUG] Registering snowflake-instrumented driver")
-			logger := instrumentedsql.LoggerFunc(func(ctx context.Context, s string, kv ...interface{}) {
-				switch s {
-				case "sql-conn-query", "sql-conn-exec":
-					log.Printf("[DEBUG] %s: %v (%s)\n", s, kv, ctx.Value(snowflakeAccountLocatorContextKey))
-				default:
-					return
-				}
-			})
-			sql.Register("snowflake-instrumented", instrumentedsql.WrapDriver(new(gosnowflake.SnowflakeDriver), instrumentedsql.WithLogger(logger)))
-		}
-		driverName = "snowflake-instrumented"
-	}
-
 	dsn, err := gosnowflake.DSN(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	db, err := sqlx.Connect(driverName, dsn)
+	db, err := sqlx.Connect("snowflake", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open snowflake connection: %w", err)
 	}
 
-	client = &Client{
+	client := &Client{
 		// snowflake does not adhere to the normal sql driver interface, so we have to use unsafe
 		db:     db.Unsafe(),
 		config: cfg,
@@ -180,15 +149,6 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	log.Printf("[DEBUG] connection success! Account: %s, Session identifier: %s\n", currentAccount, sessionID)
 
 	return client, nil
-}
-
-func NewClientFromDB(db *sql.DB) *Client {
-	dbx := sqlx.NewDb(db, "snowflake")
-	client := &Client{
-		db: dbx.Unsafe(),
-	}
-	client.initialize()
-	return client
 }
 
 func (c *Client) initialize() {
