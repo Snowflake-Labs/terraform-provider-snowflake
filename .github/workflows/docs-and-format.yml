@@ -1,4 +1,5 @@
-name: check
+name: Documentation And Code Formatting
+
 on:
   push:
     branches:
@@ -13,7 +14,7 @@ permissions:
 
 jobs:
   docs-and-fmt:
-    name: docs and fmt
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

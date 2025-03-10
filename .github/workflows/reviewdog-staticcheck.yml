@@ -1,11 +1,13 @@
-name: staticcheck
+name: Reviewdog Static Checker
 
 on:
   pull_request:
 
 jobs:
   reviewdog:
-    name: Reviewdog Static Check
+    # Adjust the configuration for action-staticcheck. For now, it returns too many unnecessary errors (e.g., regarding generated code).
+    if: false
+    name: Static Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,4 +22,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           filter_mode: nofilter
-          fail_on_error: false
+          fail_level: none
