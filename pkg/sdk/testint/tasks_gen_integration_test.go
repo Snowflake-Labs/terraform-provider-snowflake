@@ -35,7 +35,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasWarehouse(warehouseId).
 			HasSchedule("").
 			HasPredecessorsInAnyOrder().
-			HasState(sdk.TaskStateStarted).
+			HasState(sdk.TaskStateSuspended).
 			HasDefinition(sql).
 			HasCondition("").
 			HasAllowOverlappingExecution(false).
@@ -779,25 +779,36 @@ func TestInt_Tasks(t *testing.T) {
 
 		assertThatObject(t, objectassert.TaskFromObject(t, task).
 			HasTaskRelations(sdk.TaskRelations{
-				FinalizerTask: nil,
+				FinalizerTask:     nil,
+				FinalizedRootTask: nil,
 			}),
 		)
 
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSetFinalize(finalTask.ID()))
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(finalTask.ID()).WithSetFinalize(task.ID()))
 		require.NoError(t, err)
 
-		assertThatObject(t, objectassert.TaskFromObject(t, task).
+		assertThatObject(t, objectassert.Task(t, task.ID()).
 			HasTaskRelations(sdk.TaskRelations{
 				FinalizerTask: sdk.Pointer(finalTask.ID()),
 			}),
 		)
+		assertThatObject(t, objectassert.Task(t, finalTask.ID()).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizedRootTask: sdk.Pointer(task.ID()),
+			}),
+		)
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnsetFinalize(true))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(finalTask.ID()).WithUnsetFinalize(true))
 		require.NoError(t, err)
 
-		assertThatObject(t, objectassert.TaskFromObject(t, task).
+		assertThatObject(t, objectassert.Task(t, task.ID()).
 			HasTaskRelations(sdk.TaskRelations{
 				FinalizerTask: nil,
+			}),
+		)
+		assertThatObject(t, objectassert.Task(t, finalTask.ID()).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizedRootTask: nil,
 			}),
 		)
 	})
@@ -810,18 +821,18 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyAs(newSql))
 		require.NoError(t, err)
 
-		assertThatObject(t, objectassert.TaskFromObject(t, task).HasDefinition(newSql))
+		assertThatObject(t, objectassert.Task(t, task.ID()).HasDefinition(newSql))
 
 		newWhen := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyWhen(newWhen))
 		require.NoError(t, err)
 
-		assertThatObject(t, objectassert.TaskFromObject(t, task).HasCondition(newWhen))
+		assertThatObject(t, objectassert.Task(t, task.ID()).HasCondition(newWhen))
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveWhen(true))
 		require.NoError(t, err)
 
-		assertThatObject(t, objectassert.TaskFromObject(t, task).HasCondition(""))
+		assertThatObject(t, objectassert.Task(t, task.ID()).HasCondition(""))
 	})
 
 	t.Run("show task: default", func(t *testing.T) {

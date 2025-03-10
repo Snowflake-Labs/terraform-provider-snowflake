@@ -174,6 +174,9 @@ func TestAcc_Grants_To_ApplicationRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_AccountRole(t *testing.T) {
+	// TODO [SNOW-1887460]: handle SNOWFLAKE.CORE."AVG(ARG_T TABLE(FLOAT)):FLOAT" and SNOWFLAKE.ACCOUNT_USAGE."TAG_REFERENCES_WITH_LINEAGE(TAG_NAME_INPUT VARCHAR):TABLE:
+	t.Skip(`Skipped temporarily because incompatible data types on the current role: SNOWFLAKE.CORE."AVG(ARG_T TABLE(FLOAT)):FLOAT" and SNOWFLAKE.ACCOUNT_USAGE."TAG_REFERENCES_WITH_LINEAGE(TAG_NAME_INPUT VARCHAR):TABLE:`)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },

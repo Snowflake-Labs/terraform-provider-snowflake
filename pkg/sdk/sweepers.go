@@ -201,7 +201,7 @@ func getRoleSweeper(client *Client, suffix string) func() error {
 			return fmt.Errorf("sweeping roles ended with error, err = %w", err)
 		}
 		for _, role := range roles {
-			if strings.HasSuffix(role.Name, suffix) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC"}, role.Name) {
+			if strings.HasSuffix(role.Name, suffix) && !slices.Contains([]string{"ACCOUNTADMIN", "SECURITYADMIN", "SYSADMIN", "ORGADMIN", "USERADMIN", "PUBLIC", "PENTESTING_ROLE"}, role.Name) {
 				log.Printf("[DEBUG] Dropping role %s", role.ID().FullyQualifiedName())
 				if err := client.Roles.Drop(ctx, NewDropRoleRequest(role.ID())); err != nil {
 					return fmt.Errorf("sweeping role %s ended with error, err = %w", role.ID().FullyQualifiedName(), err)
