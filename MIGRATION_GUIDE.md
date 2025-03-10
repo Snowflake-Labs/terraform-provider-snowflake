@@ -9,6 +9,11 @@ across different versions.
 
 ## v1.0.3 ➞ v1.0.4
 
+### Changes in TOML configuration file requirements
+Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB.
+
+## v1.0.3 ➞ v1.0.4
+
 ### Fixed external_function VARCHAR return_type
 VARCHAR external_function return_type did not work correctly before ([#3392](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3392)) but was fixed in this version.
 

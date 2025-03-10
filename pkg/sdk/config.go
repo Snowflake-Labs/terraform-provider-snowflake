@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -19,6 +20,11 @@ import (
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
+)
+
+const (
+	maxFileSizeInMb    = 10
+	IsRunningOnWindows = runtime.GOOS == "windows"
 )
 
 func DefaultConfig() *gosnowflake.Config {
@@ -36,7 +42,7 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 		return nil, err
 	}
 
-	configs, err := loadConfigFile(path)
+	configs, err := LoadConfigFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("could not load config file: %w", err)
 	}
@@ -360,7 +366,10 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 	return nil
 }
 
-func loadConfigFile(path string) (map[string]ConfigDTO, error) {
+func LoadConfigFile(path string) (map[string]ConfigDTO, error) {
+	if err := validateFile(path); err != nil {
+		return nil, err
+	}
 	dat, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -371,6 +380,17 @@ func loadConfigFile(path string) (map[string]ConfigDTO, error) {
 		return nil, fmt.Errorf("unmarshalling config file %s: %w", path, err)
 	}
 	return s, nil
+}
+
+func validateFile(path string) error {
+	fileinfo, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("could not read information of the config file: %w", err)
+	}
+	if fileinfo.Size() > maxFileSizeInMb*1024*1024 {
+		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
+	}
+	return nil
 }
 
 func ParsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey, error) {
