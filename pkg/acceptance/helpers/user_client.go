@@ -93,6 +93,13 @@ func (c *UserClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Us
 	return c.client().ShowByID(ctx, id)
 }
 
+func (c *UserClient) Describe(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.UserDetails, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Describe(ctx, id)
+}
+
 func (c *UserClient) Disable(t *testing.T, id sdk.AccountObjectIdentifier) {
 	t.Helper()
 	ctx := context.Background()

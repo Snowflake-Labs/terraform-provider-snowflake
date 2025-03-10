@@ -1800,8 +1800,11 @@ func TestInt_Users(t *testing.T) {
 		revertRole := testClientHelper().Role.UseRole(t, role.ID())
 		t.Cleanup(revertRole)
 
-		// Describe won't work and parameters are not affected by that fact
-		assertParametersSet(objectparametersassert.UserParameters(t, id))
+		// Both describe and parameters will throw the error
+		_, err = testClientHelper().User.Describe(t, id)
+		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
+		_, err = testClientHelper().Parameter.ShowUserParametersOrError(t, id)
+		require.ErrorContains(t, err, "Insufficient privileges to operate on user")
 
 		assertThatObject(t, objectassert.User(t, id).
 			HasName(id.Name()).
