@@ -1403,8 +1403,7 @@ Type changes:
 
 #### *(breaking change)* refactored snowflake_users datasource
 > **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited.
-You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`.
-Only `parameters` output is not affected by the lack of privileges.
+You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command will return error when called, so you have to set `with_describe = false`; the SHOW PARAMETERS command will return error if called too, so you have to set `with_parameters = false`.
 
 Changes:
 - account checking logic was entirely removed
