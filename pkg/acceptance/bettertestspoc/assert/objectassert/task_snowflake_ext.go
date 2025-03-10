@@ -54,9 +54,8 @@ func (t *TaskAssert) HasTaskRelations(expected sdk.TaskRelations) *TaskAssert {
 		if !reflect.DeepEqual(expected.FinalizerTask, o.TaskRelations.FinalizerTask) {
 			errs = append(errs, fmt.Errorf("expected finalizer task: %v; got: %v", expected.FinalizerTask, o.TaskRelations.FinalizerTask))
 		}
-		if expected.FinalizedRootTask != nil {
-			// This is not supported because we would have to traverse the task graph to find the root task.
-			errs = append(errs, fmt.Errorf("asserting FinalizedRootTask is not supported"))
+		if !reflect.DeepEqual(expected.FinalizedRootTask, o.TaskRelations.FinalizedRootTask) {
+			errs = append(errs, fmt.Errorf("expected finalized root task: %v; got: %v", expected.FinalizedRootTask, o.TaskRelations.FinalizedRootTask))
 		}
 		return errors.Join(errs...)
 	})
