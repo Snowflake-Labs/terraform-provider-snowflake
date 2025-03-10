@@ -8,23 +8,17 @@ import (
 	"log"
 	"net"
 	"net/url"
-	"os"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/os"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
 	"golang.org/x/crypto/ssh"
-)
-
-const (
-	maxFileSizeInMb    = 10
-	IsRunningOnWindows = runtime.GOOS == "windows"
 )
 
 func DefaultConfig() *gosnowflake.Config {
@@ -367,10 +361,7 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 }
 
 func LoadConfigFile(path string) (map[string]ConfigDTO, error) {
-	if err := validateFile(path); err != nil {
-		return nil, err
-	}
-	dat, err := os.ReadFile(path)
+	dat, err := os.ReadFileSafe(path)
 	if err != nil {
 		return nil, err
 	}
@@ -380,17 +371,6 @@ func LoadConfigFile(path string) (map[string]ConfigDTO, error) {
 		return nil, fmt.Errorf("unmarshalling config file %s: %w", path, err)
 	}
 	return s, nil
-}
-
-func validateFile(path string) error {
-	fileinfo, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("could not read information of the config file: %w", err)
-	}
-	if fileinfo.Size() > maxFileSizeInMb*1024*1024 {
-		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
-	}
-	return nil
 }
 
 func ParsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey, error) {

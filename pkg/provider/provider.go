@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/os"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"

@@ -7,7 +7,7 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
-## v1.0.3 ➞ v1.0.4
+## v1.0.4 ➞ v1.0.5
 
 ### Changes in TOML configuration file requirements
 Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB.

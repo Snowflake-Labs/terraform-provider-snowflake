@@ -78,23 +78,6 @@ func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
 	require.ErrorContains(t, err, "toml: cannot decode TOML integer into struct field sdk.ConfigDTO.AccountName of type *string")
 }
 
-func TestLoadConfigFileThatIsTooBig(t *testing.T) {
-	if IsRunningOnWindows {
-		t.Skip("checking file sizes on Windows is currently done in manual tests package")
-	}
-	c := make([]byte, 11*1024*1024)
-	configPath := testhelpers.TestFile(t, "config", c)
-
-	_, err := LoadConfigFile(configPath)
-	require.ErrorContains(t, err, fmt.Sprintf("config file %s is too big - maximum allowed size is 10MB", configPath))
-}
-
-func TestLoadConfigFileThatDoesNotExist(t *testing.T) {
-	configPath := "non-existing"
-	_, err := LoadConfigFile(configPath)
-	require.ErrorContains(t, err, fmt.Sprintf("could not read information of the config file: stat %s: no such file or directory", configPath))
-}
-
 func TestProfileConfig(t *testing.T) {
 	unencryptedKey, encryptedKey := random.GenerateRSAPrivateKeyEncrypted(t, "password")
 

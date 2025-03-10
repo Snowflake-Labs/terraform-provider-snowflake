@@ -5,12 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"slices"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/os"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/jmoiron/sqlx"
 	"github.com/luna-duclos/instrumentedsql"
 	"github.com/snowflakedb/gosnowflake"
