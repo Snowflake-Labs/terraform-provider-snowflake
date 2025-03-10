@@ -71,7 +71,7 @@ jobs:
 
       - name: Setup Terraform
         if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # (v3)
         id: setup_terraform
         with:
           terraform_version: 1.7.4

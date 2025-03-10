@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
 
       - name: golangci-lint
-        uses: reviewdog/action-golangci-lint@v2
+        uses: reviewdog/action-golangci-lint@dd3fda91790ca90e75049e5c767509dc0ec7d99b # (v2)
         with:
           golangci_lint_flags: "--config=.golangci.yml"
           go_version_file: "go.mod"
