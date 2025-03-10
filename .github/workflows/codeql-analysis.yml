@@ -10,10 +10,9 @@ jobs:
   CodeQL-Build:
     # CodeQL runs on ubuntu-latest and windows-latest
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # We must fetch at least the immediate parents so that if this is
           # a pull request then we can checkout the head.

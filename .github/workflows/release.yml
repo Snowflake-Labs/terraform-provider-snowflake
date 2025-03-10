@@ -21,6 +21,7 @@ jobs:
               {type: "fix", section: "🐛 **Bug fixes:**", hidden: false},
             ]
             return JSON.stringify(changelogTypes)
+
       # See https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
       # For why we need to generate a token and not use the default
       - name: Create token
@@ -34,9 +35,8 @@ jobs:
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
-          # These secrets will need to be configured for the repository:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Release please
         uses: google-github-actions/release-please-action@v3

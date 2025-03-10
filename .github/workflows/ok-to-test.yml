@@ -9,21 +9,18 @@ jobs:
   ok-to-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: chanzuckerberg/github-app-token@v1.1.4
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.OK_TO_TEST_APP_ID }}
-          private_key: ${{ secrets.OK_TO_TEST_PRIVATE_KEY }}
+          app-id: ${{ secrets.OK_TO_TEST_APP_ID }}
+          private-key: ${{ secrets.OK_TO_TEST_PRIVATE_KEY }}
 
       - name: Slash Command Dispatch
-        uses: peter-evans/slash-command-dispatch@v3
-        env:
-          TOKEN: ${{ steps.generate_token.outputs.token }}
-          ACTIONS_STEP_DEBUG: true
+        uses: peter-evans/slash-command-dispatch@13bc09769d122a64f75aa5037256f6f2d78be8c4 # (v4.0)
         with:
-          token: ${{ env.TOKEN }} # GitHub App installation access token
+          token: ${{ steps.generate_token.outputs.token }}
           reaction-token: ${{ secrets.GITHUB_TOKEN }}
           issue-type: pull-request
           commands: ok-to-test
-          permission: write
+          permission: maintainer
