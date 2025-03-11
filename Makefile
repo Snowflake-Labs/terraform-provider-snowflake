@@ -77,7 +77,7 @@ test-object-renaming: ## runs tests in object_renaming_acceptance_test.go
 	TEST_SF_TF_ENABLE_OBJECT_RENAMING=1 go test ./pkg/resources/object_renaming_acceptace_test.go -v
 
 test-acceptance-%: ## run acceptance tests for the given resource only, e.g. test-acceptance-Warehouse
-	TF_ACC=1 TF_LOG=DEBUG SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES=true go test -run ^TestAcc_$*_ -v -timeout=20m ./pkg/resources
+	TF_ACC=1 TF_LOG=DEBUG SNOWFLAKE_DRIVER_TRACING=debug SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE=true SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES=true go test -run ^TestAcc_$*_ -v -timeout=20m ./pkg/resources
 
 build-local: ## build the binary locally
 	go build -o $(BASE_BINARY_NAME) .

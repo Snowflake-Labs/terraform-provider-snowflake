@@ -93,8 +93,18 @@ If you would like to contribute to the project, please follow our [contribution 
 
 ### How can I debug the issue myself?
 The provider is simply an abstraction issuing SQL commands through the Go Snowflake driver, so most of the errors will be connected to incorrectly built or executed SQL statements.
-To see what SQLs are being run you have to set the `TF_LOG=DEBUG` environment variable.
+To see what SQLs are being run you have to set more verbose logging check the [section below](#how-can-i-turn-on-logs).
 To confirm the correctness of the SQLs, refer to the [official Snowflake documentation](https://docs.snowflake.com/).
+
+### How can I turn on logs?
+The provider offers two main types of logging:
+- Terraform execution (check [Terraform Debugging Documentation](https://www.terraform.io/internals/debugging)) - you can set it through the `TF_LOG` environment variable, e.g.: `TF_LOG=DEBUG`; it will make output of the Terraform execution more verbose.
+- Snowflake communication (using the logs from the underlying [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake)) - you can set it directly in the provider config ([`driver_tracing`](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.3/docs#driver_tracing-3) attribute), by `SNOWFLAKE_DRIVER_TRACING` environmental variable (e.g. `SNOWFLAKE_DRIVER_TRACING=info`), or by `drivertracing` field in the TOML file. To see the communication with Snowflake (including the SQL commands run) we recommend setting it to `info`.
+
+As driver logs may seem cluttered, to locate the SQL commands run, search for:
+- (preferred) `--terraform_provider_usage_tracking`
+- `msg="Query:`
+- `msg="Exec:`
 
 ### How can I import already existing Snowflake infrastructure into Terraform?
 Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/resource_migration.md#3-two-options-from-here)
