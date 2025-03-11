@@ -60,7 +60,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			// base model
 			{
 				Config: config.FromModels(t, baseModel),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, baseModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, baseModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -89,7 +89,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			// set all fields
 			{
 				Config: config.FromModels(t, modelWithExtraFields),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -121,7 +121,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 					acc.TestClient().Tag.Alter(t, sdk.NewAlterTagRequest(id).WithDrop([]string{"foo"}))
 				},
 				Config: config.FromModels(t, modelWithExtraFields),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, modelWithExtraFields.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -155,7 +155,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 						plancheck.ExpectResourceAction(modelWithDifferentListOrder.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithDifferentListOrder.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, modelWithDifferentListOrder.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -184,7 +184,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			// change some values
 			{
 				Config: config.FromModels(t, modelWithDifferentValues),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithDifferentValues.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, modelWithDifferentValues.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -213,7 +213,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 			// unset optionals
 			{
 				Config: config.FromModels(t, baseModel),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, baseModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, baseModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -258,7 +258,7 @@ func TestAcc_Tag_complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -311,7 +311,7 @@ func TestAcc_Tag_Rename(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, modelWithOldId),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithOldId.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, modelWithOldId.ResourceReference()).
 					HasNameString(oldId.Name()).
 					HasDatabaseString(oldId.DatabaseName()).
 					HasSchemaString(oldId.SchemaName()),
@@ -324,7 +324,7 @@ func TestAcc_Tag_Rename(t *testing.T) {
 						plancheck.ExpectResourceAction(modelWithOldId.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, modelWithNewId.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, modelWithNewId.ResourceReference()).
 					HasNameString(newId.Name()).
 					HasDatabaseString(newId.DatabaseName()).
 					HasSchemaString(newId.SchemaName()),
@@ -351,7 +351,7 @@ func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
 			{
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
 				Config:            tag_v_0_98_0(id),
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.#", "2")),
 					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.0", "bar")),
@@ -366,7 +366,7 @@ func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
 						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
 					HasNameString(id.Name()),
 					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.#", "2")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "foo")),

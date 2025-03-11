@@ -14,17 +14,18 @@ import (
 )
 
 type (
-	parametersProvider[I sdk.ObjectIdentifier] func(*testing.T, I) []*sdk.Parameter
+	ParametersProvider[I sdk.ObjectIdentifier]           func(*testing.T, I) []*sdk.Parameter
+	testClientParametersProvider[I sdk.ObjectIdentifier] func(client *helpers.TestClient) ParametersProvider[I]
 )
 
 // SnowflakeParametersAssert is an embeddable struct that should be used to construct new Snowflake parameters assertions.
 // It implements both TestCheckFuncProvider and ImportStateCheckFuncProvider which makes it easy to create new resource assertions.
 type SnowflakeParametersAssert[I sdk.ObjectIdentifier] struct {
-	assertions []SnowflakeParameterAssertion
-	id         I
-	objectType sdk.ObjectType
-	provider   parametersProvider[I]
-	parameters []*sdk.Parameter
+	assertions                   []SnowflakeParameterAssertion
+	id                           I
+	objectType                   sdk.ObjectType
+	testClientParametersProvider testClientParametersProvider[I]
+	parameters                   []*sdk.Parameter
 }
 
 type snowflakeParameterAssertionType int
@@ -43,14 +44,14 @@ type SnowflakeParameterAssertion struct {
 	assertionType snowflakeParameterAssertionType
 }
 
-// NewSnowflakeParametersAssertWithProvider creates a SnowflakeParametersAssert with id and the provider.
+// NewSnowflakeParametersAssertWithTestClientParametersProvider creates a SnowflakeParametersAssert with id and the test client-varying parameters provider.
 // Object to check is lazily fetched from Snowflake when the checks are being run.
-func NewSnowflakeParametersAssertWithProvider[I sdk.ObjectIdentifier](id I, objectType sdk.ObjectType, provider parametersProvider[I]) *SnowflakeParametersAssert[I] {
+func NewSnowflakeParametersAssertWithTestClientParametersProvider[I sdk.ObjectIdentifier](id I, objectType sdk.ObjectType, testClientParametersProvider testClientParametersProvider[I]) *SnowflakeParametersAssert[I] {
 	return &SnowflakeParametersAssert[I]{
-		assertions: make([]SnowflakeParameterAssertion, 0),
-		id:         id,
-		objectType: objectType,
-		provider:   provider,
+		assertions:                   make([]SnowflakeParameterAssertion, 0),
+		id:                           id,
+		objectType:                   objectType,
+		testClientParametersProvider: testClientParametersProvider,
 	}
 }
 
@@ -99,46 +100,42 @@ func SnowflakeParameterLevelSet[T ~string](parameterName T, parameterType sdk.Pa
 
 // ToTerraformTestCheckFunc implements TestCheckFuncProvider to allow easier creation of new Snowflake object parameters assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc {
+func (s *SnowflakeParametersAssert[_]) ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc {
 	t.Helper()
 	return func(_ *terraform.State) error {
-		return s.runSnowflakeParametersAssertions(t)
+		return s.runSnowflakeParametersAssertions(t, testClient)
 	}
 }
 
 // ToTerraformImportStateCheckFunc implements ImportStateCheckFuncProvider to allow easier creation of new Snowflake object parameters assertions.
 // It goes through all the assertion accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc {
+func (s *SnowflakeParametersAssert[_]) ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(_ []*terraform.InstanceState) error {
-		return s.runSnowflakeParametersAssertions(t)
+		return s.runSnowflakeParametersAssertions(t, testClient)
 	}
 }
 
 // VerifyAll implements InPlaceAssertionVerifier to allow easier creation of new Snowflake parameters assertions.
 // It verifies all the assertions accumulated earlier and gathers the results of the checks.
-func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T) {
+func (s *SnowflakeParametersAssert[_]) VerifyAll(t *testing.T, testClient *helpers.TestClient) {
 	t.Helper()
-	err := s.runSnowflakeParametersAssertions(t)
+	err := s.runSnowflakeParametersAssertions(t, testClient)
 	require.NoError(t, err)
 }
 
-// VerifyAllWithTestClient is temporary (currently, added only to fulfill the interface)
-func (s *SnowflakeParametersAssert[_]) VerifyAllWithTestClient(t *testing.T, _ *helpers.TestClient) {
-	t.Helper()
-	err := s.runSnowflakeParametersAssertions(t)
-	require.NoError(t, err)
-}
-
-func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testing.T) error {
+func (s *SnowflakeParametersAssert[_]) runSnowflakeParametersAssertions(t *testing.T, testClient *helpers.TestClient) error {
 	t.Helper()
 
 	var parameters []*sdk.Parameter
 	switch {
-	case s.provider != nil:
-		parameters = s.provider(t, s.id)
 	case s.parameters != nil:
 		parameters = s.parameters
+	case s.testClientParametersProvider != nil:
+		if testClient == nil {
+			return errors.New("testClient must not be nil")
+		}
+		parameters = s.testClientParametersProvider(testClient)(t, s.id)
 	default:
 		return fmt.Errorf("cannot proceed with parameters assertion for object %s[%s]: parameters or parameters provider must be specified", s.objectType, s.id.FullyQualifiedName())
 	}

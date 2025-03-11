@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -42,7 +40,7 @@ func TestInt_Procedures(t *testing.T) {
 
 	assertParametersSet := func(t *testing.T, procedureParametersAssert *objectparametersassert.ProcedureParametersAssert) {
 		t.Helper()
-		assertions.AssertThatObject(t, procedureParametersAssert.
+		assertThatObject(t, procedureParametersAssert.
 			// TODO [SNOW-1850370]: every value end with invalid value [OFF] for parameter 'AUTO_EVENT_LOGGING'
 			// HasAutoEventLogging(sdk.AutoEventLoggingTracing).
 			HasEnableConsoleOutput(true).
@@ -77,7 +75,7 @@ func TestInt_Procedures(t *testing.T) {
 		procedure, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, procedure).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, procedure).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -97,7 +95,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, procedure.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, procedure.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -122,7 +120,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -169,7 +167,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -190,7 +188,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -218,7 +216,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -250,7 +248,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -270,7 +268,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -297,7 +295,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -336,7 +334,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -356,7 +354,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -384,7 +382,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -420,7 +418,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasImports(fmt.Sprintf(`[@"%s"."%s".%s/%s]`, stage.ID().DatabaseName(), stage.ID().SchemaName(), stage.ID().Name(), tmpJavaProcedureDifferentStage.JarName)).
 			HasExactlyImportsNormalizedInAnyOrder(sdk.NormalizedPath{
 				StageLocation: stage.ID().FullyQualifiedName(), PathOnStage: tmpJavaProcedureDifferentStage.JarName,
@@ -457,11 +455,11 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
@@ -484,7 +482,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -504,7 +502,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -527,7 +525,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -557,7 +555,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -577,7 +575,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -600,7 +598,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("CALLER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -630,7 +628,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -650,7 +648,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
 			HasReturnDataType(dataType).
@@ -675,7 +673,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -717,7 +715,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -737,7 +735,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
 			HasReturnDataType(dataType).
@@ -765,7 +763,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("CALLER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -793,7 +791,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -813,7 +811,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")).
 			HasReturnDataType(dataType).
@@ -840,7 +838,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -879,7 +877,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -899,7 +897,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(strings.ReplaceAll(dataType.ToSql(), " ", "")+" NOT NULL").
 			HasReturnDataType(dataType).
@@ -927,7 +925,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("CALLER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -959,7 +957,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -979,7 +977,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1004,7 +1002,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1053,7 +1051,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1073,7 +1071,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -1101,7 +1099,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("CALLER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1130,7 +1128,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1150,7 +1148,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1177,7 +1175,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1218,7 +1216,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1238,7 +1236,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -1266,7 +1264,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("CALLER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1291,7 +1289,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1311,7 +1309,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1334,7 +1332,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1360,11 +1358,11 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasArgumentsRaw(fmt.Sprintf(`%[1]s(DEFAULT %[2]s) RETURN %[2]s`, function.ID().Name(), dataType.ToLegacyDataTypeSql())),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())),
 		)
 	})
@@ -1395,7 +1393,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1415,7 +1413,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature(fmt.Sprintf(`(%s %s)`, argName, dataType.ToLegacyDataTypeSql())).
 			HasReturns(fmt.Sprintf(`%s NOT NULL`, dataType.ToSql())).
 			HasReturnDataType(dataType).
@@ -1440,7 +1438,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("CALLER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1462,7 +1460,7 @@ func TestInt_Procedures(t *testing.T) {
 		function, err := client.Procedures.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureFromObject(t, function).
+		assertThatObject(t, objectassert.ProcedureFromObject(t, function).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
@@ -1482,7 +1480,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
+		assertThatObject(t, objectassert.ProcedureDetails(t, function.ID()).
 			HasSignature("()").
 			HasReturns(dataType.ToSql()).
 			HasReturnDataType(dataType).
@@ -1505,7 +1503,7 @@ func TestInt_Procedures(t *testing.T) {
 			HasExecuteAs("OWNER"),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1807,14 +1805,14 @@ def filter_by_role(session, table_name, role):
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Procedure.DropProcedureFunc(t, id))
 
-		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+		assertThatObject(t, objectassert.Procedure(t, id).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasSchemaName(id.SchemaName()).
 			HasArgumentsRawContains(strings.ReplaceAll(expectedReturnDataType.ToLegacyDataTypeSql(), "TABLE(", "TABLE (")),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasReturnDataType(expectedReturnDataType),
 		)
 	})
@@ -1835,7 +1833,7 @@ def filter_by_role(session, table_name, role):
 		})
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParametersPrefetched(t, id, parameters).
+		assertThatObject(t, objectparametersassert.ProcedureParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1844,7 +1842,7 @@ def filter_by_role(session, table_name, role):
 		parameters, err = client.Procedures.ShowParameters(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParametersPrefetched(t, id, parameters).
+		assertThatObject(t, objectparametersassert.ProcedureParametersPrefetched(t, id, parameters).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1874,18 +1872,18 @@ def filter_by_role(session, table_name, role):
 		t.Cleanup(pCleanup)
 		id := p.ID()
 
-		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+		assertThatObject(t, objectassert.Procedure(t, id).
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultProcedureComment),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExternalAccessIntegrationsNil().
 			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1905,12 +1903,12 @@ def filter_by_role(session, table_name, role):
 		err := client.Procedures.Alter(ctx, request)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+		assertThatObject(t, objectassert.Procedure(t, id).
 			HasName(id.Name()).
 			HasDescription("new comment"),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExactlyExternalAccessIntegrations(externalAccessIntegration).
 			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder(externalAccessIntegration).
 			HasExactlySecrets(map[string]sdk.SchemaObjectIdentifier{"abc": secretId}).
@@ -1932,7 +1930,7 @@ def filter_by_role(session, table_name, role):
 		err = client.Procedures.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+		assertThatObject(t, objectassert.Procedure(t, id).
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultProcedureComment).
 			// both nil, because they are always nil in SHOW for procedures
@@ -1940,14 +1938,14 @@ def filter_by_role(session, table_name, role):
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExternalAccessIntegrationsNil().
 			HasExactlyExternalAccessIntegrationsNormalizedInAnyOrder().
 			// TODO [SNOW-1850370]: apparently UNSET external access integrations cleans out secrets in the describe but leaves it in SHOW
 			HasSecretsNil(),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1959,7 +1957,7 @@ def filter_by_role(session, table_name, role):
 		err = client.Procedures.Alter(ctx, unsetSecretsRequest)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasSecretsNil(),
 		)
 	})
@@ -1969,7 +1967,7 @@ def filter_by_role(session, table_name, role):
 		t.Cleanup(pCleanup)
 		id := p.ID()
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -1986,7 +1984,7 @@ def filter_by_role(session, table_name, role):
 		err := client.Procedures.Alter(ctx, request)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+		assertThatObject(t, objectassert.Procedure(t, id).
 			HasName(id.Name()).
 			HasDescription("new comment"),
 		)
@@ -2005,13 +2003,13 @@ def filter_by_role(session, table_name, role):
 		err = client.Procedures.Alter(ctx, unsetRequest)
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.Procedure(t, id).
+		assertThatObject(t, objectassert.Procedure(t, id).
 			HasCreatedOnNotEmpty().
 			HasName(id.Name()).
 			HasDescription(sdk.DefaultProcedureComment),
 		)
 
-		assertions.AssertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
+		assertThatObject(t, objectparametersassert.ProcedureParameters(t, id).
 			HasAllDefaults().
 			HasAllDefaultsExplicit(),
 		)
@@ -2022,21 +2020,21 @@ def filter_by_role(session, table_name, role):
 		t.Cleanup(pCleanup)
 		id := p.ID()
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExecuteAs("OWNER"),
 		)
 
 		err := client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsCaller)))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExecuteAs("CALLER"),
 		)
 
 		err = client.Procedures.Alter(ctx, sdk.NewAlterProcedureRequest(id).WithExecuteAs(*sdk.ExecuteAsPointer(sdk.ExecuteAsOwner)))
 		require.NoError(t, err)
 
-		assertions.AssertThatObject(t, objectassert.ProcedureDetails(t, id).
+		assertThatObject(t, objectassert.ProcedureDetails(t, id).
 			HasExecuteAs("OWNER"),
 		)
 	})

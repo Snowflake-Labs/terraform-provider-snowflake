@@ -7,9 +7,8 @@ import (
 	"testing"
 	"time"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -20,7 +19,9 @@ type DatabaseAssert struct {
 func Database(t *testing.T, id sdk.AccountObjectIdentifier) *DatabaseAssert {
 	t.Helper()
 	return &DatabaseAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeDatabase, id, acc.TestClient().Database.Show),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeDatabase, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.Database, sdk.AccountObjectIdentifier] {
+			return testClient.Database.Show
+		}),
 	}
 }
 

@@ -59,7 +59,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -91,7 +91,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(changedBody).WithComment("Terraform acceptance test - changed comment")),
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -105,7 +105,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithArgument(changedArgument)),
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -129,7 +129,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -146,7 +146,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().RowAccessPolicy.Alter(t, *sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.Pointer("case when current_role() in ('EXTERNAL') then false else true end")))
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -169,7 +169,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				PreConfig: func() {
 					acc.TestClient().RowAccessPolicy.Alter(t, *sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.Pointer("case when current_role() in ('EXTERNAL') then false else true end")))
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -238,7 +238,7 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasBodyString(`case
   when current_role() in ('ANALYST') then true
@@ -273,7 +273,7 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
@@ -287,7 +287,7 @@ func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(newId.Name()).
 					HasFullyQualifiedNameString(newId.FullyQualifiedName()),
 				),
@@ -391,7 +391,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasArguments([]sdk.TableColumnSignature{
 						{
@@ -442,7 +442,7 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -465,7 +465,7 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -524,7 +524,7 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -544,7 +544,7 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).

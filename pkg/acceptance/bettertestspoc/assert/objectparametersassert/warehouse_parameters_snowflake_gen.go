@@ -5,9 +5,8 @@ package objectparametersassert
 import (
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -18,7 +17,9 @@ type WarehouseParametersAssert struct {
 func WarehouseParameters(t *testing.T, id sdk.AccountObjectIdentifier) *WarehouseParametersAssert {
 	t.Helper()
 	return &WarehouseParametersAssert{
-		assert.NewSnowflakeParametersAssertWithProvider(id, sdk.ObjectTypeWarehouse, acc.TestClient().Parameter.ShowWarehouseParameters),
+		assert.NewSnowflakeParametersAssertWithTestClientParametersProvider(id, sdk.ObjectTypeWarehouse, func(testClient *helpers.TestClient) assert.ParametersProvider[sdk.AccountObjectIdentifier] {
+			return testClient.Parameter.ShowWarehouseParameters
+		}),
 	}
 }
 

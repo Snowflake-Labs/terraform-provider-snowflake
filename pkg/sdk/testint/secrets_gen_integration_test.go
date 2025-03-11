@@ -4,9 +4,7 @@ import (
 	"testing"
 	"time"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
@@ -71,7 +69,7 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasComment("a").
@@ -102,7 +100,7 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasDatabaseName(id.DatabaseName()).
@@ -128,7 +126,7 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasOauthScopes([]string{}).
@@ -160,7 +158,7 @@ func TestInt_Secrets(t *testing.T) {
 		_, err = client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasComment("a").
@@ -216,7 +214,7 @@ func TestInt_Secrets(t *testing.T) {
 		secret, err := client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.SecretFromObject(t, secret).
 				HasName(id.Name()).
 				HasComment(comment).
@@ -269,7 +267,7 @@ func TestInt_Secrets(t *testing.T) {
 		_, err = client.Secrets.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasComment(comment).
@@ -287,7 +285,7 @@ func TestInt_Secrets(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Secret.DropFunc(t, id))
 
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.Secret(t, id).
 				HasName(id.Name()).
 				HasSecretType(string(sdk.SecretTypeGenericString)).
