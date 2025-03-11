@@ -6,12 +6,11 @@ import (
 	"testing"
 	"time"
 
+	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,7 +26,7 @@ func TestInt_Tasks(t *testing.T) {
 
 	assertTask := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, warehouseId *sdk.AccountObjectIdentifier) {
 		t.Helper()
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+		assertions.AssertThatObject(t, objectassert.TaskFromObject(t, task).
 			HasNotEmptyCreatedOn().
 			HasName(id.Name()).
 			HasNotEmptyId().
@@ -38,7 +37,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasWarehouse(warehouseId).
 			HasSchedule("").
 			HasPredecessorsInAnyOrder().
-			HasState(sdk.TaskStateStarted).
+			HasState(sdk.TaskStateSuspended).
 			HasDefinition(sql).
 			HasCondition("").
 			HasAllowOverlappingExecution(false).
@@ -88,12 +87,12 @@ func TestInt_Tasks(t *testing.T) {
 			asserts.HasTaskRelations(sdk.TaskRelations{})
 		}
 
-		assertions.AssertThat(t, asserts)
+		assertions.AssertThatObject(t, asserts)
 	}
 
 	assertTaskTerse := func(t *testing.T, task *sdk.Task, id sdk.SchemaObjectIdentifier, schedule string) {
 		t.Helper()
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+		assertions.AssertThatObject(t, objectassert.TaskFromObject(t, task).
 			HasNotEmptyCreatedOn().
 			HasName(id.Name()).
 			HasDatabaseName(testClientHelper().Ids.DatabaseId().Name()).
@@ -245,7 +244,7 @@ func TestInt_Tasks(t *testing.T) {
 
 		assertTask(t, task, id, nil)
 
-		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).HasAllDefaults())
+		assertions.AssertThatObject(t, objectparametersassert.TaskParameters(t, id).HasAllDefaults())
 	})
 
 	t.Run("create task: with initial warehouse", func(t *testing.T) {
@@ -258,7 +257,7 @@ func TestInt_Tasks(t *testing.T) {
 		task, err := testClientHelper().Task.Show(t, id)
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+		assertions.AssertThatObject(t, objectparametersassert.TaskParameters(t, task.ID()).
 			HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeXSmall),
 		)
 
@@ -289,7 +288,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 
 		assertTaskWithOptions(t, task, id, "some comment", sdk.Pointer(testClientHelper().Ids.WarehouseId()), "10 MINUTE", `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`, true, `{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`, nil, sdk.Pointer(errorIntegration.ID()))
-		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, id).
+		assertions.AssertThatObject(t, objectparametersassert.TaskParameters(t, id).
 			HasJsonIndent(4).
 			HasUserTaskTimeoutMs(500).
 			HasSuspendTaskAfterNumFailures(3),
@@ -331,14 +330,14 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 		t.Cleanup(testClientHelper().Task.DropFunc(t, finalizerId))
 
-		assertions.AssertThat(t, objectassert.Task(t, rootTaskId).
+		assertions.AssertThatObject(t, objectassert.Task(t, rootTaskId).
 			HasTaskRelations(sdk.TaskRelations{
 				Predecessors:  []sdk.SchemaObjectIdentifier{},
 				FinalizerTask: &finalizerId,
 			}),
 		)
 
-		assertions.AssertThat(t, objectassert.Task(t, finalizerId).
+		assertions.AssertThatObject(t, objectassert.Task(t, finalizerId).
 			HasTaskRelations(sdk.TaskRelations{
 				Predecessors:      []sdk.SchemaObjectIdentifier{},
 				FinalizedRootTask: &rootTaskId,
@@ -551,7 +550,7 @@ func TestInt_Tasks(t *testing.T) {
 		require.NoError(t, err)
 		createdOn := task.CreatedOn
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+		assertions.AssertThatObject(t, objectassert.TaskFromObject(t, task).
 			HasWarehouse(sdk.Pointer(testClientHelper().Ids.WarehouseId())).
 			HasSchedule("10 MINUTES").
 			HasConfig(`{"output_dir": "/temp/test_directory/", "learning_rate": 0.1}`).
@@ -560,7 +559,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasComment("some_comment").
 			HasTaskRelations(sdk.TaskRelations{}),
 		)
-		assertions.AssertThat(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID()).
+		assertions.AssertThatObject(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID()).
 			HasUserTaskTimeoutMs(10).
 			HasSuspendTaskAfterNumFailures(15).
 			HasTaskAutoRetryAttempts(15)),
@@ -572,7 +571,7 @@ func TestInt_Tasks(t *testing.T) {
 		alteredTask, err := client.Tasks.ShowByID(ctx, id)
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, alteredTask).
+		assertions.AssertThatObject(t, objectassert.TaskFromObject(t, alteredTask).
 			HasWarehouse(nil).
 			HasSchedule("").
 			HasConfig("").
@@ -581,7 +580,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasComment("").
 			HasTaskRelations(sdk.TaskRelations{}),
 		)
-		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).
+		assertions.AssertThatObject(t, objectparametersassert.TaskParameters(t, task.ID()).
 			HasDefaultAutocommitValue().
 			HasDefaultAbortDetachedQueryValue().
 			HasDefaultUserTaskTimeoutMsValue().
@@ -628,7 +627,7 @@ func TestInt_Tasks(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).
 			// HasWarehouse(testClientHelper().Ids.WarehouseId().Name()).
 			HasErrorIntegration(sdk.Pointer(errorIntegration.ID())).
 			HasSchedule("10 MINUTE").
@@ -636,7 +635,7 @@ func TestInt_Tasks(t *testing.T) {
 			HasAllowOverlappingExecution(true).
 			HasComment("new comment"),
 		)
-		assertions.AssertThat(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID())).
+		assertions.AssertThatObject(t, assertSessionParametersSet(objectparametersassert.TaskParameters(t, task.ID())).
 			HasUserTaskTimeoutMs(1000).
 			HasSuspendTaskAfterNumFailures(100).
 			HasTaskAutoRetryAttempts(10).
@@ -712,14 +711,14 @@ func TestInt_Tasks(t *testing.T) {
 		))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.Task(t, task.ID()).
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).
 			HasErrorIntegration(nil).
 			HasSchedule("").
 			HasConfig("").
 			HasAllowOverlappingExecution(false).
 			HasComment(""),
 		)
-		assertions.AssertThat(t, objectparametersassert.TaskParameters(t, task.ID()).HasAllDefaults())
+		assertions.AssertThatObject(t, objectparametersassert.TaskParameters(t, task.ID()).HasAllDefaults())
 	})
 
 	t.Run("alter task: resume and suspend", func(t *testing.T) {
@@ -780,27 +779,38 @@ func TestInt_Tasks(t *testing.T) {
 		finalTask, finalTaskCleanup := testClientHelper().Task.Create(t)
 		t.Cleanup(finalTaskCleanup)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+		assertions.AssertThatObject(t, objectassert.TaskFromObject(t, task).
 			HasTaskRelations(sdk.TaskRelations{
-				FinalizerTask: nil,
+				FinalizerTask:     nil,
+				FinalizedRootTask: nil,
 			}),
 		)
 
-		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithSetFinalize(finalTask.ID()))
+		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(finalTask.ID()).WithSetFinalize(task.ID()))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).
 			HasTaskRelations(sdk.TaskRelations{
 				FinalizerTask: sdk.Pointer(finalTask.ID()),
 			}),
 		)
+		assertions.AssertThatObject(t, objectassert.Task(t, finalTask.ID()).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizedRootTask: sdk.Pointer(task.ID()),
+			}),
+		)
 
-		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithUnsetFinalize(true))
+		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(finalTask.ID()).WithUnsetFinalize(true))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).
 			HasTaskRelations(sdk.TaskRelations{
 				FinalizerTask: nil,
+			}),
+		)
+		assertions.AssertThatObject(t, objectassert.Task(t, finalTask.ID()).
+			HasTaskRelations(sdk.TaskRelations{
+				FinalizedRootTask: nil,
 			}),
 		)
 	})
@@ -813,18 +823,18 @@ func TestInt_Tasks(t *testing.T) {
 		err := client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyAs(newSql))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasDefinition(newSql))
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).HasDefinition(newSql))
 
 		newWhen := `SYSTEM$STREAM_HAS_DATA('MYSTREAM')`
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithModifyWhen(newWhen))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(newWhen))
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).HasCondition(newWhen))
 
 		err = client.Tasks.Alter(ctx, sdk.NewAlterTaskRequest(task.ID()).WithRemoveWhen(true))
 		require.NoError(t, err)
 
-		assertions.AssertThat(t, objectassert.TaskFromObject(t, task).HasCondition(""))
+		assertions.AssertThatObject(t, objectassert.Task(t, task.ID()).HasCondition(""))
 	})
 
 	t.Run("show task: default", func(t *testing.T) {
