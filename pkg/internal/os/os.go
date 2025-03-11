@@ -27,23 +27,23 @@ func LookupEnv(name string) (string, bool) {
 	return os.LookupEnv(name)
 }
 
-func ReadFile(path string) ([]byte, error) {
-	log.Printf("[DEBUG] reading the %s file", path)
-	return os.ReadFile(path)
-}
-
 // ReadFileSafe checks if a file is safe to read, and then reads it.
 func ReadFileSafe(path string) ([]byte, error) {
 	if err := validateFile(path); err != nil {
 		return nil, err
 	}
-	return ReadFile(path)
+	return readFile(path)
+}
+
+func readFile(path string) ([]byte, error) {
+	log.Printf("[DEBUG] reading the %s file", path)
+	return os.ReadFile(path)
 }
 
 func validateFile(path string) error {
 	fileinfo, err := Stat(path)
 	if err != nil {
-		return fmt.Errorf("could not read information of the config file: %w", err)
+		return fmt.Errorf("reading information about the config file: %w", err)
 	}
 	if fileinfo.Size() > maxFileSizeInMb*1024*1024 {
 		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)

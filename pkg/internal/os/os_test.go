@@ -23,5 +23,5 @@ func TestLoadConfigFileThatIsTooBig(t *testing.T) {
 func TestLoadConfigFileThatDoesNotExist(t *testing.T) {
 	configPath := "non-existing"
 	_, err := os.ReadFileSafe(configPath)
-	require.ErrorContains(t, err, fmt.Sprintf("could not read information of the config file: stat %s: no such file or directory", configPath))
+	require.ErrorContains(t, err, fmt.Sprintf("reading information about the config file: stat %s: no such file or directory", configPath))
 }

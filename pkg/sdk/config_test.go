@@ -193,7 +193,7 @@ func TestProfileConfig(t *testing.T) {
 		t.Setenv(snowflakeenvs.ConfigPath, filename)
 
 		config, err := ProfileConfig("orgadmin")
-		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: open %s: no such file or directory", filename))
+		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: reading information about the config file: stat %s: no such file or directory", filename))
 		require.Nil(t, config)
 	})
 }
