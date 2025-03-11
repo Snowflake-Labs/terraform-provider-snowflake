@@ -7,6 +7,13 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.4 ➞ v1.0.5
+
+### Tracking external changes for oauth_redirect_uri in the snowflake_oauth_integration_for_partner_applications resource
+From this version, the snowflake_oauth_integration_for_partner_applications resource is able to
+detect changes on the Snowflake side and apply appropriate action from the provider level. This may produce
+changes after running `terraform plan`, as before the configuration could contain different value than on the Snowflake side.
+
 ## v1.0.3 ➞ v1.0.4
 
 ### Fixed external_function VARCHAR return_type
