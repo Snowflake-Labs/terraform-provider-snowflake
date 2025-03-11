@@ -41,7 +41,7 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 	"oauth_redirect_uri": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: externalChangesNotDetectedFieldDescription("Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI. The field should be only set when OAUTH_CLIENT = LOOKER. In any other case the field should be left out empty."),
+		Description: "Specifies the client URI. After a user is authenticated, the web browser is redirected to this URI. The field should be only set when OAUTH_CLIENT = LOOKER. In any other case the field should be left out empty.",
 	},
 	"enabled": {
 		Type:             schema.TypeString,
@@ -143,6 +143,7 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 				oauthIntegrationForPartnerApplicationsSchema,
 				DescribeOutputAttributeName,
 				"oauth_client",
+				"oauth_redirect_uri",
 				"enabled",
 				"oauth_issue_refresh_tokens",
 				"oauth_refresh_token_validity",
@@ -188,6 +189,14 @@ func ImportOauthForPartnerApplicationIntegration(ctx context.Context, d *schema.
 		return property.Name == "OAUTH_ISSUE_REFRESH_TOKENS"
 	}); err == nil {
 		if err = d.Set("oauth_issue_refresh_tokens", issueRefreshTokens.Value); err != nil {
+			return nil, err
+		}
+	}
+
+	if oauthRedirectUri, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+		return property.Name == "OAUTH_REDIRECT_URI"
+	}); err == nil {
+		if err = d.Set("oauth_redirect_uri", oauthRedirectUri.Value); err != nil {
 			return nil, err
 		}
 	}
@@ -381,11 +390,20 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 				return diag.FromErr(err)
 			}
 
+			// This has to be handled differently as OAUTH_REDIRECT_URI is only visible for a given OAUTH_CLIENT type.
+			var oauthRedirectUri string
+			if oauthRedirectUriProp, err := collections.FindFirst(integrationProperties, func(property sdk.SecurityIntegrationProperty) bool {
+				return property.Name == "OAUTH_REDIRECT_URI"
+			}); err == nil {
+				oauthRedirectUri = oauthRedirectUriProp.Value
+			}
+
 			if err = handleExternalChangesToObjectInDescribe(d,
 				describeMapping{"oauth_issue_refresh_tokens", "oauth_issue_refresh_tokens", oauthIssueRefreshTokens.Value, oauthIssueRefreshTokens.Value, nil},
 				describeMapping{"oauth_refresh_token_validity", "oauth_refresh_token_validity", oauthRefreshTokenValidity.Value, oauthRefreshTokenValidityValue, nil},
 				describeMapping{"oauth_use_secondary_roles", "oauth_use_secondary_roles", oauthUseSecondaryRoles.Value, oauthUseSecondaryRoles.Value, nil},
 				describeMapping{"blocked_roles_list", "blocked_roles_list", blockedRolesList.Value, sdk.ParseCommaSeparatedStringArray(blockedRolesList.Value, false), nil},
+				describeMapping{"oauth_redirect_uri", "oauth_redirect_uri", oauthRedirectUri, oauthRedirectUri, nil},
 			); err != nil {
 				return diag.FromErr(err)
 			}
@@ -397,6 +415,7 @@ func ReadContextOauthIntegrationForPartnerApplications(withExternalChangesMarkin
 			"oauth_refresh_token_validity",
 			"oauth_use_secondary_roles",
 			"blocked_roles_list",
+			"oauth_redirect_uri",
 		}); err != nil {
 			return diag.FromErr(err)
 		}
