@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random/acceptancetests"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
@@ -30,9 +30,9 @@ import (
 const AcceptanceTestPrefix = "acc_test_"
 
 var (
-	TestDatabaseName  = fmt.Sprintf("%sdb_%s", AcceptanceTestPrefix, random.AcceptanceTestsSuffix)
-	TestSchemaName    = fmt.Sprintf("%ssc_%s", AcceptanceTestPrefix, random.AcceptanceTestsSuffix)
-	TestWarehouseName = fmt.Sprintf("%swh_%s", AcceptanceTestPrefix, random.AcceptanceTestsSuffix)
+	TestDatabaseName  = fmt.Sprintf("%sdb_%s", AcceptanceTestPrefix, acceptancetests.ObjectsSuffix)
+	TestSchemaName    = fmt.Sprintf("%ssc_%s", AcceptanceTestPrefix, acceptancetests.ObjectsSuffix)
+	TestWarehouseName = fmt.Sprintf("%swh_%s", AcceptanceTestPrefix, acceptancetests.ObjectsSuffix)
 )
 
 var (
@@ -89,8 +89,8 @@ func init() {
 	}
 	atc.secondaryClient = secondaryClient
 
-	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName, random.AcceptanceTestsSuffix)
-	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.AcceptanceTestsSuffix)
+	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName, acceptancetests.ObjectsSuffix)
+	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, acceptancetests.ObjectsSuffix)
 }
 
 type acceptanceTestContext struct {

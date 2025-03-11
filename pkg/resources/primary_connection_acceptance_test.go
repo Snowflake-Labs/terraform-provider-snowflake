@@ -7,7 +7,6 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	tfjson "github.com/hashicorp/terraform-json"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -54,7 +53,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -81,7 +80,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, connectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModelWithComment.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -107,7 +106,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasCommentString(""),
 
@@ -120,7 +119,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, connectionModelWithFailover),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModelWithFailover.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -136,7 +135,7 @@ func TestAcc_PrimaryConnection_Basic(t *testing.T) {
 			{
 				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -179,7 +178,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 			{
 				Config: config.FromModels(t, connectionModel),
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNameString(id.Name()).
 							HasFullyQualifiedNameString(id.FullyQualifiedName()).
@@ -214,7 +213,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasCommentString("config comment"),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
@@ -244,7 +243,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModel.ResourceReference()).
 							HasNoEnableFailoverToAccounts(),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModel.ResourceReference()).
@@ -271,7 +270,7 @@ func TestAcc_PrimaryConnection_ExternalChanges(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					assert.AssertThat(t,
+					assertThat(t,
 						resourceassert.PrimaryConnectionResource(t, connectionModelWithFailover.ResourceReference()).
 							HasExactlyFailoverToAccountsInOrder(secondaryAccountId),
 						resourceshowoutputassert.ConnectionShowOutput(t, connectionModelWithFailover.ResourceReference()).

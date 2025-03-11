@@ -80,6 +80,15 @@ func (c *ParameterClient) ShowUserParameters(t *testing.T, id sdk.AccountObjectI
 	return params
 }
 
+func (c *ParameterClient) ShowUserParametersOrError(t *testing.T, id sdk.AccountObjectIdentifier) ([]*sdk.Parameter, error) {
+	t.Helper()
+	return c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{
+		In: &sdk.ParametersIn{
+			User: id,
+		},
+	})
+}
+
 func (c *ParameterClient) ShowTaskParameters(t *testing.T, id sdk.SchemaObjectIdentifier) []*sdk.Parameter {
 	t.Helper()
 	params, err := c.client().ShowParameters(context.Background(), &sdk.ShowParametersOptions{

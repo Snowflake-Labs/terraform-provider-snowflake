@@ -49,7 +49,7 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: dataConnections,
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
 					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_primary_connection.test").
 						HasName(id.Name()).
@@ -97,7 +97,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: dataConnections,
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
 					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_connection.test").
 						HasName(id.Name()).

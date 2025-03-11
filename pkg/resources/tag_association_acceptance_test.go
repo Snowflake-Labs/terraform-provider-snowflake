@@ -187,7 +187,7 @@ func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model12),
-				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
 					HasObjectIdentifiersLength(2).
@@ -198,7 +198,7 @@ func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, model123),
-				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagAssociationResource(t, model12.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
 					HasObjectIdentifiersLength(3).
@@ -210,7 +210,7 @@ func TestAcc_TagAssociation_objectIdentifiers(t *testing.T) {
 			},
 			{
 				Config: config.FromModels(t, model13),
-				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model13.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagAssociationResource(t, model13.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
 					HasObjectIdentifiersLength(2).
@@ -249,7 +249,7 @@ func TestAcc_TagAssociation_objectType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, baseModel),
-				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
 					HasObjectIdentifiersLength(1).
@@ -263,7 +263,7 @@ func TestAcc_TagAssociation_objectType(t *testing.T) {
 						plancheck.ExpectResourceAction(modelWithDifferentObjectType.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagAssociationResource(t, baseModel.ResourceReference()).
 					HasObjectTypeString(string(sdk.ObjectTypeDatabaseRole)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
 					HasObjectIdentifiersLength(1).
@@ -333,7 +333,7 @@ func TestAcc_TagAssociation_lowercaseObjectType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, model),
-				Check: assert.AssertThat(t, resourceassert.TagAssociationResource(t, model.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagAssociationResource(t, model.ResourceReference()).
 					HasIdString(helpers.EncodeSnowflakeID(tag.ID().FullyQualifiedName(), "foo", string(sdk.ObjectTypeSchema))).
 					HasObjectTypeString(string(sdk.ObjectTypeSchema)).
 					HasTagIdString(tag.ID().FullyQualifiedName()).
