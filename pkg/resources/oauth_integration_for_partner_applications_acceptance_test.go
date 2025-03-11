@@ -6,14 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -863,7 +861,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_DetectExternalChangesForOaut
 		Steps: []resource.TestStep{
 			{
 				Config: accconfig.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.OauthIntegrationForPartnerApplicationsResource(t, configModel.ResourceReference()).
 						HasOauthRedirectUriString(oauthRedirectUri),
 				),
@@ -880,7 +878,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_DetectExternalChangesForOaut
 					},
 				},
 				Config: accconfig.FromModels(t, configModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.OauthIntegrationForPartnerApplicationsResource(t, configModel.ResourceReference()).
 						HasOauthRedirectUriString(oauthRedirectUri),
 				),
