@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -19,7 +18,9 @@ type AuthenticationPolicyAssert struct {
 func AuthenticationPolicy(t *testing.T, id sdk.SchemaObjectIdentifier) *AuthenticationPolicyAssert {
 	t.Helper()
 	return &AuthenticationPolicyAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeAuthenticationPolicy, id, acc.TestClient().AuthenticationPolicy.Show),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeAuthenticationPolicy, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.AuthenticationPolicy, sdk.SchemaObjectIdentifier] {
+			return testClient.AuthenticationPolicy.Show
+		}),
 	}
 }
 

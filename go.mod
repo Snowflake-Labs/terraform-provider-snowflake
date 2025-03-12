@@ -18,7 +18,6 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.0
 	github.com/hashicorp/terraform-plugin-testing v1.11.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/snowflakedb/gosnowflake v1.13.0
 	github.com/stretchr/testify v1.10.0

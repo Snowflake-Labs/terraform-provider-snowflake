@@ -12,6 +12,18 @@ across different versions.
 ### Changes in TOML configuration file requirements
 Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB.
 
+### Tracking external changes for oauth_redirect_uri in the snowflake_oauth_integration_for_partner_applications resource
+From this version, the snowflake_oauth_integration_for_partner_applications resource is able to
+detect changes on the Snowflake side and apply appropriate action from the provider level. This may produce
+changes after running `terraform plan`, as before the configuration could contain different value than on the Snowflake side.
+
+### Removal of instrumentation library
+We decided to remove the instrumentation around the [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake). It does not introduce any functional changes, however, it changes the way the Snowflake communication logs are turned on and how they are printed. Check [this section](CREATING_ISSUES.md#how-can-i-turn-on-logs) for more details.
+
+`SF_TF_NO_INSTRUMENTED_SQL`, used to turn the instrumentation off, was removed because it is no longer needed.
+
+These changes should not affect any existing workflows (unless you have custom logic based on the old logs output).
+
 ## v1.0.3 ➞ v1.0.4
 
 ### Fixed external_function VARCHAR return_type
@@ -1408,8 +1420,7 @@ Type changes:
 
 #### *(breaking change)* refactored snowflake_users datasource
 > **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited.
-You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`.
-Only `parameters` output is not affected by the lack of privileges.
+You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command will return error when called, so you have to set `with_describe = false`; the SHOW PARAMETERS command will return error if called too, so you have to set `with_parameters = false`.
 
 Changes:
 - account checking logic was entirely removed

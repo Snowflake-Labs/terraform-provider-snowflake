@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -148,15 +146,4 @@ func (w *UserAssert) HasDaysToExpiryEmpty() *UserAssert {
 		return nil
 	})
 	return w
-}
-
-// UserWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
-// It will be generated later.
-func UserWithTestClient(t *testing.T, id sdk.AccountObjectIdentifier) *UserAssert {
-	t.Helper()
-	return &UserAssert{
-		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeUser, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.User, sdk.AccountObjectIdentifier] {
-			return testClient.User.Show
-		}),
-	}
 }

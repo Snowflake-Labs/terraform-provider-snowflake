@@ -2,9 +2,9 @@ package testint
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	assertions "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -19,7 +19,7 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 
 	assertAuthenticationPolicy := func(t *testing.T, id sdk.SchemaObjectIdentifier, expectedComment string) {
 		t.Helper()
-		assertions.AssertThat(t,
+		assertThatObject(t,
 			objectassert.AuthenticationPolicy(t, id).
 				HasCreatedOnNotEmpty().
 				HasName(id.Name()).
@@ -223,13 +223,12 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 			assert.Len(t, authenticationPolicies, 1)
 		})
 
-		// TODO(SNOW-1663343): starts_with doesn't work (returns all)
 		t.Run("starts_with", func(t *testing.T) {
 			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
 				WithStartsWith("test_auth_policy_").
 				WithIn(sdk.In{Schema: id.SchemaId()}))
 			require.NoError(t, err)
-			assert.Len(t, authenticationPolicies, 3)
+			assert.Len(t, authenticationPolicies, 2)
 		})
 
 		t.Run("in_account", func(t *testing.T) {
@@ -258,13 +257,13 @@ func TestInt_AuthenticationPolicies(t *testing.T) {
 			assert.Len(t, authenticationPolicies, 1)
 		})
 
-		// TODO(SNOW-1663343): limit from doesn't work (should return 0 elements because alphabetically test_auth_policyzzz is last in the output)
 		t.Run("limit from", func(t *testing.T) {
 			authenticationPolicies, err := client.AuthenticationPolicies.Show(ctx, sdk.NewShowAuthenticationPolicyRequest().
-				WithLimit(sdk.LimitFrom{Rows: sdk.Int(2), From: sdk.String(id.Name())}).
+				WithLimit(sdk.LimitFrom{Rows: sdk.Int(1), From: sdk.String("test_auth_policy_")}).
 				WithIn(sdk.In{Schema: id.SchemaId()}))
 			require.NoError(t, err)
-			assert.Len(t, authenticationPolicies, 2)
+			require.Len(t, authenticationPolicies, 1)
+			require.True(t, strings.HasPrefix(authenticationPolicies[0].Name, "test_auth_policy_2"))
 		})
 	})
 

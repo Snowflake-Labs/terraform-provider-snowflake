@@ -47,6 +47,4 @@ const (
 	DisableConsoleLogin            = "SNOWFLAKE_DISABLE_CONSOLE_LOGIN"
 
 	ConfigPath = "SNOWFLAKE_CONFIG_PATH"
-
-	NoInstrumentedSql = "SF_TF_NO_INSTRUMENTED_SQL"
 )
