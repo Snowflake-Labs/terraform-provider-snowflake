@@ -52,6 +52,7 @@ jobs:
         # we need to fetch all history and tags
         # so we build the proper version
         with:
+          persist-credentials: false
           fetch-depth: 0
         if: ${{ steps.release.outputs.release_created }}
 
