@@ -9,6 +9,7 @@ on:
 
 jobs:
   release-please:
+    # TODO(SNOW-1965855): Uncomment after adjusting secrets for release `environment: release`
     runs-on: macos-latest
     steps:
       - uses: actions/github-script@v6

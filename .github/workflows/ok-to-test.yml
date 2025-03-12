@@ -7,6 +7,7 @@ on:
 
 jobs:
   ok-to-test:
+    # TODO(SNOW-1965855): Uncomment after adjusting secrets for ok-to-test `environment: ok-to-test`
     runs-on: ubuntu-latest
     steps:
       - name: Create token
