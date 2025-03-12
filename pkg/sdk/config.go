@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/os"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/youmark/pkcs8"
@@ -199,12 +199,12 @@ func boolToConfigBool(v bool) gosnowflake.ConfigBool {
 
 func GetConfigFileName() (string, error) {
 	// has the user overridden the default config path?
-	if configPath, ok := os.LookupEnv("SNOWFLAKE_CONFIG_PATH"); ok {
+	if configPath, ok := oswrapper.LookupEnv("SNOWFLAKE_CONFIG_PATH"); ok {
 		if configPath != "" {
 			return configPath, nil
 		}
 	}
-	dir, err := os.UserHomeDir()
+	dir, err := oswrapper.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
@@ -361,7 +361,7 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 }
 
 func LoadConfigFile(path string) (map[string]ConfigDTO, error) {
-	dat, err := os.ReadFileSafe(path)
+	dat, err := oswrapper.ReadFileSafe(path)
 	if err != nil {
 		return nil, err
 	}

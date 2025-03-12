@@ -301,8 +301,10 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
-	tmpServiceUserConfig := acc.TestClient().TempTooBigTomlConfigForServiceUser(t, tmpServiceUser)
+	c := make([]byte, 11*1024*1024)
+	tomlConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return string(c)
+	})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -312,10 +314,10 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+					t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
 				},
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
-				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tmpServiceUserConfig.Path)),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path), datasourceModel()),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path)),
 			},
 		},
 	})

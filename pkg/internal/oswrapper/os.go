@@ -1,4 +1,6 @@
-package os
+// Package oswrapper is a wrapper around the standard os package that allows more secure interactions with the operating system.
+// It should be used as a replacement in production code of the standard os package.
+package oswrapper
 
 import (
 	"fmt"
@@ -8,20 +10,27 @@ import (
 )
 
 const (
-	IsRunningOnWindows = runtime.GOOS == "windows"
-	maxFileSizeInMb    = 10
+	maxFileSizeInMb = 10
 )
 
+// IsRunningOnWindows returns true if the code is running on Windows.
+func IsRunningOnWindows() bool {
+	return runtime.GOOS == "windows"
+}
+
+// Stat is an os.Stat wrapper.
 func Stat(path string) (os.FileInfo, error) {
 	log.Printf("[DEBUG] reading the %s file info", path)
 	return os.Stat(path)
 }
 
+// Getenv is an os.Getenv wrapper.
 func Getenv(name string) string {
 	log.Printf("[DEBUG] reading the %s environmental variable", name)
 	return os.Getenv(name)
 }
 
+// LookupEnv is an os.LookupEnv wrapper.
 func LookupEnv(name string) (string, bool) {
 	log.Printf("[DEBUG] reading the %s environmental variable", name)
 	return os.LookupEnv(name)
@@ -29,7 +38,7 @@ func LookupEnv(name string) (string, bool) {
 
 // ReadFileSafe checks if a file is safe to read, and then reads it.
 func ReadFileSafe(path string) ([]byte, error) {
-	if err := validateFile(path); err != nil {
+	if err := fileIsSafeToRead(path); err != nil {
 		return nil, err
 	}
 	return readFile(path)
@@ -40,7 +49,7 @@ func readFile(path string) ([]byte, error) {
 	return os.ReadFile(path)
 }
 
-func validateFile(path string) error {
+func fileIsSafeToRead(path string) error {
 	fileinfo, err := Stat(path)
 	if err != nil {
 		return fmt.Errorf("reading information about the config file: %w", err)
@@ -51,6 +60,7 @@ func validateFile(path string) error {
 	return nil
 }
 
+// UserHomeDir is an os.UserHomeDir wrapper.
 func UserHomeDir() (string, error) {
 	log.Printf("[DEBUG] reading the user home directory location from the operating system")
 	return os.UserHomeDir()
