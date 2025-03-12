@@ -86,7 +86,7 @@ Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. 
 ```
 
 ## Additional SQL Client configuration
-Currently underlying sql [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver is wrapped with [instrumentedsql](https://github.com/luna-duclos/instrumentedsql). In order to use raw [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver, set environment variable `SF_TF_NO_INSTRUMENTED_SQL` to a non-empty value.
+The provider uses the underlying [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver to send SQL commands to Snowflake.
 
 By default, the underlying driver is set to error level logging. It can be changed by setting `driver_tracing` field in the configuration to one of (from most to least verbose):
 - `trace`

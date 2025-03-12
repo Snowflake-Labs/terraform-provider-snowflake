@@ -572,7 +572,7 @@ func TestAcc_Execute_grants(t *testing.T) {
 //
 // Quick search unveiled this issue: https://github.com/hashicorp/terraform-plugin-sdk/issues/536.
 //
-// It also seems that it is working correctly underneath; with TF_LOG set to DEBUG we have:
+// It also seems that it is working correctly underneath:
 //
 //	2023/11/26 17:16:03 [DEBUG] SQL "GRANT CREATE SCHEMA,MODIFY ON DATABASE EXECUTE_TEST_DATABASE_4397 TO ROLE EXECUTE_TEST_ROLE_1145" applied successfully
 //	2023/11/26 17:16:03 [DEBUG] SQL "GRANT MODIFY,USAGE ON DATABASE EXECUTE_TEST_DATABASE_3740 TO ROLE EXECUTE_TEST_ROLE_3008" applied successfully
