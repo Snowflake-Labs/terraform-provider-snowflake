@@ -68,12 +68,12 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
 
-	t.Run("registers snowflake-instrumented driver", func(t *testing.T) {
+	t.Run("registers snowflake driver", func(t *testing.T) {
 		config := sdk.DefaultConfig()
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 
-		assert.ElementsMatch(t, sql.Drivers(), []string{"snowflake-instrumented", "snowflake"})
+		assert.ElementsMatch(t, sql.Drivers(), []string{"snowflake"})
 	})
 }
 

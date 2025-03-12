@@ -247,11 +247,8 @@ body:
     attributes:
       label: Logs
       description: |
-        Please provide a link to a [GitHub Gist](https://gist.github.com) containing log output. [Terraform Debugging Documentation](https://www.terraform.io/internals/debugging)
-        
-        Here's a list of environment variables you can set for logging additional information:
-        - *TF_LOG=DEBUG* - this one is a must-have as it's printing executed SQLs which helps us to see what is happening underneath.
-        - *SF_TF_GOSNOWFLAKE_LOG_LEVEL=debug* - if you feel the problem may be connected with the Snowflake driver, please set this one for additional driver logs.
+        Please provide a link to a [GitHub Gist](https://gist.github.com) containing log output.
+        Read more about logging in the provider [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/dev/CREATING_ISSUES.md#how-can-i-turn-on-logs).
       placeholder: https://gist.github.com/example/12345678
 
   - id: additional-information
