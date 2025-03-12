@@ -8,11 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -312,12 +309,10 @@ func GrantPrivilegesToAccountRole() *schema.Resource {
 
 func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-		logging.DebugLogger.Printf("[DEBUG] Entering import grant privileges to account role")
 		id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 		if err != nil {
 			return nil, err
 		}
-		logging.DebugLogger.Printf("[DEBUG] Imported identifier: %s", id.String())
 		if err := d.Set("account_role_name", id.RoleName.FullyQualifiedName()); err != nil {
 			return nil, err
 		}
@@ -411,14 +406,12 @@ func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.Re
 }
 
 func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	logging.DebugLogger.Printf("[DEBUG] Entering create grant privileges to account role")
 	client := meta.(*provider.Context).Client
 
 	id, err := createGrantPrivilegesToAccountRoleIdFromSchema(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
 	grantOn, err := getAccountRoleGrantOn(d)
 	if err != nil {
@@ -444,14 +437,12 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting identifier to %s", id.String())
 	d.SetId(id.String())
 
 	return ReadGrantPrivilegesToAccountRole(ctx, d, meta)
 }
 
 func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	logging.DebugLogger.Printf("[DEBUG] Entering update grant privileges to account role")
 	client := meta.(*provider.Context).Client
 
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
@@ -464,7 +455,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			},
 		}
 	}
-	logging.DebugLogger.Printf("[DEBUG] Parsed identifier to %s", id.String())
 
 	if d.HasChange("with_grant_option") {
 		id.WithGrantOption = d.Get("with_grant_option").(bool)
@@ -475,7 +465,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		_, allPrivileges := d.GetChange("all_privileges")
 
 		if !allPrivileges.(bool) {
-			logging.DebugLogger.Printf("[DEBUG] Revoking all privileges")
 			grantOn, err := getAccountRoleGrantOn(d)
 			if err != nil {
 				return diag.FromErr(err)
@@ -517,8 +506,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			privilegesBeforeChange := expandStringList(before.(*schema.Set).List())
 			privilegesAfterChange := expandStringList(after.(*schema.Set).List())
 
-			logging.DebugLogger.Printf("[DEBUG] Changes in privileges. Before: %v, after: %v", privilegesBeforeChange, privilegesAfterChange)
-
 			var privilegesToAdd, privilegesToRemove []string
 
 			for _, privilegeBeforeChange := range privilegesBeforeChange {
@@ -539,7 +526,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			}
 
 			if len(privilegesToAdd) > 0 {
-				logging.DebugLogger.Printf("[DEBUG] Granting privileges: %v", privilegesToAdd)
 				privilegesToGrant := getAccountRolePrivileges(
 					false,
 					privilegesToAdd,
@@ -576,7 +562,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			}
 
 			if len(privilegesToRemove) > 0 {
-				logging.DebugLogger.Printf("[DEBUG] Revoking privileges: %v", privilegesToRemove)
 				err = client.Grants.RevokePrivilegesFromAccountRole(
 					ctx,
 					getAccountRolePrivileges(
@@ -611,7 +596,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		_, allPrivileges := d.GetChange("all_privileges")
 
 		if allPrivileges.(bool) {
-			logging.DebugLogger.Printf("[DEBUG] Granting all privileges")
 			grantOn, err := getAccountRoleGrantOn(d)
 			if err != nil {
 				return diag.FromErr(err)
@@ -642,7 +626,6 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	}
 
 	if id.AlwaysApply {
-		logging.DebugLogger.Printf("[DEBUG] Performing always_apply re-grant")
 		grantOn, err := getAccountRoleGrantOn(d)
 		if err != nil {
 			return diag.FromErr(err)
@@ -667,14 +650,12 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting identifier to %s", id.String())
 	d.SetId(id.String())
 
 	return ReadGrantPrivilegesToAccountRole(ctx, d, meta)
 }
 
 func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	logging.DebugLogger.Printf("[DEBUG] Entering delete grant privileges to account role")
 	client := meta.(*provider.Context).Client
 
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
@@ -687,7 +668,6 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			},
 		}
 	}
-	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
 	grantOn, err := getAccountRoleGrantOn(d)
 	if err != nil {
@@ -717,7 +697,6 @@ func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 }
 
 func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	logging.DebugLogger.Printf("[DEBUG] Entering read grant privileges to role")
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 	if err != nil {
 		return diag.Diagnostics{
@@ -728,7 +707,6 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 			},
 		}
 	}
-	logging.DebugLogger.Printf("[DEBUG] Parsed identifier: %s", id.String())
 
 	if id.AlwaysApply {
 		// The Trigger is a string rather than boolean that would be flipped on every terraform apply
@@ -787,7 +765,6 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] About to show grants")
 	grants, err := client.Grants.Show(ctx, opts)
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
@@ -819,7 +796,6 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		expectedPrivileges = append(expectedPrivileges, sdk.AccountObjectPrivilegeUsage.String())
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Filtering grants to be set on account: count = %d", len(grants))
 	for _, grant := range grants {
 		// Accept only (account) ROLEs
 		if grant.GrantTo != sdk.ObjectTypeRole && grant.GrantedTo != sdk.ObjectTypeRole {
@@ -861,7 +837,6 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 		actualPrivileges[usageIndex] = sdk.AccountObjectPrivilegeImportedPrivileges.String()
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting privileges: %v", actualPrivileges)
 	if err := d.Set("privileges", actualPrivileges); err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
