@@ -1,19 +1,30 @@
 package datasources_test
 
 import (
-	"fmt"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Database(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	databaseName := acc.TestClient().Ids.Alpha()
 	comment := random.Comment()
+
+	databaseModel := model.DatabaseWithParametersSet("test", databaseName).
+		WithComment(comment)
+	databaseDatasourceModel := datasourcemodel.Database("test", databaseName).
+		WithDependsOn(databaseModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -24,30 +35,17 @@ func TestAcc_Database(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: database(databaseName, comment),
+				Config: accconfig.FromModels(t, databaseModel, databaseDatasourceModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_database.t", "comment", comment),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "created_on"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "owner"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "retention_time"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "is_current"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database.t", "is_default"),
+					resource.TestCheckResourceAttr(databaseDatasourceModel.DatasourceReference(), "name", databaseName),
+					resource.TestCheckResourceAttr(databaseDatasourceModel.DatasourceReference(), "comment", comment),
+					resource.TestCheckResourceAttrSet(databaseDatasourceModel.DatasourceReference(), "created_on"),
+					resource.TestCheckResourceAttrSet(databaseDatasourceModel.DatasourceReference(), "owner"),
+					resource.TestCheckResourceAttrSet(databaseDatasourceModel.DatasourceReference(), "retention_time"),
+					resource.TestCheckResourceAttrSet(databaseDatasourceModel.DatasourceReference(), "is_current"),
+					resource.TestCheckResourceAttrSet(databaseDatasourceModel.DatasourceReference(), "is_default"),
 				),
 			},
 		},
 	})
-}
-
-func database(databaseName, comment string) string {
-	return fmt.Sprintf(`
-		resource snowflake_database "test_database" {
-			name = "%v"
-			comment = "%v"
-		}
-		data snowflake_database "t" {
-			depends_on = [snowflake_database.test_database]
-			name = "%v"
-		}
-	`, databaseName, comment, databaseName)
 }
