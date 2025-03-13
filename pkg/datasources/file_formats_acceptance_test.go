@@ -6,14 +6,18 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_FileFormats(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	fileFormatName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	fileFormatId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -23,13 +27,13 @@ func TestAcc_FileFormats(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormats(databaseName, schemaName, fileFormatName),
+				Config: fileFormats(fileFormatId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "database", fileFormatId.DatabaseName()),
+					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "schema", fileFormatId.SchemaName()),
 					resource.TestCheckResourceAttrSet("data.snowflake_file_formats.t", "file_formats.#"),
 					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "file_formats.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "file_formats.0.name", fileFormatName),
+					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "file_formats.0.name", fileFormatId.Name()),
 				),
 			},
 		},
@@ -37,8 +41,9 @@ func TestAcc_FileFormats(t *testing.T) {
 }
 
 func TestAcc_FileFormatsEmpty(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -48,10 +53,10 @@ func TestAcc_FileFormatsEmpty(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: zeroFileFormats(databaseName, schemaName),
+				Config: zeroFileFormats(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttrSet("data.snowflake_file_formats.t", "file_formats.#"),
 					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "file_formats.#", "0"),
 				),
@@ -60,22 +65,12 @@ func TestAcc_FileFormatsEmpty(t *testing.T) {
 	})
 }
 
-func fileFormats(databaseName string, schemaName string, fileFormatName string) string {
+func fileFormats(fileFormatId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "d" {
-		name = "%v"
-	}
-
-	resource snowflake_schema "s"{
-		name 	 = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource snowflake_file_format "t"{
-		name 	 	= "%v"
-		database 	= snowflake_schema.s.database
-		schema 	 	= snowflake_schema.s.name
+		name 	 	= "%[3]s"
+		database 	= "%[1]s"
+		schema 	 	= "%[2]s"
 		format_type = "CSV"
 		compression = "GZIP"
 		record_delimiter = "\r"
@@ -101,28 +96,18 @@ func fileFormats(databaseName string, schemaName string, fileFormatName string) 
 	}
 
 	data snowflake_file_formats "t" {
-		database = snowflake_file_format.t.database
-		schema = snowflake_file_format.t.schema
+		database = "%[1]s"
+		schema = "%[2]s"
 		depends_on = [snowflake_file_format.t]
 	}
-	`, databaseName, schemaName, fileFormatName)
+	`, fileFormatId.DatabaseName(), fileFormatId.SchemaName(), fileFormatId.Name())
 }
 
-func zeroFileFormats(databaseName string, schemaName string) string {
+func zeroFileFormats() string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "d" {
-		name = "%v"
-	}
-
-	resource snowflake_schema "s"{
-		name 	 = "%v"
-		database = snowflake_database.d.name
-	}
-
 	data snowflake_file_formats "t" {
-		database = snowflake_schema.s.database
-		schema 	 = snowflake_schema.s.name
+		database = "%[1]s"
+		schema 	 = "%[2]s"
 	}
-	`, databaseName, schemaName)
+	`, acc.TestDatabaseName, acc.TestSchemaName)
 }
