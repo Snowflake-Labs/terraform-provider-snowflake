@@ -36,7 +36,7 @@ func TestLoadConfigFile(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := loadConfigFile(configPath)
+	m, err := LoadConfigFile(configPath)
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", *m["default"].AccountName)
 	assert.Equal(t, "TEST_ORG", *m["default"].OrganizationName)
@@ -58,7 +58,7 @@ func TestLoadConfigFileWithUnknownFields(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := loadConfigFile(configPath)
+	m, err := LoadConfigFile(configPath)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]ConfigDTO{
 		"default": {
@@ -74,7 +74,7 @@ func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	_, err := loadConfigFile(configPath)
+	_, err := LoadConfigFile(configPath)
 	require.ErrorContains(t, err, "toml: cannot decode TOML integer into struct field sdk.ConfigDTO.AccountName of type *string")
 }
 
@@ -193,7 +193,7 @@ func TestProfileConfig(t *testing.T) {
 		t.Setenv(snowflakeenvs.ConfigPath, filename)
 
 		config, err := ProfileConfig("orgadmin")
-		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: open %s: no such file or directory", filename))
+		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: reading information about the config file: stat %s: no such file or directory", filename))
 		require.Nil(t, config)
 	})
 }

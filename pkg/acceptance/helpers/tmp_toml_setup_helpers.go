@@ -51,6 +51,14 @@ func (c *TestClient) TempIncorrectTomlConfigForLegacyServiceUser(t *testing.T, l
 	})
 }
 
+func (c *TestClient) TempTooBigTomlConfigForServiceUser(t *testing.T, serviceUser *TmpServiceUser) *TmpTomlConfig {
+	t.Helper()
+	return c.StoreTempTomlConfig(t, func(profile string) string {
+		c := make([]byte, 11*1024*1024)
+		return TomlConfigForServiceUser(t, profile, serviceUser.UserId, serviceUser.RoleId, serviceUser.WarehouseId, serviceUser.AccountId, string(c))
+	})
+}
+
 func (c *TestClient) StoreTempTomlConfig(t *testing.T, tomlProvider func(string) string) *TmpTomlConfig {
 	t.Helper()
 

@@ -296,6 +296,33 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	c := make([]byte, 11*1024*1024)
+	tomlConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return string(c)
+	})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path), datasourceModel()),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path)),
+			},
+		},
+	})
+}
+
 func TestAcc_Provider_envConfig(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
