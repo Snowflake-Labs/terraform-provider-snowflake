@@ -6,15 +6,19 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_ExternalTables(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	stageName := acc.TestClient().Ids.Alpha()
-	externalTableName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	externalTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -24,43 +28,33 @@ func TestAcc_ExternalTables(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: externalTables(databaseName, schemaName, stageName, externalTableName),
+				Config: externalTables(stageId, externalTableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "database", stageId.DatabaseName()),
+					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "schema", stageId.SchemaName()),
 					resource.TestCheckResourceAttrSet("data.snowflake_external_tables.t", "external_tables.#"),
 					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "external_tables.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "external_tables.0.name", externalTableName),
+					resource.TestCheckResourceAttr("data.snowflake_external_tables.t", "external_tables.0.name", externalTableId.Name()),
 				),
 			},
 		},
 	})
 }
 
-func externalTables(databaseName string, schemaName string, stageName string, externalTableName string) string {
+func externalTables(stageId sdk.SchemaObjectIdentifier, externalTableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "test" {
-		name = "%v"
-	}
-
-	resource snowflake_schema "test"{
-		name 	 = "%v"
-		database = snowflake_database.test.name
-	}
-
 	resource "snowflake_stage" "test" {
-		name = "%v"
+		name = "%[3]s"
 		url = "s3://snowflake-workshop-lab/weather-nyc"
-		database = snowflake_database.test.name
-		schema = snowflake_schema.test.name
+		database = "%[1]s"
+		schema = "%[2]s"
 		comment = "Terraform acceptance test"
 	}
 
 	resource "snowflake_external_table" "test_table" {
-		database = snowflake_database.test.name
-		schema   = snowflake_schema.test.name
-		name     = "%v"
+		database = "%[1]s"
+		schema   = "%[2]s"
+		name     = "%[4]s"
 		comment  = "Terraform acceptance test"
 		column {
 			name = "column1"
@@ -68,13 +62,13 @@ func externalTables(databaseName string, schemaName string, stageName string, ex
 		as = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
 		}
 	    file_format = "TYPE = CSV"
-	    location = "@${snowflake_database.test.name}.${snowflake_schema.test.name}.${snowflake_stage.test.name}"
+	    location = "@${snowflake_stage.test.fully_qualified_name}"
 	}
 
 	data snowflake_external_tables "t" {
-		database = snowflake_external_table.test_table.database
-		schema = snowflake_external_table.test_table.schema
+		database = "%[1]s"
+		schema = "%[2]s"
 		depends_on = [snowflake_external_table.test_table]
 	}
-	`, databaseName, schemaName, stageName, externalTableName)
+	`, stageId.DatabaseName(), stageId.SchemaName(), stageId.Name(), externalTableId.Name())
 }
