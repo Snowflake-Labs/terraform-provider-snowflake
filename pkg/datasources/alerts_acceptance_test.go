@@ -34,25 +34,26 @@ func TestAcc_Alerts(t *testing.T) {
 			{
 				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbOnly(alertId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.#", "1"),
 				),
 			},
 			{
 				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbAndSchema(alertId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.#", "1"),
 				),
 			},
 			{
 				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigAllOptionals(alertId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.#", "1"),
 					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", alertId.Name()),
 				),
 			},
 			{
 				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigSchemaOnly(alertId),
 				Check: resource.ComposeTestCheckFunc(
+					// TODO [SNOW-1348349]: currently, the schema is taken into consideration only if the database is set (this works differently in the stable datasources); address it during the rework.
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
 				),
 			},
@@ -116,5 +117,5 @@ func alertsDatasourceConfigSchemaOnly(alertId sdk.SchemaObjectIdentifier) string
 data "snowflake_alerts" "test_datasource_alert" {
 	schema  	      = "%s"
 }
-`, alertId.Name())
+`, alertId.SchemaName())
 }
