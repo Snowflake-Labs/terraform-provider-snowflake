@@ -11,3 +11,12 @@ func (d *DatabasesModel) WithLimit(rows int) *DatabasesModel {
 		}),
 	)
 }
+
+func (d *DatabasesModel) WithRowsAndFrom(rows int, from string) *DatabasesModel {
+	return d.WithLimitValue(
+		tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+			"rows": tfconfig.IntegerVariable(rows),
+			"from": tfconfig.StringVariable(from),
+		}),
+	)
+}
