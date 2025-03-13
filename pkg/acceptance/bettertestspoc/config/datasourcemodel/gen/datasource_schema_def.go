@@ -27,6 +27,10 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		schema: datasources.Database().Schema,
 	},
 	{
+		name:   "DatabaseRole",
+		schema: datasources.DatabaseRole().Schema,
+	},
+	{
 		name:   "Databases",
 		schema: datasources.Databases().Schema,
 	},
