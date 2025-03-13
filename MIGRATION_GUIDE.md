@@ -24,6 +24,12 @@ We decided to remove the instrumentation around the [Go Snowflake driver](https:
 
 These changes should not affect any existing workflows (unless you have custom logic based on the old logs output).
 
+### Removal of additional debug logs for the `snowflake_grant_privileges_to_role` resource
+
+The environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` was used to turn on the additional logging in the `snowflake_grant_privileges_to_role` resource. The additional logger was later used in multiple other places. We are currently removing it completely; however, we plan to address the logging topic globally in the provider.
+
+These changes should not affect any existing workflows (unless you have custom logic based on the additional logs output - `sf-tf-additional-debug` prefix).
+
 ## v1.0.3 ➞ v1.0.4
 
 ### Fixed external_function VARCHAR return_type

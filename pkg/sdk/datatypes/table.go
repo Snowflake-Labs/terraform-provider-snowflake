@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
 // TableDataType is based on https://docs.snowflake.com/en/developer-guide/stored-procedure/stored-procedures-java#returning-tabular-data.
@@ -59,7 +58,6 @@ func (t *TableDataType) Columns() []TableDataTypeColumn {
 func parseTableDataTypeRaw(raw sanitizedDataTypeRaw) (*TableDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
 	if r == "" || (!strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")")) {
-		logging.DebugLogger.Printf(`table %s could not be parsed, use "%s(argName argType, ...)" format`, raw.raw, raw.matchedByType)
 		return nil, fmt.Errorf(`table %s could not be parsed, use "%s(argName argType, ...)" format`, raw.raw, raw.matchedByType)
 	}
 	onlyArgs := strings.TrimSpace(r[1 : len(r)-1])
