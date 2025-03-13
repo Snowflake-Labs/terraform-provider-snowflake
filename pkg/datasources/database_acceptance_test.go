@@ -21,7 +21,7 @@ func TestAcc_Database(t *testing.T) {
 	databaseName := acc.TestClient().Ids.Alpha()
 	comment := random.Comment()
 
-	databaseModel := model.Database("test", databaseName).
+	databaseModel := model.DatabaseWithParametersSet("test", databaseName).
 		WithComment(comment)
 	databaseDatasourceModel := datasourcemodel.Database("test", databaseName).
 		WithDependsOn(databaseModel.ResourceReference())
