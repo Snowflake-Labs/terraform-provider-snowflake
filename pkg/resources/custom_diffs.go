@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/sdkv2enhancements"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -184,7 +183,7 @@ func ForceNewIfAllKeysAreNotSet(key string, keys ...string) schema.CustomizeDiff
 func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get("user_type"); n != nil {
-			logging.DebugLogger.Printf("[DEBUG] new external value for user type %s\n", n.(string))
+			log.Printf("[DEBUG] new external value for user type: %s\n", n.(string))
 			if acceptableUserTypes, ok := sdk.AcceptableUserTypes[userType]; ok && !slices.Contains(acceptableUserTypes, strings.ToUpper(n.(string))) {
 				// we have to set here a value instead of just SetNewComputed
 				// because with empty value (default snowflake behavior for type) ForceNew fails
@@ -199,7 +198,7 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 func RecreateWhenSecretTypeChangedExternally(secretType sdk.SecretType) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get("secret_type"); n != nil {
-			logging.DebugLogger.Printf("[DEBUG] new external value for secret type %s\n", n.(string))
+			log.Printf("[DEBUG] new external value for secret type: %s\n", n.(string))
 
 			diffSecretType, _ := sdk.ToSecretType(n.(string))
 			if acceptableSecretTypes, ok := sdk.AcceptableSecretTypes[secretType]; ok && !slices.Contains(acceptableSecretTypes, diffSecretType) {
@@ -237,7 +236,7 @@ func RecreateWhenStreamTypeChangedExternally(streamType sdk.StreamSourceType) sc
 func RecreateWhenResourceTypeChangedExternally[T ~string](typeField string, wantType T, toType func(string) (T, error)) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get(typeField); n != nil {
-			logging.DebugLogger.Printf("[DEBUG] new external value for %s: %s\n", typeField, n.(string))
+			log.Printf("[DEBUG] new external value for %s\n", typeField)
 
 			gotTypeRaw := n.(string)
 			// if the type is empty, the state is empty - do not recreate
@@ -275,8 +274,7 @@ func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
 func RecreateWhenResourceBoolFieldChangedExternally(boolField string, wantValue bool) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get(boolField); n != nil {
-			logging.DebugLogger.Printf("[DEBUG] new external value for %v: %v, recreating the resource...\n", boolField, n.(bool))
-
+			log.Printf("[DEBUG] new external value for %v, recreating the resource...\n", boolField)
 			if n.(bool) != wantValue {
 				return errors.Join(diff.SetNew(boolField, wantValue), diff.ForceNew(boolField))
 			}

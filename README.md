@@ -79,12 +79,6 @@ Some links that might help you:
 If you would like to create a GitHub issue, please read our [guide](./CREATING_ISSUES.md) first.
 It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
 
-## Additional debug logs for `snowflake_grant_privileges_to_role` resource
-Set environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` to a non-empty value. Additional logs will be visible with `sf-tf-additional-debug` prefix, e.g.:
-```text
-2023/12/08 12:58:22.497078 sf-tf-additional-debug [DEBUG] Creating new client from db
-```
-
 ## Additional SQL Client configuration
 The provider uses the underlying [gosnowflake](https://github.com/snowflakedb/gosnowflake) driver to send SQL commands to Snowflake.
 

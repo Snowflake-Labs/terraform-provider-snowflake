@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
 const DefaultTimePrecision = 9
@@ -34,17 +32,14 @@ var TimeDataTypeSynonyms = []string{TimeLegacyDataType}
 func parseTimeDataTypeRaw(raw sanitizedDataTypeRaw) (*TimeDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
 	if r == "" {
-		logging.DebugLogger.Printf("[DEBUG] Returning default precision for time")
 		return &TimeDataType{DefaultTimePrecision, raw.matchedByType}, nil
 	}
 	if !strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")") {
-		logging.DebugLogger.Printf(`time %s could not be parsed, use "%s(precision)" format`, raw.raw, raw.matchedByType)
 		return nil, fmt.Errorf(`time %s could not be parsed, use "%s(precision)" format`, raw.raw, raw.matchedByType)
 	}
 	precisionRaw := r[1 : len(r)-1]
 	precision, err := strconv.Atoi(strings.TrimSpace(precisionRaw))
 	if err != nil {
-		logging.DebugLogger.Printf(`[DEBUG] Could not parse time precision "%s", err: %v`, precisionRaw, err)
 		return nil, fmt.Errorf(`could not parse the time's precision: "%s", err: %w`, precisionRaw, err)
 	}
 	return &TimeDataType{precision, raw.matchedByType}, nil

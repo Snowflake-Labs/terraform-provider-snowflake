@@ -5,8 +5,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
 const (
@@ -45,7 +43,6 @@ var (
 func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
 	if r == "" {
-		logging.DebugLogger.Printf("[DEBUG] Returning default length for text")
 		switch {
 		case slices.Contains(TextDataTypeSynonyms, raw.matchedByType):
 			return &TextDataType{DefaultVarcharLength, raw.matchedByType}, nil
@@ -56,13 +53,11 @@ func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 		}
 	}
 	if !strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")") {
-		logging.DebugLogger.Printf(`text %s could not be parsed, use "%s(length)" format`, raw.raw, raw.matchedByType)
 		return nil, fmt.Errorf(`text %s could not be parsed, use "%s(length)" format`, raw.raw, raw.matchedByType)
 	}
 	lengthRaw := r[1 : len(r)-1]
 	length, err := strconv.Atoi(strings.TrimSpace(lengthRaw))
 	if err != nil {
-		logging.DebugLogger.Printf(`[DEBUG] Could not parse varchar length "%s", err: %v`, lengthRaw, err)
 		return nil, fmt.Errorf(`could not parse the varchar's length: "%s", err: %w`, lengthRaw, err)
 	}
 	return &TextDataType{length, raw.matchedByType}, nil
