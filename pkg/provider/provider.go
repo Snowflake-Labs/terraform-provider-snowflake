@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
@@ -468,7 +468,7 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
 
-	if os.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+	if oswrapper.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
 		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
 	}
 
@@ -532,7 +532,7 @@ var (
 
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
 	// hacky way to speed up our acceptance tests
-	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
 		if configureProviderCtx != nil {
 			return configureProviderCtx, nil
 		}
@@ -562,12 +562,12 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
 	}
 
-	if os.Getenv("TF_ACC") != "" && os.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
+	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
 		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
 
 	// needed for tests verifying different provider setups
-	if os.Getenv(resource.EnvTfAcc) != "" && os.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+	if oswrapper.Getenv(resource.EnvTfAcc) != "" && oswrapper.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
 		configureProviderCtx = providerCtx
 		configureClientError = clientErr
 	} else {
