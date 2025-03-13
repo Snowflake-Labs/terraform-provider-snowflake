@@ -9,6 +9,9 @@ across different versions.
 
 ## v1.0.4 ➞ v1.0.5
 
+### Changes in TOML configuration file requirements
+Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB.
+
 ### Tracking external changes for oauth_redirect_uri in the snowflake_oauth_integration_for_partner_applications resource
 From this version, the snowflake_oauth_integration_for_partner_applications resource is able to
 detect changes on the Snowflake side and apply appropriate action from the provider level. This may produce
