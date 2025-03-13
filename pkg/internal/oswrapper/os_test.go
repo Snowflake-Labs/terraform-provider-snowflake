@@ -5,11 +5,9 @@ import (
 	"io/fs"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/sys/unix"
 )
 
 func TestReadFileSafeFailsForFileThatIsTooBig(t *testing.T) {
@@ -52,12 +50,9 @@ func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
 		{permissions: 0o720},
 		{permissions: 0o710},
 	}
-	oldMask := unix.Umask(0o000)
-	defer unix.Umask(oldMask)
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("reading file with too wide permisssions %#o", tt.permissions), func(t *testing.T) {
-			c := random.String()
-			path := testhelpers.CreateTestFileWithPermissions(t, "config", []byte(c), tt.permissions)
+			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.ErrorContains(t, err, fmt.Sprintf("config file %s has unsafe permissions", path))
 		})
@@ -75,13 +70,10 @@ func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
 		{permissions: 0o200},
 		{permissions: 0o100},
 	}
-	oldMask := unix.Umask(0o000)
-	defer unix.Umask(oldMask)
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("reading file with too restrictive permisssions %#o", tt.permissions), func(t *testing.T) {
-			c := random.String()
-			path := testhelpers.CreateTestFileWithPermissions(t, "config", []byte(c), tt.permissions)
+			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.ErrorContains(t, err, fmt.Sprintf("open %s: permission denied", path))
 		})
@@ -99,17 +91,11 @@ func TestReadFileSafeReadsFileWithCorrectPermissions(t *testing.T) {
 		{permissions: 0o600},
 		{permissions: 0o500},
 		{permissions: 0o400},
-		// {permissions: 0o300},
-		// {permissions: 0o200},
-		// {permissions: 0o100},
 	}
-	oldMask := unix.Umask(0o000)
-	defer unix.Umask(oldMask)
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("reading file with correct permisssions %#o", tt.permissions), func(t *testing.T) {
-			c := random.String()
-			path := testhelpers.CreateTestFileWithPermissions(t, "config", []byte(c), tt.permissions)
+			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.NoError(t, err)
 		})

@@ -275,6 +275,8 @@ role='ACCOUNTADMIN'
 
 --> **Note: TOML file size is limited to 10MB.
 
+--> **Note: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
+
 Not all fields must be configured in one source; users can choose which fields are configured in which source.
 Provider uses an established hierarchy of sources. The current behavior is that for each field:
 1. Check if it is present in the provider configuration. If yes, use this value. If not, go to step 2.

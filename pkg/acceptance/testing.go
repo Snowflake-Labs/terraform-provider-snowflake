@@ -70,7 +70,7 @@ func init() {
 
 	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default)
 	if err != nil {
-		log.Panicf("Cannot load default config, err: %v", err)
+		log.Panicf("Could not read configuration from profile: %v", err)
 	}
 	if defaultConfig == nil {
 		log.Panic("Config is required to run acceptance tests")
