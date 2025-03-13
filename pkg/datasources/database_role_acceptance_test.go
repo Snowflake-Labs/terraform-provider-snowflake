@@ -26,7 +26,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		WithComment(comment)
 	databaseRoleDatasourceModel := datasourcemodel.DatabaseRole("test", databaseRoleId.DatabaseName(), databaseRoleId.Name()).
 		WithDependsOn(databaseRoleModel.ResourceReference())
-	databaseRoleNotExistingDatasourceModel := datasourcemodel.DatabaseRole("test", databaseRoleId.DatabaseName(), "does_not_exist").
+	databaseRoleNotExistingDatasourceModel := datasourcemodel.DatabaseRole("test", acc.NonExistingDatabaseObjectIdentifier.DatabaseName(), acc.NonExistingDatabaseObjectIdentifier.Name()).
 		WithDependsOn(databaseRoleModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
