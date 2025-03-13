@@ -51,7 +51,7 @@ func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
 		{permissions: 0o710},
 	}
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("reading file with too wide permisssions %#o", tt.permissions), func(t *testing.T) {
+		t.Run(fmt.Sprintf("reading file with too wide permissions %#o", tt.permissions), func(t *testing.T) {
 			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.ErrorContains(t, err, fmt.Sprintf("config file %s has unsafe permissions", path))
@@ -72,7 +72,7 @@ func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("reading file with too restrictive permisssions %#o", tt.permissions), func(t *testing.T) {
+		t.Run(fmt.Sprintf("reading file with too restrictive permissions %#o", tt.permissions), func(t *testing.T) {
 			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.ErrorContains(t, err, fmt.Sprintf("open %s: permission denied", path))
@@ -94,7 +94,7 @@ func TestReadFileSafeReadsFileWithCorrectPermissions(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(fmt.Sprintf("reading file with correct permisssions %#o", tt.permissions), func(t *testing.T) {
+		t.Run(fmt.Sprintf("reading file with correct permissions %#o", tt.permissions), func(t *testing.T) {
 			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.NoError(t, err)
