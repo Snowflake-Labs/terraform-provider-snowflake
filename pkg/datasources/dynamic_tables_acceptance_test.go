@@ -14,7 +14,7 @@ import (
 )
 
 func TestAcc_DynamicTables_complete(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
