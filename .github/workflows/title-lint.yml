@@ -1,4 +1,6 @@
 # Validates PR title follows conventional commits
+name: Title Lint
+
 on:
   pull_request:
     types:
@@ -9,6 +11,7 @@ on:
 
 jobs:
   conventional_commit_title:
+    name: Conventional Commit Title
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6

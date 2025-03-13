@@ -1,4 +1,4 @@
-name: jira-issues
+name: Jira issues
 
 on:
   issues:
@@ -7,7 +7,7 @@ on:
 jobs:
   jira-action:
     runs-on: ubuntu-latest
-    name: Jira create issue
+    name: Create an issue
     steps:
       - name: Curl to webhook
         run: |

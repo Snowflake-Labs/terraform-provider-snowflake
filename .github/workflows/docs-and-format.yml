@@ -1,4 +1,5 @@
-name: check
+name: Documentation And Code Formatting
+
 on:
   push:
     branches:
@@ -13,16 +14,22 @@ permissions:
 
 jobs:
   docs-and-fmt:
-    name: docs and fmt
+    name: Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - uses: actions/setup-go@v4
         with:
           go-version-file: ./go.mod
           cache: false
+
       - name: Install dependencies
         run: make dev-setup
+
       - run: make docs-check
+
       - run: if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then exit 1; fi
         name: check gofmt
