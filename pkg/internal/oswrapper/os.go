@@ -4,6 +4,7 @@ package oswrapper
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"runtime"
@@ -50,14 +51,25 @@ func readFile(path string) ([]byte, error) {
 }
 
 func fileIsSafeToRead(path string) error {
-	fileinfo, err := Stat(path)
+	fileInfo, err := Stat(path)
 	if err != nil {
 		return fmt.Errorf("reading information about the config file: %w", err)
 	}
-	if fileinfo.Size() > maxFileSizeInMb*1024*1024 {
+	if fileInfo.Size() > maxFileSizeInMb*1024*1024 {
 		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
 	}
+	if !IsRunningOnWindows() && !unixFilePermissionsAreStrict(fileInfo.Mode().Perm()) {
+		return fmt.Errorf("config file %s has unsafe permissions - %#o", path, fileInfo.Mode().Perm())
+	}
 	return nil
+}
+
+func unixFilePermissionsAreStrict(perm fs.FileMode) bool {
+	unsafeBits := os.FileMode(
+		0o070 | // group has any access
+			0o007, // others have any access
+	)
+	return perm&unsafeBits == 0
 }
 
 // UserHomeDir is an os.UserHomeDir wrapper.
