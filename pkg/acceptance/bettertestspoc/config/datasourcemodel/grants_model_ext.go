@@ -32,3 +32,17 @@ func GrantsOnAccountObject(
 			}),
 		)
 }
+
+func GrantsOnDatabaseObject(
+	datasourceName string,
+	id sdk.DatabaseObjectIdentifier,
+	objectType sdk.ObjectType,
+) *GrantsModel {
+	return Grants(datasourceName).
+		WithGrantsOnValue(
+			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+				"object_name": tfconfig.StringVariable(id.FullyQualifiedName()),
+				"object_type": tfconfig.StringVariable(fmt.Sprintf("%s", objectType)),
+			}),
+		)
+}

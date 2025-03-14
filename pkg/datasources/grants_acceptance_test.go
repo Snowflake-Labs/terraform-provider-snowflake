@@ -58,10 +58,10 @@ func TestAcc_Grants_On_AccountObject(t *testing.T) {
 }
 
 func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
-	configVariables := config.Variables{
-		"database": config.StringVariable(acc.TestDatabaseName),
-		"schema":   config.StringVariable(acc.TestSchemaName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	grantsModel := datasourcemodel.GrantsOnDatabaseObject("test", acc.TestClient().Ids.SchemaId(), sdk.ObjectTypeSchema)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -72,9 +72,8 @@ func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/DatabaseObject"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
