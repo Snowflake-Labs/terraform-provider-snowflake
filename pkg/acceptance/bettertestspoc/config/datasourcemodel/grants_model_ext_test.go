@@ -69,6 +69,21 @@ func Test_GrantsModel(t *testing.T) {
 
 		require.Equal(t, expected, result)
 	})
+
+	t.Run("on schema object with arguments", func(t *testing.T) {
+		id := randomSchemaObjectIdentifierWithArguments(sdk.DataTypeVARCHAR)
+		expected := fmt.Sprintf(`data "snowflake_grants" "test" {
+  grants_on {
+    object_name = "\"%s\".\"%s\".\"%s\"(%s)"
+    object_type = "FUNCTION"
+  }
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), sdk.DataTypeVARCHAR)
+
+		result := config.FromModels(t, datasourcemodel.GrantsOnSchemaObjectWithArguments("test", id, sdk.ObjectTypeFunction))
+
+		require.Equal(t, expected, result)
+	})
 }
 
 func randomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
@@ -81,4 +96,8 @@ func randomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
 
 func randomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
 	return sdk.NewSchemaObjectIdentifier(random.AlphaN(12), random.AlphaN(12), random.AlphaN(12))
+}
+
+func randomSchemaObjectIdentifierWithArguments(argumentDataTypes ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	return sdk.NewSchemaObjectIdentifierWithArguments(random.AlphaN(12), random.AlphaN(12), random.AlphaN(12), argumentDataTypes...)
 }

@@ -60,3 +60,17 @@ func GrantsOnSchemaObject(
 			}),
 		)
 }
+
+func GrantsOnSchemaObjectWithArguments(
+	datasourceName string,
+	id sdk.SchemaObjectIdentifierWithArguments,
+	objectType sdk.ObjectType,
+) *GrantsModel {
+	return Grants(datasourceName).
+		WithGrantsOnValue(
+			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+				"object_name": tfconfig.StringVariable(id.FullyQualifiedName()),
+				"object_type": tfconfig.StringVariable(fmt.Sprintf("%s", objectType)),
+			}),
+		)
+}

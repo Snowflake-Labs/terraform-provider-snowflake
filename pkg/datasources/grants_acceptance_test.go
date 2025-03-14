@@ -113,9 +113,7 @@ func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	function := acc.TestClient().Function.Create(t, sdk.DataTypeVARCHAR)
-	configVariables := config.Variables{
-		"fully_qualified_function_name": config.StringVariable(function.ID().FullyQualifiedName()),
-	}
+	grantsModel := datasourcemodel.GrantsOnSchemaObjectWithArguments("test", function.ID(), sdk.ObjectTypeFunction)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -126,9 +124,8 @@ func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject_WithArguments"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
