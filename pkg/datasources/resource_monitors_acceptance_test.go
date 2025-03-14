@@ -1,23 +1,39 @@
 package datasources_test
 
 import (
-	"fmt"
 	"testing"
+
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_ResourceMonitors(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	prefix := "data_source_resource_monitor_"
-	resourceMonitorName := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
-	resourceMonitorName2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	resourceMonitorId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+	resourceMonitorId2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
+
+	resourceMonitorModel1 := model.ResourceMonitor("rm1", resourceMonitorId.Name()).
+		WithCreditQuota(5)
+	resourceMonitorModel2 := model.ResourceMonitor("rm2", resourceMonitorId2.Name()).
+		WithCreditQuota(15)
+	resourceMonitorsModelLikePrefix := datasourcemodel.ResourceMonitors("test").
+		WithLike(prefix+"%").
+		WithDependsOn(resourceMonitorModel1.ResourceReference(), resourceMonitorModel2.ResourceReference())
+	resourceMonitorsModelLikeFirstMonitorName := datasourcemodel.ResourceMonitors("test").
+		WithLike(resourceMonitorId.Name()).
+		WithDependsOn(resourceMonitorModel1.ResourceReference(), resourceMonitorModel2.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -28,18 +44,18 @@ func TestAcc_ResourceMonitors(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Filter by prefix pattern (expect 2 items)
 			{
-				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), prefix+"%"),
+				Config: accconfig.FromModels(t, resourceMonitorModel1, resourceMonitorModel2, resourceMonitorsModelLikePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_resource_monitors.test", "resource_monitors.#", "2"),
+					resource.TestCheckResourceAttr(resourceMonitorsModelLikePrefix.DatasourceReference(), "resource_monitors.#", "2"),
 				),
 			},
 			// Filter by exact name (expect 1 item)
 			{
-				Config: resourceMonitors(resourceMonitorName.Name(), resourceMonitorName2.Name(), resourceMonitorName.Name()),
+				Config: accconfig.FromModels(t, resourceMonitorModel1, resourceMonitorModel2, resourceMonitorsModelLikeFirstMonitorName),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_resource_monitors.test", "resource_monitors.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(resourceMonitorsModelLikeFirstMonitorName.DatasourceReference(), "resource_monitors.#", "1")),
 					resourceshowoutputassert.ResourceMonitorDatasourceShowOutput(t, "snowflake_resource_monitors.test").
-						HasName(resourceMonitorName.Name()).
+						HasName(resourceMonitorId.Name()).
 						HasCreditQuota(5).
 						HasUsedCredits(0).
 						HasRemainingCredits(5).
@@ -56,23 +72,4 @@ func TestAcc_ResourceMonitors(t *testing.T) {
 			},
 		},
 	})
-}
-
-func resourceMonitors(resourceMonitorName, resourceMonitorName2, searchPrefix string) string {
-	return fmt.Sprintf(`
-	resource "snowflake_resource_monitor" "rm1" {
-		name 		 = "%s"
-		credit_quota = 5
-	}
-
-	resource "snowflake_resource_monitor" "rm2" {
-		name 		 = "%s"
-		credit_quota = 15
-	}
-
-	data "snowflake_resource_monitors" "test" {
-		depends_on = [ snowflake_resource_monitor.rm1, snowflake_resource_monitor.rm2 ]
-		like = "%s"
-	}
-	`, resourceMonitorName, resourceMonitorName2, searchPrefix)
 }

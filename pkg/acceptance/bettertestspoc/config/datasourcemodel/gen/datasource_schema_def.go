@@ -50,4 +50,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "NetworkPolicies",
 		schema: datasources.NetworkPolicies().Schema,
 	},
+	{
+		name:   "ResourceMonitors",
+		schema: datasources.ResourceMonitors().Schema,
+	},
 }
