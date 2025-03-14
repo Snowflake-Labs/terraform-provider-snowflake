@@ -127,8 +127,8 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	t.Cleanup(database2Cleanup)
 
 	prefix := random.AlphaN(4)
-	idOne := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix)
-	idTwo := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix)
+	idOne := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix + "1")
+	idTwo := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix + "2")
 	idThree := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	idFour := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database2.ID())
 
@@ -136,17 +136,18 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	schemaModel2 := model.Schema("test_2", idTwo.DatabaseName(), idTwo.Name())
 	schemaModel3 := model.Schema("test_3", idThree.DatabaseName(), idThree.Name())
 	schemaModel4 := model.Schema("test_4", idFour.DatabaseName(), idFour.Name())
-	schemasModelLike := datasourcemodel.Schemas("test").
+	schemasModelLike := datasourcemodel.Schemas("test1").
 		WithLike(idOne.Name()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
-	schemasModelStartsWith := datasourcemodel.Schemas("test").
+	schemasModelStartsWith := datasourcemodel.Schemas("test2").
 		WithStartsWith(prefix).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
-	schemasModelLimit := datasourcemodel.Schemas("test").
+	schemasModelLimit := datasourcemodel.Schemas("test3").
 		WithRowsAndFrom(1, prefix).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
-	schemasModelIn := datasourcemodel.Schemas("test").
-		WithIn(database2.ID()).
+	schemasModelIn := datasourcemodel.Schemas("test4").
+		WithIn(idFour.DatabaseId()).
+		WithStartsWith(idFour.Name()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -161,7 +162,7 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelLike),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(schemasModelLike.DatasourceReference(), "schemas.#", "1"),
-					resource.TestCheckResourceAttr(schemasModelLimit.DatasourceReference(), "schemas.0.show_output.0.name", idOne.Name()),
+					resource.TestCheckResourceAttr(schemasModelLike.DatasourceReference(), "schemas.0.show_output.0.name", idOne.Name()),
 				),
 			},
 			{
