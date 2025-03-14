@@ -132,6 +132,8 @@ func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
 }
 
 func TestAcc_Grants_On_Invalid_NoAttribute(t *testing.T) {
+	grantsModel := datasourcemodel.GrantsOnEmpty("test")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -141,15 +143,17 @@ func TestAcc_Grants_On_Invalid_NoAttribute(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Invalid/NoAttribute"),
-				PlanOnly:        true,
-				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
+				Config:      accconfig.FromModels(t, grantsModel),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_On_Invalid_MissingObjectType(t *testing.T) {
+	grantsModel := datasourcemodel.GrantsOnMissingObjectType("test")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -159,9 +163,9 @@ func TestAcc_Grants_On_Invalid_MissingObjectType(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Invalid/MissingObjectType"),
-				PlanOnly:        true,
-				ExpectError:     regexp.MustCompile("Error: Missing required argument"),
+				Config:      accconfig.FromModels(t, grantsModel),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Error: Missing required argument"),
 			},
 		},
 	})

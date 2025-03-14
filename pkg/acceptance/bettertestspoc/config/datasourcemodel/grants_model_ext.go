@@ -5,6 +5,7 @@ import (
 
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -71,6 +72,29 @@ func GrantsOnSchemaObjectWithArguments(
 			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
 				"object_name": tfconfig.StringVariable(id.FullyQualifiedName()),
 				"object_type": tfconfig.StringVariable(fmt.Sprintf("%s", objectType)),
+			}),
+		)
+}
+
+func GrantsOnMissingObjectType(
+	datasourceName string,
+) *GrantsModel {
+	return Grants(datasourceName).
+		WithGrantsOnValue(
+			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+				"object_name": tfconfig.StringVariable("DATABASE"),
+			}),
+		)
+}
+
+func GrantsOnEmpty(
+	datasourceName string,
+) *GrantsModel {
+	placeholder := fmt.Sprintf("%s", config.SnowflakeProviderConfigSingleAttributeWorkaround)
+	return Grants(datasourceName).
+		WithGrantsOnValue(
+			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+				"placeholder": tfconfig.StringVariable(placeholder),
 			}),
 		)
 }

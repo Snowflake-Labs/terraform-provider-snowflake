@@ -84,6 +84,18 @@ func Test_GrantsModel(t *testing.T) {
 
 		require.Equal(t, expected, result)
 	})
+
+	t.Run("on empty", func(t *testing.T) {
+		expected := `data "snowflake_grants" "test" {
+  grants_on {
+  }
+}
+`
+
+		result := config.FromModels(t, datasourcemodel.GrantsOnEmpty("test"))
+
+		require.Equal(t, expected, result)
+	})
 }
 
 func randomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
