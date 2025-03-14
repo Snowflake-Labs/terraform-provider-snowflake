@@ -175,7 +175,7 @@ func (s *Saml2SecurityIntegrationModel) WithSaml2SsoUrl(saml2SsoUrl string) *Sam
 }
 
 func (s *Saml2SecurityIntegrationModel) WithSaml2X509Cert(saml2X509Cert string) *Saml2SecurityIntegrationModel {
-	s.Saml2X509Cert = tfconfig.StringVariable(saml2X509Cert)
+	s.Saml2X509Cert = config.MultilineWrapperVariable(saml2X509Cert)
 	return s
 }
 
