@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -15,6 +17,8 @@ import (
 )
 
 func TestAcc_Grants_On_Account(t *testing.T) {
+	grantsModel := datasourcemodel.GrantsOnAccount("test")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -24,8 +28,8 @@ func TestAcc_Grants_On_Account(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Account"),
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})

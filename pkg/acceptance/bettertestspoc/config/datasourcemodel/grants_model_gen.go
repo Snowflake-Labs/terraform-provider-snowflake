@@ -46,10 +46,12 @@ func (g *GrantsModel) MarshalJSON() ([]byte, error) {
 	type Alias GrantsModel
 	return json.Marshal(&struct {
 		*Alias
-		DependsOn []string `json:"depends_on,omitempty"`
+		DependsOn                 []string                      `json:"depends_on,omitempty"`
+		SingleAttributeWorkaround config.ReplacementPlaceholder `json:"single_attribute_workaround,omitempty"`
 	}{
-		Alias:     (*Alias)(g),
-		DependsOn: g.DependsOn(),
+		Alias:                     (*Alias)(g),
+		DependsOn:                 g.DependsOn(),
+		SingleAttributeWorkaround: config.SnowflakeProviderConfigSingleAttributeWorkaround,
 	})
 }
 
