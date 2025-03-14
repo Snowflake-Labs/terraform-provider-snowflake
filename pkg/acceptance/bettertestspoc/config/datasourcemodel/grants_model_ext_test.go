@@ -54,16 +54,31 @@ func Test_GrantsModel(t *testing.T) {
 
 		require.Equal(t, expected, result)
 	})
+
+	t.Run("on schema object", func(t *testing.T) {
+		id := randomSchemaObjectIdentifier()
+		expected := fmt.Sprintf(`data "snowflake_grants" "test" {
+  grants_on {
+    object_name = "\"%s\".\"%s\".\"%s\""
+    object_type = "VIEW"
+  }
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name())
+
+		result := config.FromModels(t, datasourcemodel.GrantsOnSchemaObject("test", id, sdk.ObjectTypeView))
+
+		require.Equal(t, expected, result)
+	})
 }
 
 func randomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
-	return sdk.NewAccountObjectIdentifier(random.StringN(12))
+	return sdk.NewAccountObjectIdentifier(random.AlphaN(12))
 }
 
 func randomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
-	return sdk.NewDatabaseObjectIdentifier(random.StringN(12), random.StringN(12))
+	return sdk.NewDatabaseObjectIdentifier(random.AlphaN(12), random.AlphaN(12))
 }
 
 func randomSchemaObjectIdentifier() sdk.SchemaObjectIdentifier {
-	return sdk.NewSchemaObjectIdentifier(random.StringN(12), random.StringN(12), random.StringN(12))
+	return sdk.NewSchemaObjectIdentifier(random.AlphaN(12), random.AlphaN(12), random.AlphaN(12))
 }

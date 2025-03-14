@@ -1,6 +1,7 @@
 package datasources_test
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"regexp"
 	"testing"
 
@@ -80,12 +81,16 @@ func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
 }
 
 func TestAcc_Grants_On_SchemaObject(t *testing.T) {
-	tableName := acc.TestClient().Ids.Alpha()
-	configVariables := config.Variables{
-		"database": config.StringVariable(acc.TestDatabaseName),
-		"schema":   config.StringVariable(acc.TestSchemaName),
-		"table":    config.StringVariable(tableName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	columnNames := []string{"ROLE_NAME"}
+
+	viewModel := model.View("test", viewId.DatabaseName(), viewId.Name(), viewId.SchemaName(), statement).WithColumnNames(columnNames...)
+	grantsModel := datasourcemodel.GrantsOnSchemaObject("test", viewId, sdk.ObjectTypeView).
+		WithDependsOn(viewModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -96,9 +101,8 @@ func TestAcc_Grants_On_SchemaObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, viewModel, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
