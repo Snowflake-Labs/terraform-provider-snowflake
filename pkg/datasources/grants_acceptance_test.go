@@ -1,7 +1,6 @@
 package datasources_test
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"regexp"
 	"testing"
 
@@ -9,6 +8,7 @@ import (
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -582,9 +582,11 @@ func TestAcc_Grants_FutureIn_Invalid_SchemaNameNotFullyQualified(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
+		"database": config.StringVariable(acc.TestDatabaseName),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -605,11 +607,13 @@ func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureTo_DatabaseRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	configVariables := config.Variables{
-		"database":      config.StringVariable(databaseName),
-		"database_role": config.StringVariable(databaseRoleName),
+		"database":      config.StringVariable(acc.TestDatabaseName),
+		"database_role": config.StringVariable(databaseRoleId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
