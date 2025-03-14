@@ -98,3 +98,15 @@ func GrantsOnEmpty(
 			}),
 		)
 }
+
+func GrantsToDatabaseRole(
+	datasourceName string,
+	id sdk.DatabaseObjectIdentifier,
+) *GrantsModel {
+	return Grants(datasourceName).
+		WithGrantsToValue(
+			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+				"database_role": tfconfig.StringVariable(id.FullyQualifiedName()),
+			}),
+		)
+}

@@ -202,12 +202,13 @@ func TestAcc_Grants_To_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
-	configVariables := config.Variables{
-		"database":      config.StringVariable(databaseName),
-		"database_role": config.StringVariable(databaseRoleName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleModel := model.DatabaseRole("test", databaseRoleId.DatabaseName(), databaseRoleId.Name())
+	grantsModel := datasourcemodel.GrantsToDatabaseRole("test", databaseRoleId).
+		WithDependsOn(databaseRoleModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -218,9 +219,8 @@ func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/DatabaseRole"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, databaseRoleModel, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
