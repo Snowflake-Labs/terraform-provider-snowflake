@@ -406,6 +406,9 @@ func TestAcc_Grants_Of_ApplicationRole(t *testing.T) {
 func TestAcc_Grants_Of_Share(t *testing.T) {
 	t.Skip("TestAcc_Share are skipped")
 
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	require.NotNil(t, accountId)
@@ -492,9 +495,11 @@ func TestAcc_Grants_Of_Invalid_ApplicationRoleIdInvalid(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureIn_Database(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
+		"database": config.StringVariable(acc.TestDatabaseName),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -515,11 +520,12 @@ func TestAcc_Grants_FutureIn_Database(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureIn_Schema(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"schema":   config.StringVariable(schemaName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"schema":   config.StringVariable(acc.TestSchemaName),
 	}
 
 	resource.Test(t, resource.TestCase{
