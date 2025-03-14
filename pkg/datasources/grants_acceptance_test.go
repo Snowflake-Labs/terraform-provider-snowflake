@@ -227,10 +227,11 @@ func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_User(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Context.CurrentUser(t)
-	configVariables := config.Variables{
-		"user": config.StringVariable(userId.Name()),
-	}
+	grantsModel := datasourcemodel.GrantsToUser("test", userId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -241,20 +242,21 @@ func TestAcc_Grants_To_User(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/User"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresentLimited(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresentLimited(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_To_Share(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	shareName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"share":    config.StringVariable(shareName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"share":    config.StringVariable(shareId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{

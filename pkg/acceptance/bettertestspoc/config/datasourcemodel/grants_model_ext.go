@@ -110,3 +110,15 @@ func GrantsToDatabaseRole(
 			}),
 		)
 }
+
+func GrantsToUser(
+	datasourceName string,
+	id sdk.AccountObjectIdentifier,
+) *GrantsModel {
+	return Grants(datasourceName).
+		WithGrantsToValue(
+			tfconfig.ObjectVariable(map[string]tfconfig.Variable{
+				"user": tfconfig.StringVariable(id.Name()),
+			}),
+		)
+}
