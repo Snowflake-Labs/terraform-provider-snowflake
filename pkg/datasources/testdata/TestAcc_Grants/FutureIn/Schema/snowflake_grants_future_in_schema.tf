@@ -2,7 +2,7 @@ data "snowflake_current_role" "test" {}
 
 resource "snowflake_grant_privileges_to_account_role" "test" {
   account_role_name = data.snowflake_current_role.test.name
-  privileges = ["INSERT"]
+  privileges        = ["INSERT"]
 
   on_schema_object {
     future {

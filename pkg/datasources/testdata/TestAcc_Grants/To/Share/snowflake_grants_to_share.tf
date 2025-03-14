@@ -4,7 +4,7 @@ resource "snowflake_share" "test" {
 
 resource "snowflake_grant_privileges_to_share" "test" {
   to_share    = snowflake_share.test.name
-  privileges = ["USAGE"]
+  privileges  = ["USAGE"]
   on_database = var.database
 }
 
