@@ -30,6 +30,17 @@ func (c *DatabaseClient) CreateDatabase(t *testing.T) (*sdk.Database, func()) {
 	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
+// DatabaseWithParametersSet should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
+func (c *DatabaseClient) DatabaseWithParametersSet(t *testing.T) (*sdk.Database, func()) {
+	t.Helper()
+	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{
+		DataRetentionTimeInDays:    sdk.Int(1),
+		MaxDataExtensionTimeInDays: sdk.Int(1),
+		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
+		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
+	})
+}
+
 func (c *DatabaseClient) CreateDatabaseWithIdentifier(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
 	return c.CreateDatabaseWithOptions(t, id, &sdk.CreateDatabaseOptions{})

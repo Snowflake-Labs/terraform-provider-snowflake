@@ -2,7 +2,6 @@ package datasources_test
 
 import (
 	"fmt"
-	"maps"
 	"regexp"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -125,45 +123,31 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	prefix := random.AlphaN(4)
-	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
-	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
-	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseId := acc.TestClient().Ids.DatabaseId()
-
-	database2, database2Cleanup := acc.TestClient().Database.CreateDatabase(t)
+	database2, database2Cleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
 	t.Cleanup(database2Cleanup)
 
-	commonVariables := config.Variables{
-		"name_1":   config.StringVariable(idOne.Name()),
-		"name_2":   config.StringVariable(idTwo.Name()),
-		"name_3":   config.StringVariable(idThree.Name()),
-		"database": config.StringVariable(databaseId.Name()),
-	}
+	prefix := random.AlphaN(4)
+	idOne := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix)
+	idTwo := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix)
+	idThree := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	idFour := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database2.ID())
 
-	likeConfig := config.Variables{
-		"like": config.StringVariable(idOne.Name()),
-	}
-	maps.Copy(likeConfig, commonVariables)
-
-	startsWithConfig := config.Variables{
-		"starts_with": config.StringVariable(prefix),
-	}
-	maps.Copy(startsWithConfig, commonVariables)
-
-	limitConfig := config.Variables{
-		"rows": config.IntegerVariable(1),
-		"from": config.StringVariable(prefix),
-	}
-	maps.Copy(limitConfig, commonVariables)
-
-	inConfig := config.Variables{
-		"in":          config.StringVariable(acc.TestDatabaseName),
-		"database_1":  config.StringVariable(databaseId.Name()),
-		"database_2":  config.StringVariable(database2.ID().Name()),
-		"starts_with": config.StringVariable(prefix),
-	}
-	maps.Copy(inConfig, commonVariables)
+	schemaModel1 := model.Schema("test_1", idOne.DatabaseName(), idOne.Name())
+	schemaModel2 := model.Schema("test_2", idTwo.DatabaseName(), idTwo.Name())
+	schemaModel3 := model.Schema("test_3", idThree.DatabaseName(), idThree.Name())
+	schemaModel4 := model.Schema("test_4", idFour.DatabaseName(), idFour.Name())
+	schemasModelLike := datasourcemodel.Schemas("test").
+		WithLike(idOne.Name()).
+		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
+	schemasModelStartsWith := datasourcemodel.Schemas("test").
+		WithStartsWith(prefix).
+		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
+	schemasModelLimit := datasourcemodel.Schemas("test").
+		WithRowsAndFrom(1, prefix).
+		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
+	schemasModelIn := datasourcemodel.Schemas("test").
+		WithIn(database2.ID()).
+		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -174,32 +158,47 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/like"),
-				ConfigVariables: likeConfig,
+				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelLike),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelLike.DatasourceReference(), "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelLimit.DatasourceReference(), "schemas.0.show_output.0.name", idOne.Name()),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/starts_with"),
-				ConfigVariables: startsWithConfig,
+				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelStartsWith),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.#", "2"),
+					resource.TestCheckResourceAttr(schemasModelStartsWith.DatasourceReference(), "schemas.#", "2"),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/limit"),
-				ConfigVariables: limitConfig,
+				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelLimit),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelLimit.DatasourceReference(), "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelLimit.DatasourceReference(), "schemas.0.show_output.0.name", idOne.Name()),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/in"),
-				ConfigVariables: inConfig,
+				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelIn),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelIn.DatasourceReference(), "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelIn.DatasourceReference(), "schemas.0.show_output.0.name", idFour.Name()),
 				),
+			},
+		},
+	})
+}
+
+func TestAcc_Schemas_SchemaNotFound_WithPostConditions(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/non_existing"),
+				ExpectError:     regexp.MustCompile("there should be at least one schema"),
 			},
 		},
 	})
@@ -217,22 +216,6 @@ func TestAcc_Schemas_BadCombination(t *testing.T) {
 			{
 				Config:      schemasDatasourceConfigDbAndSchema(),
 				ExpectError: regexp.MustCompile("Invalid combination of arguments"),
-			},
-		},
-	})
-}
-
-func TestAcc_Schemas_SchemaNotFound_WithPostConditions(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/non_existing"),
-				ExpectError:     regexp.MustCompile("there should be at least one schema"),
 			},
 		},
 	})
