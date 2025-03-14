@@ -177,4 +177,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ManagedAccount",
 		schema: resources.ManagedAccount().Schema,
 	},
+	{
+		name:   "NetworkPolicy",
+		schema: resources.NetworkPolicy().Schema,
+	},
 }
