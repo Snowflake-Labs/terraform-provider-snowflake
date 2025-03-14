@@ -3,6 +3,7 @@ package datasources_test
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -126,7 +127,7 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	database2, database2Cleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
 	t.Cleanup(database2Cleanup)
 
-	prefix := random.AlphaN(4)
+	prefix := strings.ToUpper(random.AlphaN(4))
 	idOne := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix + "1")
 	idTwo := acc.TestClient().Ids.RandomDatabaseObjectIdentifierWithPrefix(prefix + "2")
 	idThree := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
@@ -137,13 +138,16 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	schemaModel3 := model.Schema("test_3", idThree.DatabaseName(), idThree.Name())
 	schemaModel4 := model.Schema("test_4", idFour.DatabaseName(), idFour.Name())
 	schemasModelLike := datasourcemodel.Schemas("test1").
-		WithLike(idOne.Name()).
+		WithLike(prefix+"%").
+		WithIn(idOne.DatabaseId()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 	schemasModelStartsWith := datasourcemodel.Schemas("test2").
-		WithStartsWith(prefix).
+		WithStartsWith(prefix+"1").
+		WithIn(idOne.DatabaseId()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 	schemasModelLimit := datasourcemodel.Schemas("test3").
-		WithRowsAndFrom(1, prefix).
+		WithRowsAndFrom(1, prefix+"1").
+		WithIn(idOne.DatabaseId()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 	schemasModelIn := datasourcemodel.Schemas("test4").
 		WithIn(idFour.DatabaseId()).
@@ -161,14 +165,14 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 			{
 				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelLike),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(schemasModelLike.DatasourceReference(), "schemas.#", "1"),
-					resource.TestCheckResourceAttr(schemasModelLike.DatasourceReference(), "schemas.0.show_output.0.name", idOne.Name()),
+					resource.TestCheckResourceAttr(schemasModelLike.DatasourceReference(), "schemas.#", "2"),
 				),
 			},
 			{
 				Config: accconfig.FromModels(t, schemaModel1, schemaModel2, schemaModel3, schemaModel4, schemasModelStartsWith),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(schemasModelStartsWith.DatasourceReference(), "schemas.#", "2"),
+					resource.TestCheckResourceAttr(schemasModelStartsWith.DatasourceReference(), "schemas.#", "1"),
+					resource.TestCheckResourceAttr(schemasModelStartsWith.DatasourceReference(), "schemas.0.show_output.0.name", idOne.Name()),
 				),
 			},
 			{
