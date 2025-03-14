@@ -405,19 +405,18 @@ func TestAcc_Grants_Of_ApplicationRole(t *testing.T) {
 // TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Grants_Of_Share(t *testing.T) {
 	t.Skip("TestAcc_Share are skipped")
-	databaseName := acc.TestClient().Ids.Alpha()
-	shareName := acc.TestClient().Ids.Alpha()
 
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	require.NotNil(t, accountId)
 
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"share":    config.StringVariable(shareName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"share":    config.StringVariable(shareId.Name()),
 		"account":  config.StringVariable(accountId.FullyQualifiedName()),
 	}
-	datasourceName := "data.snowflake_grants.test"
 
+	datasourceName := "data.snowflake_grants.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
