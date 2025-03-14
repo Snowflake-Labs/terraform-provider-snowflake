@@ -7,9 +7,13 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,13 +25,31 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	databaseId := acc.TestClient().Ids.DatabaseId()
+	comment := random.Comment()
 
-	configVariables := config.Variables{
-		"name":     config.StringVariable(id.Name()),
-		"comment":  config.StringVariable("foo"),
-		"database": config.StringVariable(databaseId.Name()),
-	}
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(id)
+	statement := "SELECT ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	columnNames := []string{"ROLE_NAME"}
+
+	schemaModel := model.Schema("test", id.DatabaseName(), id.Name()).
+		WithComment(comment).
+		WithIsTransient(datasources.BooleanTrue).
+		WithWithManagedAccess(datasources.BooleanTrue)
+	viewModel := model.View("test", viewId.DatabaseName(), viewId.Name(), viewId.SchemaName(), statement).
+		WithColumnNames(columnNames...).
+		WithDependsOn(schemaModel.ResourceReference())
+	schemasModel := datasourcemodel.Schemas("test").
+		WithLike(id.Name()).
+		WithStartsWith(id.Name()).
+		WithLimit(1).
+		WithDependsOn(schemaModel.ResourceReference(), viewModel.ResourceReference())
+	schemasModelWithoutAdditional := datasourcemodel.Schemas("test").
+		WithLike(id.Name()).
+		WithStartsWith(id.Name()).
+		WithLimit(1).
+		WithWithDescribe(false).
+		WithWithParameters(false).
+		WithDependsOn(schemaModel.ResourceReference(), viewModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -38,63 +60,61 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/optionals_set"),
-				ConfigVariables: configVariables,
+				Config: accconfig.FromModels(t, schemaModel, viewModel, schemasModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.created_on"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.is_default", "false"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.is_current"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.database_name", databaseId.Name()),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.owner"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.comment", "foo"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.options", "TRANSIENT, MANAGED ACCESS"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.retention_time"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.owner_role_type"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.#", "1"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.show_output.0.is_current"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.show_output.0.database_name", id.DatabaseName()),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.show_output.0.owner"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.show_output.0.comment", comment),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.show_output.0.options", "TRANSIENT, MANAGED ACCESS"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.show_output.0.retention_time"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.show_output.0.owner_role_type"),
 
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.parameters.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.data_retention_time_in_days.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.max_data_extension_time_in_days.0.value"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.parameters.0.external_volume.0.value", ""),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.parameters.0.catalog.0.value", ""),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.replace_invalid_characters.0.value"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.parameters.0.default_ddl_collation.0.value", ""),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.storage_serialization_policy.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.log_level.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.trace_level.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.suspend_task_after_num_failures.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.task_auto_retry_attempts.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.user_task_managed_initial_warehouse_size.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.user_task_minimum_trigger_interval_in_seconds.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.quoted_identifiers_ignore_case.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.enable_console_output.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.parameters.0.pipe_execution_paused.0.value"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.#", "1"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.data_retention_time_in_days.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.max_data_extension_time_in_days.0.value"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.external_volume.0.value", ""),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.catalog.0.value", ""),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.replace_invalid_characters.0.value"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.default_ddl_collation.0.value", ""),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.storage_serialization_policy.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.log_level.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.trace_level.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.suspend_task_after_num_failures.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.task_auto_retry_attempts.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.user_task_managed_initial_warehouse_size.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.user_task_minimum_trigger_interval_in_seconds.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.quoted_identifiers_ignore_case.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.enable_console_output.0.value"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.pipe_execution_paused.0.value"),
 
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.describe_output.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.describe_output.0.created_on"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.describe_output.0.name"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.describe_output.0.kind", "TABLE"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.describe_output.0.created_on"),
+					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.describe_output.0.name"),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.describe_output.0.kind", "VIEW"),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Schemas/optionals_unset"),
-				ConfigVariables: configVariables,
+				Config: accconfig.FromModels(t, schemaModel, viewModel, schemasModelWithoutAdditional),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.created_on"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.is_default", "false"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.is_current"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.database_name", databaseId.Name()),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.owner"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.comment", "foo"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.show_output.0.options", "TRANSIENT, MANAGED ACCESS"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.retention_time"),
-					resource.TestCheckResourceAttrSet("data.snowflake_schemas.test", "schemas.0.show_output.0.owner_role_type"),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.#", "1"),
+					resource.TestCheckResourceAttrSet(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.is_default", "false"),
+					resource.TestCheckResourceAttrSet(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.is_current"),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.database_name", id.DatabaseName()),
+					resource.TestCheckResourceAttrSet(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.owner"),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.comment", comment),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.options", "TRANSIENT, MANAGED ACCESS"),
+					resource.TestCheckResourceAttrSet(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.retention_time"),
+					resource.TestCheckResourceAttrSet(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.show_output.0.owner_role_type"),
 
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.describe_output.#", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_schemas.test", "schemas.0.parameters.#", "0"),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.describe_output.#", "0"),
+					resource.TestCheckResourceAttr(schemasModelWithoutAdditional.DatasourceReference(), "schemas.0.parameters.#", "0"),
 				),
 			},
 		},
