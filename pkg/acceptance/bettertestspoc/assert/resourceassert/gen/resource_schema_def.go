@@ -189,4 +189,12 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "Saml2SecurityIntegration",
 		schema: resources.SAML2Integration().Schema,
 	},
+	{
+		name:   "ApiAuthenticationIntegrationWithAuthorizationCodeGrant",
+		schema: resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant().Schema,
+	},
+	{
+		name:   "ApiAuthenticationIntegrationWithClientCredentials",
+		schema: resources.ApiAuthenticationIntegrationWithClientCredentials().Schema,
+	},
 }
