@@ -54,4 +54,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "ResourceMonitors",
 		schema: datasources.ResourceMonitors().Schema,
 	},
+	{
+		name:   "Schemas",
+		schema: datasources.Schemas().Schema,
+	},
 }

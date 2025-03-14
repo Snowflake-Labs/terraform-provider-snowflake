@@ -18,6 +18,8 @@ import (
 
 func TestAcc_Schemas_Complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	databaseId := acc.TestClient().Ids.DatabaseId()
 
@@ -101,6 +103,8 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 
 func TestAcc_Schemas_Filtering(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	prefix := random.AlphaN(4)
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
