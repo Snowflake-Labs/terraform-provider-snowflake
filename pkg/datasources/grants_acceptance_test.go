@@ -371,11 +371,13 @@ func TestAcc_Grants_Of_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_Of_DatabaseRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	configVariables := config.Variables{
-		"database":      config.StringVariable(databaseName),
-		"database_role": config.StringVariable(databaseRoleName),
+		"database":      config.StringVariable(acc.TestDatabaseName),
+		"database_role": config.StringVariable(databaseRoleId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
