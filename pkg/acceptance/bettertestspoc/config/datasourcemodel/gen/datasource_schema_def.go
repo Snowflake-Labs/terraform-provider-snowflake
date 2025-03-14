@@ -62,4 +62,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Secrets",
 		schema: datasources.Secrets().Schema,
 	},
+	{
+		name:   "SecurityIntegrations",
+		schema: datasources.SecurityIntegrations().Schema,
+	},
 }
