@@ -181,4 +181,12 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "NetworkPolicy",
 		schema: resources.NetworkPolicy().Schema,
 	},
+	{
+		name:   "ScimSecurityIntegration",
+		schema: resources.SCIMIntegration().Schema,
+	},
+	{
+		name:   "Saml2SecurityIntegration",
+		schema: resources.SAML2Integration().Schema,
+	},
 }
