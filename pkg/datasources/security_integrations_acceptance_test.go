@@ -18,6 +18,9 @@ import (
 )
 
 func TestAcc_SecurityIntegrations_MultipleTypes(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	prefix := random.AlphaN(4)
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
@@ -84,6 +87,9 @@ func TestAcc_SecurityIntegrations_MultipleTypes(t *testing.T) {
 }
 
 func TestAcc_SecurityIntegrations_ApiAuthenticationWithAuthorizationCodeGrant(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	m := func() map[string]config.Variable {
@@ -160,6 +166,9 @@ func TestAcc_SecurityIntegrations_ApiAuthenticationWithAuthorizationCodeGrant(t 
 }
 
 func TestAcc_SecurityIntegrations_ApiAuthenticationWithClientCredentials(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	m := func() map[string]config.Variable {
@@ -234,6 +243,9 @@ func TestAcc_SecurityIntegrations_ApiAuthenticationWithClientCredentials(t *test
 }
 
 func TestAcc_SecurityIntegrations_ExternalOauth(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	issuer := random.String()
@@ -421,6 +433,9 @@ func TestAcc_SecurityIntegrations_OauthForCustomClients(t *testing.T) {
 }
 
 func TestAcc_SecurityIntegrations_OauthForPartnerApplications(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	m := func() map[string]config.Variable {
@@ -496,6 +511,9 @@ func TestAcc_SecurityIntegrations_OauthForPartnerApplications(t *testing.T) {
 }
 
 func TestAcc_SecurityIntegrations_Saml2(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	issuer := acc.TestClient().Ids.Alpha()
 	cert := random.GenerateX509(t)
@@ -592,6 +610,9 @@ func TestAcc_SecurityIntegrations_Saml2(t *testing.T) {
 }
 
 func TestAcc_SecurityIntegrations_Scim(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
@@ -652,6 +673,9 @@ func TestAcc_SecurityIntegrations_Scim(t *testing.T) {
 }
 
 func TestAcc_SecurityIntegrations_Filtering(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	prefix := random.AlphaN(4)
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
