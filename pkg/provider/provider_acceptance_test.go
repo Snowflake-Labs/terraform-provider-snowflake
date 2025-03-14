@@ -886,15 +886,6 @@ data %[2]s t {}
 `, profile, feature)
 }
 
-func providerConfigWithDatasourcePreviewFeature(profile, feature string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
-}
-data %[2]s t {}
-`, profile, feature)
-}
-
 func datasourceModel() config.DatasourceModel {
 	return datasourcemodel.Database("t", acc.TestDatabaseName)
 }
