@@ -197,4 +197,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ApiAuthenticationIntegrationWithClientCredentials",
 		schema: resources.ApiAuthenticationIntegrationWithClientCredentials().Schema,
 	},
+	{
+		name:   "ExternalOauthSecurityIntegration",
+		schema: resources.ExternalOauthIntegration().Schema,
+	},
 }
