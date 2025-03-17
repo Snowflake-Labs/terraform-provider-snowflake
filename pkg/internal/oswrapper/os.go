@@ -63,7 +63,7 @@ func fileIsSafeToRead(path string) error {
 			return fmt.Errorf("config file %s has unsafe permissions - %#o", path, fileInfo.Mode().Perm())
 		}
 	} else {
-		log.Println("[DEBUG] Skipped checking file permissions on a Windows system...")
+		log.Println("[DEBUG] Skipped checking file permissions on a Windows system")
 	}
 	return nil
 }

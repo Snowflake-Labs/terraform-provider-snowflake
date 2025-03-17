@@ -328,8 +328,8 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 
 func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	if !oswrapper.IsRunningOnWindows() {
-		t.Skip("checking file sizes on other platforms is currently done in the sdk package")
+	if oswrapper.IsRunningOnWindows() {
+		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")

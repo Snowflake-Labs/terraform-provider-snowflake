@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestFile creates a temporary file with the given filename and data with the default permissions.
+// TestFile creates a temporary file with the given filename, data and with the default permissions.
 // The directory is automatically removed when the test and all its subtests complete.
 // Each subsequent call to t.TempDir returns a unique directory.
 func TestFile(t *testing.T, filename string, data []byte) string {
@@ -23,7 +23,7 @@ func TestFile(t *testing.T, filename string, data []byte) string {
 	return f.Name()
 }
 
-// TestFileWithPermissions creates a temporary file with the given filename and permissions.
+// CreateTestFileWithPermissions creates a temporary file with the given filename and permissions.
 // The directory is automatically removed when the test and all its subtests complete.
 // Each subsequent call to t.TempDir returns a unique directory.
 func CreateTestFileWithPermissions(t *testing.T, filename string, perms fs.FileMode) string {
