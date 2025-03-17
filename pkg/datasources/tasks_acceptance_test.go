@@ -6,14 +6,15 @@ import (
 	"strconv"
 	"testing"
 
+	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -37,6 +38,15 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 	childTask, childTaskCleanup := acc.TestClient().Task.CreateWithAfter(t, rootTask.ID())
 	t.Cleanup(childTaskCleanup)
 
+	tasksModel := datasourcemodel.Tasks("test").
+		WithLike(rootTask.ID().Name()).
+		WithInDatabase(rootTask.ID().DatabaseId()).
+		WithRootOnly(true)
+	tasksModelLikeChildRootOnly := datasourcemodel.Tasks("test").
+		WithLike(childTask.ID().Name()).
+		WithInDatabase(rootTask.ID().DatabaseId()).
+		WithRootOnly(true)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -45,9 +55,9 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: taskDatasourceLikeRootOnly(rootTask.ID().Name(), true),
+				Config: accconfig.FromModels(t, tasksModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(tasksModel.DatasourceReference(), "tasks.#", "1")),
 					resourceshowoutputassert.TaskDatasourceShowOutput(t, "snowflake_tasks.test").
 						HasName(rootTask.Name).
 						HasSchemaName(rootTask.SchemaName).
@@ -75,9 +85,9 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 				),
 			},
 			{
-				Config: taskDatasourceLikeRootOnly(childTask.ID().Name(), true),
+				Config: accconfig.FromModels(t, tasksModelLikeChildRootOnly),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "0"),
+					resource.TestCheckResourceAttr(tasksModelLikeChildRootOnly.DatasourceReference(), "tasks.#", "0"),
 				),
 			},
 		},
@@ -215,6 +225,7 @@ func taskDatasourceLimitWithPrefix(limit int, prefix string) string {
 	})
 }
 
+// TODO: replace this with config builders
 func taskDatasourceConfig(like string, onAccount bool, onDatabase sdk.AccountObjectIdentifier, onSchema sdk.DatabaseObjectIdentifier, startsWith string, rootOnly bool, limitFrom *sdk.LimitFrom) string {
 	var likeString string
 	if len(like) > 0 {
