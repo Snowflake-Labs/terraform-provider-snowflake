@@ -1,9 +1,6 @@
 package datasources_test
 
 import (
-	"bytes"
-	"fmt"
-	"strconv"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -98,19 +95,34 @@ func TestAcc_Tasks_In_StartsWith(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	prefix := acc.TestClient().Ids.AlphaN(4)
-
-	_, standaloneTaskCleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix), "SELECT 1"))
-	t.Cleanup(standaloneTaskCleanup)
-
 	schema, schemaCleanup := acc.TestClient().Schema.CreateSchema(t)
 	t.Cleanup(schemaCleanup)
 
-	standaloneTask2, standaloneTask2Cleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchemaWithPrefix(prefix, schema.ID()), "SELECT 1"))
+	prefix := acc.TestClient().Ids.AlphaN(4)
+	taskId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
+	taskId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchemaWithPrefix(prefix, schema.ID())
+	taskId3 := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	_, standaloneTaskCleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(taskId1, "SELECT 1"))
+	t.Cleanup(standaloneTaskCleanup)
+
+	_, standaloneTask2Cleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(taskId2, "SELECT 1"))
 	t.Cleanup(standaloneTask2Cleanup)
 
-	_, standaloneTask3Cleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID()), "SELECT 1"))
+	_, standaloneTask3Cleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(taskId3, "SELECT 1"))
 	t.Cleanup(standaloneTask3Cleanup)
+
+	tasksModelInAccountStartsWith := datasourcemodel.Tasks("test").
+		WithStartsWith(prefix).
+		WithInAccount()
+	tasksModelInDatabaseStartsWith := datasourcemodel.Tasks("test").
+		WithStartsWith(prefix).
+		WithInDatabase(taskId1.DatabaseId())
+	tasksModelInSchemaStartsWith := datasourcemodel.Tasks("test").
+		WithStartsWith(prefix).
+		WithInSchema(schema.ID())
+	tasksModelInSchema := datasourcemodel.Tasks("test").
+		WithInSchema(schema.ID())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -119,36 +131,32 @@ func TestAcc_Tasks_In_StartsWith(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
-			// On account with prefix
 			{
-				Config: taskDatasourceOnAccountStartsWith(prefix),
+				Config: accconfig.FromModels(t, tasksModelInAccountStartsWith),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "2"),
+					resource.TestCheckResourceAttr(tasksModelInAccountStartsWith.DatasourceReference(), "tasks.#", "2"),
 				),
 			},
-			// On database with prefix
 			{
-				Config: taskDatasourceInDatabaseStartsWith(acc.TestClient().Ids.DatabaseId(), prefix),
+				Config: accconfig.FromModels(t, tasksModelInDatabaseStartsWith),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "2"),
+					resource.TestCheckResourceAttr(tasksModelInDatabaseStartsWith.DatasourceReference(), "tasks.#", "2"),
 				),
 			},
-			// On schema with prefix
 			{
-				Config: taskDatasourceInSchemaStartsWith(schema.ID(), prefix),
+				Config: accconfig.FromModels(t, tasksModelInSchemaStartsWith),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(tasksModelInSchemaStartsWith.DatasourceReference(), "tasks.#", "1")),
 					resourceshowoutputassert.TaskDatasourceShowOutput(t, "snowflake_tasks.test").
-						HasName(standaloneTask2.Name).
-						HasSchemaName(standaloneTask2.SchemaName).
-						HasDatabaseName(standaloneTask2.DatabaseName),
+						HasName(taskId2.Name()).
+						HasSchemaName(taskId2.SchemaName()).
+						HasDatabaseName(taskId2.DatabaseName()),
 				),
 			},
-			// On schema
 			{
-				Config: taskDatasourceInSchema(schema.ID()),
+				Config: accconfig.FromModels(t, tasksModelInSchema),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "2"),
+					resource.TestCheckResourceAttr(tasksModelInSchema.DatasourceReference(), "tasks.#", "2"),
 				),
 			},
 		},
@@ -160,12 +168,21 @@ func TestAcc_Tasks_Limit(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	prefix := acc.TestClient().Ids.AlphaN(4)
+	taskId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
+	taskId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
 
-	_, standaloneTaskCleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix), "SELECT 1"))
+	_, standaloneTaskCleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(taskId1, "SELECT 1"))
 	t.Cleanup(standaloneTaskCleanup)
 
-	_, standaloneTask2Cleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix), "SELECT 1"))
+	_, standaloneTask2Cleanup := acc.TestClient().Task.CreateWithRequest(t, sdk.NewCreateTaskRequest(taskId2, "SELECT 1"))
 	t.Cleanup(standaloneTask2Cleanup)
+
+	tasksModelLimitWithPrefix := datasourcemodel.Tasks("test").
+		WithLimitRowsAndFrom(2, prefix).
+		WithInDatabase(taskId1.DatabaseId())
+	tasksModelLimit := datasourcemodel.Tasks("test").
+		WithLimitRows(1).
+		WithInDatabase(taskId1.DatabaseId())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -174,108 +191,18 @@ func TestAcc_Tasks_Limit(t *testing.T) {
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		Steps: []resource.TestStep{
-			// Limit with prefix
 			{
-				Config: taskDatasourceLimitWithPrefix(2, prefix),
+				Config: accconfig.FromModels(t, tasksModelLimitWithPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "2"),
+					resource.TestCheckResourceAttr(tasksModelLimitWithPrefix.DatasourceReference(), "tasks.#", "2"),
 				),
 			},
-			// Only limit
 			{
-				Config: taskDatasourceLimit(1),
+				Config: accconfig.FromModels(t, tasksModelLimit),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "1"),
+					resource.TestCheckResourceAttr(tasksModelLimit.DatasourceReference(), "tasks.#", "1"),
 				),
 			},
 		},
 	})
-}
-
-func taskDatasourceLikeRootOnly(like string, rootOnly bool) string {
-	return taskDatasourceConfig(like, false, sdk.AccountObjectIdentifier{}, sdk.DatabaseObjectIdentifier{}, "", rootOnly, nil)
-}
-
-func taskDatasourceOnAccountStartsWith(startsWith string) string {
-	return taskDatasourceConfig("", true, sdk.AccountObjectIdentifier{}, sdk.DatabaseObjectIdentifier{}, startsWith, false, nil)
-}
-
-func taskDatasourceInDatabaseStartsWith(databaseId sdk.AccountObjectIdentifier, startsWith string) string {
-	return taskDatasourceConfig("", false, databaseId, sdk.DatabaseObjectIdentifier{}, startsWith, false, nil)
-}
-
-func taskDatasourceInSchemaStartsWith(schemaId sdk.DatabaseObjectIdentifier, startsWith string) string {
-	return taskDatasourceConfig("", false, sdk.AccountObjectIdentifier{}, schemaId, startsWith, false, nil)
-}
-
-func taskDatasourceInSchema(schemaId sdk.DatabaseObjectIdentifier) string {
-	return taskDatasourceConfig("", false, sdk.AccountObjectIdentifier{}, schemaId, "", false, nil)
-}
-
-func taskDatasourceLimit(limit int) string {
-	return taskDatasourceConfig("", false, sdk.AccountObjectIdentifier{}, sdk.DatabaseObjectIdentifier{}, "", false, &sdk.LimitFrom{
-		Rows: sdk.Int(limit),
-	})
-}
-
-func taskDatasourceLimitWithPrefix(limit int, prefix string) string {
-	return taskDatasourceConfig("", false, sdk.AccountObjectIdentifier{}, sdk.DatabaseObjectIdentifier{}, "", false, &sdk.LimitFrom{
-		Rows: sdk.Int(limit),
-		From: sdk.String(prefix),
-	})
-}
-
-// TODO: replace this with config builders
-func taskDatasourceConfig(like string, onAccount bool, onDatabase sdk.AccountObjectIdentifier, onSchema sdk.DatabaseObjectIdentifier, startsWith string, rootOnly bool, limitFrom *sdk.LimitFrom) string {
-	var likeString string
-	if len(like) > 0 {
-		likeString = fmt.Sprintf("like = \"%s\"", like)
-	}
-
-	var startsWithString string
-	if len(startsWith) > 0 {
-		startsWithString = fmt.Sprintf("starts_with = \"%s\"", startsWith)
-	}
-
-	var inString string
-	if onAccount || (onDatabase != sdk.AccountObjectIdentifier{}) || (onSchema != sdk.DatabaseObjectIdentifier{}) {
-		inStringBuffer := new(bytes.Buffer)
-		inStringBuffer.WriteString("in {\n")
-		switch {
-		case onAccount:
-			inStringBuffer.WriteString("account = true\n")
-		case onDatabase != sdk.AccountObjectIdentifier{}:
-			inStringBuffer.WriteString(fmt.Sprintf("database = %s\n", strconv.Quote(onDatabase.FullyQualifiedName())))
-		case onSchema != sdk.DatabaseObjectIdentifier{}:
-			inStringBuffer.WriteString(fmt.Sprintf("schema = %s\n", strconv.Quote(onSchema.FullyQualifiedName())))
-		}
-		inStringBuffer.WriteString("}\n")
-		inString = inStringBuffer.String()
-	}
-
-	var rootOnlyString string
-	if rootOnly {
-		rootOnlyString = fmt.Sprintf("root_only = %t", rootOnly)
-	}
-
-	var limitFromString string
-	if limitFrom != nil {
-		inStringBuffer := new(bytes.Buffer)
-		inStringBuffer.WriteString("limit {\n")
-		inStringBuffer.WriteString(fmt.Sprintf("rows = %d\n", *limitFrom.Rows))
-		if limitFrom.From != nil {
-			inStringBuffer.WriteString(fmt.Sprintf("from = \"%s\"\n", *limitFrom.From))
-		}
-		inStringBuffer.WriteString("}\n")
-		limitFromString = inStringBuffer.String()
-	}
-
-	return fmt.Sprintf(`
-	data "snowflake_tasks" "test" {
-		%[1]s
-		%[2]s
-		%[3]s
-		%[4]s
-		%[5]s
-	}`, likeString, inString, startsWithString, rootOnlyString, limitFromString)
 }
