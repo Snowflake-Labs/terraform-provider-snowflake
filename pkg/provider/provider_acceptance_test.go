@@ -11,6 +11,7 @@ import (
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
@@ -327,6 +328,9 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 
 func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	if !oswrapper.IsRunningOnWindows() {
+		t.Skip("checking file sizes on other platforms is currently done in the sdk package")
+	}
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 

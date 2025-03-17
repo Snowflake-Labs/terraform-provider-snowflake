@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/unix"
+
+	"github.com/stretchr/testify/require"
 )
 
 // TestFile creates a temporary file with the given filename and data with the default permissions.

@@ -3,17 +3,16 @@ package oswrapper_test
 import (
 	"fmt"
 	"io/fs"
+	"os"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/require"
 )
 
 func TestReadFileSafeFailsForFileThatIsTooBig(t *testing.T) {
-	if oswrapper.IsRunningOnWindows {
-		t.Skip("checking file sizes on Windows is currently done in manual tests package")
-	}
 	c := make([]byte, 11*1024*1024)
 	configPath := testhelpers.TestFile(t, "config", c)
 
@@ -28,7 +27,7 @@ func TestReadFileSafeFailsForFileThatDoesNotExist(t *testing.T) {
 }
 
 func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
-	if oswrapper.IsRunningOnWindows {
+	if oswrapper.IsRunningOnWindows() {
 		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	tests := []struct {
@@ -60,7 +59,7 @@ func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
 }
 
 func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
-	if oswrapper.IsRunningOnWindows {
+	if oswrapper.IsRunningOnWindows() {
 		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	tests := []struct {
@@ -81,7 +80,7 @@ func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
 }
 
 func TestReadFileSafeReadsFileWithCorrectPermissions(t *testing.T) {
-	if oswrapper.IsRunningOnWindows {
+	if oswrapper.IsRunningOnWindows() {
 		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	tests := []struct {
@@ -100,4 +99,48 @@ func TestReadFileSafeReadsFileWithCorrectPermissions(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestStat(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "test")
+	require.Equal(t, os.Getenv(env), oswrapper.Getenv(env))
+}
+
+func TestStatOnFileThatDoesNotExist(t *testing.T) {
+	fileName := random.AlphaN(10)
+	expVal, expErr := os.Stat(fileName)
+	actVal, actErr := oswrapper.Stat(fileName)
+	require.Equal(t, expVal, actVal)
+	require.Equal(t, expErr, actErr)
+}
+
+func TestGetenv(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "test")
+	require.Equal(t, os.Getenv(env), oswrapper.Getenv(env))
+}
+
+func TestLookupEnvOnSetVariable(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "test")
+	expVal, expExist := os.LookupEnv(env)
+	actVal, actExist := oswrapper.LookupEnv(env)
+	require.Equal(t, expVal, actVal)
+	require.Equal(t, expExist, actExist)
+}
+
+func TestLookupEnvOnUnsetVariable(t *testing.T) {
+	env := random.AlphaN(10)
+	expVal, expExist := os.LookupEnv(env)
+	actVal, actExist := oswrapper.LookupEnv(env)
+	require.Equal(t, expVal, actVal)
+	require.Equal(t, expExist, actExist)
+}
+
+func TestUserHomeDir(t *testing.T) {
+	expVal, expExist := os.UserHomeDir()
+	actVal, actExist := oswrapper.UserHomeDir()
+	require.Equal(t, expVal, actVal)
+	require.Equal(t, expExist, actExist)
 }

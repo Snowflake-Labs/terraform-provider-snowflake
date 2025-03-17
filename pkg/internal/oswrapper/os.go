@@ -11,9 +11,13 @@ import (
 )
 
 const (
-	maxFileSizeInMb    = 10
-	IsRunningOnWindows = runtime.GOOS == "windows"
+	maxFileSizeInMb = 10
 )
+
+// IsRunningOnWindows returns true if the code is running on Windows.
+func IsRunningOnWindows() bool {
+	return runtime.GOOS == "windows"
+}
 
 // Stat is an os.Stat wrapper.
 func Stat(path string) (os.FileInfo, error) {
@@ -54,7 +58,7 @@ func fileIsSafeToRead(path string) error {
 	if fileInfo.Size() > maxFileSizeInMb*1024*1024 {
 		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
 	}
-	if !IsRunningOnWindows {
+	if !IsRunningOnWindows() {
 		if !unixFilePermissionsAreStrict(fileInfo.Mode().Perm()) {
 			return fmt.Errorf("config file %s has unsafe permissions - %#o", path, fileInfo.Mode().Perm())
 		}
