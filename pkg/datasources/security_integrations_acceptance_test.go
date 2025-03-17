@@ -2,7 +2,6 @@ package datasources_test
 
 import (
 	"fmt"
-	"maps"
 	"regexp"
 	"testing"
 
@@ -677,22 +676,17 @@ func TestAcc_SecurityIntegrations_Filtering(t *testing.T) {
 	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	role := snowflakeroles.GenericScimProvisioner
 
-	commonVariables := config.Variables{
-		"name_1": config.StringVariable(idOne.Name()),
-		"name_2": config.StringVariable(idTwo.Name()),
-		"name_3": config.StringVariable(idThree.Name()),
-	}
-
-	likeConfig := config.Variables{
-		"like": config.StringVariable(idOne.Name()),
-	}
-	maps.Copy(likeConfig, commonVariables)
-
-	likeConfig2 := config.Variables{
-		"like": config.StringVariable(prefix + "%"),
-	}
-	maps.Copy(likeConfig2, commonVariables)
+	scimModel1 := model.ScimSecurityIntegration("test1", false, idOne.Name(), role.Name(), string(sdk.ScimSecurityIntegrationScimClientGeneric))
+	scimModel2 := model.ScimSecurityIntegration("test2", false, idTwo.Name(), role.Name(), string(sdk.ScimSecurityIntegrationScimClientGeneric))
+	scimModel3 := model.ScimSecurityIntegration("test3", false, idThree.Name(), role.Name(), string(sdk.ScimSecurityIntegrationScimClientGeneric))
+	securityIntegrationsModelLikeFirst := datasourcemodel.SecurityIntegrations("test").
+		WithLike(idOne.Name()).
+		WithDependsOn(scimModel1.ResourceReference(), scimModel2.ResourceReference(), scimModel3.ResourceReference())
+	securityIntegrationsModelLikePrefix := datasourcemodel.SecurityIntegrations("test").
+		WithLike(prefix+"%").
+		WithDependsOn(scimModel1.ResourceReference(), scimModel2.ResourceReference(), scimModel3.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -703,17 +697,15 @@ func TestAcc_SecurityIntegrations_Filtering(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ScimSecurityIntegration),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/like"),
-				ConfigVariables: likeConfig,
+				Config: accconfig.FromModels(t, scimModel1, scimModel2, scimModel3, securityIntegrationsModelLikeFirst),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelLikeFirst.DatasourceReference(), "security_integrations.#", "1"),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/like"),
-				ConfigVariables: likeConfig2,
+				Config: accconfig.FromModels(t, scimModel1, scimModel2, scimModel3, securityIntegrationsModelLikePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "2"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelLikePrefix.DatasourceReference(), "security_integrations.#", "2"),
 				),
 			},
 		},
