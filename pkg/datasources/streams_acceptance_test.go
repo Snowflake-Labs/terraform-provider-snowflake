@@ -36,11 +36,11 @@ func TestAcc_Streams(t *testing.T) {
 		WithComment(comment)
 	streamsModel := datasourcemodel.Streams("test").
 		WithLike(id.Name()).
-		WithIn(id.DatabaseId()).
+		WithInDatabase(id.DatabaseId()).
 		WithDependsOn(streamModel.ResourceReference())
 	streamsModelWithoutDescribe := datasourcemodel.Streams("test").
 		WithLike(id.Name()).
-		WithIn(id.DatabaseId()).
+		WithInDatabase(id.DatabaseId()).
 		WithWithDescribe(false).
 		WithDependsOn(streamModel.ResourceReference())
 
@@ -131,7 +131,7 @@ func TestAcc_StreamOnTable(t *testing.T) {
 		WithComment(comment)
 	streamsModel := datasourcemodel.Streams("test").
 		WithLike(id.Name()).
-		WithIn(id.DatabaseId()).
+		WithInDatabase(id.DatabaseId()).
 		WithDependsOn(streamModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -201,7 +201,7 @@ func TestAcc_StreamOnExternalTable(t *testing.T) {
 		WithComment(comment)
 	streamsModel := datasourcemodel.Streams("test").
 		WithLike(id.Name()).
-		WithIn(id.DatabaseId()).
+		WithInDatabase(id.DatabaseId()).
 		WithDependsOn(streamModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -264,7 +264,7 @@ func TestAcc_StreamOnDirectoryTable(t *testing.T) {
 		WithComment(comment)
 	streamsModel := datasourcemodel.Streams("test").
 		WithLike(id.Name()).
-		WithIn(id.DatabaseId()).
+		WithInDatabase(id.DatabaseId()).
 		WithDependsOn(streamModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -332,7 +332,7 @@ func TestAcc_StreamOnView(t *testing.T) {
 		WithAppendOnly(datasources.BooleanTrue)
 	streamsModel := datasourcemodel.Streams("test").
 		WithLike(id.Name()).
-		WithIn(id.DatabaseId()).
+		WithInDatabase(id.DatabaseId()).
 		WithDependsOn(streamModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
@@ -398,11 +398,11 @@ func TestAcc_Streams_Filtering(t *testing.T) {
 	model3 := model.StreamOnTable("test_3", id3.DatabaseName(), id3.Name(), id3.SchemaName(), table.ID().FullyQualifiedName())
 	streamsModelLikeFirstOne := datasourcemodel.Streams("test").
 		WithLike(id1.Name()).
-		WithIn(id1.DatabaseId()).
+		WithInDatabase(id1.DatabaseId()).
 		WithDependsOn(model1.ResourceReference(), model2.ResourceReference(), model3.ResourceReference())
 	streamsModelLikePrefix := datasourcemodel.Streams("test").
 		WithLike(prefix+"%").
-		WithIn(id1.DatabaseId()).
+		WithInDatabase(id1.DatabaseId()).
 		WithDependsOn(model1.ResourceReference(), model2.ResourceReference(), model3.ResourceReference())
 
 	resource.Test(t, resource.TestCase{

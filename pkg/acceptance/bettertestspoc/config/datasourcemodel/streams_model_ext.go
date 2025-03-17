@@ -6,7 +6,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-func (s *StreamsModel) WithIn(databaseId sdk.AccountObjectIdentifier) *StreamsModel {
+func (s *StreamsModel) WithInDatabase(databaseId sdk.AccountObjectIdentifier) *StreamsModel {
 	return s.WithInValue(
 		tfconfig.ObjectVariable(map[string]tfconfig.Variable{
 			"database": tfconfig.StringVariable(databaseId.Name()),

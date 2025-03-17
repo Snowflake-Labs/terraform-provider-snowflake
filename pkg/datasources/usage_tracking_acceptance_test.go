@@ -30,7 +30,7 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 	schemaModel := model.Schema("test", schemaId.DatabaseName(), schemaId.Name())
 	schemasModel := datasourcemodel.Schemas("test").
 		WithLike(schemaId.Name()).
-		WithIn(schemaId.DatabaseId()).
+		WithInDatabase(schemaId.DatabaseId()).
 		WithDependsOn(schemaModel.ResourceReference())
 
 	assertQueryMetadataExists := func(t *testing.T, query string) resource.TestCheckFunc {
