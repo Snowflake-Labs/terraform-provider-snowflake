@@ -9,6 +9,7 @@ on:
 
 jobs:
   release-please:
+    # TODO(SNOW-1965855): Uncomment after adjusting secrets for release `environment: release`
     runs-on: macos-latest
     steps:
       - uses: actions/github-script@v6
@@ -40,7 +41,7 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Release please
-        uses: google-github-actions/release-please-action@db8f2c60ee802b3748b512940dde88eabd7b7e01 # v3
+        uses: googleapis/release-please-action@db8f2c60ee802b3748b512940dde88eabd7b7e01 # v3
         id: release
         with:
           release-type: simple

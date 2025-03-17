@@ -6,6 +6,7 @@ on:
 
 jobs:
   jira-action:
+    environment: jira
     runs-on: ubuntu-latest
     name: Create an issue
     steps:
