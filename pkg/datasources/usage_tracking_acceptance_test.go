@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -26,8 +26,12 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	id := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	schemaModel := model.Schema("test", id.DatabaseName(), id.Name())
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	schemaModel := model.Schema("test", schemaId.DatabaseName(), schemaId.Name())
+	schemasModel := datasourcemodel.Schemas("test").
+		WithLike(schemaId.Name()).
+		WithIn(schemaId.DatabaseId()).
+		WithDependsOn(schemaModel.ResourceReference())
 
 	assertQueryMetadataExists := func(t *testing.T, query string) resource.TestCheckFunc {
 		t.Helper()
@@ -54,28 +58,16 @@ func TestAcc_CompleteUsageTracking(t *testing.T) {
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, schemaModel) + schemaDatasourceConfigWithDependency(schemaModel.ResourceReference(), id),
+				Config: accconfig.FromModels(t, schemaModel, schemasModel),
 				Check: assertThat(t,
 					resourceassert.SchemaResource(t, schemaModel.ResourceReference()).
-						HasNameString(id.Name()),
-					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`SHOW SCHEMAS LIKE '%s' IN DATABASE "%s"`, id.Name(), id.DatabaseName()))),
+						HasNameString(schemaId.Name()),
+					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`SHOW SCHEMAS LIKE '%s' IN DATABASE "%s"`, schemaId.Name(), schemaId.DatabaseName()))),
 					// SHOW PARAMETERS IN SCHEMA "acc_test_db_AT_1AB7E1DE_1A10_89C3_C13C_899754A250B6"."FPGDHEAT_1AB7E1DE_1A10_89C3_C13C_899754A250B6" --terraform_provider_usage_tracking {"json_schema_version":"1","version":"v0.99.0","datasource":"snowflake_schemas","operation":"read"}
-					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`SHOW PARAMETERS IN SCHEMA %s`, id.FullyQualifiedName()))),
-					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`DESCRIBE SCHEMA %s`, id.FullyQualifiedName()))),
+					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`SHOW PARAMETERS IN SCHEMA %s`, schemaId.FullyQualifiedName()))),
+					assert.Check(assertQueryMetadataExists(t, fmt.Sprintf(`DESCRIBE SCHEMA %s`, schemaId.FullyQualifiedName()))),
 				),
 			},
 		},
 	})
-}
-
-func schemaDatasourceConfigWithDependency(schemaResourceReference string, id sdk.DatabaseObjectIdentifier) string {
-	return fmt.Sprintf(`
-data "snowflake_schemas" "test" {
-	depends_on = [ %[1]s ]
-	in {
-		database = "%[2]s"
-	}
-	like = "%[3]s"
-}
-`, schemaResourceReference, id.DatabaseName(), id.Name())
 }
