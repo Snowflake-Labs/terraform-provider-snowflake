@@ -26,7 +26,7 @@ func EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(client *sdk.Client, ctx conte
 
 func EnsureScimProvisionerRolesExist(client *sdk.Client, ctx context.Context) error {
 	log.Printf("[DEBUG] Making sure Scim Provisioner roles exist")
-	roleIDs := []sdk.AccountObjectIdentifier{snowflakeroles.GenericScimProvisioner, snowflakeroles.OktaProvisioner}
+	roleIDs := []sdk.AccountObjectIdentifier{snowflakeroles.GenericScimProvisioner, snowflakeroles.AadProvisioner, snowflakeroles.OktaProvisioner}
 	currentRoleID, err := client.ContextFunctions.CurrentRole(ctx)
 	if err != nil {
 		return err
