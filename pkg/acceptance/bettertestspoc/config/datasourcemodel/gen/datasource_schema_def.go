@@ -90,4 +90,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Views",
 		schema: datasources.Views().Schema,
 	},
+	{
+		name:   "Warehouses",
+		schema: datasources.Warehouses().Schema,
+	},
 }
