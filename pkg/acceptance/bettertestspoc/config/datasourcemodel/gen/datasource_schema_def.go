@@ -78,4 +78,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Tags",
 		schema: datasources.Tags().Schema,
 	},
+	{
+		name:   "Tasks",
+		schema: datasources.Tasks().Schema,
+	},
 }
