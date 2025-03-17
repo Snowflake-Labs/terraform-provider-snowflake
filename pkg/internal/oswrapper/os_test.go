@@ -11,7 +11,7 @@ import (
 )
 
 func TestReadFileSafeFailsForFileThatIsTooBig(t *testing.T) {
-	if oswrapper.IsRunningOnWindows() {
+	if oswrapper.IsRunningOnWindows {
 		t.Skip("checking file sizes on Windows is currently done in manual tests package")
 	}
 	c := make([]byte, 11*1024*1024)
@@ -28,7 +28,7 @@ func TestReadFileSafeFailsForFileThatDoesNotExist(t *testing.T) {
 }
 
 func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
-	if oswrapper.IsRunningOnWindows() {
+	if oswrapper.IsRunningOnWindows {
 		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	tests := []struct {
@@ -60,7 +60,7 @@ func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
 }
 
 func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
-	if oswrapper.IsRunningOnWindows() {
+	if oswrapper.IsRunningOnWindows {
 		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	tests := []struct {
@@ -81,7 +81,7 @@ func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
 }
 
 func TestReadFileSafeReadsFileWithCorrectPermissions(t *testing.T) {
-	if oswrapper.IsRunningOnWindows() {
+	if oswrapper.IsRunningOnWindows {
 		t.Skip("checking file permissions on Windows is currently done in manual tests package")
 	}
 	tests := []struct {

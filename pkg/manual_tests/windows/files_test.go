@@ -11,7 +11,7 @@ import (
 )
 
 func TestLoadConfigFileThatIsTooBig(t *testing.T) {
-	if !oswrapper.IsRunningOnWindows() {
+	if !oswrapper.IsRunningOnWindows {
 		t.Skip("checking file sizes on other platforms is currently done in the sdk package")
 	}
 	c := make([]byte, 11*1024*1024)

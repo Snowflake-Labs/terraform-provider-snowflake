@@ -31,6 +31,7 @@ func DefaultConfig() *gosnowflake.Config {
 }
 
 func ProfileConfig(profile string) (*gosnowflake.Config, error) {
+	log.Printf("[DEBUG] Retrieving %s profile from a TOML file\n", profile)
 	path, err := GetConfigFileName()
 	if err != nil {
 		return nil, err
