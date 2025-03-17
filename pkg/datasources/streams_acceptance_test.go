@@ -385,17 +385,25 @@ func TestAcc_Streams_Filtering(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
+	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
+	t.Cleanup(cleanupTable)
+
 	prefix := random.AlphaN(4)
 	id1 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
 	id2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
 	id3 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
-	t.Cleanup(cleanupTable)
-
 	model1 := model.StreamOnTable("test_1", id1.DatabaseName(), id1.Name(), id1.SchemaName(), table.ID().FullyQualifiedName())
 	model2 := model.StreamOnTable("test_2", id2.DatabaseName(), id2.Name(), id2.SchemaName(), table.ID().FullyQualifiedName())
 	model3 := model.StreamOnTable("test_3", id3.DatabaseName(), id3.Name(), id3.SchemaName(), table.ID().FullyQualifiedName())
+	streamsModelLikeFirstOne := datasourcemodel.Streams("test").
+		WithLike(id1.Name()).
+		WithIn(id1.DatabaseId()).
+		WithDependsOn(model1.ResourceReference(), model2.ResourceReference(), model3.ResourceReference())
+	streamsModelLikePrefix := datasourcemodel.Streams("test").
+		WithLike(prefix+"%").
+		WithIn(id1.DatabaseId()).
+		WithDependsOn(model1.ResourceReference(), model2.ResourceReference(), model3.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -405,29 +413,19 @@ func TestAcc_Streams_Filtering(t *testing.T) {
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModels(t, model1) + accconfig.FromModels(t, model2) + accconfig.FromModels(t, model3) + streamsDatasourceLike(id1.Name()),
+				Config: accconfig.FromModels(t, model1, model2, model3, streamsModelLikeFirstOne),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_streams.test", "streams.#", "1"),
+					resource.TestCheckResourceAttr(streamsModelLikeFirstOne.DatasourceReference(), "streams.#", "1"),
 				),
 			},
 			{
-				Config: accconfig.FromModels(t, model1) + accconfig.FromModels(t, model2) + accconfig.FromModels(t, model3) + streamsDatasourceLike(prefix+"%"),
+				Config: accconfig.FromModels(t, model1, model2, model3, streamsModelLikePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_streams.test", "streams.#", "2"),
+					resource.TestCheckResourceAttr(streamsModelLikePrefix.DatasourceReference(), "streams.#", "2"),
 				),
 			},
 		},
 	})
-}
-
-func streamsDatasourceLike(like string) string {
-	return fmt.Sprintf(`
-data "snowflake_streams" "test" {
-	depends_on = [snowflake_stream_on_table.test_1, snowflake_stream_on_table.test_2, snowflake_stream_on_table.test_3]
-
-	like = "%s"
-}
-`, like)
 }
 
 func TestAcc_Streams_emptyIn(t *testing.T) {
