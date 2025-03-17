@@ -86,4 +86,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Users",
 		schema: datasources.Users().Schema,
 	},
+	{
+		name:   "Views",
+		schema: datasources.Views().Schema,
+	},
 }
