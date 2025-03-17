@@ -510,32 +510,32 @@ func TestAcc_SecurityIntegrations_Saml2(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	issuer := acc.TestClient().Ids.Alpha()
 	cert := random.GenerateX509(t)
-	validUrl := "http://example.com"
+	validUrl := "https://example.com"
 	acsURL := acc.TestClient().Context.ACSURL(t)
 	issuerURL := acc.TestClient().Context.IssuerURL(t)
+	comment := random.Comment()
 
-	m := func() map[string]config.Variable {
-		return map[string]config.Variable{
-			"allowed_email_patterns":              config.ListVariable(config.StringVariable("^(.+dev)@example.com$")),
-			"allowed_user_domains":                config.ListVariable(config.StringVariable("example.com")),
-			"comment":                             config.StringVariable("foo"),
-			"enabled":                             config.BoolVariable(true),
-			"name":                                config.StringVariable(id.Name()),
-			"saml2_enable_sp_initiated":           config.BoolVariable(true),
-			"saml2_force_authn":                   config.BoolVariable(true),
-			"saml2_issuer":                        config.StringVariable(issuer),
-			"saml2_post_logout_redirect_url":      config.StringVariable(validUrl),
-			"saml2_provider":                      config.StringVariable(string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
-			"saml2_requested_nameid_format":       config.StringVariable(string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
-			"saml2_sign_request":                  config.BoolVariable(true),
-			"saml2_snowflake_acs_url":             config.StringVariable(acsURL),
-			"saml2_snowflake_issuer_url":          config.StringVariable(issuerURL),
-			"saml2_sp_initiated_login_page_label": config.StringVariable("foo"),
-			"saml2_sso_url":                       config.StringVariable(validUrl),
-			"saml2_x509_cert":                     config.StringVariable(cert),
-			// TODO(SNOW-1479617): set saml2_snowflake_x509_cert
-		}
-	}
+	// TODO(SNOW-1479617): set saml2_snowflake_x509_cert
+	resourceModel := model.Saml2SecurityIntegration("test", id.Name(), issuer, string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom), validUrl, cert).
+		WithComment(comment).
+		WithEnabled(datasources.BooleanTrue).
+		WithAllowedEmailPatterns("^(.+dev)@example.com$").
+		WithAllowedUserDomains("example.com").
+		WithSaml2EnableSpInitiated(datasources.BooleanTrue).
+		WithSaml2ForceAuthn(datasources.BooleanTrue).
+		WithSaml2PostLogoutRedirectUrl(validUrl).
+		WithSaml2RequestedNameidFormat(string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)).
+		WithSaml2SignRequest(datasources.BooleanTrue).
+		WithSaml2SnowflakeAcsUrl(acsURL).
+		WithSaml2SnowflakeIssuerUrl(issuerURL).
+		WithSaml2SpInitiatedLoginPageLabel("foo")
+	securityIntegrationsModel := datasourcemodel.SecurityIntegrations("test").
+		WithLike(id.Name()).
+		WithDependsOn(resourceModel.ResourceReference())
+	securityIntegrationsModelWithoutDescribe := datasourcemodel.SecurityIntegrations("test").
+		WithLike(id.Name()).
+		WithWithDescribe(false).
+		WithDependsOn(resourceModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -546,56 +546,54 @@ func TestAcc_SecurityIntegrations_Saml2(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Saml2SecurityIntegration),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/saml2/optionals_set"),
-				ConfigVariables: m(),
+				Config: accconfig.FromModels(t, resourceModel, securityIntegrationsModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.#", "1"),
 
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_issuer.0.value", issuer),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_sso_url.0.value", validUrl),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_provider.0.value", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_x509_cert.0.value", cert),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_sp_initiated_login_page_label.0.value", "foo"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_enable_sp_initiated.0.value", "true"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_snowflake_x509_cert.0.value"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_sign_request.0.value", "true"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_requested_nameid_format.0.value", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_post_logout_redirect_url.0.value", "http://example.com"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_force_authn.0.value", "true"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_snowflake_issuer_url.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_snowflake_acs_url.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_snowflake_metadata.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_digest_methods_used.0.value"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.saml2_signature_methods_used.0.value"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.allowed_user_domains.0.value", "[example.com]"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.allowed_email_patterns.0.value", "[^(.+dev)@example.com$]"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.0.comment.0.value", "foo"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_issuer.0.value", issuer),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_sso_url.0.value", validUrl),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_provider.0.value", string(sdk.Saml2SecurityIntegrationSaml2ProviderCustom)),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_x509_cert.0.value", cert),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_sp_initiated_login_page_label.0.value", "foo"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_enable_sp_initiated.0.value", "true"),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_snowflake_x509_cert.0.value"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_sign_request.0.value", "true"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_requested_nameid_format.0.value", string(sdk.Saml2SecurityIntegrationSaml2RequestedNameidFormatUnspecified)),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_post_logout_redirect_url.0.value", "https://example.com"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_force_authn.0.value", "true"),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_snowflake_issuer_url.0.value"),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_snowflake_acs_url.0.value"),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_snowflake_metadata.0.value"),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_digest_methods_used.0.value"),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.saml2_signature_methods_used.0.value"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.allowed_user_domains.0.value", "[example.com]"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.allowed_email_patterns.0.value", "[^(.+dev)@example.com$]"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.describe_output.0.comment.0.value", comment),
 
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "SAML2"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.comment", "foo"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.#", "1"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.0.integration_type", "SAML2"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModel.DatasourceReference(), "security_integrations.0.show_output.0.created_on"),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecurityIntegrations/saml2/optionals_unset"),
-				ConfigVariables: m(),
+				Config: accconfig.FromModels(t, resourceModel, securityIntegrationsModelWithoutDescribe),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.#", "1"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.#", "1"),
 
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.integration_type", "SAML2"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.comment", "foo"),
-					resource.TestCheckResourceAttrSet("data.snowflake_security_integrations.test", "security_integrations.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.#", "1"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.0.integration_type", "SAML2"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("data.snowflake_security_integrations.test", "security_integrations.0.describe_output.#", "0"),
+					resource.TestCheckResourceAttr(securityIntegrationsModelWithoutDescribe.DatasourceReference(), "security_integrations.0.describe_output.#", "0"),
 				),
 			},
 		},
