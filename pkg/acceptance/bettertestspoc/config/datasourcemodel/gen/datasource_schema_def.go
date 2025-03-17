@@ -70,4 +70,8 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Streamlits",
 		schema: datasources.Streamlits().Schema,
 	},
+	{
+		name:   "Streams",
+		schema: datasources.Streams().Schema,
+	},
 }
