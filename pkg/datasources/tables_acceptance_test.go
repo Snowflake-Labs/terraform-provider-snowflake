@@ -6,16 +6,20 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Tables(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
-	stageName := acc.TestClient().Ids.Alpha()
-	externalTableName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	externalTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -25,35 +29,25 @@ func TestAcc_Tables(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: tables(databaseName, schemaName, tableName, stageName, externalTableName),
+				Config: tables(tableId, stageId, externalTableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tables.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_tables.t", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_tables.t", "database", tableId.DatabaseName()),
+					resource.TestCheckResourceAttr("data.snowflake_tables.t", "schema", tableId.SchemaName()),
 					resource.TestCheckResourceAttrSet("data.snowflake_tables.t", "tables.#"),
 					resource.TestCheckResourceAttr("data.snowflake_tables.t", "tables.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_tables.t", "tables.0.name", tableName),
+					resource.TestCheckResourceAttr("data.snowflake_tables.t", "tables.0.name", tableId.Name()),
 				),
 			},
 		},
 	})
 }
 
-func tables(databaseName string, schemaName string, tableName string, stageName string, externalTableName string) string {
+func tables(tableId sdk.SchemaObjectIdentifier, stageId sdk.SchemaObjectIdentifier, externalTableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "d" {
-		name = "%v"
-	}
-
-	resource snowflake_schema "s"{
-		name 	 = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource snowflake_table "t"{
-		name 	 = "%v"
-		database = snowflake_schema.s.database
-		schema 	 = snowflake_schema.s.name
+		database = "%[1]s"
+		schema 	 = "%[2]s"
+		name 	 = "%[3]s"
 		column {
 			name = "column2"
 			type = "VARCHAR(16)"
@@ -61,29 +55,29 @@ func tables(databaseName string, schemaName string, tableName string, stageName 
 	}
 
 	resource "snowflake_stage" "s" {
-		name = "%v"
+		database = "%[1]s"
+		schema = "%[2]s"
+		name = "%[4]s"
 		url = "s3://snowflake-workshop-lab/weather-nyc"
-		database = snowflake_database.d.name
-		schema = snowflake_schema.s.name
 	}
 
 	resource "snowflake_external_table" "et" {
-		database = snowflake_database.d.name
-		schema   = snowflake_schema.s.name
-		name     = "%v"
+		database = "%[1]s"
+		schema   = "%[2]s"
+		name     = "%[5]s"
 		column {
 			name = "column1"
 			type = "STRING"
-		as = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
+			as = "TO_VARCHAR(TO_TIMESTAMP_NTZ(value:unix_timestamp_property::NUMBER, 3), 'yyyy-mm-dd-hh')"
 		}
 	    file_format = "TYPE = CSV"
-	    location = "@${snowflake_database.d.name}.${snowflake_schema.s.name}.${snowflake_stage.s.name}"
+	    location = "@${snowflake_stage.s.fully_qualified_name}"
 	}
 
 	data snowflake_tables "t" {
-		database = snowflake_table.t.database
-		schema = snowflake_table.t.schema
+		database = "%[1]s"
+		schema = "%[2]s"
 		depends_on = [snowflake_table.t, snowflake_external_table.et]
 	}
-	`, databaseName, schemaName, tableName, stageName, externalTableName)
+	`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), stageId.Name(), externalTableId.Name())
 }
