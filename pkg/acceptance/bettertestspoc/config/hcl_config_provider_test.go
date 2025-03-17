@@ -103,4 +103,53 @@ EOT
 		_, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
 		require.ErrorContains(t, err, "object expected closing RBRACE got: EOF")
 	})
+
+	t.Run("document improper handling when there is only one value inside", func(t *testing.T) {
+		datasourceJson := `{
+            "data": {
+                "snowflake_grants": {
+                    "test": {
+                        "grants_on": {
+                            "account": true
+                        }
+                    }
+                }
+            }
+        }`
+		expectedResult := `"data" "snowflake_grants" "test" "grants_on" {
+  account = true
+}
+`
+
+		result, err := config.DefaultHclConfigProvider.HclFromJson([]byte(datasourceJson))
+
+		require.NoError(t, err)
+		require.Equal(t, expectedResult, result)
+	})
+
+	t.Run("only one value inside - working with special formatter", func(t *testing.T) {
+		datasourceJson := `{
+            "data": {
+                "snowflake_grants": {
+                    "test": {
+                        "grants_on": {
+                            "account": true
+                        },
+						"any_name": "SF_TF_TEST_SINGLE_ATTRIBUTE_WORKAROUND"
+                    }
+                }
+            }
+        }`
+		expectedResult := `data "snowflake_grants" "test" {
+  grants_on {
+    account = true
+  }
+}
+`
+
+		result, err := config.DefaultHclConfigProvider.HclFromJson([]byte(datasourceJson))
+
+		require.NoError(t, err)
+		require.Equal(t, expectedResult, result)
+	})
 }

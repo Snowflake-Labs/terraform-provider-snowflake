@@ -17,7 +17,7 @@ import (
 )
 
 func TestAcc_Databases_Complete(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -117,7 +117,7 @@ func TestAcc_Databases_Complete(t *testing.T) {
 }
 
 func TestAcc_Databases_DifferentFiltering(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
 	prefix := random.AlphaN(4)

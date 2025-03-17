@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclConfigProvider = NewHclV1ConfigProvider(replaceNullPlaceholders, unquoteBlockType, fixBlockArguments, replaceMultilinePlaceholders, unquoteArguments, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclConfigProvider = NewHclV1ConfigProvider(replaceNullPlaceholders, removeSingleAttributeWorkaroundLines, unquoteBlockType, fixBlockArguments, replaceMultilinePlaceholders, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
 // HclConfigProvider defines methods to generate .tf config from .tf.json configs.
 type HclConfigProvider interface {
@@ -96,6 +96,13 @@ func replaceMultilinePlaceholders(s string) (string, error) {
 $1
 EOT`), `\n`, `
 `), nil
+}
+
+// Conversion to HCL using hcl v1 has problem with nested jsons where there is only one child value.
+// Current workaround used is to add the placeholder attribute which is later removed from the resulting HCL.
+func removeSingleAttributeWorkaroundLines(s string) (string, error) {
+	lineToRemoveRegex := regexp.MustCompile(fmt.Sprintf(`( +)"(.*)"( += +)"%s"\n`, SnowflakeProviderConfigSingleAttributeWorkaround))
+	return lineToRemoveRegex.ReplaceAllString(s, ""), nil
 }
 
 // Conversion to HCL using hcl v1  does not unquote arguments.
