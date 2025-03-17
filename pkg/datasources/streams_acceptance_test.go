@@ -6,15 +6,16 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	testconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
-	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,16 +25,26 @@ import (
 func TestAcc_Streams(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	table, cleanupTable := acc.TestClient().Table.CreateWithChangeTracking(t)
 	t.Cleanup(cleanupTable)
 
-	streamOnTable := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
-		WithAppendOnly("true").
-		WithComment("foo")
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
 
-	dsName := "data.snowflake_streams.test"
+	streamModel := model.StreamOnTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), table.ID().FullyQualifiedName()).
+		WithAppendOnly(datasources.BooleanTrue).
+		WithComment(comment)
+	streamsModel := datasourcemodel.Streams("test").
+		WithLike(id.Name()).
+		WithIn(id.DatabaseId()).
+		WithDependsOn(streamModel.ResourceReference())
+	streamsModelWithoutDescribe := datasourcemodel.Streams("test").
+		WithLike(id.Name()).
+		WithIn(id.DatabaseId()).
+		WithWithDescribe(false).
+		WithDependsOn(streamModel.ResourceReference())
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -42,10 +53,9 @@ func TestAcc_Streams(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streams/optionals_set"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, streamOnTable),
+				Config: accconfig.FromModels(t, streamModel, streamsModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.#", "1")),
 
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
 						HasCreatedOnNotEmpty().
@@ -62,29 +72,28 @@ func TestAcc_Streams(t *testing.T) {
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasOwnerRoleType("ROLE"),
-					assert.Check(resource.TestCheckResourceAttrSet(dsName, "streams.0.describe_output.0.created_on")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.database_name", id.DatabaseName())),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.schema_name", id.SchemaName())),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.comment", "foo")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.table_name", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.base_tables.#", "1")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.type", "DELTA")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.stale", "false")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.mode", string(sdk.StreamModeAppendOnly))),
-					assert.Check(resource.TestCheckResourceAttrSet(dsName, "streams.0.describe_output.0.stale_after")),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.0.owner_role_type", "ROLE")),
+					assert.Check(resource.TestCheckResourceAttrSet(streamsModel.DatasourceReference(), "streams.0.describe_output.0.created_on")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.database_name", id.DatabaseName())),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.schema_name", id.SchemaName())),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.owner", snowflakeroles.Accountadmin.Name())),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.comment", comment)),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.table_name", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.source_type", string(sdk.StreamSourceTypeTable))),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.base_tables.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.base_tables.0", table.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.type", "DELTA")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.mode", string(sdk.StreamModeAppendOnly))),
+					assert.Check(resource.TestCheckResourceAttrSet(streamsModel.DatasourceReference(), "streams.0.describe_output.0.stale_after")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.0.owner_role_type", "ROLE")),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Streams/optionals_unset"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, streamOnTable),
+				Config: accconfig.FromModels(t, streamModel, streamsModelWithoutDescribe),
 
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.#", "1")),
 
 					resourceshowoutputassert.StreamsDatasourceShowOutput(t, "snowflake_streams.test").
 						HasCreatedOnNotEmpty().
@@ -101,7 +110,7 @@ func TestAcc_Streams(t *testing.T) {
 						HasStaleAfterNotEmpty().
 						HasInvalidReason("N/A").
 						HasOwnerRoleType("ROLE"),
-					assert.Check(resource.TestCheckResourceAttr(dsName, "streams.0.describe_output.#", "0")),
+					assert.Check(resource.TestCheckResourceAttr(streamsModel.DatasourceReference(), "streams.0.describe_output.#", "0")),
 				),
 			},
 		},
@@ -390,13 +399,13 @@ func TestAcc_Streams_Filtering(t *testing.T) {
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testconfig.FromModels(t, model1) + testconfig.FromModels(t, model2) + testconfig.FromModels(t, model3) + streamsDatasourceLike(id1.Name()),
+				Config: accconfig.FromModels(t, model1) + accconfig.FromModels(t, model2) + accconfig.FromModels(t, model3) + streamsDatasourceLike(id1.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_streams.test", "streams.#", "1"),
 				),
 			},
 			{
-				Config: testconfig.FromModels(t, model1) + testconfig.FromModels(t, model2) + testconfig.FromModels(t, model3) + streamsDatasourceLike(prefix+"%"),
+				Config: accconfig.FromModels(t, model1) + accconfig.FromModels(t, model2) + accconfig.FromModels(t, model3) + streamsDatasourceLike(prefix+"%"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_streams.test", "streams.#", "2"),
 				),
