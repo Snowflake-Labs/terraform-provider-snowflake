@@ -7,6 +7,8 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,7 +16,10 @@ import (
 )
 
 func TestAcc_StorageIntegrations_basic(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -25,7 +30,7 @@ func TestAcc_StorageIntegrations_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigVariables: config.Variables{
-					"name": config.StringVariable(name),
+					"name": config.StringVariable(id.Name()),
 					"allowed_locations": config.SetVariable(
 						config.StringVariable("gcs://foo/"),
 						config.StringVariable("gcs://bar/"),
@@ -39,14 +44,14 @@ func TestAcc_StorageIntegrations_basic(t *testing.T) {
 				ConfigDirectory: config.TestNameDirectory(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_storage_integrations.test", "storage_integrations.#"),
-					containsStorageIntegration(name, true, "some comment"),
+					containsStorageIntegration(id, true, "some comment"),
 				),
 			},
 		},
 	})
 }
 
-func containsStorageIntegration(name string, enabled bool, comment string) resource.TestCheckFunc {
+func containsStorageIntegration(id sdk.AccountObjectIdentifier, enabled bool, comment string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		for _, rs := range state.RootModule().Resources {
 			if rs.Type != "snowflake_storage_integrations" {
@@ -58,7 +63,7 @@ func containsStorageIntegration(name string, enabled bool, comment string) resou
 			}
 
 			for i := 0; i < int(iter); i++ {
-				if rs.Primary.Attributes[fmt.Sprintf("storage_integrations.%d.name", i)] == name {
+				if rs.Primary.Attributes[fmt.Sprintf("storage_integrations.%d.name", i)] == id.Name() {
 					actualEnabled, err := strconv.ParseBool(rs.Primary.Attributes[fmt.Sprintf("storage_integrations.%d.enabled", i)])
 					if err != nil {
 						return err
@@ -77,7 +82,7 @@ func containsStorageIntegration(name string, enabled bool, comment string) resou
 				}
 			}
 
-			return fmt.Errorf("storage integration (%s) not found", name)
+			return fmt.Errorf("storage integration (%s) not found", id.FullyQualifiedName())
 		}
 		return nil
 	}
