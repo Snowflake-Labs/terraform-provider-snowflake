@@ -42,11 +42,18 @@ func ReadFileSafe(path string) ([]byte, error) {
 	if err := fileIsSafeToRead(path); err != nil {
 		return nil, err
 	}
-	return ReadFile(path)
+	return readFile(path)
 }
 
-// ReadFile is an os.ReadFile wrapper.
-func ReadFile(path string) ([]byte, error) {
+// ReadFileSkipPermissionsCheck reads a file without checking its permissions.
+func ReadFileSkipPermissionsCheck(path string) ([]byte, error) {
+	if err := fileIsTooBig(path); err != nil {
+		return nil, err
+	}
+	return readFile(path)
+}
+
+func readFile(path string) ([]byte, error) {
 	log.Printf("[DEBUG] Reading the %s file", path)
 	return os.ReadFile(path)
 }
@@ -65,6 +72,17 @@ func fileIsSafeToRead(path string) error {
 		}
 	} else {
 		log.Println("[DEBUG] Skipped checking file permissions on a Windows system")
+	}
+	return nil
+}
+
+func fileIsTooBig(path string) error {
+	fileInfo, err := Stat(path)
+	if err != nil {
+		return fmt.Errorf("reading information about the config file: %w", err)
+	}
+	if fileInfo.Size() > maxFileSizeInMb*1024*1024 {
+		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
 	}
 	return nil
 }

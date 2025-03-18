@@ -12,19 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReadFileWorksForFileThatIsTooBig(t *testing.T) {
+func TestReadFileSkipPermissionsCheckFailsForFileThatIsTooBig(t *testing.T) {
 	exp := make([]byte, 11*1024*1024)
 	configPath := testhelpers.TestFile(t, "config", exp)
 
-	act, err := oswrapper.ReadFile(configPath)
-	require.NoError(t, err)
-	require.Equal(t, exp, act)
+	_, err := oswrapper.ReadFileSkipPermissionsCheck(configPath)
+	require.ErrorContains(t, err, fmt.Sprintf("config file %s is too big - maximum allowed size is 10MB", configPath))
 }
 
-func TestReadFileWorksForFileWithTooWidePermissions(t *testing.T) {
+func TestReadFileSkipPermissionsCheckWorksForFileWithTooWidePermissions(t *testing.T) {
 	exp := random.Bytes()
 	path := testhelpers.TestFileWithCustomPermissions(t, "config", exp, 0o755)
-	act, err := oswrapper.ReadFile(path)
+	act, err := oswrapper.ReadFileSkipPermissionsCheck(path)
 	require.NoError(t, err)
 	require.Equal(t, exp, act)
 }

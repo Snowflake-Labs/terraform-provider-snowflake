@@ -554,7 +554,7 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 
 	var fileReader sdk.FileReader
 	if v := s.Get("skip_toml_file_permission_verification"); v.(bool) {
-		fileReader = oswrapper.ReadFile
+		fileReader = oswrapper.ReadFileSkipPermissionsCheck
 	} else {
 		fileReader = oswrapper.ReadFileSafe
 	}
