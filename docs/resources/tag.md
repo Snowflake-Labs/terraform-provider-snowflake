@@ -28,7 +28,7 @@ resource "snowflake_tag" "tag" {
   schema           = "schema"
   comment          = "comment"
   allowed_values   = ["finance", "engineering", ""]
-  masking_policies = [snowfalke_masking_policy.example.fully_qualified_name]
+  masking_policies = [snowflake_masking_policy.example.fully_qualified_name]
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
