@@ -387,20 +387,6 @@ func LoadConfigFile(path string, fileReader FileReader) (map[string]ConfigDTO, e
 	return s, nil
 }
 
-// func LoadConfigFileSafe(path string) (map[string]ConfigDTO, error) {
-// 	data, err := oswrapper.ReadFileSafe(path)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var s map[string]ConfigDTO
-
-// 	err = toml.Unmarshal(data, &s)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("unmarshalling config file %s: %w", path, err)
-// 	}
-// 	return s, nil
-// }
-
 func ParsePrivateKey(privateKeyBytes []byte, passphrase []byte) (*rsa.PrivateKey, error) {
 	privateKeyBlock, _ := pem.Decode(privateKeyBytes)
 	if privateKeyBlock == nil {

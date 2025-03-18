@@ -30,7 +30,7 @@ func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 
 	permissions := fs.FileMode(0o755)
 
-	configPath := testhelpers.CreateTestFileWithPermissions(t, random.AlphaN(10), permissions)
+	configPath := testhelpers.TestFileWithCustomPermissions(t, random.AlphaN(10), random.Bytes(), permissions)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

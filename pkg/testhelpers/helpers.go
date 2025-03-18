@@ -23,19 +23,18 @@ func TestFile(t *testing.T, filename string, data []byte) string {
 	return f.Name()
 }
 
-// CreateTestFileWithPermissions creates a temporary file with the given filename and permissions.
+// TestFileWithCustomPermissions creates a temporary file with the given filename and permissions.
 // The directory is automatically removed when the test and all its subtests complete.
 // Each subsequent call to t.TempDir returns a unique directory.
-func CreateTestFileWithPermissions(t *testing.T, filename string, perms fs.FileMode) string {
+func TestFileWithCustomPermissions(t *testing.T, filename string, data []byte, perms fs.FileMode) string {
 	t.Helper()
-	f, err := os.CreateTemp(t.TempDir(), filename)
-	require.NoError(t, err)
+	path := TestFile(t, filename, data)
 
 	oldMask := unix.Umask(0o000)
 	defer unix.Umask(oldMask)
 
-	err = os.Chmod(f.Name(), perms)
+	err := os.Chmod(path, perms)
 	require.NoError(t, err)
 
-	return f.Name()
+	return path
 }

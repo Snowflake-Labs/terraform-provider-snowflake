@@ -12,6 +12,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestReadFileWorksForFileThatIsTooBig(t *testing.T) {
+	exp := make([]byte, 11*1024*1024)
+	configPath := testhelpers.TestFile(t, "config", exp)
+
+	act, err := oswrapper.ReadFile(configPath)
+	require.NoError(t, err)
+	require.Equal(t, exp, act)
+}
+
+func TestReadFileWorksForFileWithTooWidePermissions(t *testing.T) {
+	exp := random.Bytes()
+	path := testhelpers.TestFileWithCustomPermissions(t, "config", exp, 0o755)
+	act, err := oswrapper.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, exp, act)
+}
+
 func TestReadFileSafeFailsForFileThatIsTooBig(t *testing.T) {
 	c := make([]byte, 11*1024*1024)
 	configPath := testhelpers.TestFile(t, "config", c)
@@ -51,7 +68,7 @@ func TestReadFileSafeFailsForFileWithTooWidePermissions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("reading file with too wide permissions %#o", tt.permissions), func(t *testing.T) {
-			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
+			path := testhelpers.TestFileWithCustomPermissions(t, "config", random.Bytes(), tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.ErrorContains(t, err, fmt.Sprintf("config file %s has unsafe permissions", path))
 		})
@@ -72,7 +89,7 @@ func TestReadFileSafeFailsForFileWithTooRestrictivePermissions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("reading file with too restrictive permissions %#o", tt.permissions), func(t *testing.T) {
-			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
+			path := testhelpers.TestFileWithCustomPermissions(t, "config", random.Bytes(), tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.ErrorContains(t, err, fmt.Sprintf("open %s: permission denied", path))
 		})
@@ -94,7 +111,7 @@ func TestReadFileSafeReadsFileWithCorrectPermissions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("reading file with correct permissions %#o", tt.permissions), func(t *testing.T) {
-			path := testhelpers.CreateTestFileWithPermissions(t, "config", tt.permissions)
+			path := testhelpers.TestFileWithCustomPermissions(t, "config", random.Bytes(), tt.permissions)
 			_, err := oswrapper.ReadFileSafe(path)
 			require.NoError(t, err)
 		})
