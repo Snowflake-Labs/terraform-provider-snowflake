@@ -697,7 +697,6 @@ func TestAcc_Execute_grantsComplex(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2491
 func TestAcc_Execute_queryResultsBug(t *testing.T) {
-
 	resourceName := "snowflake_execute.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
