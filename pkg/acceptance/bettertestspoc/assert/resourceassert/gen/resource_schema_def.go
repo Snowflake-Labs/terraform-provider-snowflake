@@ -177,4 +177,28 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ManagedAccount",
 		schema: resources.ManagedAccount().Schema,
 	},
+	{
+		name:   "NetworkPolicy",
+		schema: resources.NetworkPolicy().Schema,
+	},
+	{
+		name:   "ScimSecurityIntegration",
+		schema: resources.SCIMIntegration().Schema,
+	},
+	{
+		name:   "Saml2SecurityIntegration",
+		schema: resources.SAML2Integration().Schema,
+	},
+	{
+		name:   "ApiAuthenticationIntegrationWithAuthorizationCodeGrant",
+		schema: resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant().Schema,
+	},
+	{
+		name:   "ApiAuthenticationIntegrationWithClientCredentials",
+		schema: resources.ApiAuthenticationIntegrationWithClientCredentials().Schema,
+	},
+	{
+		name:   "ExternalOauthSecurityIntegration",
+		schema: resources.ExternalOauthIntegration().Schema,
+	},
 }

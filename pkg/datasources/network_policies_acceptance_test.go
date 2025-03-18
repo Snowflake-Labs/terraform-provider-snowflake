@@ -1,19 +1,25 @@
 package datasources_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_NetworkPolicies_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
@@ -22,6 +28,29 @@ func TestAcc_NetworkPolicies_Complete(t *testing.T) {
 	allowedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	blockedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	blockedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	networkPolicyModel1 := model.NetworkPolicy("test", id.Name()).
+		WithComment(comment).
+		WithAllowedNetworkRules(allowedNetworkRuleId1, allowedNetworkRuleId2).
+		WithBlockedNetworkRules(blockedNetworkRuleId1, blockedNetworkRuleId2).
+		WithAllowedIps("1.1.1.1", "2.2.2.2").
+		WithBlockedIps("3.3.3.3", "4.4.4.4")
+	networkPolicyModel2 := model.NetworkPolicy("test2", id2.Name())
+	networkPoliciesModel := datasourcemodel.NetworkPolicies("test").
+		WithLike(id.Name()).
+		WithDependsOn(networkPolicyModel1.ResourceReference(), networkPolicyModel2.ResourceReference())
+	networkPoliciesModel2WithDescribe := datasourcemodel.NetworkPolicies("test").
+		WithWithDescribe(true).
+		WithLike(id2.Name()).
+		WithDependsOn(networkPolicyModel1.ResourceReference(), networkPolicyModel2.ResourceReference())
+	networkPoliciesModel1WithDescribe := datasourcemodel.NetworkPolicies("test").
+		WithWithDescribe(true).
+		WithLike(id.Name()).
+		WithDependsOn(networkPolicyModel1.ResourceReference(), networkPolicyModel2.ResourceReference())
+	networkPoliciesModel1WithoutDescribe := datasourcemodel.NetworkPolicies("test").
+		WithWithDescribe(false).
+		WithLike(id.Name()).
+		WithDependsOn(networkPolicyModel1.ResourceReference(), networkPolicyModel2.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -38,142 +67,79 @@ func TestAcc_NetworkPolicies_Complete(t *testing.T) {
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId1)
 					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId2)
 				},
-				Config: networkPolicyConfigComplete(
-					id.Name(),
-					[]string{allowedNetworkRuleId1.FullyQualifiedName(), allowedNetworkRuleId2.FullyQualifiedName()},
-					[]string{blockedNetworkRuleId1.FullyQualifiedName(), blockedNetworkRuleId2.FullyQualifiedName()},
-					[]string{"1.1.1.1", "2.2.2.2"},
-					[]string{"3.3.3.3", "4.4.4.4"},
-					comment,
-					id2.Name(),
-				),
+				Config: accconfig.FromModels(t, networkPolicyModel1, networkPolicyModel2, networkPoliciesModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.show_output.0.created_on"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_ip_list", "2"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_ip_list", "2"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_network_rules", "2"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_network_rules", "2"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.comment", comment),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.#", "1"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_ip_list", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_ip_list", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_network_rules", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_network_rules", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.comment", comment),
 
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_ip_list"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_ip_list"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_network_rule_list"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_network_rule_list"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.allowed_ip_list"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.blocked_ip_list"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.allowed_network_rule_list"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.blocked_network_rule_list"),
 				),
 			},
 			{
-				Config: networkPolicyConfigBasic(id.Name(), true),
+				Config: accconfig.FromModels(t, networkPolicyModel1, networkPolicyModel2, networkPoliciesModel1WithDescribe),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.show_output.0.created_on"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_ip_list", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_ip_list", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_network_rules", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_network_rules", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.comment", ""),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.#", "1"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_ip_list", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_ip_list", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_network_rules", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_network_rules", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.comment", comment),
 
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.#", "1"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_ip_list"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_ip_list"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_network_rule_list"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_network_rule_list"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.#", "1"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.allowed_ip_list"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.blocked_ip_list"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.allowed_network_rule_list"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.blocked_network_rule_list"),
 				),
 			},
 			{
-				Config: networkPolicyConfigBasic(id2.Name(), true),
+				Config: accconfig.FromModels(t, networkPolicyModel1, networkPolicyModel2, networkPoliciesModel2WithDescribe),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.show_output.0.created_on"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.name", id2.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_ip_list", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_ip_list", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_network_rules", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_network_rules", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.comment", ""),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.#", "1"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.name", id2.Name()),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_ip_list", "0"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_ip_list", "0"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_network_rules", "0"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_network_rules", "0"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.comment", ""),
 
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.#", "1"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_ip_list"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_ip_list"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.allowed_network_rule_list"),
-					resource.TestCheckNoResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.0.blocked_network_rule_list"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.#", "1"),
+					resource.TestCheckNoResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.allowed_ip_list"),
+					resource.TestCheckNoResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.blocked_ip_list"),
+					resource.TestCheckNoResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.allowed_network_rule_list"),
+					resource.TestCheckNoResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.0.blocked_network_rule_list"),
 				),
 			},
 			{
-				Config: networkPolicyConfigBasic(id.Name(), false),
+				Config: accconfig.FromModels(t, networkPolicyModel1, networkPolicyModel2, networkPoliciesModel1WithoutDescribe),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.#", "1"),
-					resource.TestCheckResourceAttrSet("data.snowflake_network_policies.test", "network_policies.0.show_output.0.created_on"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_ip_list", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_ip_list", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_allowed_network_rules", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.entries_in_blocked_network_rules", "0"),
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.show_output.0.comment", ""),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.#", "1"),
+					resource.TestCheckResourceAttrSet(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.created_on"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_ip_list", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_ip_list", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_allowed_network_rules", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.entries_in_blocked_network_rules", "2"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.show_output.0.comment", comment),
 
-					resource.TestCheckResourceAttr("data.snowflake_network_policies.test", "network_policies.0.describe_output.#", "0"),
+					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.0.describe_output.#", "0"),
 				),
 			},
 		},
 	})
-}
-
-func networkPolicyConfigBasic(name string, withDescribe bool) string {
-	return fmt.Sprintf(`
-	resource "snowflake_network_policy" "test" {
-		name = "%v"
-	}
-
-	data "snowflake_network_policies" "test" {
-		with_describe = %t
-		like = snowflake_network_policy.test.name
-	}
-`, name, withDescribe)
-}
-
-func networkPolicyConfigComplete(
-	name string,
-	allowedRuleList []string,
-	blockedRuleList []string,
-	allowedIpList []string,
-	blockedIpList []string,
-	comment string,
-	name2 string,
-) string {
-	allowedRuleListBytes, _ := json.Marshal(allowedRuleList)
-	blockedRuleListBytes, _ := json.Marshal(blockedRuleList)
-	allowedIpListBytes, _ := json.Marshal(allowedIpList)
-	blockedIpListBytes, _ := json.Marshal(blockedIpList)
-
-	return fmt.Sprintf(`
-	resource "snowflake_network_policy" "test" {
-		name = "%[1]s"
-		allowed_network_rule_list = %[2]s
-		blocked_network_rule_list = %[3]s
-		allowed_ip_list = %[4]s
-		blocked_ip_list = %[5]s
-		comment = "%[6]s"
-	}
-
-	resource "snowflake_network_policy" "test2" {
-		name = "%[7]s"
-	}
-
-	data "snowflake_network_policies" "test" {
-		like = snowflake_network_policy.test.name
-	}
-`,
-		name,
-		string(allowedRuleListBytes),
-		string(blockedRuleListBytes),
-		string(allowedIpListBytes),
-		string(blockedIpListBytes),
-		comment,
-		name2,
-	)
 }
 
 func TestAcc_NetworkPolicies_NetworkPolicyNotFound_WithPostConditions(t *testing.T) {
