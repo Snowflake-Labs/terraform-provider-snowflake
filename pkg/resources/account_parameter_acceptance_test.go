@@ -173,27 +173,4 @@ func TestAcc_AccountParameter_INITIAL_REPLICATION_SIZE_LIMIT_IN_TB(t *testing.T)
 	})
 }
 
-// TODO: use different param here (account only)
-// Proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3375 is fixed
-func TestAcc_AccountParameter_METRIC_LEVEL(t *testing.T) {
-	accountParameterModel := model.AccountParameter("test", string(sdk.AccountParameterMetricLevel), string(sdk.MetricLevelAll))
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckAccountParameterUnset(t, sdk.AccountParameterMetricLevel),
-		Steps: []resource.TestStep{
-			{
-				Config: config.FromModels(t, accountParameterModel),
-				Check: assertThat(t, resourceassert.AccountParameterResource(t, accountParameterModel.ResourceReference()).
-					HasKeyString(string(sdk.AccountParameterMetricLevel)).
-					HasValueString(string(sdk.MetricLevelAll)),
-				),
-			},
-		},
-	})
-}
-
 // TODO(SNOW-1866453): add more acc tests for the remaining parameters
