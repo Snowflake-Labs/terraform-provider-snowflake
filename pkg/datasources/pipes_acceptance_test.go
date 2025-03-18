@@ -6,14 +6,20 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Pipes(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	pipeName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	pipeId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -23,36 +29,25 @@ func TestAcc_Pipes(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: pipes(databaseName, schemaName, pipeName),
+				Config: pipes(tableId, stageId, pipeId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttrSet("data.snowflake_pipes.t", "pipes.#"),
 					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "pipes.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "pipes.0.name", pipeName),
+					resource.TestCheckResourceAttr("data.snowflake_pipes.t", "pipes.0.name", pipeId.Name()),
 				),
 			},
 		},
 	})
 }
 
-func pipes(databaseName string, schemaName string, pipeName string) string {
-	s := `
-resource "snowflake_database" "test" {
-  name 	  = "%v"
-  comment = "Terraform acceptance test"
-}
-
-resource "snowflake_schema" "test" {
-  name 	   = "%v"
-  database = snowflake_database.test.name
-  comment  = "Terraform acceptance test"
-}
-
+func pipes(tableId sdk.SchemaObjectIdentifier, stageId sdk.SchemaObjectIdentifier, pipeId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test" {
-  database = snowflake_database.test.name
-  schema   = snowflake_schema.test.name
-  name     = snowflake_schema.test.name
+  database = "%[1]s"
+  schema   = "%[2]s"
+  name     = "%[3]s"
   column {
 	name = "id"
 	type = "NUMBER(5,0)"
@@ -64,30 +59,27 @@ resource "snowflake_table" "test" {
 }
 
 resource "snowflake_stage" "test" {
-  name = snowflake_schema.test.name
-  database = snowflake_database.test.name
-  schema = snowflake_schema.test.name
-  comment = "Terraform acceptance test"
+  database = "%[1]s"
+  schema = "%[2]s"
+  name = "%[4]s"
+}
+
+resource "snowflake_pipe" "test" {
+  database       = "%[1]s"
+  schema         = "%[2]s"
+  name           = "%[5]s"
+  comment        = "Terraform acceptance test"
+  copy_statement = <<CMD
+COPY INTO ${snowflake_table.test.fully_qualified_name}
+  FROM @${snowflake_stage.test.fully_qualified_name}
+  FILE_FORMAT = (TYPE = CSV)
+CMD
+  auto_ingest    = false
 }
 
 data snowflake_pipes "t" {
 	database = snowflake_pipe.test.database
 	schema = snowflake_pipe.test.schema
-	depends_on = [snowflake_pipe.test]
 }
-
-resource "snowflake_pipe" "test" {
-  database       = snowflake_database.test.name
-  schema         = snowflake_schema.test.name
-  name           = "%v"
-  comment        = "Terraform acceptance test"
-  copy_statement = <<CMD
-COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
-  FROM @"${snowflake_stage.test.database}"."${snowflake_stage.test.schema}"."${snowflake_stage.test.name}"
-  FILE_FORMAT = (TYPE = CSV)
-CMD
-  auto_ingest    = false
-}
-`
-	return fmt.Sprintf(s, databaseName, schemaName, pipeName)
+`, pipeId.DatabaseName(), pipeId.SchemaName(), tableId.Name(), stageId.Name(), pipeId.Name())
 }

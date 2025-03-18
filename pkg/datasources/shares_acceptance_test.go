@@ -7,15 +7,19 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Shares(t *testing.T) {
-	shareName := acc.TestClient().Ids.Alpha()
-	shareName2 := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	shareId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
-	pattern := shareName
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -26,14 +30,14 @@ func TestAcc_Shares(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: shares(shareName, shareName2, comment),
+				Config: shares(shareId, shareId2, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_shares.r", "shares.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_shares.r", "shares.0.name"),
 				),
 			},
 			{
-				Config: sharesPattern(shareName, pattern, comment),
+				Config: sharesPattern(shareId, shareId.Name(), comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_shares.r", "shares.#"),
 					resource.TestCheckResourceAttr("data.snowflake_shares.r", "shares.#", "1"),
@@ -45,15 +49,15 @@ func TestAcc_Shares(t *testing.T) {
 	})
 }
 
-func shares(shareName, shareName2, comment string) string {
+func shares(shareId sdk.AccountObjectIdentifier, shareId2 sdk.AccountObjectIdentifier, comment string) string {
 	return fmt.Sprintf(`
 		resource snowflake_share "test_share" {
-			name = "%v"
-			comment = "%v"
+			name = "%[1]s"
+			comment = "%[3]s"
 		}
 		resource snowflake_share "test_share_2" {
-			name = "%v"
-			comment = "%v"
+			name = "%[2]s"
+			comment = "%[3]s"
 		}
 		data snowflake_shares "r" {
 			depends_on = [
@@ -61,21 +65,21 @@ func shares(shareName, shareName2, comment string) string {
 				snowflake_share.test_share_2,
 			]
 		}
-	`, shareName, comment, shareName2, comment)
+	`, shareId.Name(), shareId2.Name(), comment)
 }
 
-func sharesPattern(shareName, pattern, comment string) string {
+func sharesPattern(shareId sdk.AccountObjectIdentifier, pattern string, comment string) string {
 	return fmt.Sprintf(`
 		resource snowflake_share "test_share" {
-			name = "%v"
-			comment = "%v"
+			name = "%[1]s"
+			comment = "%[3]s"
 		}
 
 		data snowflake_shares "r" {
-			pattern = "%v"
+			pattern = "%[2]s"
 			depends_on = [
 				snowflake_share.test_share,
 			]
 		}
-	`, shareName, comment, pattern)
+	`, shareId.Name(), pattern, comment)
 }

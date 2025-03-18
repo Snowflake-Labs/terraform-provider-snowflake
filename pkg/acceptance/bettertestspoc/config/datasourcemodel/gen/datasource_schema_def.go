@@ -46,4 +46,52 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		name:   "Grants",
 		schema: datasources.Grants().Schema,
 	},
+	{
+		name:   "NetworkPolicies",
+		schema: datasources.NetworkPolicies().Schema,
+	},
+	{
+		name:   "ResourceMonitors",
+		schema: datasources.ResourceMonitors().Schema,
+	},
+	{
+		name:   "Schemas",
+		schema: datasources.Schemas().Schema,
+	},
+	{
+		name:   "Secrets",
+		schema: datasources.Secrets().Schema,
+	},
+	{
+		name:   "SecurityIntegrations",
+		schema: datasources.SecurityIntegrations().Schema,
+	},
+	{
+		name:   "Streamlits",
+		schema: datasources.Streamlits().Schema,
+	},
+	{
+		name:   "Streams",
+		schema: datasources.Streams().Schema,
+	},
+	{
+		name:   "Tags",
+		schema: datasources.Tags().Schema,
+	},
+	{
+		name:   "Tasks",
+		schema: datasources.Tasks().Schema,
+	},
+	{
+		name:   "Users",
+		schema: datasources.Users().Schema,
+	},
+	{
+		name:   "Views",
+		schema: datasources.Views().Schema,
+	},
+	{
+		name:   "Warehouses",
+		schema: datasources.Warehouses().Schema,
+	},
 }

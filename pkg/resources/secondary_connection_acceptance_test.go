@@ -20,24 +20,22 @@ import (
 )
 
 func TestAcc_SecondaryConnection_Basic(t *testing.T) {
+	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed; also, different regions needed
+	t.Skipf("Skipped due to 003813 (23001): The connection cannot be failed over to an account in the same region")
+
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
-	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
-
-	id := acc.SecondaryTestClient().Ids.RandomAccountObjectIdentifier()
-	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
-	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, id)
-
 	// create primary connection
-	_, cleanup := acc.SecondaryTestClient().Connection.Create(t, id)
-	t.Cleanup(cleanup)
-	acc.SecondaryTestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithEnableConnectionFailover(
-		*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{accountId})))
+	connection, connectionCleanup := acc.SecondaryTestClient().Connection.Create(t)
+	t.Cleanup(connectionCleanup)
 
-	secondartyConnectionModel := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), id.Name())
-	secondartyConnectionModelWithComment := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), id.Name()).WithComment("secondary connection test comment")
+	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
+	acc.SecondaryTestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(connection.ID()).WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{accountId})))
+
+	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, connection.ID())
+	secondaryConnectionModel := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), connection.ID().Name())
+	secondaryConnectionModelWithComment := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), connection.ID().Name()).WithComment("secondary connection test comment")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -48,18 +46,18 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryConnection),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, secondartyConnectionModel),
+				Config: config.FromModels(t, secondaryConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
-							HasNameString(id.Name()).
-							HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						resourceassert.SecondaryConnectionResource(t, secondaryConnectionModel.ResourceReference()).
+							HasNameString(connection.ID().Name()).
+							HasFullyQualifiedNameString(connection.ID().FullyQualifiedName()).
 							HasAsReplicaOfIdentifier(primaryConnectionAsExternalId).
 							HasIsPrimaryString("false").
 							HasCommentString(""),
 
-						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).
-							HasName(id.Name()).
+						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModel.ResourceReference()).
+							HasName(connection.ID().Name()).
 							HasSnowflakeRegion(acc.SecondaryTestClient().Context.CurrentRegion(t)).
 							HasAccountLocator(acc.SecondaryTestClient().GetAccountLocator()).
 							HasAccountName(accountId.AccountName()).
@@ -69,66 +67,66 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 							HasPrimaryIdentifier(primaryConnectionAsExternalId).
 							HasFailoverAllowedToAccounts(accountId).
 							HasConnectionUrl(
-								acc.SecondaryTestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), id.Name()),
+								acc.SecondaryTestClient().Connection.GetConnectionUrl(accountId.OrganizationName(), connection.ID().Name()),
 							),
 					),
 				),
 			},
 			// set comment
 			{
-				Config: config.FromModels(t, secondartyConnectionModelWithComment),
+				Config: config.FromModels(t, secondaryConnectionModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModelWithComment.ResourceReference()).
-							HasNameString(id.Name()).
-							HasFullyQualifiedNameString(id.FullyQualifiedName()).
+						resourceassert.SecondaryConnectionResource(t, secondaryConnectionModelWithComment.ResourceReference()).
+							HasNameString(connection.ID().Name()).
+							HasFullyQualifiedNameString(connection.ID().FullyQualifiedName()).
 							HasCommentString("secondary connection test comment"),
 
-						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModelWithComment.ResourceReference()).
+						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModelWithComment.ResourceReference()).
 							HasComment("secondary connection test comment"),
 					),
 				),
 			},
 			// import
 			{
-				ResourceName:      secondartyConnectionModelWithComment.ResourceReference(),
+				ResourceName:      secondaryConnectionModelWithComment.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "comment", "secondary connection test comment"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(connection.ID()), "name", connection.ID().Name()),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(connection.ID()), "comment", "secondary connection test comment"),
 				),
 			},
 			// unset comment
 			{
-				Config: config.FromModels(t, secondartyConnectionModel),
+				Config: config.FromModels(t, secondaryConnectionModel),
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
+						resourceassert.SecondaryConnectionResource(t, secondaryConnectionModel.ResourceReference()).
 							HasCommentString(""),
 
-						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).
+						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModel.ResourceReference()).
 							HasComment(""),
 					),
 				),
 			},
-			// recreate when exteranlly promoted to primary
+			// recreate when externally promoted to primary
 			{
 				PreConfig: func() {
-					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(id).WithPrimary(true))
+					acc.TestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(connection.ID()).WithPrimary(true))
 				},
-				Config: config.FromModels(t, secondartyConnectionModel),
+				Config: config.FromModels(t, secondaryConnectionModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(secondartyConnectionModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(secondaryConnectionModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.SecondaryConnectionResource(t, secondartyConnectionModel.ResourceReference()).
+						resourceassert.SecondaryConnectionResource(t, secondaryConnectionModel.ResourceReference()).
 							HasIsPrimaryString("false"),
 
-						resourceshowoutputassert.ConnectionShowOutput(t, secondartyConnectionModel.ResourceReference()).
+						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModel.ResourceReference()).
 							HasIsPrimary(false),
 					),
 				),

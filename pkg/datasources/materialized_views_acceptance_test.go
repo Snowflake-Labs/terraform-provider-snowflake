@@ -6,13 +6,18 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_MaterializedViews(t *testing.T) {
-	tableName := acc.TestClient().Ids.Alpha()
-	viewName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -23,20 +28,20 @@ func TestAcc_MaterializedViews(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: materializedViews(acc.TestWarehouseName, acc.TestDatabaseName, acc.TestSchemaName, tableName, viewName),
+				Config: materializedViews(acc.TestWarehouseName, tableId, viewId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_materialized_views.v", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("data.snowflake_materialized_views.v", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttrSet("data.snowflake_materialized_views.v", "materialized_views.#"),
 					resource.TestCheckResourceAttr("data.snowflake_materialized_views.v", "materialized_views.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_materialized_views.v", "materialized_views.0.name", viewName),
+					resource.TestCheckResourceAttr("data.snowflake_materialized_views.v", "materialized_views.0.name", viewId.Name()),
 				),
 			},
 		},
 	})
 }
 
-func materializedViews(warehouseName string, databaseName string, schemaName string, tableName string, viewName string) string {
+func materializedViews(warehouseName string, tableId sdk.SchemaObjectIdentifier, viewId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 	resource snowflake_table "t"{
 		name 	 = "%[4]v"
@@ -64,5 +69,5 @@ func materializedViews(warehouseName string, databaseName string, schemaName str
 		schema = "%[3]s"
 		depends_on = [snowflake_materialized_view.v]
 	}
-	`, warehouseName, databaseName, schemaName, tableName, viewName)
+	`, warehouseName, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), viewId.Name())
 }

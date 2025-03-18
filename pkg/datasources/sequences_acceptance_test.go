@@ -6,14 +6,17 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Sequences(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	sequenceName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	sequenceId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -23,40 +26,30 @@ func TestAcc_Sequences(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: sequences(databaseName, schemaName, sequenceName),
+				Config: sequences(sequenceId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "database", databaseName),
-					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "schema", schemaName),
+					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "database", sequenceId.DatabaseName()),
+					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "schema", sequenceId.SchemaName()),
 					resource.TestCheckResourceAttrSet("data.snowflake_sequences.t", "sequences.#"),
 					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "sequences.#", "1"),
-					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "sequences.0.name", sequenceName),
+					resource.TestCheckResourceAttr("data.snowflake_sequences.t", "sequences.0.name", sequenceId.Name()),
 				),
 			},
 		},
 	})
 }
 
-func sequences(databaseName string, schemaName string, sequenceName string) string {
+func sequences(sequenceId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-
-	resource snowflake_database "d" {
-		name = "%v"
-	}
-
-	resource snowflake_schema "s"{
-		name 	 = "%v"
-		database = snowflake_database.d.name
-	}
-
 	resource snowflake_sequence "t"{
-		name 	 = "%v"
-		database = snowflake_schema.s.database
-		schema 	 = snowflake_schema.s.name
+		database = "%[1]s"
+		schema 	 = "%[2]s"
+		name 	 = "%[3]s"
 	}
 
 	data snowflake_sequences "t" {
 		database = snowflake_sequence.t.database
 		schema = snowflake_sequence.t.schema
 	}
-	`, databaseName, schemaName, sequenceName)
+	`, sequenceId.DatabaseName(), sequenceId.SchemaName(), sequenceId.Name())
 }

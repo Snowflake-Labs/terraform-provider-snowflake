@@ -27,7 +27,7 @@ func TestAcc_FileFormats(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: fileFormats(fileFormatId),
+				Config: fileFormatsInSchema(fileFormatId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "database", fileFormatId.DatabaseName()),
 					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "schema", fileFormatId.SchemaName()),
@@ -53,7 +53,7 @@ func TestAcc_FileFormatsEmpty(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: zeroFileFormats(),
+				Config: fileFormatsInSchemaWithoutCreation(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("data.snowflake_file_formats.t", "schema", acc.TestSchemaName),
@@ -65,7 +65,7 @@ func TestAcc_FileFormatsEmpty(t *testing.T) {
 	})
 }
 
-func fileFormats(fileFormatId sdk.SchemaObjectIdentifier) string {
+func fileFormatsInSchema(fileFormatId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 	resource snowflake_file_format "t"{
 		name 	 	= "%[3]s"
@@ -103,7 +103,7 @@ func fileFormats(fileFormatId sdk.SchemaObjectIdentifier) string {
 	`, fileFormatId.DatabaseName(), fileFormatId.SchemaName(), fileFormatId.Name())
 }
 
-func zeroFileFormats() string {
+func fileFormatsInSchemaWithoutCreation() string {
 	return fmt.Sprintf(`
 	data snowflake_file_formats "t" {
 		database = "%[1]s"

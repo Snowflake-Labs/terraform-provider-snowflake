@@ -12,8 +12,10 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,8 +23,10 @@ import (
 )
 
 func TestAcc_Users_PersonUser(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	pass := random.Password()
 	key1, key1Fp := random.GenerateRSAPublicKey(t)
@@ -50,6 +54,9 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 		WithRsaPublicKey2(key2).
 		WithComment(comment).
 		WithDisableMfa("true")
+	usersModel := datasourcemodel.Users("test").
+		WithLike(id.Name()).
+		WithDependsOn(userModelAllAttributes.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -60,9 +67,9 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.User),
+				Config: config.FromModels(t, userModelAllAttributes, usersModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
 						HasType("").
@@ -87,44 +94,44 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 						HasHasMfa(false),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", comment)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "Display Name")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "Jan")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "Jakub")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "Testowski")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "fake@email.com")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "********")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "true")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "some.namespace")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "some_role")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", key1)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", key2)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.type", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.comment", comment)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.display_name", "Display Name")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.first_name", "Jan")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.middle_name", "Jakub")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.last_name", "Testowski")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.email", "fake@email.com")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password", "********")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.must_change_password", "true")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "some_warehouse")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "some.namespace")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "some_role")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key", key1)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2", key2)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.password_last_set_time")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.has_mfa", "false")),
 				),
 			},
 			{
-				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.User),
+				Config: config.FromModels(t, userModelNoAttributes, usersModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
 						HasType("").
@@ -148,37 +155,37 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 						HasComment(""),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.type", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.display_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.email", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2_fp", "")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.password_last_set_time")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
 				),
 			},
 		},
@@ -186,8 +193,10 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 }
 
 func TestAcc_Users_ServiceUser(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	key1, key1Fp := random.GenerateRSAPublicKey(t)
 	key2, key2Fp := random.GenerateRSAPublicKey(t)
@@ -207,6 +216,9 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 		WithRsaPublicKey(key1).
 		WithRsaPublicKey2(key2).
 		WithComment(comment)
+	usersModel := datasourcemodel.Users("test").
+		WithLike(id.Name()).
+		WithDependsOn(userModelAllAttributes.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -217,9 +229,9 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ServiceUser),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.ServiceUser),
+				Config: config.FromModels(t, userModelAllAttributes, usersModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
 						HasType(string(sdk.UserTypeService)).
@@ -244,44 +256,44 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 						HasHasMfa(false),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", comment)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeService))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "Display Name")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "fake@email.com")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "some.namespace")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "some_role")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", key1)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", key2)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.comment", comment)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.type", string(sdk.UserTypeService))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.display_name", "Display Name")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.email", "fake@email.com")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "some_warehouse")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "some.namespace")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "some_role")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key", key1)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2", key2)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password_last_set_time", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.has_mfa", "false")),
 				),
 			},
 			{
-				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.ServiceUser),
+				Config: config.FromModels(t, userModelNoAttributes, usersModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
 						HasType(string(sdk.UserTypeService)).
@@ -305,37 +317,37 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 						HasComment(""),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeService))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.type", string(sdk.UserTypeService))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.display_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.email", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password_last_set_time", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
 				),
 			},
 		},
@@ -343,8 +355,10 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 }
 
 func TestAcc_Users_LegacyServiceUser(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	pass := random.Password()
 	key1, key1Fp := random.GenerateRSAPublicKey(t)
@@ -367,6 +381,9 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 		WithRsaPublicKey(key1).
 		WithRsaPublicKey2(key2).
 		WithComment(comment)
+	usersModel := datasourcemodel.Users("test").
+		WithLike(id.Name()).
+		WithDependsOn(userModelAllAttributes.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -377,9 +394,9 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.LegacyServiceUser),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, userModelAllAttributes) + datasourceWithLike(resources.LegacyServiceUser),
+				Config: config.FromModels(t, userModelAllAttributes, usersModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
 						HasType(string(sdk.UserTypeLegacyService)).
@@ -404,44 +421,44 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 						HasHasMfa(false),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeLegacyService))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", comment)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "Display Name")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "fake@email.com")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "********")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "true")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "some_warehouse")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "some.namespace")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "some_role")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", key1)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", key2)),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.has_mfa", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.type", string(sdk.UserTypeLegacyService))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.comment", comment)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.display_name", "Display Name")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.login_name", fmt.Sprintf("%s_LOGIN", id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.email", "fake@email.com")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password", "********")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.must_change_password", "true")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "some_warehouse")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "some.namespace")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "some_role")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key", key1)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key_fp", "SHA256:"+key1Fp)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2", key2)),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2_fp", "SHA256:"+key2Fp)),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.password_last_set_time")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.has_mfa", "false")),
 				),
 			},
 			{
-				Config: config.FromModels(t, userModelNoAttributes) + datasourceWithLike(resources.LegacyServiceUser),
+				Config: config.FromModels(t, userModelNoAttributes, usersModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.#", "1")),
 					resourceshowoutputassert.UsersDatasourceShowOutput(t, "snowflake_users.test").
 						HasName(id.Name()).
 						HasType(string(sdk.UserTypeLegacyService)).
@@ -465,37 +482,37 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 						HasComment(""),
 					resourceparametersassert.UsersDatasourceParameters(t, "snowflake_users.test").
 						HasAllDefaults(),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.type", string(sdk.UserTypeLegacyService))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.comment", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.display_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.first_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.middle_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.last_name", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.email", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.password", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.must_change_password", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.disabled", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_lock", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.snowflake_support", "false")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.days_to_expiry")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.mins_to_unlock")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_warehouse", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_namespace", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_role", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.default_secondary_roles", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_duo", "false")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.ext_authn_uid", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key_fp", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.rsa_public_key2_fp", "")),
-					assert.Check(resource.TestCheckResourceAttrSet("data.snowflake_users.test", "users.0.describe_output.0.password_last_set_time")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url", "")),
-					assert.Check(resource.TestCheckResourceAttr("data.snowflake_users.test", "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.type", string(sdk.UserTypeLegacyService))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.comment", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.display_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.login_name", strings.ToUpper(id.Name()))),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.first_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.middle_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.last_name", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.email", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.password", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.must_change_password", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.disabled", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_lock", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.snowflake_support", "false")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.days_to_expiry")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_unlock")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_network_policy", "0")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key_fp", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.rsa_public_key2_fp", "")),
+					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.password_last_set_time")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.custom_landing_page_url_flush_next_ui_load", "false")),
 				),
 			},
 		},
@@ -503,6 +520,9 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 }
 
 func TestAcc_Users_DifferentFiltering(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	prefix := random.AlphaN(4)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
@@ -512,7 +532,15 @@ func TestAcc_Users_DifferentFiltering(t *testing.T) {
 	user2Model := model.User("u2", id2.Name())
 	user3Model := model.User("u3", id3.Name())
 
-	allUsersConfig := config.FromModels(t, userModel) + config.FromModels(t, user2Model) + config.FromModels(t, user3Model)
+	usersModelLikeFirstOne := datasourcemodel.Users("test").
+		WithLike(id.Name()).
+		WithDependsOn(userModel.ResourceReference(), user2Model.ResourceReference(), user3Model.ResourceReference())
+	usersModelStartsWithPrefix := datasourcemodel.Users("test").
+		WithStartsWith(prefix).
+		WithDependsOn(userModel.ResourceReference(), user2Model.ResourceReference(), user3Model.ResourceReference())
+	usersModelLimitRowsAndFrom := datasourcemodel.Users("test").
+		WithLimitRowsAndFrom(1, prefix).
+		WithDependsOn(userModel.ResourceReference(), user2Model.ResourceReference(), user3Model.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -523,63 +551,25 @@ func TestAcc_Users_DifferentFiltering(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				Config: allUsersConfig + datasourceWithLikeMultipleUsers(),
+				Config: config.FromModels(t, userModel, user2Model, user3Model, usersModelLikeFirstOne),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1"),
+					resource.TestCheckResourceAttr(usersModelLikeFirstOne.DatasourceReference(), "users.#", "1"),
 				),
 			},
 			{
-				Config: allUsersConfig + datasourceWithStartsWithMultipleUsers(prefix),
+				Config: config.FromModels(t, userModel, user2Model, user3Model, usersModelStartsWithPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "2"),
+					resource.TestCheckResourceAttr(usersModelStartsWithPrefix.DatasourceReference(), "users.#", "2"),
 				),
 			},
 			{
-				Config: allUsersConfig + datasourceWithLimitMultipleUsers(1, prefix),
+				Config: config.FromModels(t, userModel, user2Model, user3Model, usersModelLimitRowsAndFrom),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_users.test", "users.#", "1"),
+					resource.TestCheckResourceAttr(usersModelLimitRowsAndFrom.DatasourceReference(), "users.#", "1"),
 				),
 			},
 		},
 	})
-}
-
-func datasourceWithLike(resource resources.Resource) string {
-	return fmt.Sprintf(`
-	data "snowflake_users" "test" {
-		like = %s.u.name
-	}
-	`, resource)
-}
-
-func datasourceWithLikeMultipleUsers() string {
-	return `
-	data "snowflake_users" "test" {
-		depends_on = [snowflake_user.u, snowflake_user.u2, snowflake_user.u3]
-		like = snowflake_user.u.name
-	}
-`
-}
-
-func datasourceWithStartsWithMultipleUsers(startsWith string) string {
-	return fmt.Sprintf(`
-	data "snowflake_users" "test" {
-		depends_on = [snowflake_user.u, snowflake_user.u2, snowflake_user.u3]
-		starts_with = "%s"
-	}
-`, startsWith)
-}
-
-func datasourceWithLimitMultipleUsers(rows int, from string) string {
-	return fmt.Sprintf(`
-	data "snowflake_users" "test" {
-		depends_on = [snowflake_user.u, snowflake_user.u2, snowflake_user.u3]
-		limit {
-    		rows = %d
-			from = "%s"
-  		}
-	}
-`, rows, from)
 }
 
 func TestAcc_Users_UserNotFound_WithPostConditions(t *testing.T) {

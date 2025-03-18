@@ -6,6 +6,8 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -33,7 +35,11 @@ func TestAcc_ParametersOnAccount(t *testing.T) {
 }
 
 func TestAcc_ParametersOnSession(t *testing.T) {
-	userName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Context.CurrentUser(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -43,12 +49,12 @@ func TestAcc_ParametersOnSession(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: parametersConfigOnSession(userName),
+				Config: parametersConfigOnSession(userId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.key"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.value"),
-					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "user", userName),
+					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "user", userId.Name()),
 				),
 			},
 		},
@@ -56,7 +62,11 @@ func TestAcc_ParametersOnSession(t *testing.T) {
 }
 
 func TestAcc_ParametersOnObject(t *testing.T) {
-	dbName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dbId := acc.TestClient().Ids.DatabaseId()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -66,32 +76,13 @@ func TestAcc_ParametersOnObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: parametersConfigOnObject(dbName),
+				Config: parametersConfigOnObject(dbId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.#"),
 					resource.TestCheckResourceAttrSet("data.snowflake_parameters.p", "parameters.0.key"),
 					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_type", "DATABASE"),
-					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_name", dbName),
+					resource.TestCheckResourceAttr("data.snowflake_parameters.p", "object_name", dbId.Name()),
 				),
-			},
-		},
-	})
-}
-
-// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 is fixed
-func TestAcc_Parameters_TransactionAbortOnErrorCanBeSet(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: `resource "snowflake_account_parameter" "test" {
-				   key   = "TRANSACTION_ABORT_ON_ERROR"
-				   value = "true"
-				}`,
 			},
 		},
 	})
@@ -104,28 +95,21 @@ func parametersConfigOnAccount() string {
 	}`
 }
 
-func parametersConfigOnSession(user string) string {
+func parametersConfigOnSession(userId sdk.AccountObjectIdentifier) string {
 	s := `
-	resource "snowflake_user" "u" {
-		name = "%s"
-	}
-
 	data "snowflake_parameters" "p" {
 		parameter_type = "SESSION"
-		user = snowflake_user.u.name
+		user = "%s"
 	}`
-	return fmt.Sprintf(s, user)
+	return fmt.Sprintf(s, userId.Name())
 }
 
-func parametersConfigOnObject(name string) string {
+func parametersConfigOnObject(databaseId sdk.AccountObjectIdentifier) string {
 	stmt := `
-	resource "snowflake_database" "d" {
-		name = "%s"
-	}
 	data "snowflake_parameters" "p" {
 		parameter_type = "OBJECT"
 		object_type = "DATABASE"
-		object_name = snowflake_database.d.name
+		object_name = "%s"
 	}`
-	return fmt.Sprintf(stmt, name)
+	return fmt.Sprintf(stmt, databaseId.Name())
 }

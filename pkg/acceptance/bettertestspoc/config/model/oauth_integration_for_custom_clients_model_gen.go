@@ -119,12 +119,12 @@ func (o *OauthIntegrationForCustomClientsModel) WithOauthAllowNonTlsRedirectUri(
 }
 
 func (o *OauthIntegrationForCustomClientsModel) WithOauthClientRsaPublicKey(oauthClientRsaPublicKey string) *OauthIntegrationForCustomClientsModel {
-	o.OauthClientRsaPublicKey = tfconfig.StringVariable(oauthClientRsaPublicKey)
+	o.OauthClientRsaPublicKey = config.MultilineWrapperVariable(oauthClientRsaPublicKey)
 	return o
 }
 
 func (o *OauthIntegrationForCustomClientsModel) WithOauthClientRsaPublicKey2(oauthClientRsaPublicKey2 string) *OauthIntegrationForCustomClientsModel {
-	o.OauthClientRsaPublicKey2 = tfconfig.StringVariable(oauthClientRsaPublicKey2)
+	o.OauthClientRsaPublicKey2 = config.MultilineWrapperVariable(oauthClientRsaPublicKey2)
 	return o
 }
 

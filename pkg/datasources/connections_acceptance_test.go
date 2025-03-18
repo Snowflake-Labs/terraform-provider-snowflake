@@ -183,7 +183,7 @@ func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 
-	_, cleanup := acc.SecondaryTestClient().Connection.Create(t, idTwo)
+	_, cleanup := acc.SecondaryTestClient().Connection.CreateWithIdentifier(t, idTwo)
 	t.Cleanup(cleanup)
 
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, idTwo)
