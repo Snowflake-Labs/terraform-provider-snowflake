@@ -23,6 +23,9 @@ import (
 )
 
 func TestAcc_Execute_basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	secondId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
@@ -94,6 +97,9 @@ func TestAcc_Execute_basic(t *testing.T) {
 }
 
 func TestAcc_Execute_withRead(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
@@ -141,6 +147,9 @@ func TestAcc_Execute_withRead(t *testing.T) {
 }
 
 func TestAcc_Execute_readRemoved(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
@@ -191,6 +200,9 @@ func TestAcc_Execute_readRemoved(t *testing.T) {
 }
 
 func TestAcc_Execute_badQuery(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	createDatabaseStatement := func(id string) string { return fmt.Sprintf("create database %s", id) }
@@ -276,6 +288,9 @@ func TestAcc_Execute_invalidExecuteStatement(t *testing.T) {
 }
 
 func TestAcc_Execute_invalidRevertStatement(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	updatedId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
@@ -370,6 +385,9 @@ func TestAcc_Execute_invalidRevertStatement(t *testing.T) {
 }
 
 func TestAcc_Execute_revertUpdated(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	execute := fmt.Sprintf("create database %s", name)
@@ -434,6 +452,9 @@ func TestAcc_Execute_revertUpdated(t *testing.T) {
 }
 
 func TestAcc_Execute_executeUpdated(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("EXECUTE_TEST_DATABASE_")
 	name := id.Name()
 	execute := fmt.Sprintf("create database %s", name)
@@ -578,6 +599,8 @@ func TestAcc_Execute_grants(t *testing.T) {
 //	2023/11/26 17:16:03 [DEBUG] SQL "GRANT MODIFY,USAGE ON DATABASE EXECUTE_TEST_DATABASE_3740 TO ROLE EXECUTE_TEST_ROLE_3008" applied successfully
 func TestAcc_Execute_grantsComplex(t *testing.T) {
 	t.Skip("Skipping TestAcc_Execute_grantsComplex because of https://github.com/hashicorp/terraform-plugin-sdk/issues/536 issue")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	client := acc.TestClient()
 
@@ -674,8 +697,8 @@ func TestAcc_Execute_grantsComplex(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2491
 func TestAcc_Execute_queryResultsBug(t *testing.T) {
-	resourceName := "snowflake_execute.test"
 
+	resourceName := "snowflake_execute.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -721,9 +744,12 @@ output "query_results_output" {
 }
 
 func TestAcc_Execute_QueryResultsRecomputedWithoutQueryChanges(t *testing.T) {
-	resourceName := "snowflake_execute.test"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
+	resourceName := "snowflake_execute.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -792,6 +818,9 @@ func verifyGrantExists(t *testing.T, roleId sdk.AccountObjectIdentifier, privile
 }
 
 func TestAcc_Execute_ImportWithRandomId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -867,7 +896,6 @@ func testAccCheckDatabaseExistence(t *testing.T, id sdk.AccountObjectIdentifier,
 
 // Result of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3334.
 func TestAcc_Execute_gh3334_allTimeouts(t *testing.T) {
-	resourceName := "snowflake_execute.test"
 	createConfigVariables := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"execute":        config.StringVariable("CALL SYSTEM$WAIT(5, 'SECONDS');"),
@@ -880,6 +908,7 @@ func TestAcc_Execute_gh3334_allTimeouts(t *testing.T) {
 		}
 	}
 
+	resourceName := "snowflake_execute.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
