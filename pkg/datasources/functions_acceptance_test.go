@@ -21,7 +21,6 @@ func TestAcc_Functions(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	dataSourceName := "data.snowflake_functions.functions"
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },

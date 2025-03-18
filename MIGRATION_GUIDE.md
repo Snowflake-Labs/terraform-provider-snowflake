@@ -7,10 +7,44 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 
+## v1.0.4 ➞ v1.0.5
+
+### Changes in TOML configuration file requirements
+Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB.
+
+### Tracking external changes for oauth_redirect_uri in the snowflake_oauth_integration_for_partner_applications resource
+From this version, the snowflake_oauth_integration_for_partner_applications resource is able to
+detect changes on the Snowflake side and apply appropriate action from the provider level. This may produce
+changes after running `terraform plan`, as before the configuration could contain different value than on the Snowflake side.
+
+### Removal of instrumentation library
+We decided to remove the instrumentation around the [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake). It does not introduce any functional changes, however, it changes the way the Snowflake communication logs are turned on and how they are printed. Check [this section](CREATING_ISSUES.md#how-can-i-turn-on-logs) for more details.
+
+`SF_TF_NO_INSTRUMENTED_SQL`, used to turn the instrumentation off, was removed because it is no longer needed.
+
+These changes should not affect any existing workflows (unless you have custom logic based on the old logs output).
+
+### Removal of additional debug logs for the `snowflake_grant_privileges_to_role` resource
+
+The environment variable `SF_TF_ADDITIONAL_DEBUG_LOGGING` was used to turn on the additional logging in the `snowflake_grant_privileges_to_role` resource. The additional logger was later used in multiple other places. We are currently removing it completely; however, we plan to address the logging topic globally in the provider.
+
+These changes should not affect any existing workflows (unless you have custom logic based on the additional logs output - `sf-tf-additional-debug` prefix).
+
 ## v1.0.3 ➞ v1.0.4
 
 ### Fixed external_function VARCHAR return_type
 VARCHAR external_function return_type did not work correctly before ([#3392](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3392)) but was fixed in this version.
+
+### New Go version and conflicts with Suricata-based firewalls (like AWS Network Firewall)
+In this version we bumped our underlying Go version to v1.23.6.
+Based on issue [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
+it seems it introduces changes to the standard library that may not be supported by other third party software.
+The issue presents one of those changes that seem to be introduced in Golang's `crypto/tls` package.
+One thing that is valuable in such cases is to check the [GODEBUG](https://go.dev/doc/godebug)
+documentation page (especially [history section](https://go.dev/doc/godebug#history)).
+It specifies a set of parameters which can be turned on/off depending on
+what features of Go would you like to use or resign from. The solution for this issue was to set
+the GODEBUG environment variable to `GODEBUG=tlskyber=0`.
 
 ## v1.0.2 ➞ v1.0.3
 
@@ -1392,8 +1426,7 @@ Type changes:
 
 #### *(breaking change)* refactored snowflake_users datasource
 > **IMPORTANT NOTE:** when querying users you don't have permissions to, the querying options are limited.
-You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command cannot be called, so you have to set `with_describe = false`.
-Only `parameters` output is not affected by the lack of privileges.
+You won't get almost any field in `show_output` (only empty or default values), the DESCRIBE command will return error when called, so you have to set `with_describe = false`; the SHOW PARAMETERS command will return error if called too, so you have to set `with_parameters = false`.
 
 Changes:
 - account checking logic was entirely removed

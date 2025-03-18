@@ -17,7 +17,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
@@ -73,7 +72,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			},
 			// incorrect user in provider config should not be rewritten by profile and cause error
 			{
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(tmpServiceUserConfig.Profile).WithUserId(ids.NonExistingAccountObjectIdentifier), datasourceModel()),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(tmpServiceUserConfig.Profile).WithUserId(acc.NonExistingAccountObjectIdentifier), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// correct user and key in provider's config should not be rewritten by a faulty config
@@ -94,7 +93,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// incorrect user in env variable should not be rewritten by profile and cause error (profile authenticator is set to JWT and that's why the error is about incorrect token)
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, ids.NonExistingAccountObjectIdentifier.Name())
+					t.Setenv(snowflakeenvs.User, acc.NonExistingAccountObjectIdentifier.Name())
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
@@ -122,7 +121,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 				Config: config.FromModels(t, providermodel.SnowflakeProvider().
 					WithAuthenticatorType(sdk.AuthenticationTypeJwt).
 					WithProfile(tmpServiceUserConfig.Profile).
-					WithUserId(ids.NonExistingAccountObjectIdentifier).
+					WithUserId(acc.NonExistingAccountObjectIdentifier).
 					WithRoleId(tmpServiceUser.RoleId).
 					WithPrivateKeyMultiline(tmpServiceUser.PrivateKey), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
@@ -152,7 +151,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					t.Setenv(snowflakeenvs.OrganizationName, tmpServiceUser.AccountId.OrganizationName())
 					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
 				},
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(testprofiles.Default).WithUserId(ids.NonExistingAccountObjectIdentifier), datasourceModel()),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(testprofiles.Default).WithUserId(acc.NonExistingAccountObjectIdentifier), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// make sure the teardown is fine by using a correct env config at the end
@@ -291,6 +290,33 @@ func TestAcc_Provider_tomlConfig(t *testing.T) {
 
 					return nil
 				},
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	c := make([]byte, 11*1024*1024)
+	tomlConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return string(c)
+	})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path), datasourceModel()),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path)),
 			},
 		},
 	})
@@ -855,15 +881,6 @@ func providerConfigWithDatasourcePreviewFeatureEnabled(profile, feature string) 
 provider "snowflake" {
 	profile = "%[1]s"
 	preview_features_enabled = ["%[2]s_datasource"]
-}
-data %[2]s t {}
-`, profile, feature)
-}
-
-func providerConfigWithDatasourcePreviewFeature(profile, feature string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
 }
 data %[2]s t {}
 `, profile, feature)

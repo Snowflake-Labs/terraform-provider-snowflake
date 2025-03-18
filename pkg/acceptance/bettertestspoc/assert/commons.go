@@ -18,18 +18,18 @@ import (
 // It allows using it as input the "Check:" in resource.TestStep.
 // It should be used with AssertThat.
 type TestCheckFuncProvider interface {
-	ToTerraformTestCheckFunc(t *testing.T) resource.TestCheckFunc
+	ToTerraformTestCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.TestCheckFunc
 }
 
 // AssertThat should be used for "Check:" input in resource.TestStep instead of e.g. resource.ComposeTestCheckFunc.
 // It allows performing all the checks implementing the TestCheckFuncProvider interface.
-func AssertThat(t *testing.T, fs ...TestCheckFuncProvider) resource.TestCheckFunc {
+func AssertThat(t *testing.T, testClient *helpers.TestClient, fs ...TestCheckFuncProvider) resource.TestCheckFunc {
 	t.Helper()
 	return func(s *terraform.State) error {
 		var result []error
 
 		for i, f := range fs {
-			if err := f.ToTerraformTestCheckFunc(t)(s); err != nil {
+			if err := f.ToTerraformTestCheckFunc(t, testClient)(s); err != nil {
 				result = append(result, fmt.Errorf("check %d/%d error:\n%w", i+1, len(fs), err))
 			}
 		}
@@ -44,7 +44,7 @@ type testCheckFuncWrapper struct {
 	f resource.TestCheckFunc
 }
 
-func (w *testCheckFuncWrapper) ToTerraformTestCheckFunc(_ *testing.T) resource.TestCheckFunc {
+func (w *testCheckFuncWrapper) ToTerraformTestCheckFunc(_ *testing.T, _ *helpers.TestClient) resource.TestCheckFunc {
 	return w.f
 }
 
@@ -58,18 +58,18 @@ func Check(f resource.TestCheckFunc) TestCheckFuncProvider {
 // It allows using it as input the "ImportStateCheck:" in resource.TestStep for import tests.
 // It should be used with AssertThatImport.
 type ImportStateCheckFuncProvider interface {
-	ToTerraformImportStateCheckFunc(t *testing.T) resource.ImportStateCheckFunc
+	ToTerraformImportStateCheckFunc(t *testing.T, testClient *helpers.TestClient) resource.ImportStateCheckFunc
 }
 
 // AssertThatImport should be used for "ImportStateCheck:" input in resource.TestStep instead of e.g. importchecks.ComposeImportStateCheck.
 // It allows performing all the checks implementing the ImportStateCheckFuncProvider interface.
-func AssertThatImport(t *testing.T, fs ...ImportStateCheckFuncProvider) resource.ImportStateCheckFunc {
+func AssertThatImport(t *testing.T, testClient *helpers.TestClient, fs ...ImportStateCheckFuncProvider) resource.ImportStateCheckFunc {
 	t.Helper()
 	return func(s []*terraform.InstanceState) error {
 		var result []error
 
 		for i, f := range fs {
-			if err := f.ToTerraformImportStateCheckFunc(t)(s); err != nil {
+			if err := f.ToTerraformImportStateCheckFunc(t, testClient)(s); err != nil {
 				result = append(result, fmt.Errorf("check %d/%d error:\n%w", i+1, len(fs), err))
 			}
 		}
@@ -84,7 +84,7 @@ type importStateCheckFuncWrapper struct {
 	f resource.ImportStateCheckFunc
 }
 
-func (w *importStateCheckFuncWrapper) ToTerraformImportStateCheckFunc(_ *testing.T) resource.ImportStateCheckFunc {
+func (w *importStateCheckFuncWrapper) ToTerraformImportStateCheckFunc(_ *testing.T, _ *helpers.TestClient) resource.ImportStateCheckFunc {
 	return w.f
 }
 
@@ -97,23 +97,14 @@ func CheckImport(f resource.ImportStateCheckFunc) ImportStateCheckFuncProvider {
 // InPlaceAssertionVerifier is an interface providing a method allowing verifying all the prepared assertions in place.
 // It does not return function like TestCheckFuncProvider or ImportStateCheckFuncProvider; it runs all the assertions in place instead.
 type InPlaceAssertionVerifier interface {
-	VerifyAll(t *testing.T)
-	// VerifyAllWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
-	VerifyAllWithTestClient(t *testing.T, testClient *helpers.TestClient)
+	VerifyAll(t *testing.T, testClient *helpers.TestClient)
 }
 
 // AssertThatObject should be used in the SDK tests for created object validation.
 // It verifies all the prepared assertions in place.
-func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier) {
+func AssertThatObject(t *testing.T, objectAssert InPlaceAssertionVerifier, testClient *helpers.TestClient) {
 	t.Helper()
-	objectAssert.VerifyAll(t)
-}
-
-// AssertThatObjectWithTestClient is temporary. It's here to show the changes proposed to the assertions setup.
-// It should be replaced back to AssertThatObject.
-func AssertThatObjectWithTestClient(t *testing.T, objectAssert InPlaceAssertionVerifier, testClient *helpers.TestClient) {
-	t.Helper()
-	objectAssert.VerifyAllWithTestClient(t, testClient)
+	objectAssert.VerifyAll(t, testClient)
 }
 
 func ContainsExactlyInAnyOrder(resourceKey string, attributePath string, expectedItems []map[string]string) resource.TestCheckFunc {

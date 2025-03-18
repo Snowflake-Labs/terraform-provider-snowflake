@@ -11,6 +11,7 @@ import (
 	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
@@ -79,7 +80,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "false"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
@@ -140,7 +141,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
@@ -227,7 +228,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
@@ -271,7 +272,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "false"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
 					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
@@ -834,6 +835,52 @@ func TestAcc_OauthIntegrationForPartnerApplications_WithPrivilegedRolesBlockedLi
 					resource.TestCheckResourceAttr(modelWithoutBlockedRole.ResourceReference(), "name", id.Name()),
 
 					resource.TestCheckResourceAttr(modelWithoutBlockedRole.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_OauthIntegrationForPartnerApplications_DetectExternalChangesForOauthRedirectUri(t *testing.T) {
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	oauthRedirectUri := "https://example.com"
+	otherOauthRedirectUri := "https://example2.com"
+	configModel := model.OauthIntegrationForPartnerApplications(
+		"test",
+		id.Name(),
+		string(sdk.OauthSecurityIntegrationClientLooker),
+	).WithOauthRedirectUri(oauthRedirectUri)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.OauthIntegrationForPartnerApplications),
+		Steps: []resource.TestStep{
+			{
+				Config: accconfig.FromModels(t, configModel),
+				Check: assertThat(t,
+					resourceassert.OauthIntegrationForPartnerApplicationsResource(t, configModel.ResourceReference()).
+						HasOauthRedirectUriString(oauthRedirectUri),
+				),
+			},
+			{
+				PreConfig: func() {
+					acc.TestClient().SecurityIntegration.UpdateOauthForPartnerApplications(t, sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSet(
+						*sdk.NewOauthForPartnerApplicationsIntegrationSetRequest().WithOauthRedirectUri(otherOauthRedirectUri),
+					))
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(configModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: accconfig.FromModels(t, configModel),
+				Check: assertThat(t,
+					resourceassert.OauthIntegrationForPartnerApplicationsResource(t, configModel.ResourceReference()).
+						HasOauthRedirectUriString(oauthRedirectUri),
 				),
 			},
 		},

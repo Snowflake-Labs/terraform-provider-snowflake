@@ -25,6 +25,7 @@
   * [Granting PUBLIC role fails](#granting-public-role-fails)
   * [Issues with grant_ownership resource](#issues-with-grant_ownership)
   * [Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider](#using-quoted_identifiers_ignore_case-with-the-provider)
+  * [Experiencing Go related issues (e.g., using Suricata-based firewalls, like AWS Network Firewall, with >=v1.0.4 version of the provider)](#experiencing-go-related-issues-eg-using-suricata-based-firewalls-like-aws-network-firewall-with-v104-version-of-the-provider)
 
 This guide was made to aid with creating the GitHub issues, so you can maximize your chances of getting help as quickly as possible.
 To correctly report the issue, we suggest going through the following steps.
@@ -92,8 +93,18 @@ If you would like to contribute to the project, please follow our [contribution 
 
 ### How can I debug the issue myself?
 The provider is simply an abstraction issuing SQL commands through the Go Snowflake driver, so most of the errors will be connected to incorrectly built or executed SQL statements.
-To see what SQLs are being run you have to set the `TF_LOG=DEBUG` environment variable.
+To see what SQLs are being run you have to set more verbose logging check the [section below](#how-can-i-turn-on-logs).
 To confirm the correctness of the SQLs, refer to the [official Snowflake documentation](https://docs.snowflake.com/).
+
+### How can I turn on logs?
+The provider offers two main types of logging:
+- Terraform execution (check [Terraform Debugging Documentation](https://www.terraform.io/internals/debugging)) - you can set it through the `TF_LOG` environment variable, e.g.: `TF_LOG=DEBUG`; it will make output of the Terraform execution more verbose.
+- Snowflake communication (using the logs from the underlying [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake)) - you can set it directly in the provider config ([`driver_tracing`](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.3/docs#driver_tracing-3) attribute), by `SNOWFLAKE_DRIVER_TRACING` environmental variable (e.g. `SNOWFLAKE_DRIVER_TRACING=info`), or by `drivertracing` field in the TOML file. To see the communication with Snowflake (including the SQL commands run) we recommend setting it to `info`.
+
+As driver logs may seem cluttered, to locate the SQL commands run, search for:
+- (preferred) `--terraform_provider_usage_tracking`
+- `msg="Query:`
+- `msg="Exec:`
 
 ### How can I import already existing Snowflake infrastructure into Terraform?
 Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/resource_migration.md#3-two-options-from-here)
@@ -128,6 +139,9 @@ Please refer to [this document](https://github.com/Snowflake-Labs/terraform-prov
 │ Error: open snowflake connection: 390144 (08004): JWT token is invalid.
 │
 ```
+
+**Related issues**: [Experiencing Go related issues (e.g., using Suricata-based firewalls, like AWS Network Firewall, with >=v1.0.4 version of the provider)](#experiencing-go-related-issues-eg-using-suricata-based-firewalls-like-aws-network-firewall-with-v104-version-of-the-provider)
+
 **Solution**: Go to the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth-troubleshooting#list-of-errors) and search by error code (390144 in this case).
 
 [GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
@@ -292,3 +306,11 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 **Related issues:** [#2967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2967)
 
 **Solution:** Either turn off the parameter or adjust your configurations to use only upper-cased names for identifiers and import back the resources.
+
+### Experiencing Go related issues (e.g., using Suricata-based firewalls, like AWS Network Firewall, with >=v1.0.4 version of the provider)
+
+**Problem:** The communication from the provider is dropped, because of the firewalls that are incompatible with the `tlskyber` setting introduced in [Go v1.23](https://go.dev/doc/godebug#go-123).
+
+**Related issues:** [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
+
+**Solution:** [Solution described in the migration guide for v1.0.3 to v1.0.4 upgrade](./MIGRATION_GUIDE.md#new-go-version-and-conflicts-with-suricata-based-firewalls-like-aws-network-firewall).

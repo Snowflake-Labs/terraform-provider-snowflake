@@ -11,10 +11,12 @@ func ({{ $modelVar }} *{{ $modelName }}) MarshalJSON() ([]byte, error) {
     type Alias {{ $modelName }}
     return json.Marshal(&struct {
         *Alias
-        DependsOn []string `json:"depends_on,omitempty"`
+        DependsOn                 []string                      `json:"depends_on,omitempty"`
+        SingleAttributeWorkaround config.ReplacementPlaceholder `json:"single_attribute_workaround,omitempty"`
     }{
-        Alias:     (*Alias)({{ $modelVar }}),
-        DependsOn: {{ $modelVar }}.DependsOn(),
+        Alias:                     (*Alias)({{ $modelVar }}),
+        DependsOn:                 {{ $modelVar }}.DependsOn(),
+        SingleAttributeWorkaround: config.SnowflakeProviderConfigSingleAttributeWorkaround,
     })
 }
 

@@ -97,7 +97,8 @@ func Test_DatasourceFromModelPoc(t *testing.T) {
 	t.Run("test basic", func(t *testing.T) {
 		datasourceModel := datasourcemodel.Databases("test")
 		expectedOutput := strings.TrimPrefix(`
-data "snowflake_databases" "test" {}
+data "snowflake_databases" "test" {
+}
 `, "\n")
 		result := config.DatasourceFromModel(t, datasourceModel)
 

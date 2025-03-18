@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
@@ -19,7 +18,9 @@ type ViewAssert struct {
 func View(t *testing.T, id sdk.SchemaObjectIdentifier) *ViewAssert {
 	t.Helper()
 	return &ViewAssert{
-		assert.NewSnowflakeObjectAssertWithProvider(sdk.ObjectTypeView, id, acc.TestClient().View.Show),
+		assert.NewSnowflakeObjectAssertWithTestClientObjectProvider(sdk.ObjectTypeView, id, func(testClient *helpers.TestClient) assert.ObjectProvider[sdk.View, sdk.SchemaObjectIdentifier] {
+			return testClient.View.Show
+		}),
 	}
 }
 

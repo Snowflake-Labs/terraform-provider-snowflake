@@ -73,7 +73,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -88,7 +88,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(body).WithComment("Terraform acceptance test").WithExemptOtherPolicies(r.BooleanTrue)),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -121,7 +121,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(bodyWithBooleanReturnType).WithReturnDataType(string(sdk.DataTypeBoolean)).WithArgument(argumentWithChangedFirstArgumentType).WithComment("Terraform acceptance test - changed comment").WithExemptOtherPolicies(r.BooleanFalse)),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -137,7 +137,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(body).WithReturnDataType(string(sdk.DataTypeVARCHAR)).WithArgument(changedArgument).WithExemptOtherPolicies(r.BooleanTrue)),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -165,7 +165,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -186,7 +186,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 						},
 					})
 				},
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -213,7 +213,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 						},
 					})
 				},
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -262,7 +262,7 @@ func TestAcc_MaskingPolicy_complete(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -464,7 +464,7 @@ func TestAcc_MaskingPolicy_Rename(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
 				),
@@ -478,7 +478,7 @@ func TestAcc_MaskingPolicy_Rename(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(newId.Name()).
 					HasFullyQualifiedNameString(newId.FullyQualifiedName()),
 				),
@@ -534,7 +534,7 @@ func TestAcc_MaskingPolicy_DataTypeAliases(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicy/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasReturnDataTypeString(string(sdk.DataTypeVARCHAR)).
 					HasArguments([]sdk.TableColumnSignature{
@@ -580,7 +580,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 					},
 				},
 				Config: maskingPolicy_v0_95_0(id, body, comment),
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -606,7 +606,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assert.AssertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).

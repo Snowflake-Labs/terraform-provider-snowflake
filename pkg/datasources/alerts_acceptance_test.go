@@ -6,12 +6,15 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Alerts(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 	alertId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -29,27 +32,28 @@ func TestAcc_Alerts(t *testing.T) {
 				),
 			},
 			{
-				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbOnly(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbOnly(alertId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.#", "1"),
 				),
 			},
 			{
-				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbAndSchema(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigDbAndSchema(alertId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.#", "1"),
 				),
 			},
 			{
 				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigAllOptionals(alertId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
+					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.#", "1"),
 					resource.TestCheckResourceAttr("data.snowflake_alerts.test_datasource_alert", "alerts.0.name", alertId.Name()),
 				),
 			},
 			{
-				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigSchemaOnly(),
+				Config: alertsResourceConfig(alertId) + alertsDatasourceConfigSchemaOnly(alertId),
 				Check: resource.ComposeTestCheckFunc(
+					// TODO [SNOW-1348349]: currently, the schema is taken into consideration only if the database is set (this works differently in the stable datasources); address it during the rework.
 					resource.TestCheckResourceAttrSet("data.snowflake_alerts.test_datasource_alert", "alerts.#"),
 				),
 			},
@@ -81,21 +85,21 @@ data "snowflake_alerts" "test_datasource_alert" {}
 `
 }
 
-func alertsDatasourceConfigDbOnly() string {
+func alertsDatasourceConfigDbOnly(alertId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 data "snowflake_alerts" "test_datasource_alert" {
 	database  	      = "%s"
 }
-`, acc.TestDatabaseName)
+`, alertId.DatabaseName())
 }
 
-func alertsDatasourceConfigDbAndSchema() string {
+func alertsDatasourceConfigDbAndSchema(alertId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 data "snowflake_alerts" "test_datasource_alert" {
 	database  	      = "%s"
 	schema  	      = "%s"
 }
-`, acc.TestDatabaseName, acc.TestSchemaName)
+`, alertId.DatabaseName(), alertId.SchemaName())
 }
 
 func alertsDatasourceConfigAllOptionals(alertId sdk.SchemaObjectIdentifier) string {
@@ -108,10 +112,10 @@ data "snowflake_alerts" "test_datasource_alert" {
 `, alertId.DatabaseName(), alertId.SchemaName(), alertId.Name())
 }
 
-func alertsDatasourceConfigSchemaOnly() string {
+func alertsDatasourceConfigSchemaOnly(alertId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 data "snowflake_alerts" "test_datasource_alert" {
 	schema  	      = "%s"
 }
-`, acc.TestSchemaName)
+`, alertId.SchemaName())
 }

@@ -9,12 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random/integrationtests"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/snowflakedb/gosnowflake"
 )
@@ -22,9 +21,9 @@ import (
 const IntegrationTestPrefix = "int_test_"
 
 var (
-	TestWarehouseName = fmt.Sprintf("%swh_%s", IntegrationTestPrefix, random.IntegrationTestsSuffix)
-	TestDatabaseName  = fmt.Sprintf("%sdb_%s", IntegrationTestPrefix, random.IntegrationTestsSuffix)
-	TestSchemaName    = fmt.Sprintf("%ssc_%s", IntegrationTestPrefix, random.IntegrationTestsSuffix)
+	TestWarehouseName = fmt.Sprintf("%swh_%s", IntegrationTestPrefix, integrationtests.ObjectsSuffix)
+	TestDatabaseName  = fmt.Sprintf("%sdb_%s", IntegrationTestPrefix, integrationtests.ObjectsSuffix)
+	TestSchemaName    = fmt.Sprintf("%ssc_%s", IntegrationTestPrefix, integrationtests.ObjectsSuffix)
 
 	NonExistingAccountObjectIdentifier  = sdk.NewAccountObjectIdentifier("does_not_exist")
 	NonExistingDatabaseObjectIdentifier = sdk.NewDatabaseObjectIdentifier(TestDatabaseName, "does_not_exist")
@@ -160,7 +159,7 @@ func (itc *integrationTestContext) initialize() error {
 	}
 	itc.warehouse = wh
 
-	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
+	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
 
 	// TODO [SNOW-1763603]: improve setup; this is a quick workaround for faster local testing
 	if os.Getenv(string(testenvs.SimplifiedIntegrationTestsSetup)) == "" {
@@ -201,7 +200,7 @@ func (itc *integrationTestContext) initialize() error {
 		}
 		itc.secondaryWarehouse = secondaryWarehouse
 
-		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, random.IntegrationTestsSuffix)
+		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
 
 		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
 		if err != nil {

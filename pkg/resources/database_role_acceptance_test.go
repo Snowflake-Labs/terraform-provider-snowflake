@@ -6,7 +6,6 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
@@ -37,7 +36,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config.FromModels(t, databaseRoleModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -54,7 +53,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				ResourceName: "snowflake_database_role.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasCommentString(""),
@@ -66,7 +65,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			// set comment
 			{
 				Config: config.FromModels(t, databaseRoleModelWithComment),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -83,7 +82,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				ResourceName: "snowflake_database_role.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasCommentString(comment),
@@ -95,7 +94,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			// unset comment
 			{
 				Config: config.FromModels(t, databaseRoleModel),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(id.Name()).
 						HasDatabaseString(id.DatabaseName()).
@@ -112,7 +111,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 			{
 				ResourceName: "snowflake_database_role.test",
 				ImportState:  true,
-				ImportStateCheck: assert.AssertThatImport(t,
+				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedDatabaseRoleResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasCommentString(""),
@@ -129,7 +128,7 @@ func TestAcc_DatabaseRole(t *testing.T) {
 					},
 				},
 				Config: config.FromModels(t, databaseRoleModel.WithName(newId.Name())),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					resourceassert.DatabaseRoleResource(t, "snowflake_database_role.test").
 						HasNameString(newId.Name()).
 						HasDatabaseString(newId.DatabaseName()).

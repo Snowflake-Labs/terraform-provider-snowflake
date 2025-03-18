@@ -46,7 +46,7 @@ func TestAcc_Tasks_Like_RootTask(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: taskDatasourceLikeRootOnly(rootTask.ID().Name(), true),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "1")),
 					resourceshowoutputassert.TaskDatasourceShowOutput(t, "snowflake_tasks.test").
 						HasName(rootTask.Name).
@@ -126,7 +126,7 @@ func TestAcc_Tasks_In_StartsWith(t *testing.T) {
 			// On schema with prefix
 			{
 				Config: taskDatasourceInSchemaStartsWith(schema.ID(), prefix),
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_tasks.test", "tasks.#", "1")),
 					resourceshowoutputassert.TaskDatasourceShowOutput(t, "snowflake_tasks.test").
 						HasName(standaloneTask2.Name).

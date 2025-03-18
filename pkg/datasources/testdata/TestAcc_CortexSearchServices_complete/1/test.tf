@@ -1,15 +1,6 @@
-resource "snowflake_database" "test" {
-  name = var.database
-}
-
-resource "snowflake_schema" "test" {
-  database = snowflake_database.test.name
-  name     = var.schema
-}
-
 resource "snowflake_table" "test" {
-  database        = snowflake_database.test.name
-  schema          = snowflake_schema.test.name
+  database        = var.database
+  schema          = var.schema
   name            = var.table
   change_tracking = true
   column {
@@ -26,8 +17,8 @@ resource "snowflake_table" "test" {
 resource "snowflake_cortex_search_service" "test" {
   depends_on = [snowflake_table.test]
 
-  database   = snowflake_database.test.name
-  schema     = snowflake_schema.test.name
+  database   = var.database
+  schema     = var.schema
   name       = var.name
   on         = var.on
   target_lag = "2 minutes"
@@ -39,7 +30,7 @@ resource "snowflake_cortex_search_service" "test" {
 data "snowflake_cortex_search_services" "test" {
   like = snowflake_cortex_search_service.test.name
   in {
-    database = snowflake_cortex_search_service.test.database
+    database = var.database
   }
   starts_with = snowflake_cortex_search_service.test.name
   limit {

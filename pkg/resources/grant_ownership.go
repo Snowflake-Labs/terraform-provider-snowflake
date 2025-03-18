@@ -6,10 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -171,12 +169,10 @@ func GrantOwnership() *schema.Resource {
 
 func ImportGrantOwnership() schema.StateContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		logging.DebugLogger.Printf("[DEBUG] Entering import grant privileges to account role")
 		id, err := ParseGrantOwnershipId(d.Id())
 		if err != nil {
 			return nil, err
 		}
-		logging.DebugLogger.Printf("[DEBUG] Imported identifier: %s", id.String())
 
 		switch id.GrantOwnershipTargetRoleKind {
 		case ToAccountGrantOwnershipTargetRoleKind:
@@ -246,7 +242,6 @@ func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	logging.DebugLogger.Printf("[DEBUG] created identifier from schema: %s", id.String())
 
 	grantOn, err := getOwnershipGrantOn(d)
 	if err != nil {
@@ -273,7 +268,6 @@ func CreateGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	logging.DebugLogger.Printf("[DEBUG] Setting identifier to %s", id.String())
 	d.SetId(id.String())
 
 	return ReadGrantOwnership(ctx, d, meta)

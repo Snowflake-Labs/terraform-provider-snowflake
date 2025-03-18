@@ -31,6 +31,9 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	connectionModel := model.PrimaryConnection("test", id.Name())
@@ -49,7 +52,7 @@ func TestAcc_Connections_Minimal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: dataConnections,
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
 					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_primary_connection.test").
 						HasName(id.Name()).
@@ -75,6 +78,9 @@ func TestAcc_Connections_Complete(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	accountId := acc.TestClient().Account.GetAccountIdentifier(t)
 	secondaryAccountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 
@@ -97,7 +103,7 @@ func TestAcc_Connections_Complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: dataConnections,
-				Check: assert.AssertThat(t,
+				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr("data.snowflake_connections.test", "connections.#", "1")),
 					resourceshowoutputassert.ConnectionShowOutput(t, "snowflake_connection.test").
 						HasName(id.Name()).
@@ -122,6 +128,9 @@ func TestAcc_Connections_Complete(t *testing.T) {
 func TestAcc_Connections_Filtering(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	// TODO: [SNOW-1788041] - need to uppercase as connection name in snowflake is returned in uppercase
 	prefix := random.AlphaN(4)
@@ -161,6 +170,9 @@ func TestAcc_Connections_Filtering(t *testing.T) {
 func TestAcc_Connections_FilteringWithReplica(t *testing.T) {
 	// TODO: [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	// TODO: [SNOW-1788041] - need to uppercase as connection name in snowflake is returned in uppercase
 	prefix := random.AlphaN(4)
