@@ -6,6 +6,8 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -15,24 +17,29 @@ import (
 )
 
 func TestAcc_DynamicTable_basic(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_dynamic_table.dt"
-	tableName := id.Name() + "_table"
-	newWarehouseName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newWarehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+	newComment := random.Comment()
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(id.Name()),
+			"name":       config.StringVariable(dynamicTableId.Name()),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)),
-			"comment":    config.StringVariable("Terraform acceptance test"),
-			"table_name": config.StringVariable(tableName),
+			"query":      config.StringVariable(fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableId.Name())),
+			"comment":    config.StringVariable(comment),
+			"table_name": config.StringVariable(tableId.Name()),
 		}
 	}
 	variableSet2 := m()
-	variableSet2["warehouse"] = config.StringVariable(newWarehouseName)
-	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
+	variableSet2["warehouse"] = config.StringVariable(newWarehouseId.Name())
+	variableSet2["comment"] = config.StringVariable(newComment)
 
 	variableSet3 := m()
 	variableSet3["initialize"] = config.StringVariable(string(sdk.DynamicTableInitializeOnSchedule))
@@ -44,6 +51,7 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 	// used to check whether a dynamic table was replaced
 	var createdOn string
 
+	resourceName := "snowflake_dynamic_table.dt"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -56,8 +64,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "name", dynamicTableId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", dynamicTableId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "warehouse", acc.TestWarehouseName),
@@ -65,8 +73,8 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "refresh_mode", string(sdk.DynamicTableRefreshModeAuto)),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.maximum_duration", "2 minutes"),
-					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableId.Name())),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment),
 
 					// computed attributes
 
@@ -95,14 +103,14 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: variableSet2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "name", dynamicTableId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", dynamicTableId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),
+					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_lag.0.downstream", "true"),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
+					resource.TestCheckResourceAttr(resourceName, "comment", newComment),
 
 					resource.TestCheckResourceAttrWith(resourceName, "created_on", func(value string) error {
 						if value != createdOn {
@@ -158,14 +166,19 @@ func TestAcc_DynamicTable_basic(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2173 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2173 issue.
 func TestAcc_DynamicTable_issue2173(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	dynamicTableName := dynamicTableId.Name()
-	tableName := dynamicTableName + "_table"
-	tableId := acc.TestClient().Ids.NewSchemaObjectIdentifier(tableName)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
+
 	query := fmt.Sprintf(`select "ID" from %s`, tableId.FullyQualifiedName())
 	otherSchemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	otherSchemaName := otherSchemaId.Name()
 	newDynamicTableId := acc.TestClient().Ids.NewSchemaObjectIdentifierInSchema(dynamicTableName, otherSchemaId)
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":         config.StringVariable(dynamicTableName),
@@ -237,8 +250,14 @@ func TestAcc_DynamicTable_issue2173(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2134 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2134 issue.
 func TestAcc_DynamicTable_issue2134(t *testing.T) {
-	dynamicTableName := acc.TestClient().Ids.Alpha()
-	tableName := dynamicTableName + "_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	dynamicTableName := dynamicTableId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
+
 	// whitespace (initial tab) is added on purpose here
 	query := fmt.Sprintf(`	select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
@@ -300,10 +319,17 @@ func TestAcc_DynamicTable_issue2134(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2276 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2276 issue.
 func TestAcc_DynamicTable_issue2276(t *testing.T) {
-	dynamicTableName := acc.TestClient().Ids.Alpha()
-	tableName := dynamicTableName + "_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	dynamicTableName := dynamicTableId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
+
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	newQuery := fmt.Sprintf(`select "data" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(dynamicTableName),
@@ -348,8 +374,14 @@ func TestAcc_DynamicTable_issue2276(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2329 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
 func TestAcc_DynamicTable_issue2329(t *testing.T) {
-	dynamicTableName := acc.TestClient().Ids.AlphaContaining("AS")
-	tableName := dynamicTableName + "_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierContaining("AS")
+	dynamicTableName := dynamicTableId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
+
 	query := fmt.Sprintf(`select "id" from "%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -395,8 +427,14 @@ func TestAcc_DynamicTable_issue2329(t *testing.T) {
 
 // TestAcc_DynamicTable_issue2329_with_matching_comment proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2329 issue.
 func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
-	dynamicTableName := acc.TestClient().Ids.AlphaContaining("AS")
-	tableName := dynamicTableName + "_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierContaining("AS")
+	dynamicTableName := dynamicTableId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
+
 	query := fmt.Sprintf(`with temp as (select "id" from "%v"."%v"."%v") select * from temp`, acc.TestDatabaseName, acc.TestSchemaName, tableName)
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
