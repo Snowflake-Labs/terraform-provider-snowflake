@@ -42,10 +42,11 @@ func ReadFileSafe(path string) ([]byte, error) {
 	if err := fileIsSafeToRead(path); err != nil {
 		return nil, err
 	}
-	return readFile(path)
+	return ReadFile(path)
 }
 
-func readFile(path string) ([]byte, error) {
+// ReadFile is an os.ReadFile wrapper.
+func ReadFile(path string) ([]byte, error) {
 	log.Printf("[DEBUG] reading the %s file", path)
 	return os.ReadFile(path)
 }

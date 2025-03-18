@@ -35,13 +35,13 @@ func fourthTestClient(t *testing.T) *Client {
 func testClient(t *testing.T, profile string) *Client {
 	t.Helper()
 
-	config, err := ProfileConfig(profile)
+	config, err := ProfileConfigSafe(profile)
 	if err != nil {
-		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config", profile)
+		t.Skipf("Snowflake %s profile not configured. Must be set in ~/.snowflake/config", profile)
 	}
 	client, err := NewClient(config)
 	if err != nil {
-		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config", profile)
+		t.Skipf("Snowflake %s profile not configured. Must be set in ~/.snowflake/config", profile)
 	}
 
 	return client

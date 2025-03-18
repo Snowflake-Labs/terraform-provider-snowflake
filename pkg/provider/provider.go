@@ -368,6 +368,12 @@ func Provider() *schema.Provider {
 				},
 				Description: fmt.Sprintf("A list of preview features that are handled by the provider. See [preview features list](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). Preview features may have breaking changes in future releases, even without raising the major version. This field can not be set with environmental variables. Valid options are: %v.", docs.PossibleValuesListed(previewfeatures.AllPreviewFeatures)),
 			},
+			"skip_file_permission_verification": {
+				Type:        schema.TypeBool,
+				Description: envNameFieldDescription("Enables the session to persist even after the connection is closed.", snowflakeenvs.SkipFilePermissionVerification),
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.SkipFilePermissionVerification, nil),
+			},
 		},
 		ResourcesMap:         getResources(),
 		DataSourcesMap:       getDataSources(),
@@ -546,8 +552,15 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		return nil, diag.FromErr(err)
 	}
 
+	var fileReader sdk.FileReader
+	if v := s.Get("skip_file_permission_verification"); v.(bool) {
+		fileReader = oswrapper.ReadFile
+	} else {
+		fileReader = oswrapper.ReadFileSafe
+	}
+
 	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
-		tomlConfig, err := getDriverConfigFromTOML(v.(string))
+		tomlConfig, err := getDriverConfigFromTOML(v.(string), fileReader)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -561,7 +574,6 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	if v, ok := s.GetOk("preview_features_enabled"); ok {
 		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
 	}
-
 	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
 		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
@@ -594,16 +606,16 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func getDriverConfigFromTOML(profile string) (*gosnowflake.Config, error) {
+func getDriverConfigFromTOML(profile string, fileReader sdk.FileReader) (*gosnowflake.Config, error) {
 	if profile == "default" {
-		return sdk.DefaultConfig(), nil
+		return sdk.DefaultConfig(fileReader), nil
 	}
 	path, err := sdk.GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	profileConfig, err := sdk.ProfileConfig(profile)
+	profileConfig, err := sdk.ProfileConfig(profile, fileReader)
 	if err != nil {
 		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
 	}

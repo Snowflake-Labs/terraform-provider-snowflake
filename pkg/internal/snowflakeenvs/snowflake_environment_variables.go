@@ -45,6 +45,7 @@ const (
 	DriverTracing                  = "SNOWFLAKE_DRIVER_TRACING"
 	TmpDirectoryPath               = "SNOWFLAKE_TMP_DIRECTORY_PATH"
 	DisableConsoleLogin            = "SNOWFLAKE_DISABLE_CONSOLE_LOGIN"
+	SkipFilePermissionVerification = "SNOWFLAKE_SKIP_FILE_PERMISSION_VERIFICATION"
 
 	ConfigPath = "SNOWFLAKE_CONFIG_PATH"
 )

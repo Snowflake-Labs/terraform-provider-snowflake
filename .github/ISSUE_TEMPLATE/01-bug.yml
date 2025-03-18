@@ -8,9 +8,9 @@ body:
       value: |
         # Thank you for raising a bug report!
 
-        Before submitting, we ask that you first search existing issues (also the closed ones) to see if someone else may have experienced the same issue.
+        Before submitting, we ask that you first search existing issues (also the closed ones) to see if someone else may have experienced the same issue. 
         This helps to keep all relevant information in one place, including any potential workarounds.
-
+        
         If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
 
         Here's a list of useful links that may help you with your issue:
@@ -21,8 +21,8 @@ body:
     attributes:
       value: |
         # Terraform CLI and Snowflake Provider Versions
-
-        Please run `terraform version` to show Terraform CLI and Snowflake Provider versions.
+        
+        Please run `terraform version` to show Terraform CLI and Snowflake Provider versions. 
         If you are not running the latest version of either CLI or the Provider, please consider upgrading as your issue could be already resolved.
 
   - id: terraform-cli-version
@@ -53,7 +53,7 @@ body:
     attributes:
       value: |
         # Issue Description
-
+        
         In the following fields, please provide as much information as possible to reduce the time of us providing help.
         Remember to put the configuration and logs in the form below for additional context.
 
@@ -249,7 +249,6 @@ body:
     attributes:
       label: Logs
       description: |
-        IMPORTANT: If you run terraform with a one-liner JSON file with a provider configuration, and an error occurs during the validation, Terraform prints the invalid line (whole file in this case) and may print some sensitive values. Read more in [Terraform documentation](https://developer.hashicorp.com/terraform/language/values/variables#cases-where-terraform-may-disclose-a-sensitive-variable). Please make sure you do not send any sensitive values.
         Please provide a link to a [GitHub Gist](https://gist.github.com) containing log output.
         Read more about logging in the provider [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/dev/CREATING_ISSUES.md#how-can-i-turn-on-logs).
       placeholder: https://gist.github.com/example/12345678

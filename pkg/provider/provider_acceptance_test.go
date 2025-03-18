@@ -355,6 +355,35 @@ func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_tomlConfigFilePermissionsCanBeSkipped(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	if oswrapper.IsRunningOnWindows() {
+		t.Skip("checking file permissions on Windows is currently done in manual tests package")
+	}
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	permissions := fs.FileMode(0o755)
+
+	configPath := testhelpers.CreateTestFileWithPermissions(t, random.AlphaN(10), permissions)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(configPath), datasourceModel()),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s has unsafe permissions - %#o", configPath, permissions)),
+			},
+		},
+	})
+}
+
 func TestAcc_Provider_envConfig(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)

@@ -112,6 +112,7 @@ provider "snowflake" {
 - `protocol` (String) A protocol used in the connection. Valid options are: `http` | `https`. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.
 - `request_timeout` (Number) request retry timeout in seconds EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_REQUEST_TIMEOUT` environment variable.
 - `role` (String) Specifies the role to use by default for accessing Snowflake objects in the client session. Can also be sourced from the `SNOWFLAKE_ROLE` environment variable.
+- `skip_file_permission_verification` (Boolean) Enables the session to persist even after the connection is closed. Can also be sourced from the `SNOWFLAKE_SKIP_FILE_PERMISSION_VERIFICATION` environment variable.
 - `tmp_directory_path` (String) Sets temporary directory used by the driver for operations like encrypting, compressing etc. Can also be sourced from the `SNOWFLAKE_TMP_DIRECTORY_PATH` environment variable.
 - `token` (String, Sensitive) Token to use for OAuth and other forms of token based auth. Can also be sourced from the `SNOWFLAKE_TOKEN` environment variable.
 - `token_accessor` (Block List, Max: 1) (see [below for nested schema](#nestedblock--token_accessor))
