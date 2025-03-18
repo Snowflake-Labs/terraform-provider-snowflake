@@ -381,7 +381,7 @@ func TestAcc_Provider_tomlConfigFilePermissionsCanBeSkipped(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, configPath)
 				},
-				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(profile).WithSkipFilePermissionVerification(true), datasourceModel()),
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(profile).WithSkipTomlFilePermissionVerification(true), datasourceModel()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),

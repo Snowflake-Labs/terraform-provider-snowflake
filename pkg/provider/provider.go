@@ -368,11 +368,11 @@ func Provider() *schema.Provider {
 				},
 				Description: fmt.Sprintf("A list of preview features that are handled by the provider. See [preview features list](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). Preview features may have breaking changes in future releases, even without raising the major version. This field can not be set with environmental variables. Valid options are: %v.", docs.PossibleValuesListed(previewfeatures.AllPreviewFeatures)),
 			},
-			"skip_file_permission_verification": {
+			"skip_toml_file_permission_verification": {
 				Type:        schema.TypeBool,
-				Description: envNameFieldDescription("Enables the session to persist even after the connection is closed.", snowflakeenvs.SkipFilePermissionVerification),
+				Description: envNameFieldDescription("Skips TOML configuration file permission verification. This flag has no effect on Windows systems, as they are not checked by default. Instead of using this flag, we recommend setting the proper privileges - see [the section below](#order-precedence).", snowflakeenvs.SkipTomlFilePermissionVerification),
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.SkipFilePermissionVerification, nil),
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.SkipTomlFilePermissionVerification, nil),
 			},
 		},
 		ResourcesMap:         getResources(),
@@ -553,7 +553,7 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	}
 
 	var fileReader sdk.FileReader
-	if v := s.Get("skip_file_permission_verification"); v.(bool) {
+	if v := s.Get("skip_toml_file_permission_verification"); v.(bool) {
 		fileReader = oswrapper.ReadFile
 	} else {
 		fileReader = oswrapper.ReadFileSafe

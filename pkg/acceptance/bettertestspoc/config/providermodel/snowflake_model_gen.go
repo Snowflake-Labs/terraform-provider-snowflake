@@ -9,47 +9,47 @@ import (
 )
 
 type SnowflakeModel struct {
-	AccountName                    tfconfig.Variable `json:"account_name,omitempty"`
-	Authenticator                  tfconfig.Variable `json:"authenticator,omitempty"`
-	ClientIp                       tfconfig.Variable `json:"client_ip,omitempty"`
-	ClientRequestMfaToken          tfconfig.Variable `json:"client_request_mfa_token,omitempty"`
-	ClientStoreTemporaryCredential tfconfig.Variable `json:"client_store_temporary_credential,omitempty"`
-	ClientTimeout                  tfconfig.Variable `json:"client_timeout,omitempty"`
-	DisableConsoleLogin            tfconfig.Variable `json:"disable_console_login,omitempty"`
-	DisableQueryContextCache       tfconfig.Variable `json:"disable_query_context_cache,omitempty"`
-	DisableTelemetry               tfconfig.Variable `json:"disable_telemetry,omitempty"`
-	DriverTracing                  tfconfig.Variable `json:"driver_tracing,omitempty"`
-	ExternalBrowserTimeout         tfconfig.Variable `json:"external_browser_timeout,omitempty"`
-	Host                           tfconfig.Variable `json:"host,omitempty"`
-	IncludeRetryReason             tfconfig.Variable `json:"include_retry_reason,omitempty"`
-	InsecureMode                   tfconfig.Variable `json:"insecure_mode,omitempty"`
-	JwtClientTimeout               tfconfig.Variable `json:"jwt_client_timeout,omitempty"`
-	JwtExpireTimeout               tfconfig.Variable `json:"jwt_expire_timeout,omitempty"`
-	KeepSessionAlive               tfconfig.Variable `json:"keep_session_alive,omitempty"`
-	LoginTimeout                   tfconfig.Variable `json:"login_timeout,omitempty"`
-	MaxRetryCount                  tfconfig.Variable `json:"max_retry_count,omitempty"`
-	OcspFailOpen                   tfconfig.Variable `json:"ocsp_fail_open,omitempty"`
-	OktaUrl                        tfconfig.Variable `json:"okta_url,omitempty"`
-	OrganizationName               tfconfig.Variable `json:"organization_name,omitempty"`
-	Params                         tfconfig.Variable `json:"params,omitempty"`
-	Passcode                       tfconfig.Variable `json:"passcode,omitempty"`
-	PasscodeInPassword             tfconfig.Variable `json:"passcode_in_password,omitempty"`
-	Password                       tfconfig.Variable `json:"password,omitempty"`
-	Port                           tfconfig.Variable `json:"port,omitempty"`
-	PreviewFeaturesEnabled         tfconfig.Variable `json:"preview_features_enabled,omitempty"`
-	PrivateKey                     tfconfig.Variable `json:"private_key,omitempty"`
-	PrivateKeyPassphrase           tfconfig.Variable `json:"private_key_passphrase,omitempty"`
-	Profile                        tfconfig.Variable `json:"profile,omitempty"`
-	Protocol                       tfconfig.Variable `json:"protocol,omitempty"`
-	RequestTimeout                 tfconfig.Variable `json:"request_timeout,omitempty"`
-	Role                           tfconfig.Variable `json:"role,omitempty"`
-	SkipFilePermissionVerification tfconfig.Variable `json:"skip_file_permission_verification,omitempty"`
-	TmpDirectoryPath               tfconfig.Variable `json:"tmp_directory_path,omitempty"`
-	Token                          tfconfig.Variable `json:"token,omitempty"`
-	TokenAccessor                  tfconfig.Variable `json:"token_accessor,omitempty"`
-	User                           tfconfig.Variable `json:"user,omitempty"`
-	ValidateDefaultParameters      tfconfig.Variable `json:"validate_default_parameters,omitempty"`
-	Warehouse                      tfconfig.Variable `json:"warehouse,omitempty"`
+	AccountName                        tfconfig.Variable `json:"account_name,omitempty"`
+	Authenticator                      tfconfig.Variable `json:"authenticator,omitempty"`
+	ClientIp                           tfconfig.Variable `json:"client_ip,omitempty"`
+	ClientRequestMfaToken              tfconfig.Variable `json:"client_request_mfa_token,omitempty"`
+	ClientStoreTemporaryCredential     tfconfig.Variable `json:"client_store_temporary_credential,omitempty"`
+	ClientTimeout                      tfconfig.Variable `json:"client_timeout,omitempty"`
+	DisableConsoleLogin                tfconfig.Variable `json:"disable_console_login,omitempty"`
+	DisableQueryContextCache           tfconfig.Variable `json:"disable_query_context_cache,omitempty"`
+	DisableTelemetry                   tfconfig.Variable `json:"disable_telemetry,omitempty"`
+	DriverTracing                      tfconfig.Variable `json:"driver_tracing,omitempty"`
+	ExternalBrowserTimeout             tfconfig.Variable `json:"external_browser_timeout,omitempty"`
+	Host                               tfconfig.Variable `json:"host,omitempty"`
+	IncludeRetryReason                 tfconfig.Variable `json:"include_retry_reason,omitempty"`
+	InsecureMode                       tfconfig.Variable `json:"insecure_mode,omitempty"`
+	JwtClientTimeout                   tfconfig.Variable `json:"jwt_client_timeout,omitempty"`
+	JwtExpireTimeout                   tfconfig.Variable `json:"jwt_expire_timeout,omitempty"`
+	KeepSessionAlive                   tfconfig.Variable `json:"keep_session_alive,omitempty"`
+	LoginTimeout                       tfconfig.Variable `json:"login_timeout,omitempty"`
+	MaxRetryCount                      tfconfig.Variable `json:"max_retry_count,omitempty"`
+	OcspFailOpen                       tfconfig.Variable `json:"ocsp_fail_open,omitempty"`
+	OktaUrl                            tfconfig.Variable `json:"okta_url,omitempty"`
+	OrganizationName                   tfconfig.Variable `json:"organization_name,omitempty"`
+	Params                             tfconfig.Variable `json:"params,omitempty"`
+	Passcode                           tfconfig.Variable `json:"passcode,omitempty"`
+	PasscodeInPassword                 tfconfig.Variable `json:"passcode_in_password,omitempty"`
+	Password                           tfconfig.Variable `json:"password,omitempty"`
+	Port                               tfconfig.Variable `json:"port,omitempty"`
+	PreviewFeaturesEnabled             tfconfig.Variable `json:"preview_features_enabled,omitempty"`
+	PrivateKey                         tfconfig.Variable `json:"private_key,omitempty"`
+	PrivateKeyPassphrase               tfconfig.Variable `json:"private_key_passphrase,omitempty"`
+	Profile                            tfconfig.Variable `json:"profile,omitempty"`
+	Protocol                           tfconfig.Variable `json:"protocol,omitempty"`
+	RequestTimeout                     tfconfig.Variable `json:"request_timeout,omitempty"`
+	Role                               tfconfig.Variable `json:"role,omitempty"`
+	SkipTomlFilePermissionVerification tfconfig.Variable `json:"skip_toml_file_permission_verification,omitempty"`
+	TmpDirectoryPath                   tfconfig.Variable `json:"tmp_directory_path,omitempty"`
+	Token                              tfconfig.Variable `json:"token,omitempty"`
+	TokenAccessor                      tfconfig.Variable `json:"token_accessor,omitempty"`
+	User                               tfconfig.Variable `json:"user,omitempty"`
+	ValidateDefaultParameters          tfconfig.Variable `json:"validate_default_parameters,omitempty"`
+	Warehouse                          tfconfig.Variable `json:"warehouse,omitempty"`
 
 	*config.ProviderModelMeta
 }
@@ -238,8 +238,8 @@ func (s *SnowflakeModel) WithRole(role string) *SnowflakeModel {
 	return s
 }
 
-func (s *SnowflakeModel) WithSkipFilePermissionVerification(skipFilePermissionVerification bool) *SnowflakeModel {
-	s.SkipFilePermissionVerification = tfconfig.BoolVariable(skipFilePermissionVerification)
+func (s *SnowflakeModel) WithSkipTomlFilePermissionVerification(skipTomlFilePermissionVerification bool) *SnowflakeModel {
+	s.SkipTomlFilePermissionVerification = tfconfig.BoolVariable(skipTomlFilePermissionVerification)
 	return s
 }
 
@@ -444,8 +444,8 @@ func (s *SnowflakeModel) WithRoleValue(value tfconfig.Variable) *SnowflakeModel 
 	return s
 }
 
-func (s *SnowflakeModel) WithSkipFilePermissionVerificationValue(value tfconfig.Variable) *SnowflakeModel {
-	s.SkipFilePermissionVerification = value
+func (s *SnowflakeModel) WithSkipTomlFilePermissionVerificationValue(value tfconfig.Variable) *SnowflakeModel {
+	s.SkipTomlFilePermissionVerification = value
 	return s
 }
 
