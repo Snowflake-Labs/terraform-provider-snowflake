@@ -23,7 +23,7 @@ func (s *SchemasModel) WithRowsAndFrom(rows int, from string) *SchemasModel {
 	)
 }
 
-func (s *SchemasModel) WithIn(databaseId sdk.AccountObjectIdentifier) *SchemasModel {
+func (s *SchemasModel) WithInDatabase(databaseId sdk.AccountObjectIdentifier) *SchemasModel {
 	return s.WithInValue(
 		tfconfig.ObjectVariable(map[string]tfconfig.Variable{
 			"database": tfconfig.StringVariable(databaseId.Name()),

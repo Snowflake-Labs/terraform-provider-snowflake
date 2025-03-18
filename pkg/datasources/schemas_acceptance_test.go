@@ -139,18 +139,18 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	schemaModel4 := model.Schema("test_4", idFour.DatabaseName(), idFour.Name())
 	schemasModelLike := datasourcemodel.Schemas("test1").
 		WithLike(prefix+"%").
-		WithIn(idOne.DatabaseId()).
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 	schemasModelStartsWith := datasourcemodel.Schemas("test2").
 		WithStartsWith(prefix+"1").
-		WithIn(idOne.DatabaseId()).
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 	schemasModelLimit := datasourcemodel.Schemas("test3").
 		WithRowsAndFrom(1, prefix+"1").
-		WithIn(idOne.DatabaseId()).
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 	schemasModelIn := datasourcemodel.Schemas("test4").
-		WithIn(idFour.DatabaseId()).
+		WithInDatabase(idFour.DatabaseId()).
 		WithStartsWith(idFour.Name()).
 		WithDependsOn(schemaModel1.ResourceReference(), schemaModel2.ResourceReference(), schemaModel3.ResourceReference(), schemaModel4.ResourceReference())
 

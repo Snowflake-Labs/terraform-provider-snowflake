@@ -1,17 +1,16 @@
 package datasources_test
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	testconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -23,13 +22,18 @@ import (
 func TestAcc_Tags(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
 
-	model := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
-		WithComment("foo").
+	tagModel := model.TagBase("test", id).
+		WithComment(comment).
 		WithAllowedValuesValue(tfconfig.ListVariable(tfconfig.StringVariable("foo"), tfconfig.StringVariable(""), tfconfig.StringVariable("bar")))
+	tagsModel := datasourcemodel.Tags("test").
+		WithLike(id.Name()).
+		WithInDatabase(id.DatabaseId()).
+		WithDependsOn(tagModel.ResourceReference())
 
-	dsName := "data.snowflake_tags.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -38,38 +42,26 @@ func TestAcc_Tags(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Tags/basic"),
-				ConfigVariables: config.ConfigVariablesFromModel(t, model),
-
+				Config: accconfig.FromModels(t, tagModel, tagsModel),
 				Check: assertThat(t,
-					assert.Check(resource.TestCheckResourceAttr(dsName, "tags.#", "1")),
+					assert.Check(resource.TestCheckResourceAttr(tagsModel.DatasourceReference(), "tags.#", "1")),
 
 					resourceshowoutputassert.TagsDatasourceShowOutput(t, "snowflake_tags.test").
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasComment("foo").
+						HasComment(comment).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE"),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "show_output.0.allowed_values.#", "3")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "show_output.0.allowed_values.*", "foo")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "show_output.0.allowed_values.*", "")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "show_output.0.allowed_values.*", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(tagsModel.DatasourceReference(), "tags.0.show_output.0.allowed_values.#", "3")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagsModel.DatasourceReference(), "tags.0.show_output.0.allowed_values.*", "foo")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagsModel.DatasourceReference(), "tags.0.show_output.0.allowed_values.*", "")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagsModel.DatasourceReference(), "tags.0.show_output.0.allowed_values.*", "bar")),
 				),
 			},
 		},
 	})
-}
-
-func tagsDatasource(like, resourceName string) string {
-	return fmt.Sprintf(`
-data "snowflake_tags" "test" {
-	depends_on = [%s]
-
-	like = "%s"
-}
-`, resourceName, like)
 }
 
 func TestAcc_Tags_Filtering(t *testing.T) {
@@ -81,9 +73,17 @@ func TestAcc_Tags_Filtering(t *testing.T) {
 	id2 := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
 	id3 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	model1 := model.Tag("test_1", id1.DatabaseName(), id1.Name(), id1.SchemaName())
-	model2 := model.Tag("test_2", id2.DatabaseName(), id2.Name(), id2.SchemaName())
-	model3 := model.Tag("test_3", id3.DatabaseName(), id3.Name(), id3.SchemaName())
+	model1 := model.TagBase("test1", id1)
+	model2 := model.TagBase("test2", id2)
+	model3 := model.TagBase("test3", id3)
+	tagsModelLikeFirstOne := datasourcemodel.Tags("test").
+		WithLike(id1.Name()).
+		WithInDatabase(id1.DatabaseId()).
+		WithDependsOn(model1.ResourceReference(), model2.ResourceReference(), model3.ResourceReference())
+	tagsModelLikePrefix := datasourcemodel.Tags("test").
+		WithLike(prefix+"%").
+		WithInDatabase(id1.DatabaseId()).
+		WithDependsOn(model1.ResourceReference(), model2.ResourceReference(), model3.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -93,29 +93,19 @@ func TestAcc_Tags_Filtering(t *testing.T) {
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testconfig.FromModels(t, model1) + testconfig.FromModels(t, model2) + testconfig.FromModels(t, model3) + tagsDatasourceLike(id1.Name()),
+				Config: accconfig.FromModels(t, model1, model2, model3, tagsModelLikeFirstOne),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tags.test", "tags.#", "1"),
+					resource.TestCheckResourceAttr(tagsModelLikeFirstOne.DatasourceReference(), "tags.#", "1"),
 				),
 			},
 			{
-				Config: testconfig.FromModels(t, model1) + testconfig.FromModels(t, model2) + testconfig.FromModels(t, model3) + tagsDatasourceLike(prefix+"%"),
+				Config: accconfig.FromModels(t, model1, model2, model3, tagsModelLikePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.snowflake_tags.test", "tags.#", "2"),
+					resource.TestCheckResourceAttr(tagsModelLikePrefix.DatasourceReference(), "tags.#", "2"),
 				),
 			},
 		},
 	})
-}
-
-func tagsDatasourceLike(like string) string {
-	return fmt.Sprintf(`
-data "snowflake_tags" "test" {
-	depends_on = [snowflake_tag.test_1, snowflake_tag.test_2, snowflake_tag.test_3]
-
-	like = "%s"
-}
-`, like)
 }
 
 func TestAcc_Tags_emptyIn(t *testing.T) {

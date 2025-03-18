@@ -201,4 +201,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ExternalOauthSecurityIntegration",
 		schema: resources.ExternalOauthIntegration().Schema,
 	},
+	{
+		name:   "Streamlit",
+		schema: resources.Streamlit().Schema,
+	},
 }

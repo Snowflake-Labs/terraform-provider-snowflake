@@ -84,7 +84,7 @@ func TestInt_Connections(t *testing.T) {
 
 		secondaryAccountId := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
-		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		_, connectionCleanup := testClientHelper().Connection.CreateWithIdentifier(t, id)
 		t.Cleanup(connectionCleanup)
 
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(id).
@@ -121,7 +121,7 @@ func TestInt_Connections(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		secondaryAccountId := secondaryTestClientHelper().Ids.AccountIdentifierWithLocator()
 
-		primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
+		primaryConn, connectionCleanup := testClientHelper().Connection.CreateWithIdentifier(t, testClientHelper().Ids.RandomAccountObjectIdentifier())
 		t.Cleanup(connectionCleanup)
 
 		err := client.Connections.Alter(ctx, sdk.NewAlterConnectionRequest(primaryConn.ID()).
@@ -164,7 +164,7 @@ func TestInt_Connections(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		secondaryAccountId := secondaryTestClientHelper().Account.GetAccountIdentifier(t)
 
-		primaryConn, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		primaryConn, connectionCleanup := testClientHelper().Connection.CreateWithIdentifier(t, id)
 		t.Cleanup(connectionCleanup)
 
 		// Add secondary account to failover list
@@ -196,7 +196,7 @@ func TestInt_Connections(t *testing.T) {
 
 	t.Run("Alter comment", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		_, connectionCleanup := testClientHelper().Connection.CreateWithIdentifier(t, id)
 		t.Cleanup(connectionCleanup)
 
 		// Set
@@ -224,7 +224,7 @@ func TestInt_Connections(t *testing.T) {
 
 	t.Run("Drop", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		_, connectionCleanup := testClientHelper().Connection.CreateWithIdentifier(t, id)
 		t.Cleanup(connectionCleanup)
 
 		connection, err := client.Connections.ShowByID(ctx, id)
@@ -251,10 +251,10 @@ func TestInt_Connections(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		connection1, connectionCleanup1 := testClientHelper().Connection.Create(t, id1)
+		connection1, connectionCleanup1 := testClientHelper().Connection.CreateWithIdentifier(t, id1)
 		t.Cleanup(connectionCleanup1)
 
-		connection2, connectionCleanup2 := testClientHelper().Connection.Create(t, id2)
+		connection2, connectionCleanup2 := testClientHelper().Connection.CreateWithIdentifier(t, id2)
 		t.Cleanup(connectionCleanup2)
 
 		returnedConnections, err := client.Connections.Show(ctx, sdk.NewShowConnectionRequest())
@@ -267,10 +267,10 @@ func TestInt_Connections(t *testing.T) {
 		id1 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		id2 := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		connection1, connectionCleanup1 := testClientHelper().Connection.Create(t, id1)
+		connection1, connectionCleanup1 := testClientHelper().Connection.CreateWithIdentifier(t, id1)
 		t.Cleanup(connectionCleanup1)
 
-		connection2, connectionCleanup2 := testClientHelper().Connection.Create(t, id2)
+		connection2, connectionCleanup2 := testClientHelper().Connection.CreateWithIdentifier(t, id2)
 		t.Cleanup(connectionCleanup2)
 
 		returnedConnections, err := client.Connections.Show(ctx, sdk.NewShowConnectionRequest().
@@ -285,7 +285,7 @@ func TestInt_Connections(t *testing.T) {
 	t.Run("ShowByID", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
-		_, connectionCleanup := testClientHelper().Connection.Create(t, id)
+		_, connectionCleanup := testClientHelper().Connection.CreateWithIdentifier(t, id)
 		t.Cleanup(connectionCleanup)
 
 		returnedConnection, err := client.Connections.ShowByID(ctx, id)
