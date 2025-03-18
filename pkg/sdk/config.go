@@ -59,7 +59,7 @@ func ProfileConfig(profile string, fileReader FileReader) (*gosnowflake.Config, 
 	}
 	var config *gosnowflake.Config
 	if cfg, ok := configs[profile]; ok {
-		log.Printf("[DEBUG] loading config for profile: \"%s\"", profile)
+		log.Printf("[DEBUG] Loading config for profile: \"%s\"", profile)
 		driverCfg, err := cfg.DriverConfig()
 		if err != nil {
 			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
@@ -67,7 +67,7 @@ func ProfileConfig(profile string, fileReader FileReader) (*gosnowflake.Config, 
 		config = Pointer(driverCfg)
 	}
 	if config == nil {
-		log.Printf("[DEBUG] no config found for profile: \"%s\"", profile)
+		log.Printf("[DEBUG] No config found for profile: \"%s\"", profile)
 		return nil, nil
 	}
 

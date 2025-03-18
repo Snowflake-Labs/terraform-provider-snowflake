@@ -21,19 +21,19 @@ func IsRunningOnWindows() bool {
 
 // Stat is an os.Stat wrapper.
 func Stat(path string) (os.FileInfo, error) {
-	log.Printf("[DEBUG] reading the %s file info", path)
+	log.Printf("[DEBUG] Reading the %s file info", path)
 	return os.Stat(path)
 }
 
 // Getenv is an os.Getenv wrapper.
 func Getenv(name string) string {
-	log.Printf("[DEBUG] reading the %s environmental variable", name)
+	log.Printf("[DEBUG] Reading the %s environmental variable", name)
 	return os.Getenv(name)
 }
 
 // LookupEnv is an os.LookupEnv wrapper.
 func LookupEnv(name string) (string, bool) {
-	log.Printf("[DEBUG] reading the %s environmental variable", name)
+	log.Printf("[DEBUG] Reading the %s environmental variable", name)
 	return os.LookupEnv(name)
 }
 
@@ -47,7 +47,7 @@ func ReadFileSafe(path string) ([]byte, error) {
 
 // ReadFile is an os.ReadFile wrapper.
 func ReadFile(path string) ([]byte, error) {
-	log.Printf("[DEBUG] reading the %s file", path)
+	log.Printf("[DEBUG] Reading the %s file", path)
 	return os.ReadFile(path)
 }
 
@@ -80,6 +80,6 @@ func unixFilePermissionsAreStrict(perm fs.FileMode) bool {
 
 // UserHomeDir is an os.UserHomeDir wrapper.
 func UserHomeDir() (string, error) {
-	log.Printf("[DEBUG] reading the user home directory location from the operating system")
+	log.Printf("[DEBUG] Reading the user home directory location from the operating system")
 	return os.UserHomeDir()
 }

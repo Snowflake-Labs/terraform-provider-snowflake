@@ -43,6 +43,7 @@ type SnowflakeModel struct {
 	Protocol                       tfconfig.Variable `json:"protocol,omitempty"`
 	RequestTimeout                 tfconfig.Variable `json:"request_timeout,omitempty"`
 	Role                           tfconfig.Variable `json:"role,omitempty"`
+	SkipFilePermissionVerification tfconfig.Variable `json:"skip_file_permission_verification,omitempty"`
 	TmpDirectoryPath               tfconfig.Variable `json:"tmp_directory_path,omitempty"`
 	Token                          tfconfig.Variable `json:"token,omitempty"`
 	TokenAccessor                  tfconfig.Variable `json:"token_accessor,omitempty"`
@@ -234,6 +235,11 @@ func (s *SnowflakeModel) WithRequestTimeout(requestTimeout int) *SnowflakeModel 
 
 func (s *SnowflakeModel) WithRole(role string) *SnowflakeModel {
 	s.Role = tfconfig.StringVariable(role)
+	return s
+}
+
+func (s *SnowflakeModel) WithSkipFilePermissionVerification(skipFilePermissionVerification bool) *SnowflakeModel {
+	s.SkipFilePermissionVerification = tfconfig.BoolVariable(skipFilePermissionVerification)
 	return s
 }
 
@@ -435,6 +441,11 @@ func (s *SnowflakeModel) WithRequestTimeoutValue(value tfconfig.Variable) *Snowf
 
 func (s *SnowflakeModel) WithRoleValue(value tfconfig.Variable) *SnowflakeModel {
 	s.Role = value
+	return s
+}
+
+func (s *SnowflakeModel) WithSkipFilePermissionVerificationValue(value tfconfig.Variable) *SnowflakeModel {
+	s.SkipFilePermissionVerification = value
 	return s
 }
 
