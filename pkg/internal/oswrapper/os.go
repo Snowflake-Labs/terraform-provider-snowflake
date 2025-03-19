@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
 )
 
 const (
@@ -29,6 +30,17 @@ func Stat(path string) (os.FileInfo, error) {
 func Getenv(name string) string {
 	log.Printf("[DEBUG] Reading the %s environmental variable", name)
 	return os.Getenv(name)
+}
+
+// GetenvBool returns if an environmental variable is set to true.
+// If it is not set, it is considered false.
+// If it is set to a value that cannot be parsed as a boolean, an error is returned.
+func GetenvBool(name string) (bool, error) {
+	v, ok := LookupEnv(name)
+	if !ok {
+		return false, nil
+	}
+	return strconv.ParseBool(v)
 }
 
 // LookupEnv is an os.LookupEnv wrapper.

@@ -474,7 +474,16 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
 
-	if oswrapper.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		log.Panicf("TF_ACC environmental variable has incorrect format: %v", err)
+	}
+	objectRenamingTestEnabled, err := oswrapper.GetenvBool(string(testenvs.EnableObjectRenamingTest))
+	if err != nil {
+		log.Panicf("%s environmental variable has incorrect format: %v", string(testenvs.EnableObjectRenamingTest), err)
+	}
+
+	if accTestEnabled && objectRenamingTestEnabled {
 		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
 	}
 
@@ -537,8 +546,16 @@ var (
 )
 
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		log.Panicf("TF_ACC environmental variable has incorrect format: %v", err)
+	}
+	configureClientOnceEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE")
+	if err != nil {
+		log.Panicf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v", err)
+	}
 	// hacky way to speed up our acceptance tests
-	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+	if accTestEnabled && configureClientOnceEnabled {
 		if configureProviderCtx != nil {
 			return configureProviderCtx, nil
 		}
@@ -574,12 +591,18 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	if v, ok := s.GetOk("preview_features_enabled"); ok {
 		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
 	}
-	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
+
+	allPreviewFeaturesEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES")
+	if err != nil {
+		log.Panicf("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES environmental variable has incorrect format: %v", err)
+	}
+
+	if accTestEnabled && allPreviewFeaturesEnabled {
 		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
 
 	// needed for tests verifying different provider setups
-	if oswrapper.Getenv(resource.EnvTfAcc) != "" && oswrapper.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+	if accTestEnabled && configureClientOnceEnabled {
 		configureProviderCtx = providerCtx
 		configureClientError = clientErr
 	} else {
