@@ -207,6 +207,7 @@ func TestInt_Table(t *testing.T) {
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
+		// change to test tmp
 		f, err := os.CreateTemp("/tmp", "data.csv")
 		require.NoError(t, err)
 		w := bufio.NewWriter(f)

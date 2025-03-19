@@ -145,6 +145,7 @@ func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIde
 	t.Helper()
 	ctx := context.Background()
 
+	// change to test tmp
 	tf := fmt.Sprintf("/tmp/%s", filename)
 	f, err := os.Create(tf)
 	require.NoError(t, err)
