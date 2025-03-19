@@ -7,7 +7,7 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 >
-> If you want to upgrade multiple versions at once, consider reimporting your infrastructure to the reworked resources. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
+> If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
 
 ## v1.0.4 ➞ v1.0.5
 

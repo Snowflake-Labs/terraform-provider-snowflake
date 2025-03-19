@@ -55,7 +55,8 @@ After running `terraform apply`, the resource is removed from the state. The `re
 
 #### 3. Three options from here
 
-At this point, we have several options for creating new grant resources that will replace the old ones.
+At this step, you should upgrade the provider to the version you want.
+Now, we have several options for creating new grant resources that will replace the old ones.
 We will cover three options:
 - Configuration + Terraform CLI
 - Configuration + import block
