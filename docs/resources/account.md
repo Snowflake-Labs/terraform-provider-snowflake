@@ -13,6 +13,11 @@ The account resource allows you to create and manage Snowflake accounts. For mor
 
 ~> **Note** Changes for the following fields won't be detected: `admin_name`, `admin_password`, `admin_rsa_public_key`, `admin_user_type`, `first_name`, `last_name`, `email`, `must_change_password`. This is because these fields only supply initial values for creating the admin user. Once the account is created, the admin user becomes an independent entity. Modifying users from the account resource is challenging since it requires logging into that account. This would require the account resource logging into the account it created to read or alter admin user properties, which is impractical, because any external change to the admin user would disrupt the change detection anyway.
 
+~> **Note** In order to drop the account successfully, you need to specify `grace_period_days` field (see [Snowflake docs](https://docs.snowflake.com/en/sql-reference/sql/drop-account)). This affects Terraform plans with changes on a `ForceNew` fields, causing the resource to be recreated. If you do not want to recreate the resource:
+~> Make sure if the resource configuration matches the actual state, or
+~> Use [ignore_changes](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) meta argument to ignore changes on a field.
+~> You can also use [prevent_destroy](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) to prevent accidentally deleting the entire account (such plans will simply fail).
+
 ## Example Usage
 
 ```terraform
