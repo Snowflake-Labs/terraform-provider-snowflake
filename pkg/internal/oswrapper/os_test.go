@@ -137,6 +137,51 @@ func TestGetenv(t *testing.T) {
 	require.Equal(t, os.Getenv(env), oswrapper.Getenv(env))
 }
 
+func TestGetenvBool(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected bool
+	}{
+		{value: "TRUE", expected: true},
+		{value: "true", expected: true},
+		{value: "1", expected: true},
+		{value: "FALSE", expected: false},
+		{value: "false", expected: false},
+		{value: "0", expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("getting a boolean env with value %v", tt.value), func(t *testing.T) {
+			env := random.AlphaN(10)
+			t.Setenv(env, tt.value)
+			actual, err := oswrapper.GetenvBool(env)
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func TestGetenvBoolUnset(t *testing.T) {
+	env := random.AlphaN(10)
+	value, err := oswrapper.GetenvBool(env)
+	require.NoError(t, err)
+	require.False(t, value)
+}
+
+func TestGetenvBoolFailsForEmptyValue(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "")
+	_, err := oswrapper.GetenvBool(env)
+	require.ErrorContains(t, err, "strconv.ParseBool: parsing \"\": invalid syntax")
+}
+
+func TestGetenvBoolFailsForInvalidValue(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "invalid")
+	_, err := oswrapper.GetenvBool(env)
+	require.ErrorContains(t, err, "strconv.ParseBool: parsing \"invalid\": invalid syntax")
+}
+
 func TestLookupEnvOnSetVariable(t *testing.T) {
 	env := random.AlphaN(10)
 	t.Setenv(env, "test")
