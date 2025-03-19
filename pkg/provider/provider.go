@@ -44,6 +44,17 @@ func init() {
 		}
 		return strings.TrimSpace(desc)
 	}
+
+	schema.SchemaDescriptionBuilder = func(s *schema.Schema) string {
+		desc := s.Description
+		if s.Default != nil {
+			desc = fmt.Sprintf("(Default: `%v`) %s", s.Default, s.Description)
+		}
+		if s.DefaultFunc != nil {
+			desc = fmt.Sprintf("(Default is computed) %s", s.Description)
+		}
+		return desc
+	}
 }
 
 // Provider returns a Terraform Provider using configuration. It is based on https://pkg.go.dev/github.com/snowflakedb/gosnowflake#Config.
