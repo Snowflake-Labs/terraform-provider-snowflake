@@ -248,6 +248,8 @@ export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
 When a `default` profile is not present in the TOML file, it is treated as "empty", without failing.
 
+Read [TOML](https://toml.io/en/) specification for more details on the syntax.
+
 Example content of the Terraform file configuration:
 
 ```terraform
