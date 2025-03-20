@@ -81,7 +81,7 @@ To run the tests we have three different commands:
 - `make test-acceptance` run acceptance tests
 - `make test-integration` run integration tests
 
-You can run the particular tests form inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you). It is also worth setting up more verbose logging (check [this section](CREATING_ISSUES.md#how-can-i-turn-on-logs) for more details).
+You can run the particular tests form inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you). It is also worth setting up more verbose logging (check [this section](FAQ.md#how-can-i-turn-on-logs) for more details).
 
 ## Making a contribution
 
