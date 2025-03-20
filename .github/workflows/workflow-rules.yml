@@ -13,9 +13,9 @@ jobs:
 
       - name: Check for pull_request_target
         run: |
-          grep -r --exclude="workflow-rules.yml" "pull_request_target" .github/workflows/
-          if [ $? -eq 0 ]; then
-            echo "pull_request_target found in workflow files"
-            exit 1
-          fi
-          exit 0
+          grep -r --exclude="workflow-rules.yml" "pull_request_target" .github/workflows/ \
+          if [ $? -eq 0 ]; then                                                           \
+            echo "pull_request_target found in workflow files"                            \
+            exit 1                                                                        \
+          fi                                                                              \
+          exit 0                                                                          \
