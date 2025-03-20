@@ -18,3 +18,4 @@ jobs:
             echo "pull_request_target found in workflow files"
             exit 1
           fi
+          exit 0
