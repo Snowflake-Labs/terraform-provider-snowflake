@@ -37,7 +37,7 @@ func Getenv(name string) string {
 // If it is set to a value that cannot be parsed as a boolean, an error is returned.
 func GetenvBool(name string) (bool, error) {
 	v, ok := LookupEnv(name)
-	if !ok {
+	if !ok || v == "" {
 		return false, nil
 	}
 	return strconv.ParseBool(v)

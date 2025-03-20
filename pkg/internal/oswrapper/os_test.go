@@ -168,11 +168,12 @@ func TestGetenvBoolUnset(t *testing.T) {
 	require.False(t, value)
 }
 
-func TestGetenvBoolFailsForEmptyValue(t *testing.T) {
+func TestGetenvBoolEmptyValue(t *testing.T) {
 	env := random.AlphaN(10)
 	t.Setenv(env, "")
-	_, err := oswrapper.GetenvBool(env)
-	require.ErrorContains(t, err, "strconv.ParseBool: parsing \"\": invalid syntax")
+	value, err := oswrapper.GetenvBool(env)
+	require.NoError(t, err)
+	require.False(t, value)
 }
 
 func TestGetenvBoolFailsForInvalidValue(t *testing.T) {
