@@ -1,0 +1,20 @@
+name: Workflow rules
+
+on:
+  pull_request:
+
+jobs:
+  check_workflows:
+    name: Check workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for pull_request_target
+        run: |
+          grep -r "pull_request_target" .github/workflows/
+          if [ $? -eq 0 ]; then
+            echo "pull_request_target found in workflow files"
+            exit 1
+          fi
