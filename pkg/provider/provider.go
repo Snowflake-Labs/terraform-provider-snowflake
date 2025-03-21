@@ -552,15 +552,15 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		return nil, diag.FromErr(err)
 	}
 
-	var fileReader sdk.FileReader
+	var verifyPermissions bool
 	if v := s.Get("skip_toml_file_permission_verification"); v.(bool) {
-		fileReader = oswrapper.ReadFileSkipPermissionsCheck
+		verifyPermissions = false
 	} else {
-		fileReader = oswrapper.ReadFileSafe
+		verifyPermissions = true
 	}
 
 	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
-		tomlConfig, err := getDriverConfigFromTOML(v.(string), fileReader)
+		tomlConfig, err := getDriverConfigFromTOML(v.(string), verifyPermissions)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -606,16 +606,16 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func getDriverConfigFromTOML(profile string, fileReader sdk.FileReader) (*gosnowflake.Config, error) {
+func getDriverConfigFromTOML(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
 	if profile == "default" {
-		return sdk.DefaultConfig(fileReader), nil
+		return sdk.DefaultConfig(verifyPermissions), nil
 	}
 	path, err := sdk.GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	profileConfig, err := sdk.ProfileConfig(profile, fileReader)
+	profileConfig, err := sdk.ProfileConfig(profile, verifyPermissions)
 	if err != nil {
 		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
 	}

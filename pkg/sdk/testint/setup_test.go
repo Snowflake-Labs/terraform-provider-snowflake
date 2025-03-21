@@ -113,7 +113,7 @@ func (itc *integrationTestContext) initialize() error {
 		return errors.New("test object suffix is required for this test run")
 	}
 
-	defaultConfig, err := sdk.ProfileConfigSafe(testprofiles.Default)
+	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default, true)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func (itc *integrationTestContext) initialize() error {
 
 	// TODO [SNOW-1763603]: improve setup; this is a quick workaround for faster local testing
 	if os.Getenv(string(testenvs.SimplifiedIntegrationTestsSetup)) == "" {
-		config, err := sdk.ProfileConfigSafe(testprofiles.Secondary)
+		config, err := sdk.ProfileConfig(testprofiles.Secondary, true)
 		if err != nil {
 			return err
 		}

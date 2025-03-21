@@ -38,27 +38,15 @@ func LookupEnv(name string) (string, bool) {
 }
 
 // ReadFileSafe checks if a file is safe to read, and then reads it.
-func ReadFileSafe(path string) ([]byte, error) {
-	if err := fileIsSafeToRead(path); err != nil {
+// On Unix platforms, it can optionally if the file has strict permissions.
+func ReadFileSafe(path string, verifyPermissions bool) ([]byte, error) {
+	if err := fileIsSafeToRead(path, verifyPermissions); err != nil {
 		return nil, err
 	}
 	return readFile(path)
 }
 
-// ReadFileSkipPermissionsCheck reads a file without checking its permissions.
-func ReadFileSkipPermissionsCheck(path string) ([]byte, error) {
-	if err := fileIsTooBig(path); err != nil {
-		return nil, err
-	}
-	return readFile(path)
-}
-
-func readFile(path string) ([]byte, error) {
-	log.Printf("[DEBUG] Reading the %s file", path)
-	return os.ReadFile(path)
-}
-
-func fileIsSafeToRead(path string) error {
+func fileIsSafeToRead(path string, verifyPermissions bool) error {
 	fileInfo, err := Stat(path)
 	if err != nil {
 		return fmt.Errorf("reading information about the config file: %w", err)
@@ -66,7 +54,7 @@ func fileIsSafeToRead(path string) error {
 	if fileInfo.Size() > maxFileSizeInMb*1024*1024 {
 		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
 	}
-	if !IsRunningOnWindows() {
+	if !IsRunningOnWindows() && verifyPermissions {
 		if !unixFilePermissionsAreStrict(fileInfo.Mode().Perm()) {
 			return fmt.Errorf("config file %s has unsafe permissions - %#o", path, fileInfo.Mode().Perm())
 		}
@@ -76,15 +64,9 @@ func fileIsSafeToRead(path string) error {
 	return nil
 }
 
-func fileIsTooBig(path string) error {
-	fileInfo, err := Stat(path)
-	if err != nil {
-		return fmt.Errorf("reading information about the config file: %w", err)
-	}
-	if fileInfo.Size() > maxFileSizeInMb*1024*1024 {
-		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
-	}
-	return nil
+func readFile(path string) ([]byte, error) {
+	log.Printf("[DEBUG] Reading the %s file", path)
+	return os.ReadFile(path)
 }
 
 func unixFilePermissionsAreStrict(perm fs.FileMode) bool {

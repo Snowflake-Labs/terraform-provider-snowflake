@@ -21,16 +21,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type (
-	FileReader func(path string) ([]byte, error)
-)
-
-func DefaultConfigSafe() *gosnowflake.Config {
-	return DefaultConfig(oswrapper.ReadFileSafe)
-}
-
-func DefaultConfig(configLoader FileReader) *gosnowflake.Config {
-	config, err := ProfileConfig("default", configLoader)
+func DefaultConfig(verifyPermissions bool) *gosnowflake.Config {
+	config, err := ProfileConfig("default", verifyPermissions)
 	if err != nil || config == nil {
 		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
 		config = &gosnowflake.Config{}
@@ -38,18 +30,14 @@ func DefaultConfig(configLoader FileReader) *gosnowflake.Config {
 	return config
 }
 
-func ProfileConfigSafe(profile string) (*gosnowflake.Config, error) {
-	return ProfileConfig(profile, oswrapper.ReadFileSafe)
-}
-
-func ProfileConfig(profile string, fileReader FileReader) (*gosnowflake.Config, error) {
+func ProfileConfig(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
 	log.Printf("[DEBUG] Retrieving %s profile from a TOML file\n", profile)
 	path, err := GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	configs, err := LoadConfigFile(path, fileReader)
+	configs, err := LoadConfigFile(path, verifyPermissions)
 	if err != nil {
 		return nil, fmt.Errorf("could not load config file: %w", err)
 	}
@@ -373,8 +361,8 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 	return nil
 }
 
-func LoadConfigFile(path string, fileReader FileReader) (map[string]ConfigDTO, error) {
-	data, err := fileReader(path)
+func LoadConfigFile(path string, verifyPermissions bool) (map[string]ConfigDTO, error) {
+	data, err := oswrapper.ReadFileSafe(path, verifyPermissions)
 	if err != nil {
 		return nil, err
 	}

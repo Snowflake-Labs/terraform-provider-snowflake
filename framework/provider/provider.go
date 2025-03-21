@@ -745,13 +745,13 @@ func (p *SnowflakeProvider) Configure(ctx context.Context, req provider.Configur
 
 	if profile != "" {
 		if profile == "default" {
-			defaultConfig := sdk.DefaultConfigSafe()
+			defaultConfig := sdk.DefaultConfig(true)
 			if defaultConfig.Account == "" || defaultConfig.User == "" {
 				resp.Diagnostics.AddError("Error retrieving default profile config", "default profile not found in config file")
 			}
 			config = sdk.MergeConfig(config, defaultConfig)
 		} else {
-			profileConfig, err := sdk.ProfileConfigSafe(profile)
+			profileConfig, err := sdk.ProfileConfig(profile, true)
 			if err != nil {
 				resp.Diagnostics.AddError("Error retrieving profile config", err.Error())
 			}
