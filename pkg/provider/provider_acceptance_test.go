@@ -308,6 +308,7 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 	tomlConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
 		return string(c)
 	})
+	providerModel := providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -319,7 +320,7 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
 				},
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path), datasourceModel()),
+				Config:      config.FromModels(t, providerModel, datasourceModel()),
 				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path)),
 			},
 		},
@@ -337,6 +338,7 @@ func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 	permissions := fs.FileMode(0o755)
 
 	configPath := testhelpers.TestFileWithCustomPermissions(t, random.AlphaN(10), random.Bytes(), permissions)
+	providerModel := providermodel.SnowflakeProvider().WithProfile(configPath)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -348,7 +350,7 @@ func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, configPath)
 				},
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(configPath), datasourceModel()),
+				Config:      config.FromModels(t, providerModel, datasourceModel()),
 				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s has unsafe permissions - %#o", configPath, permissions)),
 			},
 		},
@@ -364,12 +366,9 @@ func TestAcc_Provider_tomlConfigFilePermissionsCanBeSkipped(t *testing.T) {
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
-	profile := random.AlphaN(6)
-	tomlConfig := helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigWithCustomPermissionsForServiceUser(t, tmpServiceUser, fs.FileMode(0o755))
 
-	permissions := fs.FileMode(0o755)
-
-	configPath := testhelpers.TestFileWithCustomPermissions(t, random.AlphaN(10), []byte(tomlConfig), permissions)
+	providerModelWithSkippedPermissionVerification := providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithSkipTomlFilePermissionVerification(true)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -379,9 +378,9 @@ func TestAcc_Provider_tomlConfigFilePermissionsCanBeSkipped(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
-				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(profile).WithSkipTomlFilePermissionVerification(true), datasourceModel()),
+				Config: config.FromModels(t, providerModelWithSkippedPermissionVerification, datasourceModel()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
 				),
