@@ -89,6 +89,10 @@ terraform import 'snowflake_grant_privileges_to_account_role.new_resource["role_
 
 [Hashicorp documentation reference on import command](https://developer.hashicorp.com/terraform/cli/commands/import)
 
+**! Warning !** During the import, when Terraform detects changes on a field with `ForceNew`, it will try to recreate the resource. This may not be the desired behavior, as it may cause downtime.
+Before importing, make sure if the resource configuration matches the actual state, or use [ignore_changes](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) meta argument to ignore changes on a field with changes.
+You can also use [prevent_destroy](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) to prevent accidentally deleting the entire object (such plans will simply fail).
+
 #### 3.2.1 Write import block with new resource
 
 This is similar to the first approach, but here we don't have to worry about importing each `for_each`
