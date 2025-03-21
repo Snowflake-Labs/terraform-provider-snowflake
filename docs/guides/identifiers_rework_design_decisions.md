@@ -66,7 +66,7 @@ With the new computed field, it will be much easier to use resources requiring f
 
 For example, instead of writing
 
-```
+```terraform
 object_name = “\”${snowflake_table.database}\”.\”${snowflake_table.schema}\”.\”${snowflake_table.name}\””
 # for procedures
 object_name = “\”${snowflake_procedure_sql.database}\”.\”${snowflake_procedure_sql.schema}\”.\”${snowflake_procedure_sql.name}\"(NUMBER, VARCHAR)”
@@ -74,7 +74,7 @@ object_name = “\”${snowflake_procedure_sql.database}\”.\”${snowflake_pro
 
 now we can write
 
-```
+```terraform
 object_name = snowflake_table.fully_qualified_name
 ```
 
