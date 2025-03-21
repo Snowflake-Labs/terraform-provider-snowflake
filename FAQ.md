@@ -1,13 +1,17 @@
 # FAQ
 
+* [What are the current/future plans for the provider?](#what-are-the-currentfuture-plans-for-the-provider)
 * [When will the Snowflake feature X be available in the provider?](#when-will-the-snowflake-feature-x-be-available-in-the-provider)
 * [When will my bug report be fixed/released?](#when-will-my-bug-report-be-fixedreleased)
 * [How to migrate from version X to Y?](#how-to-migrate-from-version-x-to-y)
-* [What are the current/future plans for the provider?](#what-are-the-currentfuture-plans-for-the-provider)
 * [How can I contribute?](#how-can-i-contribute)
 * [How can I debug the issue myself?](#how-can-i-debug-the-issue-myself)
 * [How can I import already existing Snowflake infrastructure into Terraform?](#how-can-i-import-already-existing-snowflake-infrastructure-into-terraform)
 * [What identifiers are valid inside the provider and how to reference one resource inside the other one?](#what-identifiers-are-valid-inside-the-provider-and-how-to-reference-one-resource-inside-the-other-one)
+
+### What are the current/future plans for the provider?
+Our current plans are documented in the publicly available [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md) that you can find in our repository.
+We will be updating it to keep you posted on what’s coming for the provider.
 
 ### When will the Snowflake feature X be available in the provider?
 It depends on the status of the feature. Snowflake marks features as follows:
@@ -16,8 +20,12 @@ It depends on the status of the feature. Snowflake marks features as follows:
 - Generally Available (GA)
 
 Currently, our main focus is on making the provider stable with the most stable GA features,
-but please take a closer look at our recently updated [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#05052024-roadmap-overview)
+but please take a closer look at our recently updated [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md)
 which describes our priorities for the next quarters.
+
+The provider uses SQL under the hood. When requesting a new feature, 
+make sure all the necessary SQL commands representing CRUD (CREATE/READ/UPDATE/DELETE) operations are available in Snowflake.
+If they are not, you can create a feature request (reach out to your account manager) for Snowflake to add the missing functionality.
 
 ### When will my bug report be fixed/released?
 Our team is checking daily incoming GitHub issues. The resolution depends on the complexity and the topic of a given issue, but the general rules are:
@@ -33,10 +41,6 @@ the project is still experimental and breaking change may occur. We try to minim
 Because of that, whenever we introduce any breaking change, we add it to the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md).
 It’s a document containing every breaking change (starting from around v0.73.0) with additional hints on how to migrate resources between the versions.
 
-### What are the current/future plans for the provider?
-Our current plans are documented in the publicly available [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md) that you can find in our repository.
-We will be updating it to keep you posted on what’s coming for the provider.
-
 ### How can I contribute?
 If you would like to contribute to the project, please follow our [contribution guidelines](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md).
 
@@ -44,6 +48,7 @@ If you would like to contribute to the project, please follow our [contribution 
 The provider is simply an abstraction issuing SQL commands through the Go Snowflake driver, so most of the errors will be connected to incorrectly built or executed SQL statements.
 To see what SQLs are being run you have to set more verbose logging check the [section below](#how-can-i-turn-on-logs).
 To confirm the correctness of the SQLs, refer to the [official Snowflake documentation](https://docs.snowflake.com/).
+If the SQLs seem correct, try to run them in the [Snowsight](https://docs.snowflake.com/en/user-guide/ui-snowsight) to confirm it's not a Snowflake issue.
 
 ### How can I turn on logs?
 The provider offers two main types of logging:
@@ -56,7 +61,7 @@ As driver logs may seem cluttered, to locate the SQL commands run, search for:
 - `msg="Exec:`
 
 ### How can I import already existing Snowflake infrastructure into Terraform?
-Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/resource_migration.md#3-two-options-from-here)
+Please refer to [this document](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/guides/resource_migration.md#3-three-options-from-here)
 as it describes different approaches of importing the existing Snowflake infrastructure into Terraform as configuration.
 One thing worth noting is that some approaches can be automated by scripts interacting with Snowflake and generating needed configuration blocks,
 which is highly recommended for large-scale migrations.

@@ -18,7 +18,7 @@ body:
         This helps to keep all relevant information in one place, including any potential workarounds.
         
         Here's a list of useful links that may help you with your issue:
-        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/COMMONLY_KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
+        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
         - [Migration Guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) - when introducing breaking changes, we note them in the migration guide and describe how to upgrade to the next version. If you recently upgraded the provider version, please check if you applied all the needed changes.
 
   - type: markdown

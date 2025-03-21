@@ -17,7 +17,7 @@ contact_links:
     about: If you would like to create a GitHub issue, please read our guide first.
 
   - name: Commonly known issues
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/COMMONLY_KNOWN_ISSUES.md
+    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md
     about: Contains the collection of common issues that are encountered by users when using the provider.
 
   - name: FAQ

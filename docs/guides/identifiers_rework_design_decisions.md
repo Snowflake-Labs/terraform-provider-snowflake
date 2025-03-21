@@ -42,12 +42,12 @@ In addition to a better parsing function, we made sure it will return user-frien
 Previously, the error looked like [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2091).
 
 ### Using the recommended format for account identifiers
-Previously, the use of account identifiers was mixed across the resources, in many cases causing confusion ([commonly known issues reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/COMMONLY_KNOWN_ISSUES.md#incorrect-account-identifier-snowflake_databasefrom_share)).
+Previously, the use of account identifiers was mixed across the resources, in many cases causing confusion ([commonly known issues reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md#incorrect-account-identifier-snowflake_databasefrom_share)).
 Some of them required an account locator format (that was not fully supported), and some of the new recommended ones.
 We decided to unify them and use the new account identifier format everywhere. The account locator format is not supported in v1.
 
 ### Better handling for identifiers with arguments
-Previously, the handling of identifiers with arguments was not done fully correctly, causing many issues and confusion on how to use them ([commonly known issues reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/COMMONLY_KNOWN_ISSUES.md#granting-on-functions-or-procedures)).
+Previously, the handling of identifiers with arguments was not done fully correctly, causing many issues and confusion on how to use them ([commonly known issues reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md#granting-on-functions-or-procedures)).
 The main pain point was using them with privilege-granting resources. To address this we had to make two steps.
 The first one was adding a dedicated representation of an identifier containing arguments and using it in our SDK.
 The second one was additional parsing for the output of SHOW GRANTS in our SDK which was only necessary for functions,

@@ -1,8 +1,9 @@
-# Commonly known issues
+# Known issues
 
-* [Usage problem - debugging provider](#usage-problem---debugging-provider)
-* [Usage problem - ignore_changes meta-attribute](#usage-problem---ignore_changes-meta-attribute)
-* [Usage problem - lack of support for the moved block](#usage-problem---lack-of-support-for-the-moved-block)
+* [General considerations](#general-considerations-)
+  * [Debugging provider](#debugging-provider)
+  * [Ignore_changes meta-attribute](#ignore_changes-meta-attribute)
+  * [Lack of support for the moved block](#lack-of-support-for-the-moved-block)
 * [Old Terraform CLI version](#old-terraform-cli-version)
 * [Errors with connection to Snowflake](#errors-with-connection-to-snowflake)
 * [How to set up the connection with the private key?](#how-to-set-up-the-connection-with-the-private-key)
@@ -17,15 +18,17 @@
 
 This is a collection of the most common issues (with solutions) that users encounter when using the Snowflake Terraform Provider.
 
-### Usage problem - debugging provider
+### General considerations 
+
+#### Debugging provider
 To enable lower levels of logs, follow the official HashiCorp guide on [debugging providers](https://developer.hashicorp.com/terraform/internals/debugging).
 The topic of debugging is further described in the [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md#how-can-i-debug-the-issue-myself).
 
-### Usage problem - ignore_changes meta-attribute
+#### Ignore_changes meta-attribute
 Sometimes if unexpected changes occur, you can use the `ignore_changes` meta-attribute to ignore specific fields.
 This is described in the [official Terraform documentation](https://www.terraform.io/docs/language/meta-arguments/resource.html#ignore_changes).
 
-### Usage problem - lack of support for the moved block
+#### Lack of support for the moved block
 In the latest Terraform provider framework library, there is a new concept of the moved block.
 It can be used to support migrations from deprecated resources to their new counterparts.
 We are aware of this feature, but unfortunately, we cannot take advantage of it.
@@ -44,7 +47,8 @@ HashiCorp still maintains it, but no new features are added.
 │ This is a bug in the provider, which should be reported in the provider's own issue tracker.
 │
 ```
-[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2347)
+GitHub issue reference: [#2347](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2347)
+
 **Solution:** You have to be using at least 1.1.5 version of the Terraform CLI.
 
 ### Errors with connection to Snowflake
@@ -59,7 +63,7 @@ HashiCorp still maintains it, but no new features are added.
 
 **Solution**: Go to the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth-troubleshooting#list-of-errors) and search by error code (390144 in this case).
 
-[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
+GitHub issue reference: [#2432](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
 
 **Problem**: Getting `Error: 260000: account is empty` error with non-empty `account` configuration after upgrading to v1, with the same provider configuration which worked up to v0.100.0
 
@@ -72,7 +76,7 @@ GitHub issue reference: [#3198](https://github.com/Snowflake-Labs/terraform-prov
 ### How to set up the connection with the private key?
 **Problem:** From the version v0.78.0, we introduced a lot of provider configuration changes. One of them was deprecating `private_key_path` in favor of `private_key`.
 
-[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2489), [Migration Guide reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0730--v0740)
+GitHub issue reference: [#2489](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2489), [Migration Guide reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0730--v0740)
 
 **Solution:** Use a non-deprecated `private_key` field with the use of the [file](https://developer.hashicorp.com/terraform/language/functions/file) function to pass the private key.
 
@@ -86,7 +90,7 @@ GitHub issue reference: [#3198](https://github.com/Snowflake-Labs/terraform-prov
 │ github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake/identifier.go:58 +0x174
 ```
 
-[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2224)
+GitHub issue reference: [#2224](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2224)
 
 **Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed.
 
@@ -96,7 +100,7 @@ GitHub issue reference: [#3198](https://github.com/Snowflake-Labs/terraform-prov
 panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier, not sdk.DatabaseObjectIdentifier
 ```
 
-[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2779)
+GitHub issue reference: [#2779](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2779)
 
 **Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed. Quick reference:
 - AccountObjectIdentifier - `<name>`
@@ -107,7 +111,7 @@ panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier
 ### Incorrect account identifier (snowflake_database.from_share)
 **Problem:** From 0.87.0 version, we are quoting incoming external account identifier correctly, which may break configurations that specified account identifier as `<org_name>.<acc_name>` that worked previously by accident.
 
-[GitHub issue reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2590)
+GitHub issue reference: [#2590](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2590)
 
 **Solution:** As specified in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#behavior-change-external-object-identifier-changes), use account locator instead.
 
@@ -229,3 +233,21 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 **Related issues:** [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
 
 **Solution:** [Solution described in the migration guide for v1.0.3 to v1.0.4 upgrade](./MIGRATION_GUIDE.md#new-go-version-and-conflicts-with-suricata-based-firewalls-like-aws-network-firewall).
+
+### Provider is too slow
+
+**Problem:** The provider is taking too long to perform plan/apply operations.
+
+**Solution:** Refer to our [performance analysis](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/performance_benchmarks) and the optimizations we are proposing.
+
+### Dropping related resources
+
+**Problem:** Sometimes you may seem to have issues with dropping related resources, like in the example below:
+```text
+│ Error deleting network policy EXAMPLE, err = 001492 (42601): SQL compilation error:
+│ Cannot perform Drop operation on network policy EXAMPLE. The policy is attached to INTEGRATION with name EXAMPLE. Unset the network policy from INTEGRATION and try the
+│ Drop operation again.
+```
+That is because some of the Snowflake objects are interdependent, and dropping one requires dropping the other first.
+
+**Solution:** This should be mostly resolved by keeping the dependencies between resources in the configuration code, but also make sure to check our [guide regarding this topic](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies).

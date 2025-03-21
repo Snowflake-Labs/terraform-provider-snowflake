@@ -9,7 +9,7 @@ body:
         # Thank you for raising a documentation issue!
 
         This form is meant to alert the maintainers to an issue with any of documentation connected with the provider, especially in:
-        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/COMMONLY_KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
+        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
         - [Terraform Registry](https://registry.terraform.io/providers/hashicorp/snowflake/latest) (such as resource and data source documentation, guides and examples).
         - [Project README](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/README.md).
         - [Contribution Guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md).
