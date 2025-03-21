@@ -89,10 +89,8 @@ func fileIsTooBig(path string) error {
 
 func unixFilePermissionsAreStrict(perm fs.FileMode) bool {
 	log.Println("[DEBUG] Checking file permissions on a Unix system...")
-	unsafeBits := os.FileMode(
-		0o070 | // group has any access
-			0o007, // others have any access
-	)
+	// group or others have any access
+	unsafeBits := os.FileMode(0o077)
 	return perm&unsafeBits == 0
 }
 
