@@ -476,13 +476,13 @@ func getResources() map[string]*schema.Resource {
 
 	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
 	if err != nil {
-		log.Printf("TF_ACC environmental variable has incorrect format: %v, using false as a default value", err)
 		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
 	}
 	objectRenamingTestEnabled, err := oswrapper.GetenvBool(string(testenvs.EnableObjectRenamingTest))
 	if err != nil {
-		log.Printf("%s environmental variable has incorrect format: %v, using false as a default value", string(testenvs.EnableObjectRenamingTest), err)
 		objectRenamingTestEnabled = false
+		log.Printf("%s environmental variable has incorrect format: %v, using %v as a default value", string(testenvs.EnableObjectRenamingTest), err, objectRenamingTestEnabled)
 	}
 
 	if accTestEnabled && objectRenamingTestEnabled {
@@ -550,13 +550,13 @@ var (
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
 	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
 	if err != nil {
-		log.Printf("TF_ACC environmental variable has incorrect format: %v, using false as a default value", err)
 		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
 	}
 	configureClientOnceEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE")
 	if err != nil {
-		log.Printf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v, using false as a default value", err)
 		configureClientOnceEnabled = false
+		log.Printf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v, using %v as a default value", err, configureClientOnceEnabled)
 	}
 	// hacky way to speed up our acceptance tests
 	if accTestEnabled && configureClientOnceEnabled {
