@@ -3,6 +3,7 @@ package testhelpers
 import (
 	"io/fs"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"golang.org/x/sys/unix"
@@ -15,12 +16,14 @@ import (
 // Each subsequent call to t.TempDir returns a unique directory.
 func TestFile(t *testing.T, filename string, data []byte) string {
 	t.Helper()
-	f, err := os.CreateTemp(t.TempDir(), filename)
+	dir, err := os.MkdirTemp(t.TempDir(), "")
 	require.NoError(t, err)
 
-	err = os.WriteFile(f.Name(), data, 0o600)
+	filepath := filepath.Join(dir, filename)
+
+	err = os.WriteFile(filepath, data, 0o600)
 	require.NoError(t, err)
-	return f.Name()
+	return filepath
 }
 
 // TestFileWithCustomPermissions creates a temporary file with the given filename and permissions.

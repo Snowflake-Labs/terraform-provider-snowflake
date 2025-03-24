@@ -1,10 +1,8 @@
 package testint
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -14,6 +12,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -207,17 +206,10 @@ func TestInt_Table(t *testing.T) {
 		stage, stageCleanup := testClientHelper().Stage.CreateStage(t)
 		t.Cleanup(stageCleanup)
 
-		f, err := os.CreateTemp("/tmp", "data.csv")
-		require.NoError(t, err)
-		w := bufio.NewWriter(f)
-		_, err = w.WriteString(` [{"name": "column1", "type" "INTEGER"},
-									 {"name": "column2", "type" "INTEGER"} ]`)
-		require.NoError(t, err)
-		err = w.Flush()
-		require.NoError(t, err)
-		_, err = client.ExecForTests(ctx, fmt.Sprintf("PUT file://%s @%s", f.Name(), stage.ID().FullyQualifiedName()))
-		require.NoError(t, err)
-		err = os.Remove(f.Name())
+		filePath := testhelpers.TestFile(t, "data.csv", []byte(` [{"name": "column1", "type" "INTEGER"},
+									 {"name": "column2", "type" "INTEGER"} ]`))
+
+		_, err := client.ExecForTests(ctx, fmt.Sprintf("PUT file://%s @%s", filePath, stage.ID().FullyQualifiedName()))
 		require.NoError(t, err)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()

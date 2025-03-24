@@ -13,8 +13,8 @@ import (
 )
 
 func TestReadFileSafeFailsForFileThatIsTooBig(t *testing.T) {
-	exp := make([]byte, 11*1024*1024)
-	configPath := testhelpers.TestFile(t, "config", exp)
+	c := make([]byte, 11*1024*1024)
+	configPath := testhelpers.TestFile(t, "config", c)
 
 	_, err := oswrapper.ReadFileSafe(configPath, false)
 	require.ErrorContains(t, err, fmt.Sprintf("config file %s is too big - maximum allowed size is 10MB", configPath))
@@ -135,6 +135,52 @@ func TestGetenv(t *testing.T) {
 	env := random.AlphaN(10)
 	t.Setenv(env, "test")
 	require.Equal(t, os.Getenv(env), oswrapper.Getenv(env))
+}
+
+func TestGetenvBool(t *testing.T) {
+	tests := []struct {
+		value    string
+		expected bool
+	}{
+		{value: "TRUE", expected: true},
+		{value: "true", expected: true},
+		{value: "1", expected: true},
+		{value: "FALSE", expected: false},
+		{value: "false", expected: false},
+		{value: "0", expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("getting a boolean env with value %v", tt.value), func(t *testing.T) {
+			env := random.AlphaN(10)
+			t.Setenv(env, tt.value)
+			actual, err := oswrapper.GetenvBool(env)
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func TestGetenvBoolUnset(t *testing.T) {
+	env := random.AlphaN(10)
+	value, err := oswrapper.GetenvBool(env)
+	require.NoError(t, err)
+	require.False(t, value)
+}
+
+func TestGetenvBoolEmptyValue(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "")
+	value, err := oswrapper.GetenvBool(env)
+	require.NoError(t, err)
+	require.False(t, value)
+}
+
+func TestGetenvBoolFailsForInvalidValue(t *testing.T) {
+	env := random.AlphaN(10)
+	t.Setenv(env, "invalid")
+	_, err := oswrapper.GetenvBool(env)
+	require.ErrorContains(t, err, "strconv.ParseBool: parsing \"invalid\": invalid syntax")
 }
 
 func TestLookupEnvOnSetVariable(t *testing.T) {
