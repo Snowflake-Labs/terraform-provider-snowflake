@@ -7,6 +7,7 @@ export TERRAFORM_PLUGIN_LOCAL_INSTALL=$(TERRAFORM_PLUGINS_DIR)/$(BASE_BINARY_NAM
 default: help
 
 dev-setup: ## setup development dependencies
+# TODO(SNOW-2002208): Upgrade to the latest version of golangci-lint.
 	@which ./bin/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./bin v1.63.4
 	cd tools && mkdir -p bin/
 	cd tools && env GOBIN=$$PWD/bin go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
