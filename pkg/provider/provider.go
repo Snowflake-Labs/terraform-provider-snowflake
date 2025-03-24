@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"strings"
@@ -21,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -474,7 +474,18 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
 
-	if oswrapper.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
+	}
+	objectRenamingTestEnabled, err := oswrapper.GetenvBool(string(testenvs.EnableObjectRenamingTest))
+	if err != nil {
+		objectRenamingTestEnabled = false
+		log.Printf("%s environmental variable has incorrect format: %v, using %v as a default value", string(testenvs.EnableObjectRenamingTest), err, objectRenamingTestEnabled)
+	}
+
+	if accTestEnabled && objectRenamingTestEnabled {
 		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
 	}
 
@@ -537,8 +548,18 @@ var (
 )
 
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
+	}
+	configureClientOnceEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE")
+	if err != nil {
+		configureClientOnceEnabled = false
+		log.Printf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v, using %v as a default value", err, configureClientOnceEnabled)
+	}
 	// hacky way to speed up our acceptance tests
-	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+	if accTestEnabled && configureClientOnceEnabled {
 		if configureProviderCtx != nil {
 			return configureProviderCtx, nil
 		}
@@ -579,7 +600,7 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	}
 
 	// needed for tests verifying different provider setups
-	if oswrapper.Getenv(resource.EnvTfAcc) != "" && oswrapper.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+	if accTestEnabled && configureClientOnceEnabled {
 		configureProviderCtx = providerCtx
 		configureClientError = clientErr
 	} else {

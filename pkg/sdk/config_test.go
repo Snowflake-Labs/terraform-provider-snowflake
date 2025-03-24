@@ -67,15 +67,143 @@ func TestLoadConfigFileWithUnknownFields(t *testing.T) {
 	}, m)
 }
 
-func TestLoadConfigFileWithInvalidFieldValue(t *testing.T) {
-	c := `
-	[default]
-	accountname=42
-	`
-	configPath := testhelpers.TestFile(t, "config", []byte(c))
+func TestLoadConfigFileWithInvalidFieldTypeFails(t *testing.T) {
+	tests := []struct {
+		name      string
+		fieldName string
+		wantType  string
+	}{
+		{name: "AccountName", fieldName: "accountname", wantType: "*string"},
+		{name: "OrganizationName", fieldName: "organizationname", wantType: "*string"},
+		{name: "User", fieldName: "user", wantType: "*string"},
+		{name: "Username", fieldName: "username", wantType: "*string"},
+		{name: "Password", fieldName: "password", wantType: "*string"},
+		{name: "Host", fieldName: "host", wantType: "*string"},
+		{name: "Warehouse", fieldName: "warehouse", wantType: "*string"},
+		{name: "Role", fieldName: "role", wantType: "*string"},
+		{name: "Params", fieldName: "params", wantType: "*map[string]*string"},
+		{name: "ClientIp", fieldName: "clientip", wantType: "*string"},
+		{name: "Protocol", fieldName: "protocol", wantType: "*string"},
+		{name: "Passcode", fieldName: "passcode", wantType: "*string"},
+		{name: "PasscodeInPassword", fieldName: "passcodeinpassword", wantType: "*bool"},
+		{name: "OktaUrl", fieldName: "oktaurl", wantType: "*string"},
+		{name: "Authenticator", fieldName: "authenticator", wantType: "*string"},
+		{name: "InsecureMode", fieldName: "insecuremode", wantType: "*bool"},
+		{name: "OcspFailOpen", fieldName: "ocspfailopen", wantType: "*bool"},
+		{name: "Token", fieldName: "token", wantType: "*string"},
+		{name: "KeepSessionAlive", fieldName: "keepsessionalive", wantType: "*bool"},
+		{name: "PrivateKey", fieldName: "privatekey", wantType: "*string"},
+		{name: "PrivateKeyPassphrase", fieldName: "privatekeypassphrase", wantType: "*string"},
+		{name: "DisableTelemetry", fieldName: "disabletelemetry", wantType: "*bool"},
+		{name: "ValidateDefaultParameters", fieldName: "validatedefaultparameters", wantType: "*bool"},
+		{name: "ClientRequestMfaToken", fieldName: "clientrequestmfatoken", wantType: "*bool"},
+		{name: "ClientStoreTemporaryCredential", fieldName: "clientstoretemporarycredential", wantType: "*bool"},
+		{name: "Tracing", fieldName: "tracing", wantType: "*string"},
+		{name: "TmpDirPath", fieldName: "tmpdirpath", wantType: "*string"},
+		{name: "DisableQueryContextCache", fieldName: "disablequerycontextcache", wantType: "*bool"},
+		{name: "IncludeRetryReason", fieldName: "includeretryreason", wantType: "*bool"},
+		{name: "DisableConsoleLogin", fieldName: "disableconsolelogin", wantType: "*bool"},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s has to have a correct type", tt.name), func(t *testing.T) {
+			config := fmt.Sprintf(`
+		[default]
+		%s=42
+		`, tt.fieldName)
+			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-	_, err := LoadConfigFile(configPath, true)
-	require.ErrorContains(t, err, "toml: cannot decode TOML integer into struct field sdk.ConfigDTO.AccountName of type *string")
+			_, err := LoadConfigFile(configPath, true)
+			require.ErrorContains(t, err, fmt.Sprintf("toml: cannot decode TOML integer into struct field sdk.ConfigDTO.%s of type %s", tt.name, tt.wantType))
+		})
+	}
+}
+
+func TestLoadConfigFileWithInvalidFieldTypeIntFails(t *testing.T) {
+	tests := []struct {
+		name      string
+		fieldName string
+	}{
+		{name: "Port", fieldName: "port"},
+		{name: "ClientTimeout", fieldName: "clienttimeout"},
+		{name: "JwtClientTimeout", fieldName: "jwtclienttimeout"},
+		{name: "LoginTimeout", fieldName: "logintimeout"},
+		{name: "RequestTimeout", fieldName: "requesttimeout"},
+		{name: "JwtExpireTimeout", fieldName: "jwtexpiretimeout"},
+		{name: "ExternalBrowserTimeout", fieldName: "externalbrowsertimeout"},
+		{name: "MaxRetryCount", fieldName: "maxretrycount"},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s has to have a correct type", tt.name), func(t *testing.T) {
+			config := fmt.Sprintf(`
+		[default]
+		%s=value
+		`, tt.fieldName)
+			configPath := testhelpers.TestFile(t, "config", []byte(config))
+
+			_, err := LoadConfigFile(configPath, true)
+			require.ErrorContains(t, err, "toml: incomplete number")
+		})
+	}
+}
+
+func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
+	tests := []struct {
+		name   string
+		config string
+		err    string
+	}{
+		{
+			name: "key without a value",
+			config: `
+			[default]
+			accountname=
+			`,
+			err: "toml: incomplete number",
+		},
+		{
+			name: "value without a key",
+			config: `
+			[default]
+			="value"
+			`,
+			err: "toml: invalid character at start of key: =",
+		},
+		{
+			name: "multiple profiles with the same name",
+			config: `
+			[default]
+			accountname="value"
+			[default]
+			organizationname="value"
+			`,
+			err: "toml: table default already exists",
+		},
+		{
+			name: "multiple keys with the same name",
+			config: `
+			[default]
+			accountname="foo"
+			accountname="bar"
+			`,
+			err: "toml: key accountname is already defined",
+		},
+		{
+			name: "more than one key in a line",
+			config: `
+			[default]
+			accountname="account" organizationname="organizationname"
+			`,
+			err: "toml: expected newline but got U+006F 'o'",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			configPath := testhelpers.TestFile(t, "config", []byte(tt.config))
+
+			_, err := LoadConfigFile(configPath, true)
+			require.ErrorContains(t, err, tt.err)
+		})
+	}
 }
 
 func TestProfileConfig(t *testing.T) {
