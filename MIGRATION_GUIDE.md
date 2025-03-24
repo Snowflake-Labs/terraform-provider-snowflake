@@ -17,9 +17,6 @@ Before this version, it was possible to abuse the provider by providing a huge T
 Additionally, now TOML file with only restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. For a TOML configuration file with too broad permissions, the provider will fail. If you want to skip such verification, please specify `skip_toml_file_permission_verification=true` in your TF configuration or set `SKIP_TOML_FILE_PERMISSION_VERIFICATION=TRUE` environment variable. Note that this is not recommended.
 If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
 
-Additionally, now TOML file with only restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you want to skip such verification, please specify `skip_toml_file_permission_verification=true` in your TF configuration or set `SKIP_TOML_FILE_PERMISSION_VERIFICATION=TRUE` environment variable. Note that this is not recommended.
-If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
-
 ### Tracking external changes for oauth_redirect_uri in the snowflake_oauth_integration_for_partner_applications resource
 From this version, the snowflake_oauth_integration_for_partner_applications resource is able to
 detect changes on the Snowflake side and apply appropriate action from the provider level. This may produce
