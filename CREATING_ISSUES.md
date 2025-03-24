@@ -1,5 +1,11 @@
 # Creating GitHub issues
 
+> **Note:** Part of this guide was moved to the following documents: 
+> - [FAQ](./FAQ.md)
+> - [Known issues](./KNOWN_ISSUES.md).
+>
+> Their subsections were not removed to preserve already existing links to them.
+
 * [1. Check the documentation for a given resource](#1-check-the-documentation-for-a-given-resource)
 * [2. Check the existing GitHub issues.](#2-check-the-existing-github-issues)
 * [3. Go through the frequently asked questions and commonly known issues.](#3-go-through-the-frequently-asked-questions-and-commonly-known-issues)
@@ -43,3 +49,11 @@ That way we will be able to categorize the issues and plan future improvements. 
 - General Usage - Like in the case of bugs, any additional context can speed up the process.
 - Documentation - If there’s an error somewhere in the documentation, please check the related parts. For example, an error in the documentation for stage could be also found in the dependent resources like external tables.
 - Feature Request - Before filling out the feature request, please familiarize yourself with the publicly available [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md) in case the problem will be resolved by upcoming plans. Also, it would be helpful to reference the roadmap item if the proposals are closely related. That way, we can take a closer look when doing the planned task.
+
+## FAQ
+
+Moved to [FAQ.md](./FAQ.md).
+
+## Commonly known issues
+
+Moved to [KNOWN_ISSUES.md](./KNOWN_ISSUES.md).

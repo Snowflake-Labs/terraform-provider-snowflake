@@ -30,10 +30,10 @@ If they are not, you can create a feature request (reach out to your account man
 ### When will my bug report be fixed/released?
 Our team is checking daily incoming GitHub issues. The resolution depends on the complexity and the topic of a given issue, but the general rules are:
 - If the issue is easy enough, we tend to answer it immediately and provide fix depending on the issue and our current workload.
-- If the issue needs more insight, we tend to reproduce the issue usually in the matter of days and answer/fix it right away (also very dependent on our current workload).
+- If the issue needs more insight, we tend to reproduce the issue usually in a matter of days and answer/fix it right away (also very dependent on our current workload).
 - If the issue is a part of the incoming topic on the [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md), we postpone it to resolve it with the related tasks.
 
-The releases are usually happening once every two weeks, mostly done on Wednesday.
+The releases usually happen once every two-three weeks, mostly on Wednesdays or Thursdays.
 
 ### How to migrate from version X to Y?
 As noted at the top of our [README](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#snowflake-terraform-provider),
