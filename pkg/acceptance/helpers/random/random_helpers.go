@@ -54,3 +54,7 @@ func AlphaLowerN(num int) string {
 func Email() string {
 	return gofakeit.Email()
 }
+
+func Bytes() []byte {
+	return []byte(AlphaN(10))
+}
