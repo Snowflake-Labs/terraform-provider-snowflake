@@ -15,7 +15,7 @@ func TestReadFileSafeWorksOnWindows(t *testing.T) {
 	exp := []byte("content")
 	configPath := testhelpers.TestFile(t, "config", exp)
 
-	act, err := oswrapper.ReadFileSafe(configPath)
+	act, err := oswrapper.ReadFileSafe(configPath, true)
 	require.NoError(t, err)
 	require.Equal(t, exp, act)
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/snowflakedb/gosnowflake"
@@ -37,7 +36,7 @@ func TestLoadConfigFile(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := LoadConfigFile(configPath, oswrapper.ReadFileSafe)
+	m, err := LoadConfigFile(configPath, true)
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", *m["default"].AccountName)
 	assert.Equal(t, "TEST_ORG", *m["default"].OrganizationName)
@@ -59,7 +58,7 @@ func TestLoadConfigFileWithUnknownFields(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := LoadConfigFile(configPath, oswrapper.ReadFileSafe)
+	m, err := LoadConfigFile(configPath, true)
 	require.NoError(t, err)
 	assert.Equal(t, map[string]ConfigDTO{
 		"default": {
@@ -113,7 +112,7 @@ func TestLoadConfigFileWithInvalidFieldTypeFails(t *testing.T) {
 		`, tt.fieldName)
 			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-			_, err := LoadConfigFile(configPath, oswrapper.ReadFileSafe)
+			_, err := LoadConfigFile(configPath, true)
 			require.ErrorContains(t, err, fmt.Sprintf("toml: cannot decode TOML integer into struct field sdk.ConfigDTO.%s of type %s", tt.name, tt.wantType))
 		})
 	}
@@ -141,7 +140,7 @@ func TestLoadConfigFileWithInvalidFieldTypeIntFails(t *testing.T) {
 		`, tt.fieldName)
 			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-			_, err := LoadConfigFile(configPath, oswrapper.ReadFileSafe)
+			_, err := LoadConfigFile(configPath, true)
 			require.ErrorContains(t, err, "toml: incomplete number")
 		})
 	}
@@ -201,7 +200,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configPath := testhelpers.TestFile(t, "config", []byte(tt.config))
 
-			_, err := LoadConfigFile(configPath, oswrapper.ReadFileSafe)
+			_, err := LoadConfigFile(configPath, true)
 			require.ErrorContains(t, err, tt.err)
 		})
 	}
@@ -258,7 +257,7 @@ func TestProfileConfig(t *testing.T) {
 	t.Run("with found profile", func(t *testing.T) {
 		t.Setenv(snowflakeenvs.ConfigPath, configPath)
 
-		config, err := ProfileConfig("securityadmin", oswrapper.ReadFileSafe)
+		config, err := ProfileConfig("securityadmin", true)
 		require.NoError(t, err)
 		require.NotNil(t, config.PrivateKey)
 
@@ -312,7 +311,7 @@ func TestProfileConfig(t *testing.T) {
 	t.Run("with not found profile", func(t *testing.T) {
 		t.Setenv(snowflakeenvs.ConfigPath, configPath)
 
-		config, err := ProfileConfig("orgadmin", oswrapper.ReadFileSafe)
+		config, err := ProfileConfig("orgadmin", true)
 		require.NoError(t, err)
 		require.Nil(t, config)
 	})
@@ -321,7 +320,7 @@ func TestProfileConfig(t *testing.T) {
 		filename := random.AlphaN(8)
 		t.Setenv(snowflakeenvs.ConfigPath, filename)
 
-		config, err := ProfileConfig("orgadmin", oswrapper.ReadFileSafe)
+		config, err := ProfileConfig("orgadmin", true)
 		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: reading information about the config file: stat %s: no such file or directory", filename))
 		require.Nil(t, config)
 	})

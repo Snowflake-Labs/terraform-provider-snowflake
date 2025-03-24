@@ -1,5 +1,17 @@
 # Our roadmap
 
+## (24.03.2025) snowflakedb migration
+
+As part of GA preparation, we must migrate out of the [Snowflake-Labs](https://github.com/Snowflake-Labs) GitHub organization to [snowflakedb](https://github.com/snowflakedb), as noted in the [previous Roadmap entry](#what-is-ga). It should happen within a few days. A few important notes on that:
+- **The [old terraform registry](http://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) will still be accessible so no immediate action is needed** (at least for now; we will have separate communication regarding its deprecation). However, don’t wait with the migration, as we plan to deprecate and remove the old registry sooner rather than later.
+- There will be a new entry in the registry; it should contain the same releases as the [old one](http://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) (however, we want to ensure that it includes the releases starting from v0.60.0; if you are on the older version, please migrate to the newer one soon).
+- The old GitHub repository ([link](https://github.com/Snowflake-Labs/terraform-provider-snowflake)) will redirect to the same repository located in the snowflakedb organization. All issues, pull requests, and discussions will be persisted.
+- When the repository is migrated, we will first verify if the new registry is working correctly and provide detailed instructions on migrating (it should be a straightforward process similar to the description in [#upgrading-from-czi-provider](./CZI_UPGRADE.md#upgrading-from-czi-provider)).
+
+If you have any questions about the migration topic, please contact us through GitHub or your account managers.
+
+We will announce the GA date soon, so stay tuned!
+
 ## (07.02.2025) GA scope and roadmap
 
 ### Current focus and goals

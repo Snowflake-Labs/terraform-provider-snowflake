@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/snowflakedb/gosnowflake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,7 +57,7 @@ func TestClient_queryOne(t *testing.T) {
 
 func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
 	t.Run("get default gosnowflake driver logging level", func(t *testing.T) {
-		config := DefaultConfig(oswrapper.ReadFileSafe)
+		config := DefaultConfig(true)
 		_, err := NewClient(config)
 		require.NoError(t, err)
 
@@ -72,7 +71,7 @@ func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
 	})
 
 	t.Run("set gosnowflake driver logging level with config", func(t *testing.T) {
-		config := DefaultConfig(oswrapper.ReadFileSafe)
+		config := DefaultConfig(true)
 		config.Tracing = "trace"
 		_, err := NewClient(config)
 		require.NoError(t, err)

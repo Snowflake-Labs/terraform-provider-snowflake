@@ -20,7 +20,7 @@ import (
 // TODO [SNOW-1827310]: use generated config for these tests
 func TestInt_Client_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
-		config := sdk.DefaultConfigSafe()
+		config := sdk.DefaultConfig(true)
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 	})
@@ -30,7 +30,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config := sdk.DefaultConfigSafe()
+		config := sdk.DefaultConfig(true)
 		_, err = sdk.NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
@@ -41,7 +41,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 
 		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 
-		config, err := sdk.ProfileConfigSafe(tmpServiceUserConfig.Profile)
+		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile, true)
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
@@ -50,7 +50,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 	})
 
 	t.Run("with missing config - should not care about correct env variables", func(t *testing.T) {
-		config, err := sdk.ProfileConfigSafe(testprofiles.Default)
+		config, err := sdk.ProfileConfig(testprofiles.Default, true)
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
@@ -63,13 +63,13 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config = sdk.DefaultConfigSafe()
+		config = sdk.DefaultConfig(true)
 		_, err = sdk.NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
 
 	t.Run("registers snowflake driver", func(t *testing.T) {
-		config := sdk.DefaultConfigSafe()
+		config := sdk.DefaultConfig(true)
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 

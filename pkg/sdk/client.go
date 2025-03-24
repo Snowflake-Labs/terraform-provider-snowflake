@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/jmoiron/sqlx"
 	"github.com/snowflakedb/gosnowflake"
@@ -111,7 +110,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
 	if cfg == nil {
 		log.Printf("[DEBUG] Searching for default config in credentials chain...\n")
-		cfg = DefaultConfig(oswrapper.ReadFileSafe)
+		cfg = DefaultConfig(true)
 	}
 
 	dsn, err := gosnowflake.DSN(cfg)
