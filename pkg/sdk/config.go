@@ -21,8 +21,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func DefaultConfig() *gosnowflake.Config {
-	config, err := ProfileConfig("default")
+func DefaultConfig(verifyPermissions bool) *gosnowflake.Config {
+	config, err := ProfileConfig("default", verifyPermissions)
 	if err != nil || config == nil {
 		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
 		config = &gosnowflake.Config{}
@@ -30,13 +30,14 @@ func DefaultConfig() *gosnowflake.Config {
 	return config
 }
 
-func ProfileConfig(profile string) (*gosnowflake.Config, error) {
+func ProfileConfig(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
+	log.Printf("[DEBUG] Retrieving %s profile from a TOML file\n", profile)
 	path, err := GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	configs, err := LoadConfigFile(path)
+	configs, err := LoadConfigFile(path, verifyPermissions)
 	if err != nil {
 		return nil, fmt.Errorf("could not load config file: %w", err)
 	}
@@ -46,7 +47,7 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 	}
 	var config *gosnowflake.Config
 	if cfg, ok := configs[profile]; ok {
-		log.Printf("[DEBUG] loading config for profile: \"%s\"", profile)
+		log.Printf("[DEBUG] Loading config for profile: \"%s\"", profile)
 		driverCfg, err := cfg.DriverConfig()
 		if err != nil {
 			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
@@ -54,7 +55,7 @@ func ProfileConfig(profile string) (*gosnowflake.Config, error) {
 		config = Pointer(driverCfg)
 	}
 	if config == nil {
-		log.Printf("[DEBUG] no config found for profile: \"%s\"", profile)
+		log.Printf("[DEBUG] No config found for profile: \"%s\"", profile)
 		return nil, nil
 	}
 
@@ -360,13 +361,14 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 	return nil
 }
 
-func LoadConfigFile(path string) (map[string]ConfigDTO, error) {
-	dat, err := oswrapper.ReadFileSafe(path)
+func LoadConfigFile(path string, verifyPermissions bool) (map[string]ConfigDTO, error) {
+	data, err := oswrapper.ReadFileSafe(path, verifyPermissions)
 	if err != nil {
 		return nil, err
 	}
 	var s map[string]ConfigDTO
-	err = toml.Unmarshal(dat, &s)
+
+	err = toml.Unmarshal(data, &s)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config file %s: %w", path, err)
 	}
