@@ -260,7 +260,7 @@ func TestAcc_AccountRole_WithQuotedName(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+	quotedId := fmt.Sprintf(`"%s"`, id.Name())
 	comment := random.Comment()
 
 	accountRoleModelWithComment := model.AccountRole("role", quotedId).
