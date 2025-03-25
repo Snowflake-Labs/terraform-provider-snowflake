@@ -3,16 +3,20 @@ package resources_test
 import (
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_AuthenticationPolicy(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	authenticationPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	comment := "This is a test resource"
 	m := func(authenticationMethods []string, mfaAuthenticationMethods []string, mfaEnrollment string, clientTypes []string, securityIntegrations []string) map[string]config.Variable {
 		authenticationMethodsStringVariables := make([]config.Variable, len(authenticationMethods))
@@ -33,9 +37,9 @@ func TestAcc_AuthenticationPolicy(t *testing.T) {
 		}
 
 		return map[string]config.Variable{
-			"name":                       config.StringVariable(accName),
-			"database":                   config.StringVariable(acc.TestDatabaseName),
-			"schema":                     config.StringVariable(acc.TestSchemaName),
+			"name":                       config.StringVariable(authenticationPolicyId.Name()),
+			"database":                   config.StringVariable(authenticationPolicyId.DatabaseName()),
+			"schema":                     config.StringVariable(authenticationPolicyId.SchemaName()),
 			"authentication_methods":     config.SetVariable(authenticationMethodsStringVariables...),
 			"mfa_authentication_methods": config.SetVariable(mfaAuthenticationMethodsStringVariables...),
 			"mfa_enrollment":             config.StringVariable(mfaEnrollment),
@@ -58,7 +62,9 @@ func TestAcc_AuthenticationPolicy(t *testing.T) {
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: variables1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "name", authenticationPolicyId.Name()),
+					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "authentication_methods.0", "PASSWORD"),
 					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "mfa_authentication_methods.0", "PASSWORD"),
 					resource.TestCheckResourceAttr("snowflake_authentication_policy.authentication_policy", "mfa_enrollment", "REQUIRED"),

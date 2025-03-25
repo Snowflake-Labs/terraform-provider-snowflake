@@ -2,13 +2,9 @@ resource "snowflake_account_role" "test" {
   name = var.account_role_name
 }
 
-resource "snowflake_database" "test" {
-  name = var.database_name
-}
-
 resource "snowflake_database_role" "test" {
   name     = var.database_role_name
-  database = snowflake_database.test.name
+  database = var.database_name
 }
 
 resource "snowflake_grant_ownership" "test" {

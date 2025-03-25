@@ -5,6 +5,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -12,17 +13,20 @@ import (
 )
 
 func TestAcc_ApiIntegration_aws(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	const dummyAwsPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
 	const dummyAwsOtherPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
 	const dummyAwsApiRoleArn = "arn:aws:iam::000000000001:/role/test"
 	const dummyAwsOtherApiRoleArn = "arn:aws:iam::000000000001:/role/other"
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := "acceptance test"
 	key := "12345"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":             config.StringVariable(name),
+			"name":             config.StringVariable(id.Name()),
 			"api_provider":     config.StringVariable("aws_api_gateway"),
 			"api_aws_role_arn": config.StringVariable(dummyAwsApiRoleArn),
 			"api_allowed_prefixes": config.ListVariable(
@@ -57,7 +61,7 @@ func TestAcc_ApiIntegration_aws(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_provider", "aws_api_gateway"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_aws_role_arn", dummyAwsApiRoleArn),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_allowed_prefixes.#", "1"),
@@ -76,7 +80,7 @@ func TestAcc_ApiIntegration_aws(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
 				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_provider", "aws_api_gateway"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_aws_role_arn", dummyAwsOtherApiRoleArn),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_aws_int", "api_allowed_prefixes.#", "1"),
@@ -102,6 +106,9 @@ func TestAcc_ApiIntegration_aws(t *testing.T) {
 }
 
 func TestAcc_ApiIntegration_azure(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	const dummyAzurePrefix = "https://apim-hello-world.azure-api.net/dev"
 	const dummyAzureOtherPrefix = "https://apim-hello-world.azure-api.net/prod"
 	const dummyAzureTenantId = "00000000-0000-0000-0000-000000000000"
@@ -109,12 +116,12 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 	const dummyAzureAdApplicationId = "22222222-2222-2222-2222-222222222222"
 	const dummyAzureOtherAdApplicationId = "33333333-3333-3333-3333-333333333333"
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := "acceptance test"
 	key := "12345"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":                    config.StringVariable(name),
+			"name":                    config.StringVariable(id.Name()),
 			"azure_tenant_id":         config.StringVariable(dummyAzureTenantId),
 			"azure_ad_application_id": config.StringVariable(dummyAzureAdApplicationId),
 			"api_allowed_prefixes": config.ListVariable(
@@ -150,7 +157,7 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_provider", "azure_api_management"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_tenant_id", dummyAzureTenantId),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_ad_application_id", dummyAzureAdApplicationId),
@@ -170,7 +177,7 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
 				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "api_provider", "azure_api_management"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_tenant_id", dummyAzureOtherTenantId),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_azure_int", "azure_ad_application_id", dummyAzureOtherAdApplicationId),
@@ -197,16 +204,19 @@ func TestAcc_ApiIntegration_azure(t *testing.T) {
 }
 
 func TestAcc_ApiIntegration_google(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	const dummyGooglePrefix = "https://gateway-id-123456.uc.gateway.dev/prod"
 	const dummyGoogleOtherPrefix = "https://gateway-id-123456.uc.gateway.dev/dev"
 	const dummyGoogleAudience = "api-gateway-id-123456.apigateway.gcp-project.cloud.goog"
 	const dummyGoogleOtherAudience = "api-gateway-id-666777.apigateway.gcp-project.cloud.goog"
 
-	name := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := "acceptance test"
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":            config.StringVariable(name),
+			"name":            config.StringVariable(id.Name()),
 			"google_audience": config.StringVariable(dummyGoogleAudience),
 			"api_allowed_prefixes": config.ListVariable(
 				config.StringVariable(dummyGooglePrefix),
@@ -240,7 +250,7 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 				ConfigDirectory: config.TestStepDirectory(),
 				ConfigVariables: m(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_provider", "google_api_gateway"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "google_audience", dummyGoogleAudience),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_allowed_prefixes.#", "1"),
@@ -259,7 +269,7 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationSameAsStepN(1),
 				ConfigVariables: m2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "name", name),
+					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_provider", "google_api_gateway"),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "google_audience", dummyGoogleOtherAudience),
 					resource.TestCheckResourceAttr("snowflake_api_integration.test_gcp_int", "api_allowed_prefixes.#", "1"),
@@ -285,6 +295,9 @@ func TestAcc_ApiIntegration_google(t *testing.T) {
 }
 
 func TestAcc_ApiIntegration_changeApiProvider(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	const dummyAwsPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/dev/"
 	const dummyAwsOtherPrefix = "https://123456.execute-api.us-west-2.amazonaws.com/prod/"
 	const dummyAwsApiRoleArn = "arn:aws:iam::000000000001:/role/test"

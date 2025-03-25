@@ -26,11 +26,14 @@ import (
 func TestAcc_ExternalTable_basic(t *testing.T) {
 	// TODO [SNOW-1423486]: unskip
 	t.Skipf("Skip because error %s; will be fixed in SNOW-1423486", "Error: 000606 (57P03): No active warehouse selected in the current session.  Select an active warehouse with the 'use warehouse' command.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
-	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
 	configVariables := map[string]config.Variable{
@@ -61,6 +64,7 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	resourceName := "snowflake_external_table.test_table"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -131,11 +135,13 @@ func TestAcc_ExternalTable_basic(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2310 is fixed
 func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
-	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
 	configVariables := map[string]config.Variable{
@@ -147,6 +153,7 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 		"schema":         config.StringVariable(acc.TestSchemaName),
 	}
 
+	resourceName := "snowflake_external_table.test_table"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -190,11 +197,13 @@ func TestAcc_ExternalTable_CorrectDataTypes(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2293 is fixed
 func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
-	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
 	configVariables := map[string]config.Variable{
@@ -206,6 +215,7 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 		"schema":         config.StringVariable(acc.TestSchemaName),
 	}
 
+	resourceName := "snowflake_external_table.test_table"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -250,11 +260,13 @@ func TestAcc_ExternalTable_CanCreateWithPartitions(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1564 is implemented
 func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	awsBucketURL, awsKeyId, awsSecretKey := getExternalTableTestEnvsOrSkipTest(t)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
-	resourceName := "snowflake_external_table.test_table"
 
 	innerDirectory := "/external_tables_test_data/"
 	configVariables := map[string]config.Variable{
@@ -266,6 +278,7 @@ func TestAcc_ExternalTable_DeltaLake(t *testing.T) {
 		"schema":         config.StringVariable(acc.TestSchemaName),
 	}
 
+	resourceName := "snowflake_external_table.test_table"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },

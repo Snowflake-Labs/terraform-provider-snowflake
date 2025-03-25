@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -14,13 +16,16 @@ import (
 )
 
 func TestAcc_ExternalFunction_basic(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"database":                  config.StringVariable(acc.TestDatabaseName),
-			"schema":                    config.StringVariable(acc.TestSchemaName),
-			"name":                      config.StringVariable(accName),
+			"database":                  config.StringVariable(id.DatabaseName()),
+			"schema":                    config.StringVariable(id.SchemaName()),
+			"name":                      config.StringVariable(id.Name()),
 			"api_allowed_prefixes":      config.ListVariable(config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/")),
 			"url_of_proxy_and_resource": config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
 			"comment":                   config.StringVariable("Terraform acceptance test"),
@@ -44,7 +49,7 @@ func TestAcc_ExternalFunction_basic(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalFunction/basic"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", accName),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "arg.#", "2"),
@@ -85,13 +90,16 @@ func TestAcc_ExternalFunction_basic(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"database":                  config.StringVariable(acc.TestDatabaseName),
-			"schema":                    config.StringVariable(acc.TestSchemaName),
-			"name":                      config.StringVariable(accName),
+			"database":                  config.StringVariable(id.DatabaseName()),
+			"schema":                    config.StringVariable(id.SchemaName()),
+			"name":                      config.StringVariable(id.Name()),
 			"api_allowed_prefixes":      config.ListVariable(config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/")),
 			"url_of_proxy_and_resource": config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
 			"comment":                   config.StringVariable("Terraform acceptance test"),
@@ -115,7 +123,7 @@ func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_ExternalFunction/no_arguments"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", accName),
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "arg.#", "0"),
@@ -152,12 +160,15 @@ func TestAcc_ExternalFunction_no_arguments(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArguments()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"database":                  config.StringVariable(acc.TestDatabaseName),
-			"schema":                    config.StringVariable(acc.TestSchemaName),
+			"database":                  config.StringVariable(id.DatabaseName()),
+			"schema":                    config.StringVariable(id.SchemaName()),
 			"name":                      config.StringVariable(id.Name()),
 			"api_allowed_prefixes":      config.ListVariable(config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/")),
 			"url_of_proxy_and_resource": config.StringVariable("https://123456.execute-api.us-west-2.amazonaws.com/prod/test_func"),
@@ -226,6 +237,9 @@ func TestAcc_ExternalFunction_complete(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsOld(sdk.DataTypeVARCHAR, sdk.DataTypeVARCHAR)
 	name := id.Name()
 	resourceName := "snowflake_external_function.f"
@@ -280,7 +294,11 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePresent(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -325,7 +343,11 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePrese
 }
 
 func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValueRemoved(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -381,8 +403,13 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValueRemov
 // The problem originated from ShowById without IN clause. There was no IN clause in the docs at the time.
 // It was raised with the appropriate team in Snowflake.
 func TestAcc_ExternalFunction_issue2528(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-	secondSchema := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	accName := id.Name()
+	secondSchemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	secondSchema := secondSchemaId.Name()
 
 	resourceName := "snowflake_external_function.f"
 
@@ -405,7 +432,11 @@ func TestAcc_ExternalFunction_issue2528(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_issue3392_returnVarchar(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	accName := id.Name()
 
 	resourceName := "snowflake_external_function.f"
 
@@ -428,7 +459,11 @@ func TestAcc_ExternalFunction_issue3392_returnVarchar(t *testing.T) {
 }
 
 func TestAcc_ExternalFunction_issue3392_returnVarcharWithSize(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	accName := id.Name()
 
 	resourceName := "snowflake_external_function.f"
 
@@ -454,6 +489,9 @@ func TestAcc_ExternalFunction_issue3392_returnVarcharWithSize(t *testing.T) {
 
 // Proves that header parsing handles values wrapped in curly braces, e.g. `value = "{1}"`
 func TestAcc_ExternalFunction_HeaderParsing(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resourceName := "snowflake_external_function.f"
@@ -656,7 +694,11 @@ resource "snowflake_external_function" "f" {
 }
 
 func TestAcc_ExternalFunction_EnsureSmoothResourceIdMigrationToV0950(t *testing.T) {
-	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{
@@ -730,7 +772,11 @@ resource "snowflake_external_function" "f" {
 }
 
 func TestAcc_ExternalFunction_EnsureSmoothResourceIdMigrationToV0950_WithoutArguments(t *testing.T) {
-	name := acc.TestClient().Ids.RandomAccountObjectIdentifier().Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	resourceName := "snowflake_external_function.f"
 
 	resource.Test(t, resource.TestCase{

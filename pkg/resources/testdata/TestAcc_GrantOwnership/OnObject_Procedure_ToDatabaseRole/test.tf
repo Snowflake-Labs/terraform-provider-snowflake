@@ -1,20 +1,16 @@
-resource "snowflake_database" "test" {
-  name = var.database_name
-}
-
 resource "snowflake_database_role" "test" {
   name     = var.database_role_name
-  database = snowflake_database.test.name
+  database = var.database_name
 }
 
 resource "snowflake_schema" "test" {
   name     = var.schema_name
-  database = snowflake_database.test.name
+  database = var.database_name
 }
 
 resource "snowflake_procedure_javascript" "test" {
   name                 = var.procedure_name
-  database             = snowflake_database.test.name
+  database             = var.database_name
   schema               = snowflake_schema.test.name
   return_type          = "FLOAT"
   execute_as           = "CALLER"

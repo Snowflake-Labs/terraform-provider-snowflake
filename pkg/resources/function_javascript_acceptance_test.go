@@ -24,6 +24,9 @@ import (
 )
 
 func TestAcc_FunctionJavascript_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	argName := "x"
 	dataType := testdatatypes.DataTypeVariant
 
@@ -94,6 +97,9 @@ func TestAcc_FunctionJavascript_InlineBasic(t *testing.T) {
 }
 
 func TestAcc_FunctionJavascript_InlineEmptyArgs(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithArgumentsNewDataTypes()
 	definition := acc.TestClient().Function.SampleJavascriptDefinitionNoArgs(t)
 	functionModel := model.FunctionJavascriptInline("test", id, definition, datatypes.VariantLegacyDataType)

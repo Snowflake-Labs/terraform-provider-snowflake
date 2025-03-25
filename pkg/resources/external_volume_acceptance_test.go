@@ -7,17 +7,16 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -117,6 +116,8 @@ func externalVolumeMultiple(s3StorageLocations config.Variable, gcsStorageLocati
 // Test volume with s3 storage locations
 func TestAcc_External_Volume_S3(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalVolumeName := id.Name()
 	resourceId := helpers.EncodeResourceIdentifier(id)
@@ -597,6 +598,8 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 // Test volume with gcs storage locations
 func TestAcc_External_Volume_GCS(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalVolumeName := id.Name()
 	resourceId := helpers.EncodeResourceIdentifier(id)
@@ -1020,6 +1023,8 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 // Test volume with azure storage locations
 func TestAcc_External_Volume_Azure(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalVolumeName := id.Name()
 	resourceId := helpers.EncodeResourceIdentifier(id)
@@ -1251,6 +1256,8 @@ func TestAcc_External_Volume_Azure(t *testing.T) {
 // Other tests start without setting all optionals
 func TestAcc_External_Volume_All_Options(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalVolumeName := id.Name()
 	comment := random.Comment()
@@ -1347,6 +1354,8 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 // Test adding/removing storage locations at different positions in the storage_location list
 func TestAcc_External_Volume_Multiple(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalVolumeName := id.Name()
 	comment := random.Comment()
@@ -2151,6 +2160,8 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 // Test that drifts are detected and fixed
 func TestAcc_External_Volume_External_Changes(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalVolumeName := id.Name()
 	comment := random.Comment()
@@ -2428,6 +2439,9 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 
 // Test invalid parameter combinations throw errors
 func TestAcc_External_Volume_Invalid_Cases(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	s3StorageLocationName := "s3Test"
 	s3StorageProvider := "S3"
