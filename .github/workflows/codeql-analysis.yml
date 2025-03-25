@@ -11,7 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
         with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/checkout@v4
+        if: github.event_name == 'schedule'
+        with:
+          ref: dev
           fetch-depth: 0
           persist-credentials: false
 
