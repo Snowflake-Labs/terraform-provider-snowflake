@@ -338,7 +338,7 @@ func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
 	permissions := fs.FileMode(0o755)
 
 	configPath := testhelpers.TestFileWithCustomPermissions(t, random.AlphaN(10), random.Bytes(), permissions)
-	providerModel := providermodel.SnowflakeProvider().WithProfile(configPath)
+	providerModel := providermodel.SnowflakeProvider().WithProfile(configPath).WithSkipTomlFilePermissionVerification(false)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -368,7 +368,7 @@ func TestAcc_Provider_tomlConfigFilePermissionsCanBeSkipped(t *testing.T) {
 	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
 	tmpServiceUserConfig := acc.TestClient().TempTomlConfigWithCustomPermissionsForServiceUser(t, tmpServiceUser, fs.FileMode(0o755))
 
-	providerModelWithSkippedPermissionVerification := providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithSkipTomlFilePermissionVerification(true)
+	providerModelWithSkippedPermissionVerification := providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
