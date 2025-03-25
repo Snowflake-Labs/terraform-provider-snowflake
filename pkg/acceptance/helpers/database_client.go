@@ -30,21 +30,25 @@ func (c *DatabaseClient) CreateDatabase(t *testing.T) (*sdk.Database, func()) {
 	return c.CreateDatabaseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateDatabaseOptions{})
 }
 
-// DatabaseWithParametersSet should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
-func (c *DatabaseClient) DatabaseWithParametersSet(t *testing.T) (*sdk.Database, func()) {
+// CreateDatabaseWithParametersSet should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
+func (c *DatabaseClient) CreateDatabaseWithParametersSet(t *testing.T) (*sdk.Database, func()) {
 	t.Helper()
-	return c.DatabaseWithParametersSetWithId(t, c.ids.RandomAccountObjectIdentifier())
+	return c.CreateDatabaseWithParametersSetWithId(t, c.ids.RandomAccountObjectIdentifier())
 }
 
-// DatabaseWithParametersSetWithId should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
-func (c *DatabaseClient) DatabaseWithParametersSetWithId(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
+// CreateDatabaseWithParametersSetWithId should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
+func (c *DatabaseClient) CreateDatabaseWithParametersSetWithId(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
-	return c.CreateDatabaseWithOptions(t, id, &sdk.CreateDatabaseOptions{
+	return c.CreateDatabaseWithOptions(t, id, c.testParametersSet())
+}
+
+func (c *DatabaseClient) testParametersSet() *sdk.CreateDatabaseOptions {
+	return &sdk.CreateDatabaseOptions{
 		DataRetentionTimeInDays:    sdk.Int(1),
 		MaxDataExtensionTimeInDays: sdk.Int(1),
 		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
 		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
-	})
+	}
 }
 
 func (c *DatabaseClient) CreateDatabaseWithIdentifier(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
@@ -193,6 +197,35 @@ func (c *DatabaseClient) CreateDatabaseFromShareTemporarily(t *testing.T, extern
 
 	err = c.DropDatabase(t, databaseId)
 	require.NoError(t, err)
+}
+
+// CreateDatabaseFromShare logic is duplicated from CreateDatabaseFromShareTemporarily.
+func (c *DatabaseClient) CreateDatabaseFromShare(t *testing.T, externalShareId sdk.ExternalObjectIdentifier) (*sdk.Database, func()) {
+	t.Helper()
+
+	databaseId := c.ids.RandomAccountObjectIdentifier()
+	err := c.client().CreateShared(context.Background(), databaseId, externalShareId, c.testParametersSetSharedDatabase())
+	require.NoError(t, err)
+
+	var database *sdk.Database
+	require.Eventually(t, func() bool {
+		database, err = c.Show(t, databaseId)
+		if err != nil {
+			return false
+		}
+		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
+		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
+		return database.Origin != nil
+	}, time.Minute, time.Second*6)
+
+	return database, c.DropDatabaseFunc(t, databaseId)
+}
+
+func (c *DatabaseClient) testParametersSetSharedDatabase() *sdk.CreateSharedDatabaseOptions {
+	return &sdk.CreateSharedDatabaseOptions{
+		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
+		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
+	}
 }
 
 func (c *DatabaseClient) ShowAllReplicationDatabases(t *testing.T) ([]sdk.ReplicationDatabase, error) {
