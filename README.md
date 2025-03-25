@@ -21,7 +21,6 @@ This is a terraform provider for managing [Snowflake](https://www.snowflake.com/
   * [Roadmap](#roadmap)
   * [Getting Help](#getting-help)
   * [Would you like to create an issue?](#would-you-like-to-create-an-issue)
-  * [Additional debug logs for `snowflake_grant_privileges_to_role` resource](#additional-debug-logs-for-snowflake_grant_privileges_to_role-resource)
   * [Additional SQL Client configuration](#additional-sql-client-configuration)
   * [Contributing](#contributing)
   * [Releases](#releases)
