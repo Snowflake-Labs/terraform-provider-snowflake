@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.0.5](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.4...v1.0.5) (2025-03-25)
+
+
+### 🔧 **Misc**
+
+* Bump tracking version to v1.0.5 ([#3460](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3460)) ([2af79e6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2af79e6c343462e304cc1eb4d5b45125962c9f7b))
+* Bump tracking version to v1.0.5 ([#3460](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3460)) ([3aaf555](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3aaf555e72772da8e1088cb08bfd4a66f0bbb926))
+* Document godebug flag usage ([#3429](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3429)) ([5f04947](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5f04947c8e94f921c86d79ec2dd025a076baf724))
+* Document godebug flag usage ([#3429](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3429)) ([2dce172](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2dce1724570c40e77dbaefe283c371491f682d91))
+* fix failing tests ([#3428](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3428)) ([884ca54](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/884ca54ac8b02e990c08da2695c428c8197576b5))
+* fix failing tests ([#3428](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3428)) ([245fd86](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/245fd866ec1b79f680f5b9ff363439a6aaeb7f22))
+* Fix migration guide ([#3468](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3468)) ([6540841](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6540841542d258e943d3f901397eb0d708029fc0))
+* GitHub actions cleanup ([#3431](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3431)) ([1cc6d80](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1cc6d8083fd99565c7819cdd865559189e51271f))
+* GitHub actions cleanup ([#3431](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3431)) ([a6e7429](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a6e74292643db3ad27ad2296d6ba1f03215660f0))
+* Protect pentesting user and role from sweepers ([#3426](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3426)) ([1478c5e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/1478c5e0531c6a525ee018372587cc991457e345))
+* Protect pentesting user and role from sweepers ([#3426](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3426)) ([6354dba](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6354dba3a6bb7c20b9666436764c13d3251baa1a))
+* Remove driver instrumentation ([#3439](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3439)) ([61802a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/61802a808e4820ee339fabd31f4962c21b758e7a))
+* Remove driver instrumentation ([#3439](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3439)) ([e9fc6ed](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e9fc6ed2020b561dc32e8276fd1b1dcab66c1c90))
+* Remove SF_TF_ADDITIONAL_DEBUG_LOGGING ([#3441](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3441)) ([cab63e9](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/cab63e99e727d53b5e52f3e86144bb9ee21e92d6))
+* Remove SF_TF_ADDITIONAL_DEBUG_LOGGING ([#3441](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3441)) ([b57db81](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b57db81966c80ecf5f27d3fe8f0878af86152ffc))
+* Update GitHub actions ([#3455](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3455)) ([3b027a8](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/3b027a8872d8f108aab3fbea10ab357fd818284c))
+* Update GitHub actions ([#3455](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3455)) ([368f090](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/368f090cdf3b7acf3c2f06f61603207edabaa59a))
+* Use environmental secrets in GitHub Actions ([#3440](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3440)) ([6048977](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/604897767eb6d8d7e70345804c23f0b133de8a61))
+* Use environmental secrets in GitHub Actions ([#3440](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3440)) ([8e5a262](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/8e5a2629b38be9e8bb31ada43f545bf778a8b0a0))
+
+
+### 🐛 **Bug fixes:**
+
+* Add boolean env validations and unit tests for TOML config validation ([#3453](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3453)) ([c113928](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/c11392874a38da2f3979259785e3a891b639737b))
+* Add boolean env validations and unit tests for TOML config validation ([#3453](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3453)) ([408db4e](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/408db4eefbf49bf6494ad3afd46fe95dd0315cc1))
+* Adjust docs ([#3451](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3451)) ([46d071d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/46d071d2150b7736df5d14da8e9afd9314cf1f8d))
+* Adjust docs ([#3451](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3451)) ([29b0e4d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/29b0e4d901fcb79e0f8837b62bf17166cd6b6cc9))
+* Apply new assertions setup ([#3409](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3409)) ([e5fdced](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e5fdced939d4f8dc513dfdb3d26d48312a1862eb))
+* Apply new assertions setup ([#3409](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3409)) ([af83da0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/af83da0058655fddbc3469a2fc63c5fe24b69e77))
+* Correct a typo in a tag resource example ([#3446](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3446)) ([a0202d1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a0202d1709b5ac4e129928dce197f3e59b4bd699))
+* Correct a typo in a tag resource example ([#3446](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3446)) ([afd19a2](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/afd19a208be8b1336c756d8d7fa4a51596c74984))
+* Fix datasource acceptance tests setup part1 ([#3443](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3443)) ([58126ea](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/58126ea0cf157cd4cc05e4f0a374e631055a782a))
+* Fix datasource acceptance tests setup part1 ([#3443](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3443)) ([5046654](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5046654ecd503c531dda8787edde96bc7268402a))
+* Fix datasource acceptance tests setup part2 ([#3445](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3445)) ([6c7ceeb](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6c7ceeb74a6c6cd46227df01976f90ead2e78e58))
+* Fix datasource acceptance tests setup part2 ([#3445](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3445)) ([4ba2bb6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/4ba2bb6835f89068242fe7d851b2e2fe8a0bb51d))
+* Fix datasource acceptance tests setup part3 ([#3448](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3448)) ([5475c69](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/5475c69dca01de5c20f68874cdf1222986480080))
+* Fix datasource acceptance tests setup part3 ([#3448](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3448)) ([f6fdc17](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/f6fdc17cbc8ffba56b581ccbc92db9de0b6b6594))
+* Fix datasource acceptance tests setup part4 ([#3449](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3449)) ([04e082a](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/04e082a9a969bc3e8c92663b9bf4097e58a736fd))
+* Fix datasource acceptance tests setup part4 ([#3449](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3449)) ([935d969](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/935d9698eb2645a4532c101b23e141c0b3968478))
+* Fix tasks tests ([#3434](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3434)) ([33ab740](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/33ab7403d13ac4c2cdb434875fdab4e7f6b01e73))
+* Fix tasks tests ([#3434](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3434)) ([b5457f6](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/b5457f61efd654b0c9d126ed7d57ed2ed4ded830))
+* Handle TOML file permissions ([#3444](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3444)) ([6c746b4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/6c746b47518ad6f44813881e2d13a4408dc508b4))
+* Handle TOML file permissions ([#3444](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3444)) ([e4ed171](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/e4ed171aabd3ce2173ce429df01abb029bf96e6a))
+* Limit TOML file size ([#3432](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3432)) ([55fcbe3](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/55fcbe301a48610905bc0dfcebd6b18527e3a606))
+* Limit TOML file size ([#3432](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3432)) ([2e12981](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/2e12981b0155de46d1839b4dff2714fbcbf82327))
+* Quick fix assertions ([#3438](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3438)) ([0e05c6f](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/0e05c6fbe4fd6c38ef5dcfc95b4c9ba3b8e2844a))
+* Quick fix assertions ([#3438](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3438)) ([a430ba7](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/a430ba79a9826d823b8617b53cfdd1c7174f01b5))
+* Skip file permission verification by default ([#3476](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3476)) ([562173d](https://github.com/Snowflake-Labs/terraform-provider-snowflake/commit/562173d38643bb4ab3ec388b64226e37362bcea9))
+
 ## [1.0.4](https://github.com/Snowflake-Labs/terraform-provider-snowflake/compare/v1.0.3...v1.0.4) (2025-02-26)
 
 
