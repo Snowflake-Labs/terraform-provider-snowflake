@@ -53,7 +53,7 @@ func init() {
 				provider.IntDefault,
 				provider.BooleanDefault,
 			}, s.Default) {
-				desc = fmt.Sprintf("(Default: fallback to Snowflake default - uses special value that cannot be set in the confinguration manually (`%v`)) %s", s.Default, s.Description)
+				desc = fmt.Sprintf("(Default: fallback to Snowflake default - uses special value that cannot be set in the configuration manually (`%v`)) %s", s.Default, s.Description)
 			} else {
 				desc = fmt.Sprintf("(Default: `%v`) %s", s.Default, s.Description)
 			}
