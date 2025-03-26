@@ -4,23 +4,26 @@ import (
 	"fmt"
 	"testing"
 
-	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
-
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_basic(t *testing.T) {
 	// TODO [SNOW-1452191]: unskip
 	t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func(complete bool) map[string]config.Variable {
 		c := map[string]config.Variable{
@@ -139,6 +142,10 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_basic(t *testing.T) {
 func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_complete(t *testing.T) {
 	// TODO [SNOW-1452191]: unskip
 	t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -222,6 +229,10 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_invalidIncomplete(t *test
 func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
 	// TODO [SNOW-1452191]: unskip
 	t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -259,6 +270,10 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_migrateFromV0941_ensureSm
 func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_IdentifierQuotingDiffSuppression(t *testing.T) {
 	// TODO [SNOW-1452191]: unskip
 	t.Skip("Skip because of the error: Invalid value specified for property 'OAUTH_CLIENT_SECRET'")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 

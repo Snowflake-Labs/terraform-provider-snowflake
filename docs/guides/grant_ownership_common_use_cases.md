@@ -1,5 +1,5 @@
 ---
-page_title: "Grant ownership - common use cases"
+page_title: "Grant Ownership - Common Use Cases"
 subcategory: ""
 description: |-
 
@@ -337,20 +337,20 @@ After the first apply the provider will raise a warning and an error:
 ```text
 ╷
 │ Warning: Failed to retrieve grants. Marking the resource as removed.
-│ 
+│
 │   with snowflake_grant_ownership.transfer_ownership,
 │   on main.tf line 18, in resource "snowflake_grant_ownership" "transfer_ownership":
 │   18: resource "snowflake_grant_ownership" "transfer_ownership" {
-│ 
-│ Id: 
+│
+│ Id:
 │ Error: [errors.go:22] object does not exist or not authorized
 ╵
 ╷
 │ Error: Provider produced inconsistent result after apply
-│ 
+│
 │ When applying changes to snowflake_grant_ownership.transfer_ownership, provider
 │ "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]" produced an unexpected new value: Root object was present, but now absent.
-│ 
+│
 │ This is a bug in the provider, which should be reported in the provider's own issue tracker.
 ╵
 ```

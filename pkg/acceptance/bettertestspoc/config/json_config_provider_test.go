@@ -91,7 +91,9 @@ func Test_JsonConfigProvider(t *testing.T) {
 		expectedResult := `{
     "data": {
         "snowflake_databases": {
-            "some_name": {}
+            "some_name": {
+                "single_attribute_workaround": "SF_TF_TEST_SINGLE_ATTRIBUTE_WORKAROUND"
+            }
         }
     }
 }`

@@ -5,7 +5,10 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -15,6 +18,8 @@ import (
 )
 
 func TestAcc_Grants_On_Account(t *testing.T) {
+	grantsModel := datasourcemodel.GrantsOnAccount("test")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -24,17 +29,18 @@ func TestAcc_Grants_On_Account(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Account"),
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_On_AccountObject(t *testing.T) {
-	configVariables := config.Variables{
-		"database": config.StringVariable(acc.TestDatabaseName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	grantsModel := datasourcemodel.GrantsOnAccountObject("test", acc.TestClient().Ids.DatabaseId(), sdk.ObjectTypeDatabase)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -45,19 +51,18 @@ func TestAcc_Grants_On_AccountObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/AccountObject"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
-	configVariables := config.Variables{
-		"database": config.StringVariable(acc.TestDatabaseName),
-		"schema":   config.StringVariable(acc.TestSchemaName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	grantsModel := datasourcemodel.GrantsOnDatabaseObject("test", acc.TestClient().Ids.SchemaId(), sdk.ObjectTypeSchema)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -68,21 +73,24 @@ func TestAcc_Grants_On_DatabaseObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/DatabaseObject"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_On_SchemaObject(t *testing.T) {
-	tableName := acc.TestClient().Ids.Alpha()
-	configVariables := config.Variables{
-		"database": config.StringVariable(acc.TestDatabaseName),
-		"schema":   config.StringVariable(acc.TestSchemaName),
-		"table":    config.StringVariable(tableName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	columnNames := []string{"ROLE_NAME"}
+
+	viewModel := model.View("test", viewId.DatabaseName(), viewId.Name(), viewId.SchemaName(), statement).WithColumnNames(columnNames...)
+	grantsModel := datasourcemodel.GrantsOnSchemaObject("test", viewId, sdk.ObjectTypeView).
+		WithDependsOn(viewModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -93,9 +101,8 @@ func TestAcc_Grants_On_SchemaObject(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, viewModel, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
@@ -106,9 +113,7 @@ func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	function := acc.TestClient().Function.Create(t, sdk.DataTypeVARCHAR)
-	configVariables := config.Variables{
-		"fully_qualified_function_name": config.StringVariable(function.ID().FullyQualifiedName()),
-	}
+	grantsModel := datasourcemodel.GrantsOnSchemaObjectWithArguments("test", function.ID(), sdk.ObjectTypeFunction)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -119,15 +124,16 @@ func TestAcc_Grants_On_SchemaObject_WithArguments(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/SchemaObject_WithArguments"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_On_Invalid_NoAttribute(t *testing.T) {
+	grantsModel := datasourcemodel.GrantsOnEmpty("test")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -137,15 +143,17 @@ func TestAcc_Grants_On_Invalid_NoAttribute(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Invalid/NoAttribute"),
-				PlanOnly:        true,
-				ExpectError:     regexp.MustCompile("Error: Invalid combination of arguments"),
+				Config:      accconfig.FromModels(t, grantsModel),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Error: Invalid combination of arguments"),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_On_Invalid_MissingObjectType(t *testing.T) {
+	grantsModel := datasourcemodel.GrantsOnMissingObjectType("test")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -155,9 +163,9 @@ func TestAcc_Grants_On_Invalid_MissingObjectType(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/On/Invalid/MissingObjectType"),
-				PlanOnly:        true,
-				ExpectError:     regexp.MustCompile("Error: Missing required argument"),
+				Config:      accconfig.FromModels(t, grantsModel),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Error: Missing required argument"),
 			},
 		},
 	})
@@ -194,12 +202,13 @@ func TestAcc_Grants_To_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
-	configVariables := config.Variables{
-		"database":      config.StringVariable(databaseName),
-		"database_role": config.StringVariable(databaseRoleName),
-	}
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRoleModel := model.DatabaseRole("test", databaseRoleId.DatabaseName(), databaseRoleId.Name())
+	grantsModel := datasourcemodel.GrantsToDatabaseRole("test", databaseRoleId).
+		WithDependsOn(databaseRoleModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -210,19 +219,19 @@ func TestAcc_Grants_To_DatabaseRole(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/DatabaseRole"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresent(),
+				Config: accconfig.FromModels(t, databaseRoleModel, grantsModel),
+				Check:  checkAtLeastOneGrantPresent(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_To_User(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Context.CurrentUser(t)
-	configVariables := config.Variables{
-		"user": config.StringVariable(userId.Name()),
-	}
+	grantsModel := datasourcemodel.GrantsToUser("test", userId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -233,20 +242,21 @@ func TestAcc_Grants_To_User(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Grants/To/User"),
-				ConfigVariables: configVariables,
-				Check:           checkAtLeastOneGrantPresentLimited(),
+				Config: accconfig.FromModels(t, grantsModel),
+				Check:  checkAtLeastOneGrantPresentLimited(),
 			},
 		},
 	})
 }
 
 func TestAcc_Grants_To_Share(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	shareName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"share":    config.StringVariable(shareName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"share":    config.StringVariable(shareId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -361,11 +371,13 @@ func TestAcc_Grants_Of_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_Of_DatabaseRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	configVariables := config.Variables{
-		"database":      config.StringVariable(databaseName),
-		"database_role": config.StringVariable(databaseRoleName),
+		"database":      config.StringVariable(acc.TestDatabaseName),
+		"database_role": config.StringVariable(databaseRoleId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -393,19 +405,21 @@ func TestAcc_Grants_Of_ApplicationRole(t *testing.T) {
 // TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Grants_Of_Share(t *testing.T) {
 	t.Skip("TestAcc_Share are skipped")
-	databaseName := acc.TestClient().Ids.Alpha()
-	shareName := acc.TestClient().Ids.Alpha()
 
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountId := acc.SecondaryTestClient().Account.GetAccountIdentifier(t)
 	require.NotNil(t, accountId)
 
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"share":    config.StringVariable(shareName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"share":    config.StringVariable(shareId.Name()),
 		"account":  config.StringVariable(accountId.FullyQualifiedName()),
 	}
-	datasourceName := "data.snowflake_grants.test"
 
+	datasourceName := "data.snowflake_grants.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -481,9 +495,11 @@ func TestAcc_Grants_Of_Invalid_ApplicationRoleIdInvalid(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureIn_Database(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
+		"database": config.StringVariable(acc.TestDatabaseName),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -504,11 +520,12 @@ func TestAcc_Grants_FutureIn_Database(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureIn_Schema(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
-		"schema":   config.StringVariable(schemaName),
+		"database": config.StringVariable(acc.TestDatabaseName),
+		"schema":   config.StringVariable(acc.TestSchemaName),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -565,9 +582,11 @@ func TestAcc_Grants_FutureIn_Invalid_SchemaNameNotFullyQualified(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	configVariables := config.Variables{
-		"database": config.StringVariable(databaseName),
+		"database": config.StringVariable(acc.TestDatabaseName),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -588,11 +607,13 @@ func TestAcc_Grants_FutureTo_AccountRole(t *testing.T) {
 }
 
 func TestAcc_Grants_FutureTo_DatabaseRole(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	databaseRoleName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 	configVariables := config.Variables{
-		"database":      config.StringVariable(databaseName),
-		"database_role": config.StringVariable(databaseRoleName),
+		"database":      config.StringVariable(acc.TestDatabaseName),
+		"database_role": config.StringVariable(databaseRoleId.Name()),
 	}
 
 	resource.Test(t, resource.TestCase{

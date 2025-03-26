@@ -1,11 +1,9 @@
 package sdk
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
-	"github.com/snowflakedb/gosnowflake"
 )
 
 func defaultTestClient(t *testing.T) *Client {
@@ -37,21 +35,14 @@ func fourthTestClient(t *testing.T) *Client {
 func testClient(t *testing.T, profile string) *Client {
 	t.Helper()
 
-	config, err := ProfileConfig(profile)
+	config, err := ProfileConfig(profile, true)
 	if err != nil {
-		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config", profile)
+		t.Skipf("Snowflake %s profile not configured. Must be set in ~/.snowflake/config", profile)
 	}
 	client, err := NewClient(config)
 	if err != nil {
-		t.Skipf("Snowflake %s profile not configured. Must be set in ~./snowflake/config", profile)
+		t.Skipf("Snowflake %s profile not configured. Must be set in ~/.snowflake/config", profile)
 	}
 
 	return client
-}
-
-func configAccountId(t *testing.T, cfg *gosnowflake.Config) AccountIdentifier {
-	t.Helper()
-	accountIdRaw := cfg.Account
-	parts := strings.SplitN(accountIdRaw, "-", 2)
-	return NewAccountIdentifier(parts[0], parts[1])
 }

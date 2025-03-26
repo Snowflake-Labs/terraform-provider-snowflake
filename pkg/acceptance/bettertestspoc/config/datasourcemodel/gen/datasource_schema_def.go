@@ -23,15 +23,75 @@ func GetDatasourceSchemaDetails() []genhelpers.ResourceSchemaDetails {
 
 var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 	{
+		name:   "Accounts",
+		schema: datasources.Accounts().Schema,
+	},
+	{
 		name:   "Database",
 		schema: datasources.Database().Schema,
+	},
+	{
+		name:   "DatabaseRole",
+		schema: datasources.DatabaseRole().Schema,
+	},
+	{
+		name:   "DatabaseRoles",
+		schema: datasources.DatabaseRoles().Schema,
 	},
 	{
 		name:   "Databases",
 		schema: datasources.Databases().Schema,
 	},
 	{
-		name:   "Accounts",
-		schema: datasources.Accounts().Schema,
+		name:   "Grants",
+		schema: datasources.Grants().Schema,
+	},
+	{
+		name:   "NetworkPolicies",
+		schema: datasources.NetworkPolicies().Schema,
+	},
+	{
+		name:   "ResourceMonitors",
+		schema: datasources.ResourceMonitors().Schema,
+	},
+	{
+		name:   "Schemas",
+		schema: datasources.Schemas().Schema,
+	},
+	{
+		name:   "Secrets",
+		schema: datasources.Secrets().Schema,
+	},
+	{
+		name:   "SecurityIntegrations",
+		schema: datasources.SecurityIntegrations().Schema,
+	},
+	{
+		name:   "Streamlits",
+		schema: datasources.Streamlits().Schema,
+	},
+	{
+		name:   "Streams",
+		schema: datasources.Streams().Schema,
+	},
+	{
+		name:   "Tags",
+		schema: datasources.Tags().Schema,
+	},
+	{
+		name:   "Tasks",
+		schema: datasources.Tasks().Schema,
+	},
+	{
+		name:   "Users",
+		schema: datasources.Users().Schema,
+	},
+	{
+		name:   "Views",
+		schema: datasources.Views().Schema,
+	},
+	{
+		name:   "Warehouses",
+		schema: datasources.Warehouses().Schema,
 	},
 }

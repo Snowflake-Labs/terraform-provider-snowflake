@@ -85,7 +85,7 @@ var maskingPolicySchema = map[string]*schema.Schema{
 		Default:          BooleanDefault,
 		ValidateDiagFunc: validateBooleanString,
 		DiffSuppressFunc: IgnoreChangeToCurrentSnowflakeValueInShow("exempt_other_policies"),
-		Description:      booleanStringFieldDescription("Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy. Due to Snowflake limitations, when value is chenged, the resource is recreated."),
+		Description:      booleanStringFieldDescription("Specifies whether the row access policy or conditional masking policy can reference a column that is already protected by a masking policy. Due to Snowflake limitations, when value is changed, the resource is recreated."),
 		ForceNew:         true,
 	},
 	"comment": {

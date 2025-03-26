@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"slices"
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/snowflakedb/gosnowflake"
 )
 
@@ -387,6 +387,12 @@ func Provider() *schema.Provider {
 				},
 				Description: fmt.Sprintf("A list of preview features that are handled by the provider. See [preview features list](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). Preview features may have breaking changes in future releases, even without raising the major version. This field can not be set with environmental variables. Valid options are: %v.", docs.PossibleValuesListed(previewfeatures.AllPreviewFeatures)),
 			},
+			"skip_toml_file_permission_verification": {
+				Type:        schema.TypeBool,
+				Description: envNameFieldDescription("True by default. Skips TOML configuration file permission verification. This flag has no effect on Windows systems, as the permissions are not checked on this platform. We recommend setting this to `false` and setting the proper privileges - see [the section below](#order-precedence).", snowflakeenvs.SkipTomlFilePermissionVerification),
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.SkipTomlFilePermissionVerification, true),
+			},
 		},
 		ResourcesMap:         getResources(),
 		DataSourcesMap:       getDataSources(),
@@ -487,7 +493,18 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
 
-	if oswrapper.Getenv(string(testenvs.EnableObjectRenamingTest)) != "" {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
+	}
+	objectRenamingTestEnabled, err := oswrapper.GetenvBool(string(testenvs.EnableObjectRenamingTest))
+	if err != nil {
+		objectRenamingTestEnabled = false
+		log.Printf("%s environmental variable has incorrect format: %v, using %v as a default value", string(testenvs.EnableObjectRenamingTest), err, objectRenamingTestEnabled)
+	}
+
+	if accTestEnabled && objectRenamingTestEnabled {
 		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
 	}
 
@@ -550,8 +567,18 @@ var (
 )
 
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
+	}
+	configureClientOnceEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE")
+	if err != nil {
+		configureClientOnceEnabled = false
+		log.Printf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v, using %v as a default value", err, configureClientOnceEnabled)
+	}
 	// hacky way to speed up our acceptance tests
-	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE") == "true" {
+	if accTestEnabled && configureClientOnceEnabled {
 		if configureProviderCtx != nil {
 			return configureProviderCtx, nil
 		}
@@ -565,8 +592,15 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 		return nil, diag.FromErr(err)
 	}
 
+	var verifyPermissions bool
+	if v := s.Get("skip_toml_file_permission_verification"); v.(bool) {
+		verifyPermissions = false
+	} else {
+		verifyPermissions = true
+	}
+
 	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
-		tomlConfig, err := getDriverConfigFromTOML(v.(string))
+		tomlConfig, err := getDriverConfigFromTOML(v.(string), verifyPermissions)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -580,13 +614,12 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	if v, ok := s.GetOk("preview_features_enabled"); ok {
 		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
 	}
-
 	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
 		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
 
 	// needed for tests verifying different provider setups
-	if oswrapper.Getenv(resource.EnvTfAcc) != "" && oswrapper.Getenv(string(testenvs.ConfigureClientOnce)) == "true" {
+	if accTestEnabled && configureClientOnceEnabled {
 		configureProviderCtx = providerCtx
 		configureClientError = clientErr
 	} else {
@@ -613,16 +646,16 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func getDriverConfigFromTOML(profile string) (*gosnowflake.Config, error) {
+func getDriverConfigFromTOML(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
 	if profile == "default" {
-		return sdk.DefaultConfig(), nil
+		return sdk.DefaultConfig(verifyPermissions), nil
 	}
 	path, err := sdk.GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	profileConfig, err := sdk.ProfileConfig(profile)
+	profileConfig, err := sdk.ProfileConfig(profile, verifyPermissions)
 	if err != nil {
 		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
 	}

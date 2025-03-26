@@ -32,6 +32,9 @@ import (
 // TODO [SNOW-1348103]: test changes of attributes separately
 
 func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -121,6 +124,9 @@ func TestAcc_FunctionJava_InlineBasic(t *testing.T) {
 }
 
 func TestAcc_FunctionJava_InlineEmptyArgs(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	returnDataType := testdatatypes.DataTypeVarchar_100
@@ -156,6 +162,9 @@ func TestAcc_FunctionJava_InlineEmptyArgs(t *testing.T) {
 }
 
 func TestAcc_FunctionJava_InlineBasicDefaultArg(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -199,6 +208,7 @@ func TestAcc_FunctionJava_InlineBasicDefaultArg(t *testing.T) {
 func TestAcc_FunctionJava_InlineFull(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	stage, stageCleanup := acc.TestClient().Stage.CreateStage(t)
@@ -400,7 +410,11 @@ func TestAcc_FunctionJava_StagedBasic(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1991414]: set these parameters on the pre-created db level
 func TestAcc_FunctionJava_AllParameters(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"

@@ -7,12 +7,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/go-cty/cty"
@@ -265,7 +263,6 @@ func LegacyServiceUser() *schema.Resource {
 
 func GetImportUserFunc(userType sdk.UserType) func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-		logging.DebugLogger.Printf("[DEBUG] Starting user import")
 		client := meta.(*provider.Context).Client
 		id, err := sdk.ParseAccountObjectIdentifier(d.Id())
 		if err != nil {
@@ -696,7 +693,7 @@ func handlePasswordUpdate(ctx context.Context, id sdk.AccountObjectIdentifier, u
 			err := client.Users.Alter(ctx, id, &sdk.AlterUserOptions{Set: &sdk.UserSet{ObjectProperties: &setPassword}})
 			if err != nil {
 				if strings.Contains(err.Error(), "Error: 003002 (28P01)") || strings.Contains(err.Error(), "Reason: 'PRIOR_USE'") {
-					logging.DebugLogger.Printf("[DEBUG] Update to the same password is prohibited but it means we have a valid password in the current state. Continue.")
+					log.Printf("[DEBUG] Update to the same password is prohibited but it means we have a valid password in the current state. Continue.")
 				} else {
 					d.Partial(true)
 					return err

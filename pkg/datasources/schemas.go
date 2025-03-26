@@ -3,13 +3,11 @@ package datasources
 import (
 	"context"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	resourceschemas "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -103,7 +101,7 @@ var schemasSchema = map[string]*schema.Schema{
 					Computed:    true,
 					Description: "Holds the output of SHOW SCHEMAS.",
 					Elem: &schema.Resource{
-						Schema: schemas.ShowSchemaSchema,
+						Schema: resourceschemas.ShowSchemaSchema,
 					},
 				},
 				resources.DescribeOutputAttributeName: {
@@ -111,7 +109,7 @@ var schemasSchema = map[string]*schema.Schema{
 					Computed:    true,
 					Description: "Holds the output of DESCRIBE SCHEMA.",
 					Elem: &schema.Resource{
-						Schema: schemas.SchemaDescribeSchema,
+						Schema: resourceschemas.SchemaDescribeSchema,
 					},
 				},
 				resources.ParametersAttributeName: {
@@ -119,7 +117,7 @@ var schemasSchema = map[string]*schema.Schema{
 					Computed:    true,
 					Description: "Holds the output of SHOW PARAMETERS FOR SCHEMA.",
 					Elem: &schema.Resource{
-						Schema: schemas.ShowSchemaParametersSchema,
+						Schema: resourceschemas.ShowSchemaParametersSchema,
 					},
 				},
 			},

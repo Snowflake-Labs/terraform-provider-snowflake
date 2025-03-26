@@ -13,6 +13,9 @@ import (
 )
 
 func TestAcc_FailoverGroupBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
@@ -56,10 +59,13 @@ func TestAcc_FailoverGroupBasic(t *testing.T) {
 }
 
 func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -71,9 +77,9 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 20, acc.TestDatabaseName),
+				Config: failoverGroupWithInterval(id.Name(), accountName, 20, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -82,9 +88,9 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 				),
 			},
 			{
-				Config: failoverGroupWithNoWarehouse(randomCharacters, accountName, 20),
+				Config: failoverGroupWithNoWarehouse(id.Name(), accountName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "0"),
@@ -97,10 +103,13 @@ func TestAcc_FailoverGroupRemoveObjectTypes(t *testing.T) {
 }
 
 func TestAcc_FailoverGroupInterval(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -112,9 +121,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
+				Config: failoverGroupWithInterval(id.Name(), accountName, 10, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -126,9 +135,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Update Interval
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 20, acc.TestDatabaseName),
+				Config: failoverGroupWithInterval(id.Name(), accountName, 20, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -140,9 +149,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Change to Cron Expression
 			{
-				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 10-20 * TUE,THU", acc.TestDatabaseName),
+				Config: failoverGroupWithCronExpression(id.Name(), accountName, "0 0 10-20 * TUE,THU", acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -156,9 +165,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Update Cron Expression
 			{
-				Config: failoverGroupWithCronExpression(randomCharacters, accountName, "0 0 5-20 * TUE,THU", acc.TestDatabaseName),
+				Config: failoverGroupWithCronExpression(id.Name(), accountName, "0 0 5-20 * TUE,THU", acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -172,9 +181,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Remove replication schedule
 			{
-				Config: failoverGroupWithoutReplicationSchedule(randomCharacters, accountName, acc.TestDatabaseName),
+				Config: failoverGroupWithoutReplicationSchedule(id.Name(), accountName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -184,9 +193,9 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 			},
 			// Change to Interval
 			{
-				Config: failoverGroupWithInterval(randomCharacters, accountName, 10, acc.TestDatabaseName),
+				Config: failoverGroupWithInterval(id.Name(), accountName, 10, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -208,10 +217,13 @@ func TestAcc_FailoverGroupInterval(t *testing.T) {
 }
 
 func TestAcc_FailoverGroup_issue2517(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -223,9 +235,9 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupWithAccountParameters(randomCharacters, accountName, acc.TestDatabaseName),
+				Config: failoverGroupWithAccountParameters(id.Name(), accountName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "object_types.#", "5"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "allowed_databases.#", "1"),
@@ -239,10 +251,13 @@ func TestAcc_FailoverGroup_issue2517(t *testing.T) {
 }
 
 func TestAcc_FailoverGroup_issue2544(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	// TODO [SNOW-1002023]: Unskip; Business Critical Snowflake Edition needed
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestFailoverGroups)
 
-	randomCharacters := acc.TestClient().Ids.Alpha()
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	accountName := testenvs.GetOrSkipTest(t, testenvs.BusinessCriticalAccount)
 	resource.Test(t, resource.TestCase{
@@ -254,15 +269,15 @@ func TestAcc_FailoverGroup_issue2544(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.FailoverGroup),
 		Steps: []resource.TestStep{
 			{
-				Config: failoverGroupBasic(randomCharacters, accountName, acc.TestDatabaseName),
+				Config: failoverGroupBasic(id.Name(), accountName, acc.TestDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 				),
 			},
 			{
-				Config: failoverGroupWithChanges(randomCharacters, accountName, 20),
+				Config: failoverGroupWithChanges(id.Name(), accountName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", randomCharacters),
+					resource.TestCheckResourceAttr("snowflake_failover_group.fg", "name", id.Name()),
 				),
 			},
 		},

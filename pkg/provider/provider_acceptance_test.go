@@ -2,6 +2,7 @@ package provider_test
 
 import (
 	"fmt"
+	"io/fs"
 	"net"
 	"os"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
@@ -17,13 +19,14 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/ids"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/testhelpers"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -73,7 +76,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			},
 			// incorrect user in provider config should not be rewritten by profile and cause error
 			{
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(tmpServiceUserConfig.Profile).WithUserId(ids.NonExistingAccountObjectIdentifier), datasourceModel()),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(tmpServiceUserConfig.Profile).WithUserId(acc.NonExistingAccountObjectIdentifier), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// correct user and key in provider's config should not be rewritten by a faulty config
@@ -94,7 +97,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 			// incorrect user in env variable should not be rewritten by profile and cause error (profile authenticator is set to JWT and that's why the error is about incorrect token)
 			{
 				PreConfig: func() {
-					t.Setenv(snowflakeenvs.User, ids.NonExistingAccountObjectIdentifier.Name())
+					t.Setenv(snowflakeenvs.User, acc.NonExistingAccountObjectIdentifier.Name())
 					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 				},
 				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
@@ -122,7 +125,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 				Config: config.FromModels(t, providermodel.SnowflakeProvider().
 					WithAuthenticatorType(sdk.AuthenticationTypeJwt).
 					WithProfile(tmpServiceUserConfig.Profile).
-					WithUserId(ids.NonExistingAccountObjectIdentifier).
+					WithUserId(acc.NonExistingAccountObjectIdentifier).
 					WithRoleId(tmpServiceUser.RoleId).
 					WithPrivateKeyMultiline(tmpServiceUser.PrivateKey), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
@@ -152,7 +155,7 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 					t.Setenv(snowflakeenvs.OrganizationName, tmpServiceUser.AccountId.OrganizationName())
 					t.Setenv(snowflakeenvs.Role, tmpServiceUser.RoleId.Name())
 				},
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(testprofiles.Default).WithUserId(ids.NonExistingAccountObjectIdentifier), datasourceModel()),
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithAuthenticatorType(sdk.AuthenticationTypeJwt).WithProfile(testprofiles.Default).WithUserId(acc.NonExistingAccountObjectIdentifier), datasourceModel()),
 				ExpectError: regexp.MustCompile("JWT token is invalid"),
 			},
 			// make sure the teardown is fine by using a correct env config at the end
@@ -305,6 +308,7 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 	tomlConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
 		return string(c)
 	})
+	providerModel := providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -316,8 +320,70 @@ func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 				PreConfig: func() {
 					t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
 				},
-				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tomlConfig.Path), datasourceModel()),
+				Config:      config.FromModels(t, providerModel, datasourceModel()),
 				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path)),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_tomlConfigIsTooPermissive(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	if oswrapper.IsRunningOnWindows() {
+		t.Skip("checking file permissions on Windows is currently done in manual tests package")
+	}
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	permissions := fs.FileMode(0o755)
+
+	configPath := testhelpers.TestFileWithCustomPermissions(t, random.AlphaN(10), random.Bytes(), permissions)
+	providerModel := providermodel.SnowflakeProvider().WithProfile(configPath).WithSkipTomlFilePermissionVerification(false)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, configPath)
+				},
+				Config:      config.FromModels(t, providerModel, datasourceModel()),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("could not load config file: config file %s has unsafe permissions - %#o", configPath, permissions)),
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_tomlConfigFilePermissionsCanBeSkipped(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	if oswrapper.IsRunningOnWindows() {
+		t.Skip("checking file permissions on Windows is currently done in manual tests package")
+	}
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().TempTomlConfigWithCustomPermissionsForServiceUser(t, tmpServiceUser, fs.FileMode(0o755))
+
+	providerModelWithSkippedPermissionVerification := providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config: config.FromModels(t, providerModelWithSkippedPermissionVerification, datasourceModel()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.snowflake_database.t", "name", acc.TestDatabaseName),
+				),
 			},
 		},
 	})
@@ -882,15 +948,6 @@ func providerConfigWithDatasourcePreviewFeatureEnabled(profile, feature string) 
 provider "snowflake" {
 	profile = "%[1]s"
 	preview_features_enabled = ["%[2]s_datasource"]
-}
-data %[2]s t {}
-`, profile, feature)
-}
-
-func providerConfigWithDatasourcePreviewFeature(profile, feature string) string {
-	return fmt.Sprintf(`
-provider "snowflake" {
-	profile = "%[1]s"
 }
 data %[2]s t {}
 `, profile, feature)

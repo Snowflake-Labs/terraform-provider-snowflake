@@ -1,21 +1,33 @@
 package datasources_test
 
 import (
-	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_DatabaseRole(t *testing.T) {
-	dbName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
-	dbRoleName := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	comment := random.Comment()
+
+	databaseRoleModel := model.DatabaseRole("test", databaseRoleId.DatabaseName(), databaseRoleId.Name()).
+		WithComment(comment)
+	databaseRoleDatasourceModel := datasourcemodel.DatabaseRole("test", databaseRoleId.DatabaseName(), databaseRoleId.Name()).
+		WithDependsOn(databaseRoleModel.ResourceReference())
+	databaseRoleNotExistingDatasourceModel := datasourcemodel.DatabaseRole("test", acc.NonExistingDatabaseObjectIdentifier.DatabaseName(), acc.NonExistingDatabaseObjectIdentifier.Name()).
+		WithDependsOn(databaseRoleModel.ResourceReference())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -26,55 +38,17 @@ func TestAcc_DatabaseRole(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: databaseRole(dbName, dbRoleName),
+				Config: accconfig.FromModels(t, databaseRoleModel, databaseRoleDatasourceModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "name"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "comment"),
-					resource.TestCheckResourceAttrSet("data.snowflake_database_role.db_role", "owner"),
+					resource.TestCheckResourceAttrSet(databaseRoleDatasourceModel.DatasourceReference(), "name"),
+					resource.TestCheckResourceAttrSet(databaseRoleDatasourceModel.DatasourceReference(), "comment"),
+					resource.TestCheckResourceAttrSet(databaseRoleDatasourceModel.DatasourceReference(), "owner"),
 				),
 			},
 			{
-				Config:      databaseRoleEmpty(dbName),
+				Config:      accconfig.FromModels(t, databaseRoleModel, databaseRoleNotExistingDatasourceModel),
 				ExpectError: regexp.MustCompile("Error: object does not exist"),
 			},
 		},
 	})
-}
-
-func databaseRole(dbName, dbRoleName string) string {
-	return fmt.Sprintf(`
-		resource snowflake_database "test_db" {
-			name = "%v"
-		}
-
-		resource snowflake_database_role "test_role" {
-			name = "%v"
-            comment = "test"
-			database = snowflake_database.test_db.name
-		}
-
-		data snowflake_database_role "db_role" {
-            database = snowflake_database.test_db.name
-			name = snowflake_database_role.test_role.name
-			depends_on = [
-				snowflake_database_role.test_role,
-			]
-		}
-	`, dbName, dbRoleName)
-}
-
-func databaseRoleEmpty(dbName string) string {
-	return fmt.Sprintf(`
-		resource snowflake_database "test_db" {
-			name = "%v"
-		}
-
-		data snowflake_database_role "db_role" {
-            database = snowflake_database.test_db.name
-			name = "dummy_missing"
-			depends_on = [
-				snowflake_database.test_db,
-			]
-		}
-	`, dbName)
 }

@@ -5,25 +5,33 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_GrantAccountRole_accountRole(t *testing.T) {
-	roleName := acc.TestClient().Ids.Alpha()
-	parentRoleName := acc.TestClient().Ids.Alpha()
-	resourceName := "snowflake_grant_account_role.g"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleName := roleId.Name()
+	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	parentRoleName := parentRoleId.Name()
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"role_name":        config.StringVariable(roleName),
 			"parent_role_name": config.StringVariable(parentRoleName),
 		}
 	}
+
+	resourceName := "snowflake_grant_account_role.g"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -54,15 +62,22 @@ func TestAcc_GrantAccountRole_accountRole(t *testing.T) {
 }
 
 func TestAcc_GrantAccountRole_user(t *testing.T) {
-	roleName := acc.TestClient().Ids.Alpha()
-	userName := acc.TestClient().Ids.Alpha()
-	resourceName := "snowflake_grant_account_role.g"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	roleName := roleId.Name()
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	userName := userId.Name()
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"role_name": config.StringVariable(roleName),
 			"user_name": config.StringVariable(userName),
 		}
 	}
+
+	resourceName := "snowflake_grant_account_role.g"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -93,8 +108,11 @@ func TestAcc_GrantAccountRole_user(t *testing.T) {
 }
 
 func TestAcc_GrantAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
-	roleName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	parentRoleName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -110,15 +128,15 @@ func TestAcc_GrantAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: grantAccountRoleBasicConfig(roleName.Name(), parentRoleName.Name()),
+				Config: grantAccountRoleBasicConfig(roleId, parentRoleId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "id", fmt.Sprintf(`%v|ROLE|%v`, roleName.FullyQualifiedName(), parentRoleName.FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "id", fmt.Sprintf(`%v|ROLE|%v`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantAccountRoleBasicConfig(roleName.Name(), parentRoleName.Name()),
+				Config:                   grantAccountRoleBasicConfig(roleId, parentRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_account_role.test", plancheck.ResourceActionNoop),
@@ -128,14 +146,14 @@ func TestAcc_GrantAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourc
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "id", fmt.Sprintf(`%v|ROLE|%v`, roleName.FullyQualifiedName(), parentRoleName.FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_grant_account_role.test", "id", fmt.Sprintf(`%v|ROLE|%v`, roleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
 				),
 			},
 		},
 	})
 }
 
-func grantAccountRoleBasicConfig(roleName string, parentRoleName string) string {
+func grantAccountRoleBasicConfig(roleId sdk.AccountObjectIdentifier, parentRoleId sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_account_role" "role" {
   name = "%s"
@@ -149,15 +167,15 @@ resource "snowflake_grant_account_role" "test" {
   role_name        = snowflake_account_role.role.name
   parent_role_name = snowflake_account_role.parent_role.name
 }
-`, roleName, parentRoleName)
+`, roleId.Name(), parentRoleId.Name())
 }
 
 func TestAcc_GrantAccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
-	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedRoleId := fmt.Sprintf(`\"%s\"`, roleId.Name())
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedParentRoleId := fmt.Sprintf(`\"%s\"`, parentRoleId.Name())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -174,12 +192,12 @@ func TestAcc_GrantAccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				ExpectError: regexp.MustCompile("Error: Provider produced inconsistent final plan"),
-				Config:      grantAccountRoleBasicConfig(quotedRoleId, quotedParentRoleId),
+				Config:      grantAccountRoleConfigWithQuotedIdentifiers(roleId, parentRoleId),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantAccountRoleBasicConfig(quotedRoleId, quotedParentRoleId),
+				Config:                   grantAccountRoleConfigWithQuotedIdentifiers(roleId, parentRoleId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_account_role.test", plancheck.ResourceActionCreate),
@@ -196,4 +214,24 @@ func TestAcc_GrantAccountRole_IdentifierQuotingDiffSuppression(t *testing.T) {
 			},
 		},
 	})
+}
+
+func grantAccountRoleConfigWithQuotedIdentifiers(roleId sdk.AccountObjectIdentifier, parentRoleId sdk.AccountObjectIdentifier) string {
+	quotedRoleId := fmt.Sprintf(`\"%s\"`, roleId.Name())
+	quotedParentRoleId := fmt.Sprintf(`\"%s\"`, parentRoleId.Name())
+
+	return fmt.Sprintf(`
+resource "snowflake_account_role" "role" {
+  name = "%s"
+}
+
+resource "snowflake_account_role" "parent_role" {
+  name = "%s"
+}
+
+resource "snowflake_grant_account_role" "test" {
+  role_name        = snowflake_account_role.role.name
+  parent_role_name = snowflake_account_role.parent_role.name
+}
+`, quotedRoleId, quotedParentRoleId)
 }

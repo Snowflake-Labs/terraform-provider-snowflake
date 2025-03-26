@@ -1,5 +1,5 @@
 ---
-page_title: "Authentication methods"
+page_title: "Authentication Methods"
 subcategory: ""
 description: |-
 

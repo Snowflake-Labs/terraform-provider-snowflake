@@ -26,7 +26,12 @@ func (c *ConnectionClient) client() sdk.Connections {
 	return c.context.client.Connections
 }
 
-func (c *ConnectionClient) Create(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Connection, func()) {
+func (c *ConnectionClient) Create(t *testing.T) (*sdk.Connection, func()) {
+	t.Helper()
+	return c.CreateWithIdentifier(t, c.ids.RandomAccountObjectIdentifier())
+}
+
+func (c *ConnectionClient) CreateWithIdentifier(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Connection, func()) {
 	t.Helper()
 	ctx := context.Background()
 	request := sdk.NewCreateConnectionRequest(id)

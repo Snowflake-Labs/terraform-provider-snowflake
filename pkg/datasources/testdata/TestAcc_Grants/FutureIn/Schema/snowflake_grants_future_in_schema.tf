@@ -1,12 +1,7 @@
 data "snowflake_current_role" "test" {}
 
-resource "snowflake_database" "test" {
-  name = var.database
-}
-
-resource "snowflake_schema" "test" {
-  name     = var.schema
-  database = snowflake_database.test.name
+locals {
+  schema_identifier = "\"${var.database}\".\"${var.schema}\""
 }
 
 resource "snowflake_grant_privileges_to_account_role" "test" {
@@ -16,7 +11,7 @@ resource "snowflake_grant_privileges_to_account_role" "test" {
   on_schema_object {
     future {
       object_type_plural = "TABLES"
-      in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+      in_schema          = local.schema_identifier
     }
   }
 }
@@ -25,6 +20,6 @@ data "snowflake_grants" "test" {
   depends_on = [snowflake_grant_privileges_to_account_role.test]
 
   future_grants_in {
-    schema = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+    schema = local.schema_identifier
   }
 }

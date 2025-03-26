@@ -5,8 +5,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 )
 
 // VectorDataType is based on https://docs.snowflake.com/en/sql-reference/data-types-vector#vector
@@ -40,7 +38,6 @@ var (
 func parseVectorDataTypeRaw(raw sanitizedDataTypeRaw) (*VectorDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
 	if r == "" || (!strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")")) {
-		logging.DebugLogger.Printf(`vector %s could not be parsed, use "%s(type, dimension)" format`, raw.raw, raw.matchedByType)
 		return nil, fmt.Errorf(`vector %s could not be parsed, use "%s(type, dimension)" format`, raw.raw, raw.matchedByType)
 	}
 	onlyArgs := r[1 : len(r)-1]
@@ -49,17 +46,14 @@ func parseVectorDataTypeRaw(raw sanitizedDataTypeRaw) (*VectorDataType, error) {
 	case 2:
 		vectorType := strings.TrimSpace(parts[0])
 		if !slices.Contains(VectorAllowedInnerTypes, vectorType) {
-			logging.DebugLogger.Printf(`[DEBUG] Inner type for vector could not be recognized: "%s"; use one of %s`, parts[0], strings.Join(VectorAllowedInnerTypes, ","))
 			return nil, fmt.Errorf(`could not parse vector's inner type': "%s"; use one of %s`, parts[0], strings.Join(VectorAllowedInnerTypes, ","))
 		}
 		dimension, err := strconv.Atoi(strings.TrimSpace(parts[1]))
 		if err != nil {
-			logging.DebugLogger.Printf(`[DEBUG] Could not parse vector's dimension "%s", err: %v`, parts[1], err)
 			return nil, fmt.Errorf(`could not parse the vector's dimension: "%s", err: %w`, parts[1], err)
 		}
 		return &VectorDataType{vectorType, dimension, raw.matchedByType}, nil
 	default:
-		logging.DebugLogger.Printf("[DEBUG] Unexpected length of vector arguments")
 		return nil, fmt.Errorf(`vector cannot have %d arguments: "%s"; use "%s(type, dimension)" format`, l, onlyArgs, raw.matchedByType)
 	}
 }

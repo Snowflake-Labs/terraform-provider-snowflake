@@ -33,6 +33,10 @@ var (
 	TestDatabaseName  = fmt.Sprintf("%sdb_%s", AcceptanceTestPrefix, acceptancetests.ObjectsSuffix)
 	TestSchemaName    = fmt.Sprintf("%ssc_%s", AcceptanceTestPrefix, acceptancetests.ObjectsSuffix)
 	TestWarehouseName = fmt.Sprintf("%swh_%s", AcceptanceTestPrefix, acceptancetests.ObjectsSuffix)
+
+	NonExistingAccountObjectIdentifier  = sdk.NewAccountObjectIdentifier("does_not_exist")
+	NonExistingDatabaseObjectIdentifier = sdk.NewDatabaseObjectIdentifier(TestDatabaseName, "does_not_exist")
+	NonExistingSchemaObjectIdentifier   = sdk.NewSchemaObjectIdentifier(TestDatabaseName, TestSchemaName, "does_not_exist")
 )
 
 var (
@@ -64,9 +68,9 @@ func init() {
 	}
 	_ = testAccProtoV6ProviderFactoriesNew
 
-	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default)
+	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default, true)
 	if err != nil {
-		log.Panicf("Cannot load default config, err: %v", err)
+		log.Panicf("Could not read configuration from profile: %v", err)
 	}
 	if defaultConfig == nil {
 		log.Panic("Config is required to run acceptance tests")
@@ -79,7 +83,7 @@ func init() {
 	}
 	atc.client = client
 
-	cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
+	cfg, err := sdk.ProfileConfig(testprofiles.Secondary, true)
 	if err != nil {
 		log.Panicf("Config for the secondary client is needed to run acceptance tests, err: %v", err)
 	}

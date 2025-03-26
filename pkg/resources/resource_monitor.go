@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/logging"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -121,7 +119,6 @@ func ResourceMonitor() *schema.Resource {
 }
 
 func ImportResourceMonitor(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	logging.DebugLogger.Printf("[DEBUG] Starting resource monitor import")
 	client := meta.(*provider.Context).Client
 
 	id, err := sdk.ParseAccountObjectIdentifier(d.Id())

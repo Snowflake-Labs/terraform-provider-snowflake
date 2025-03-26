@@ -6,6 +6,19 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
+// DatabaseWithParametersSet should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
+// TODO [this PR]: consider using helper instead
+func DatabaseWithParametersSet(
+	resourceName string,
+	name string,
+) *DatabaseModel {
+	return Database(resourceName, name).
+		WithDataRetentionTimeInDays(1).
+		WithMaxDataExtensionTimeInDays(1).
+		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
+		WithCatalog("SNOWFLAKE")
+}
+
 func (d *DatabaseModel) WithReplication(accountIdentifier sdk.AccountIdentifier, withFailover bool, ignoreEditionCheck bool) *DatabaseModel {
 	return d.WithReplicationValue(
 		tfconfig.ObjectVariable(

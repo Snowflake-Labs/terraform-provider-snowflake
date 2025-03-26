@@ -1,15 +1,11 @@
 data "snowflake_current_role" "test" {}
 
-resource "snowflake_database" "test" {
-  name = var.database
-}
-
 resource "snowflake_grant_privileges_to_account_role" "test" {
   account_role_name = data.snowflake_current_role.test.name
   privileges        = ["CREATE TABLE"]
 
   on_schema {
-    future_schemas_in_database = snowflake_database.test.name
+    future_schemas_in_database = var.database
   }
 }
 

@@ -7,28 +7,32 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_DynamicTables_complete(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	dataSourceName := "data.snowflake_dynamic_tables.dts"
-	tableName := name + "_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":       config.StringVariable(name),
+			"name":       config.StringVariable(dynamicTableId.Name()),
 			"database":   config.StringVariable(acc.TestDatabaseName),
 			"schema":     config.StringVariable(acc.TestSchemaName),
 			"warehouse":  config.StringVariable(acc.TestWarehouseName),
-			"query":      config.StringVariable(fmt.Sprintf("select \"id\" from \"%v\".\"%v\".\"%v\"", acc.TestDatabaseName, acc.TestSchemaName, tableName)),
+			"query":      config.StringVariable(fmt.Sprintf("select \"id\" from %v", tableId.FullyQualifiedName())),
 			"comment":    config.StringVariable("Terraform acceptance test"),
-			"table_name": config.StringVariable(tableName),
+			"table_name": config.StringVariable(tableId.Name()),
 		}
 	}
 	variableSet1 := m()
 
+	dataSourceName := "data.snowflake_dynamic_tables.dts"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -42,10 +46,10 @@ func TestAcc_DynamicTables_complete(t *testing.T) {
 				ConfigVariables: variableSet1,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "like.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "like.0.pattern", name),
+					resource.TestCheckResourceAttr(dataSourceName, "like.0.pattern", dynamicTableId.Name()),
 					resource.TestCheckResourceAttr(dataSourceName, "in.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "in.0.database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr(dataSourceName, "starts_with", name),
+					resource.TestCheckResourceAttr(dataSourceName, "in.0.database", dynamicTableId.DatabaseName()),
+					resource.TestCheckResourceAttr(dataSourceName, "starts_with", dynamicTableId.Name()),
 					resource.TestCheckResourceAttr(dataSourceName, "limit.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "limit.0.rows", "1"),
 
