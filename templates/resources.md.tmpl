@@ -26,7 +26,6 @@ description: |-
 {{- end }}
 
 -> **Note** If a field has default value, it is displayed next to the type in the schema. If the default is computed from external sources (e.g., environment variables), it displays `Default is computed`.
-~> **Warning** Not all default values are valid (e.g., only positive values are allowed, but default is set to `-1`). It's intentional as they help with external change detection (on the Snowflake side). Please refer to the [documentation on empty values](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/bb22bb2783ad31a453413fc931fdb6f97f723941/v1-preparations/CHANGES_BEFORE_V1.md#empty-values) for more information.
 
 {{ .SchemaMarkdown | trimspace }}
 {{- if .HasImport }}

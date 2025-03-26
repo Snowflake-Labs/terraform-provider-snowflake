@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -48,7 +49,14 @@ func init() {
 	schema.SchemaDescriptionBuilder = func(s *schema.Schema) string {
 		desc := s.Description
 		if s.Default != nil {
-			desc = fmt.Sprintf("(Default: `%v`) %s", s.Default, s.Description)
+			if slices.Contains([]any{
+				provider.IntDefault,
+				provider.BooleanDefault,
+			}, s.Default) {
+				desc = fmt.Sprintf("(Default: fallback to Snowflake default - uses special value that cannot be set in the confinguration manually (`%v`)) %s", s.Default, s.Description)
+			} else {
+				desc = fmt.Sprintf("(Default: `%v`) %s", s.Default, s.Description)
+			}
 		}
 		if s.DefaultFunc != nil {
 			desc = fmt.Sprintf("(Default is computed) %s", s.Description)
