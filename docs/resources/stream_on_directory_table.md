@@ -52,7 +52,7 @@ resource "snowflake_stream_on_directory_table" "stream" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the stream.
-- `copy_grants` (Boolean) Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.
+- `copy_grants` (Boolean) (Default: `false`) Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.
 
 ### Read-Only
 

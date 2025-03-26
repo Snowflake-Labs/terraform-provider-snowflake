@@ -45,7 +45,7 @@ resource "snowflake_pipe" "pipe" {
 
 ### Optional
 
-- `auto_ingest` (Boolean) Specifies a auto_ingest param for the pipe.
+- `auto_ingest` (Boolean) (Default: `false`) Specifies a auto_ingest param for the pipe.
 - `aws_sns_topic_arn` (String) Specifies the Amazon Resource Name (ARN) for the SNS topic for your S3 bucket.
 - `comment` (String) Specifies a comment for the pipe.
 - `error_integration` (String) Specifies the name of the notification integration used for error notifications.

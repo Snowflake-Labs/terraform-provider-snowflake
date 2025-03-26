@@ -60,7 +60,7 @@ variable "oauth_client_secret" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the integration.
-- `oauth_access_token_validity` (Number) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
+- `oauth_access_token_validity` (Number) (Default: fallback to Snowflake default - uses special value that cannot be set in the configuration manually (`-1`)) Specifies the default lifetime of the OAuth access token (in seconds) issued by an OAuth server.
 - `oauth_allowed_scopes` (Set of String) Specifies a list of scopes to use when making a request from the OAuth by a role with USAGE on the integration during the OAuth client credentials flow.
 - `oauth_client_auth_method` (String) Specifies that POST is used as the authentication method to the external service. If removed from the config, the resource is recreated. Valid values are (case-insensitive): `CLIENT_SECRET_POST`.
 - `oauth_refresh_token_validity` (Number) Specifies the value to determine the validity of the refresh token obtained from the OAuth server.

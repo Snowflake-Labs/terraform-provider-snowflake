@@ -51,7 +51,7 @@ resource "snowflake_scim_integration" "test" {
 
 - `comment` (String) Specifies a comment for the integration.
 - `network_policy` (String) Specifies an existing network policy that controls SCIM network traffic. For more information about this resource, see [docs](./network_policy).
-- `sync_password` (String) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. This property is not supported for Azure SCIM. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
+- `sync_password` (String) (Default: fallback to Snowflake default - uses special value that cannot be set in the configuration manually (`default`)) Specifies whether to enable or disable the synchronization of a user password from an Okta SCIM client as part of the API request to Snowflake. This property is not supported for Azure SCIM. Available options are: "true" or "false". When the value is not set in the configuration the provider will put "default" there which means to use the Snowflake default for this value.
 
 ### Read-Only
 
