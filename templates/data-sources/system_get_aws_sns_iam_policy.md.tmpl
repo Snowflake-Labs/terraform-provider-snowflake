@@ -23,4 +23,6 @@ It's SQL-based, but after knowing what has to be done use corresponding resource
 
 {{ tffile (printf "examples/data-sources/%s/data-source.tf" .Name) }}
 
+-> **Note** If a field has default value, it is displayed next to the type in the schema. If the default is computed from external sources (e.g., environment variables), it displays `Default is computed`.
+
 {{ .SchemaMarkdown | trimspace }}

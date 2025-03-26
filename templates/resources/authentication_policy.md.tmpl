@@ -27,6 +27,8 @@ description: |-
 
 {{- end }}
 
+-> **Note** If a field has default value, it is displayed next to the type in the schema. If the default is computed from external sources (e.g., environment variables), it displays `Default is computed`.
+
 {{ .SchemaMarkdown | trimspace }}
 {{- if .HasImport }}
 
