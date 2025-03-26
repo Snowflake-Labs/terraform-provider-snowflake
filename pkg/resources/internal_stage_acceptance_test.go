@@ -6,12 +6,17 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_InternalStage(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -23,7 +28,7 @@ func TestAcc_InternalStage(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
 		Steps: []resource.TestStep{
 			{
-				Config: internalStageConfig(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: internalStageConfig(id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_stage.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", id.FullyQualifiedName()),
@@ -36,13 +41,13 @@ func TestAcc_InternalStage(t *testing.T) {
 	})
 }
 
-func internalStageConfig(n, databaseName, schemaName string) string {
+func internalStageConfig(stageId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_stage" "test" {
-	name = "%v"
-	database = "%s"
-	schema = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 	comment = "Terraform acceptance test"
 }
-`, n, databaseName, schemaName)
+`, stageId.DatabaseName(), stageId.SchemaName(), stageId.Name())
 }
