@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -15,6 +15,10 @@ import (
 func TestAcc_AccountPasswordPolicyAttachment(t *testing.T) {
 	// TODO [SNOW-1763613]: unskip
 	t.Skipf("Skip because error %s; will be fixed in SNOW-1763613", "Error: 003549 (23505): Object <account_name> already has a PASSWORD_POLICY. Only one PASSWORD_POLICY is allowed at a time")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{

@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"io/fs"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
@@ -59,12 +60,31 @@ func (c *TestClient) TempTooBigTomlConfigForServiceUser(t *testing.T, serviceUse
 	})
 }
 
+func (c *TestClient) TempTomlConfigWithCustomPermissionsForServiceUser(t *testing.T, serviceUser *TmpServiceUser, permissions fs.FileMode) *TmpTomlConfig {
+	t.Helper()
+	return c.StoreTempTomlConfigWithCustomPermissions(t, func(profile string) string {
+		return TomlConfigForServiceUser(t, profile, serviceUser.UserId, serviceUser.RoleId, serviceUser.WarehouseId, serviceUser.AccountId, serviceUser.PrivateKey)
+	}, permissions)
+}
+
 func (c *TestClient) StoreTempTomlConfig(t *testing.T, tomlProvider func(string) string) *TmpTomlConfig {
 	t.Helper()
 
 	profile := random.AlphaN(6)
 	toml := tomlProvider(profile)
 	configPath := testhelpers.TestFile(t, random.AlphaN(10), []byte(toml))
+	return &TmpTomlConfig{
+		Profile: profile,
+		Path:    configPath,
+	}
+}
+
+func (c *TestClient) StoreTempTomlConfigWithCustomPermissions(t *testing.T, tomlProvider func(string) string, permissions fs.FileMode) *TmpTomlConfig {
+	t.Helper()
+
+	profile := random.AlphaN(6)
+	toml := tomlProvider(profile)
+	configPath := testhelpers.TestFileWithCustomPermissions(t, random.AlphaN(10), []byte(toml), permissions)
 	return &TmpTomlConfig{
 		Profile: profile,
 		Path:    configPath,

@@ -3,7 +3,6 @@ package helpers
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -145,17 +144,9 @@ func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIde
 	t.Helper()
 	ctx := context.Background()
 
-	tf := fmt.Sprintf("/tmp/%s", filename)
-	f, err := os.Create(tf)
-	require.NoError(t, err)
-	defer f.Close()
-	defer os.Remove(f.Name())
-	if content != "" {
-		_, err = f.Write([]byte(content))
-		require.NoError(t, err)
-	}
+	filePath := testhelpers.TestFile(t, filename, []byte(content))
 
-	_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, f.Name(), id.FullyQualifiedName()))
+	_, err := c.context.client.ExecForTests(ctx, fmt.Sprintf(`PUT file://%s @%s AUTO_COMPRESS = FALSE OVERWRITE = TRUE`, filePath, id.FullyQualifiedName()))
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), filename))

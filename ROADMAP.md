@@ -1,5 +1,17 @@
 # Our roadmap
 
+## (24.03.2025) snowflakedb migration
+
+As part of GA preparation, we must migrate out of the [Snowflake-Labs](https://github.com/Snowflake-Labs) GitHub organization to [snowflakedb](https://github.com/snowflakedb), as noted in the [previous Roadmap entry](#what-is-ga). It should happen within a few days. A few important notes on that:
+- **The [old terraform registry](http://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) will still be accessible so no immediate action is needed** (at least for now; we will have separate communication regarding its deprecation). However, don’t wait with the migration, as we plan to deprecate and remove the old registry sooner rather than later.
+- There will be a new entry in the registry; it should contain the same releases as the [old one](http://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) (however, we want to ensure that it includes the releases starting from v0.60.0; if you are on the older version, please migrate to the newer one soon).
+- The old GitHub repository ([link](https://github.com/Snowflake-Labs/terraform-provider-snowflake)) will redirect to the same repository located in the snowflakedb organization. All issues, pull requests, and discussions will be persisted.
+- When the repository is migrated, we will first verify if the new registry is working correctly and provide detailed instructions on migrating (it should be a straightforward process similar to the description in [#upgrading-from-czi-provider](./CZI_UPGRADE.md#upgrading-from-czi-provider)).
+
+If you have any questions about the migration topic, please contact us through GitHub or your account managers.
+
+We will announce the GA date soon, so stay tuned!
+
 ## (07.02.2025) GA scope and roadmap
 
 ### Current focus and goals
@@ -258,7 +270,7 @@ Since the last update we have focused on:
 - [Redesigning grants](#redesigning-grants) (check announcements: [discussions/1890#discussioncomment-9071073](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/1890#discussioncomment-9071073), [discussions/2235](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2235), and [discussions/2736](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736)).
 - Improving the provider’s stability (by [stabilizing the tests](#tests-stabilization), solving new incoming issues on a daily basis, and [introducing repository-wide fixes to multiple objects](#resolving-existing-issues)).
 - Preparing the scope for the V1 (more below). Part of [supporting-all-snowflake-ga-features](#supporting-all-snowflake-ga-features).
-- Raising the transparency of the project (this roadmap, [contribution guidelines](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md), [old issues cleanup](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2755), and [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md#faq)).
+- Raising the transparency of the project (this roadmap, [contribution guidelines](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md), [old issues cleanup](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2755), and [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md)).
 
 The primary goals we are working on currently are:
 - Introducing support for the fundamental GA features and improving the existing objects (resolving existing provider issues included). Continuation of [supporting-all-snowflake-ga-features](#supporting-all-snowflake-ga-features).

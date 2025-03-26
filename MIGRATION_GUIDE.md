@@ -6,11 +6,20 @@ across different versions.
 
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
+>
+> If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
 
 ## v1.0.4 ➞ v1.0.5
 
 ### Changes in TOML configuration file requirements
-Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB.
+Before this version, it was possible to abuse the provider by providing a huge TOML config file which was read every time. To mitigate this, we set a limit of the supported file size to 10MB. For a larger TOML configuration file, the provider will fail.
+
+We encourage you to make your TOML configuration file more restricted. Any privileges for a UNIX group or others should not be set (the maximum recommended privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This check is not enabled by default, but we introduced a new `skip_toml_file_permission_verification` boolean field to the provider's configuration with a default `true` value to enable this behavior.
+
+If you want to check the TOML config file privileges, please specify `skip_toml_file_permission_verification=false` in your TF configuration or set `SKIP_TOML_FILE_PERMISSION_VERIFICATION=FALSE` environment variable. For a TOML configuration file with too broad permissions, the provider will fail.
+This requirement can be checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
+
+This setting can be changed to `false` in the future, meaning verifying file permissions by default, so the preferred action is to set the proper permissions now and to disable skipping permission verification.
 
 ### Tracking external changes for oauth_redirect_uri in the snowflake_oauth_integration_for_partner_applications resource
 From this version, the snowflake_oauth_integration_for_partner_applications resource is able to
@@ -18,7 +27,7 @@ detect changes on the Snowflake side and apply appropriate action from the provi
 changes after running `terraform plan`, as before the configuration could contain different value than on the Snowflake side.
 
 ### Removal of instrumentation library
-We decided to remove the instrumentation around the [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake). It does not introduce any functional changes, however, it changes the way the Snowflake communication logs are turned on and how they are printed. Check [this section](CREATING_ISSUES.md#how-can-i-turn-on-logs) for more details.
+We decided to remove the instrumentation around the [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake). It does not introduce any functional changes, however, it changes the way the Snowflake communication logs are turned on and how they are printed. Check [this section](FAQ.md#how-can-i-turn-on-logs) for more details.
 
 `SF_TF_NO_INSTRUMENTED_SQL`, used to turn the instrumentation off, was removed because it is no longer needed.
 
