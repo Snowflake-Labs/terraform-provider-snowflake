@@ -77,7 +77,7 @@ body:
         - **grants** - issue connected in any way with the grants handling,
         - **identifiers** - issue connected in any way with the object identifier,
         - **import** - issue connected in any way with importing objects into terraform state,
-        - **migration** - issue connected with moving between the provider versions (0x - 0.y and 0.x - 1.x),
+        - **migration** - issue connected with moving between the provider versions,
         - **open-tofu** - topics about OpenTofu,
         - **other** - issue not falling into any existing category,
         - **preview** - issue connected with a preview feature,
@@ -86,6 +86,7 @@ body:
         - **show_output** - issue connected with the `show_output,` `describe_output,` and `parameters` computed attributes,
         - **snowflake** - issue ending with missing features in Snowflake or improper Snowflake behavior,
         - **stable** - issue connected with a stable feature,
+      multiple: true
       options:
         - category:data_source
         - category:data_type
