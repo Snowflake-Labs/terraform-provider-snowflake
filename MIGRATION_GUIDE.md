@@ -27,7 +27,7 @@ detect changes on the Snowflake side and apply appropriate action from the provi
 changes after running `terraform plan`, as before the configuration could contain different value than on the Snowflake side.
 
 ### Removal of instrumentation library
-We decided to remove the instrumentation around the [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake). It does not introduce any functional changes, however, it changes the way the Snowflake communication logs are turned on and how they are printed. Check [this section](CREATING_ISSUES.md#how-can-i-turn-on-logs) for more details.
+We decided to remove the instrumentation around the [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake). It does not introduce any functional changes, however, it changes the way the Snowflake communication logs are turned on and how they are printed. Check [this section](FAQ.md#how-can-i-turn-on-logs) for more details.
 
 `SF_TF_NO_INSTRUMENTED_SQL`, used to turn the instrumentation off, was removed because it is no longer needed.
 

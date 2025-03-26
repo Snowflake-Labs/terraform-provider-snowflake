@@ -14,7 +14,7 @@ body:
         If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
 
         Here's a list of useful links that may help you with your issue:
-        - [Guide on creating issues + FAQ + Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) - If you would like to create a GitHub issue, please read our guide first. It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
+        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
         - [Migration Guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) - when introducing breaking changes, we note them in the migration guide and describe how to upgrade to the next version. If you recently upgraded the provider version, please check if you applied all the needed changes.
 
   - type: markdown
@@ -251,7 +251,7 @@ body:
       description: |
         IMPORTANT: If you run terraform with a one-liner JSON file with a provider configuration, and an error occurs during the validation, Terraform prints the invalid line (whole file in this case) and may print some sensitive values. Read more in [Terraform documentation](https://developer.hashicorp.com/terraform/language/values/variables#cases-where-terraform-may-disclose-a-sensitive-variable). Please make sure you do not send any sensitive values.
         Please provide a link to a [GitHub Gist](https://gist.github.com) containing log output.
-        Read more about logging in the provider [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/dev/CREATING_ISSUES.md#how-can-i-turn-on-logs).
+        Read more about logging in the provider [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/dev/FAQ.md#how-can-i-turn-on-logs).
       placeholder: https://gist.github.com/example/12345678
 
   - id: additional-information
