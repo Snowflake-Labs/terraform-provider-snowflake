@@ -59,7 +59,7 @@ func init() {
 			}
 		}
 		if s.DefaultFunc != nil {
-			desc = fmt.Sprintf("(Default is computed) %s", s.Description)
+			desc = fmt.Sprintf("(Default is computed based on environment variable) %s", s.Description)
 		}
 		return desc
 	}
