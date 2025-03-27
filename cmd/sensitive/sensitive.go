@@ -108,6 +108,7 @@ func extractStringFields(schemas []Schema) []StringField {
 
 func extractStringFieldsFromSchemaMap(resourceName string, parentName string, schemaMap map[string]*schema.Schema) []StringField {
 	fields := make([]StringField, 0)
+
 	for fieldName, v := range schemaMap {
 		switch v.Type {
 		case schema.TypeString, schema.TypeMap:
@@ -117,21 +118,25 @@ func extractStringFieldsFromSchemaMap(resourceName string, parentName string, sc
 			case *schema.Schema:
 				fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Sensitive, v.Computed))
 			case *schema.Resource:
+				// Check if the underlying schema contains typical names for parameter-like schema
+				// We could directly compare with schemas like elem == schemas.ShowParameterSchema, but we have more schemas like this, so went with easier approach.
 				if slices.ContainsFunc(maps.Keys(elem.Schema), func(name string) bool { return slices.Contains([]string{"key", "value", "default"}, name) }) {
 					fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Sensitive, v.Computed))
 				} else {
-					// check recursively
 					var parent string
 					if parentName != "" {
 						parent = parentName + "." + fieldName + "."
 					} else {
 						parent = fieldName + "."
 					}
+
+					// Check recursively
 					fields = append(fields, extractStringFieldsFromSchemaMap(resourceName, parent, elem.Schema)...)
 				}
 			}
 		}
 	}
+
 	return fields
 }
 
