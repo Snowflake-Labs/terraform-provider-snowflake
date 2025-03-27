@@ -6,13 +6,20 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Pipe(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	pipeId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -23,10 +30,10 @@ func TestAcc_Pipe(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Pipe),
 		Steps: []resource.TestStep{
 			{
-				Config: pipeConfig(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: pipeConfig(pipeId, tableId, stageId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_pipe.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_pipe.test", "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_pipe.test", "name", pipeId.Name()),
+					resource.TestCheckResourceAttr("snowflake_pipe.test", "fully_qualified_name", pipeId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_pipe.test", "comment", "Terraform acceptance test"),
@@ -39,44 +46,42 @@ func TestAcc_Pipe(t *testing.T) {
 }
 
 // whitespace in copy_statement matters for the tests, change with caution!
-func pipeConfig(name string, databaseName string, schemaName string) string {
-	s := `
+func pipeConfig(pipeId sdk.SchemaObjectIdentifier, tableId sdk.SchemaObjectIdentifier, stageId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test" {
-	database = "%s"
-  	schema   = "%s"
-	name     = "%s"
+	database = "%[1]s"
+  	schema   = "%[2]s"
+	name     = "%[4]s"
 
-	  column {
-			name = "id"
-			type = "NUMBER(5,0)"
-	  }
+	column {
+		name = "id"
+		type = "NUMBER(5,0)"
+	}
 
-	  column {
+	column {
 		name = "data"
 		type = "VARCHAR(16)"
-	  }
+	}
 }
 
 resource "snowflake_stage" "test" {
-	name = "%s"
-	database = "%s"
-	schema = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[5]s"
 	comment = "Terraform acceptance test"
 }
 
-
 resource "snowflake_pipe" "test" {
-  database       = "%s"
-  schema         = "%s"
-  name           = "%s"
+  database       = "%[1]s"
+  schema         = "%[2]s"
+  name           = "%[3]s"
   comment        = "Terraform acceptance test"
   copy_statement = <<CMD
-  	COPY INTO "${snowflake_table.test.database}"."${snowflake_table.test.schema}"."${snowflake_table.test.name}"
-  FROM @"${snowflake_stage.test.database}"."${snowflake_stage.test.schema}"."${snowflake_stage.test.name}"
+  	COPY INTO ${snowflake_table.test.fully_qualified_name}
+  FROM @${snowflake_stage.test.fully_qualified_name}
   FILE_FORMAT = (TYPE = CSV)
 CMD
   auto_ingest    = false
 }
-`
-	return fmt.Sprintf(s, databaseName, schemaName, name, name, databaseName, schemaName, databaseName, schemaName, name)
+`, pipeId.DatabaseName(), pipeId.SchemaName(), pipeId.Name(), tableId.Name(), stageId.Name())
 }
