@@ -234,7 +234,9 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 
 func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()

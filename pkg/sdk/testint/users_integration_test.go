@@ -42,7 +42,7 @@ func TestInt_Users(t *testing.T) {
 	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
 	t.Cleanup(tagCleanup)
 
-	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+	networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	assertParametersSet := func(userParametersAssert *objectparametersassert.UserParametersAssert) {
@@ -2174,51 +2174,7 @@ func TestInt_Users(t *testing.T) {
 		require.Nil(t, userDetails.MinsToBypassMfa.Value)
 	})
 
-	t.Run("default secondary roles: before bundle 2024_08", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-
-		// create, expecting null as default
-		err := client.Users.Create(ctx, id, nil)
-		require.NoError(t, err)
-		t.Cleanup(testClientHelper().User.DropUserFunc(t, id))
-
-		userDetails, err := client.Users.Describe(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, "", userDetails.DefaultSecondaryRoles.Value)
-
-		// set to empty, expecting empty list
-		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Set: &sdk.UserSet{
-				ObjectProperties: &sdk.UserAlterObjectProperties{
-					UserObjectProperties: sdk.UserObjectProperties{
-						DefaultSecondaryRoles: &sdk.SecondaryRoles{None: sdk.Bool(true)},
-					},
-				},
-			},
-		})
-		require.NoError(t, err)
-
-		userDetails, err = client.Users.Describe(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, "[]", userDetails.DefaultSecondaryRoles.Value)
-
-		// unset, expecting null
-		err = client.Users.Alter(ctx, id, &sdk.AlterUserOptions{
-			Unset: &sdk.UserUnset{
-				ObjectProperties: &sdk.UserObjectPropertiesUnset{
-					DefaultSecondaryRoles: sdk.Bool(true),
-				},
-			},
-		})
-		require.NoError(t, err)
-
-		userDetails, err = client.Users.Describe(ctx, id)
-		require.NoError(t, err)
-		require.Equal(t, "", userDetails.DefaultSecondaryRoles.Value)
-	})
-
-	t.Run("default secondary roles: with bundle 2024_08 enabled", func(t *testing.T) {
-		testClientHelper().BcrBundles.EnableBcrBundle(t, "2024_08")
+	t.Run("default secondary roles: after bundle 2024_08 enabled", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		// create, expecting ALL as new default

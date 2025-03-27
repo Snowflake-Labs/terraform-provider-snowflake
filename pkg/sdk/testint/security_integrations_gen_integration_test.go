@@ -492,7 +492,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("CreateOauthCustom", func(t *testing.T) {
-		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 		t.Cleanup(networkPolicyCleanup)
 		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(role1Cleanup)
@@ -585,7 +585,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	})
 
 	t.Run("CreateScim", func(t *testing.T) {
-		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 		t.Cleanup(networkPolicyCleanup)
 
 		_, id := createSCIMIntegration(t, func(r *sdk.CreateScimSecurityIntegrationRequest) {
@@ -873,7 +873,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 	t.Run("AlterOauthCustom", func(t *testing.T) {
 		_, id := createOauthCustom(t, nil)
 
-		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicy(t)
+		networkPolicy, networkPolicyCleanup := testClientHelper().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 		t.Cleanup(networkPolicyCleanup)
 		role1, role1Cleanup := testClientHelper().Role.CreateRole(t)
 		t.Cleanup(role1Cleanup)

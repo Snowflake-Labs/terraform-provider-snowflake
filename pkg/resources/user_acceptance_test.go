@@ -357,7 +357,9 @@ func TestAcc_User_issue2058(t *testing.T) {
 
 func TestAcc_User_AllParameters(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
