@@ -2174,7 +2174,7 @@ func TestInt_Users(t *testing.T) {
 		require.Nil(t, userDetails.MinsToBypassMfa.Value)
 	})
 
-	t.Run("default secondary roles: after bundle 2024_08 enabled", func(t *testing.T) {
+	t.Run("default secondary roles: after BCR 2024_08", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
 
 		// create, expecting ALL as new default

@@ -1196,6 +1196,9 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 }
 
 func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelEmpty := model.UserWithDefaultMeta(userId.Name())
@@ -1216,9 +1219,6 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
 		Steps: []resource.TestStep{
 			// 1. create without default secondary roles option set (DEFAULT will be used)
 			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-				},
 				Config: config.FromModels(t, userModelEmpty),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
@@ -1593,6 +1593,9 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 // https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
 // https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
 func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelNoAttributes := model.User("w", userId.Name())
@@ -1607,9 +1610,6 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-				},
 				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
@@ -1630,7 +1630,56 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
 // https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
 // https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
 // https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
-func TestAcc_User_handleChangesToShowUsers_bcr202408_migration(t *testing.T) {
+func TestAcc_User_handleChangesToShowUsers_bcr202408_generallyEnabled(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.98.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: config.FromModels(t, userModel),
+				Check: assertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModels(t, userModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+		},
+	})
+}
+
+// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
+func TestAcc_User_handleChangesToShowUsers_bcr202408_defaults(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("w", userId.Name())
@@ -1649,32 +1698,24 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				Config:    config.FromModels(t, userModel),
-				Check: assertThat(t,
-					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
-				),
+				PreConfig:   func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				Config:      config.FromModels(t, userModel),
+				ExpectError: regexp.MustCompile("\"default_namespace\": converting NULL to string is unsupported"),
 			},
 			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=0.98.0",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
 				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
 					func() { acc.UnsetConfigPathEnv(t) }()
 				},
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModels(t, userModel),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectDrift(userModel.ResourceReference(), "default_secondary_roles_option", sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionAll))),
-						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionAll)), sdk.String(string(sdk.SecondaryRolesOptionDefault))),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
+				Config: config.FromModels(t, userModel),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
-						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+						HasNoDefaultNamespace(),
 				),
 			},
 		},

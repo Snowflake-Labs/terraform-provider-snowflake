@@ -79,20 +79,6 @@ func TestAcc_ManagedAccount_HandleShowOutputChanges_BCR_2024_08(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: managedAccountConfig(id.Name(), adminName, adminPass),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_name", adminName),
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "admin_password", adminPass),
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "comment", managedAccountComment),
-					resource.TestCheckResourceAttr("snowflake_managed_account.test", "type", "READER"),
-				),
-			},
-			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-				},
-				Config: managedAccountConfig(id.Name(), adminName, adminPass),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_managed_account.test", plancheck.ResourceActionNoop),
