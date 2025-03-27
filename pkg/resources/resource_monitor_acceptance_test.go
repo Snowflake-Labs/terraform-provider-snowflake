@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -24,6 +25,9 @@ import (
 )
 
 func TestAcc_ResourceMonitor_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configModel := model.ResourceMonitor("test", id.Name())
 
@@ -87,6 +91,9 @@ func TestAcc_ResourceMonitor_Basic(t *testing.T) {
 }
 
 func TestAcc_ResourceMonitor_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configModel := model.ResourceMonitor("test", id.Name()).
 		WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("JAN_CIESLAK"))).
@@ -168,6 +175,9 @@ func TestAcc_ResourceMonitor_Complete(t *testing.T) {
 }
 
 func TestAcc_ResourceMonitor_Updates(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configModelNothingSet := model.ResourceMonitor("test", id.Name())
@@ -342,6 +352,9 @@ func TestAcc_ResourceMonitor_Updates(t *testing.T) {
 }
 
 func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	startTimestamp := time.Now().Add(time.Hour * 24 * 40).Format("2006-01-02 15:01")
@@ -435,6 +448,9 @@ func TestAcc_ResourceMonitor_ExternalChanges(t *testing.T) {
 // fail, but invalid values would be saved in the state anyway. In the new version, the old values in state will be preserved
 // because the old values are also stored on the Snowflake side (they weren't altered).
 func TestAcc_ResourceMonitor_PartialUpdate(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	validTimestamp := time.Now().Add(time.Hour * 24 * 60).Format("2006-01-02 15:01")
@@ -486,6 +502,9 @@ func TestAcc_ResourceMonitor_PartialUpdate(t *testing.T) {
 // Second step is purposely error, because tests TestAcc_ResourceMonitorUpdateNotifyUsers and TestAcc_ResourceMonitorNotifyUsers are still skipped.
 // It can be fixed with them.
 func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configNoUsers := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(config.EmptyListVariable())
 	configWithNonExistingUser := model.ResourceMonitor("test", id.Name()).WithNotifyUsersValue(configvariable.SetVariable(configvariable.StringVariable("non_existing_user")))
@@ -514,6 +533,9 @@ func TestAcc_ResourceMonitor_issue2167(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1990 is fixed
 func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configModel := model.ResourceMonitor("test", id.Name())
 
@@ -578,6 +600,9 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 // https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1754
 // are fixed and errors are more meaningful for the user
 func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configModel := model.ResourceMonitor("test", id.Name())
 	configModelWithDateStartTimestamp := model.ResourceMonitor("test", id.Name()).
@@ -661,6 +686,9 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1500 is fixed and errors are more meaningful for the user
 func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	configModel := model.ResourceMonitor("test", id.Name()).
 		WithNotifyTriggersValue(configvariable.SetVariable(
@@ -702,6 +730,9 @@ func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1500 is fixed and errors are more meaningful for the user
 func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configModelWithCreditQuota := model.ResourceMonitor("test", id.Name()).
@@ -791,6 +822,9 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 }
 
 func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configModelWithNotifyTriggers := model.ResourceMonitor("test", id.Name()).
@@ -893,7 +927,14 @@ func TestAcc_ResourceMonitor_RemovingAllTriggers(t *testing.T) {
 
 // proves that fields that were present in the previous versions are not kept in the state after the upgrade
 func TestAcc_ResourceMonitor_SetForWarehouse(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	newVersionModel := model.ResourceMonitor("test", id.Name()).
+		WithCreditQuota(100).
+		WithSuspendTrigger(100)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -925,16 +966,10 @@ resource "snowflake_resource_monitor" "test" {
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config: fmt.Sprintf(`
-resource "snowflake_resource_monitor" "test" {
-	name = "%s"
-	credit_quota = 100
-	suspend_trigger = 100
-}
-`, id.Name()),
+				Config:                   config.FromModels(t, newVersionModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "warehouses"),
-					resource.TestCheckNoResourceAttr("snowflake_resource_monitor.test", "warehouses.#"),
+					resource.TestCheckNoResourceAttr(newVersionModel.ResourceReference(), "warehouses"),
+					resource.TestCheckNoResourceAttr(newVersionModel.ResourceReference(), "warehouses.#"),
 				),
 			},
 		},
