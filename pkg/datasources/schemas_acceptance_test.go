@@ -124,7 +124,7 @@ func TestAcc_Schemas_Filtering(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database2, database2Cleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database2, database2Cleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(database2Cleanup)
 
 	prefix := strings.ToUpper(random.AlphaN(4))

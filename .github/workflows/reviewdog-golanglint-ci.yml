@@ -27,5 +27,5 @@ jobs:
         with:
           golangci_lint_flags: "--config=.golangci.yml"
           # TODO(SNOW-2002208): Upgrade to the latest version of golangci-lint.
-          golangci_lint_version: "v1.63.4"
+          golangci_lint_version: "v1.64.8"
           go_version_file: "go.mod"

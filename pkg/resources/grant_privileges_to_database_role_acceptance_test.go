@@ -8,11 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,10 +21,14 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeApplyBudget)),
 			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
@@ -35,8 +38,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		"database":          config.StringVariable(acc.TestDatabaseName),
 		"with_grant_option": config.BoolVariable(true),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -46,14 +49,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeApplyBudget)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeCreateSchema)),
@@ -61,7 +60,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.3", string(sdk.AccountObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|APPLYBUDGET,CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|APPLYBUDGET,CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -76,10 +75,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeUsage)),
 			config.StringVariable(string(sdk.AccountObjectPrivilegeModify)),
@@ -88,8 +91,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		"database":          config.StringVariable(acc.TestDatabaseName),
 		"with_grant_option": config.BoolVariable(true),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -99,21 +102,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|true|false|CREATE SCHEMA,MODIFY,USAGE|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -128,17 +127,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnDatabase_PrivilegesReversed(t *test
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	schemaName := acc.TestClient().Ids.SchemaId().FullyQualifiedName()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
+	schemaId := acc.TestClient().Ids.SchemaId()
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaPrivilegeCreateTable)),
 			config.StringVariable(string(sdk.SchemaPrivilegeModify)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(schemaId.DatabaseName()),
+		"schema":            config.StringVariable(schemaId.Name()),
 		"with_grant_option": config.BoolVariable(false),
 	}
 	resourceName := "snowflake_grant_privileges_to_database_role.test"
@@ -152,21 +155,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema(t *testing.T) {
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", schemaId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnSchema|%s", databaseRoleId.FullyQualifiedName(), schemaName)),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnSchema|%s", databaseRole.ID().FullyQualifiedName(), schemaId.FullyQualifiedName())),
 				),
 			},
 			{
@@ -199,10 +198,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchema_ExactlyOneOf(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaPrivilegeCreateTable)),
 			config.StringVariable(string(sdk.SchemaPrivilegeModify)),
@@ -210,8 +213,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 		"database":          config.StringVariable(acc.TestDatabaseName),
 		"with_grant_option": config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -221,21 +224,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.0.all_schemas_in_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnAllSchemasInDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnAllSchemasInDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -250,10 +249,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnAllSchemasInDatabase(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaPrivilegeCreateTable)),
 			config.StringVariable(string(sdk.SchemaPrivilegeModify)),
@@ -261,8 +264,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 		"database":          config.StringVariable(acc.TestDatabaseName),
 		"with_grant_option": config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -272,21 +275,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnFutureSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.0.future_schemas_in_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnFutureSchemasInDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE TABLE,MODIFY|OnSchema|OnFutureSchemasInDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -301,25 +300,28 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureSchemasInDatabase(t *testing.
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	databaseRoleName := databaseRoleId.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
+	databaseRoleName := databaseRole.ID().Name()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	tableName := tableId.Name()
 
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	configVariables := config.Variables{
 		"name":       config.StringVariable(databaseRoleName),
-		"table_name": config.StringVariable(tableName),
+		"table_name": config.StringVariable(tableId.Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(tableId.DatabaseName()),
+		"schema":            config.StringVariable(tableId.SchemaName()),
 		"with_grant_option": config.BoolVariable(false),
 	}
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -329,14 +331,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleName)
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeInsert)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -344,7 +342,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_type", string(sdk.ObjectTypeTable)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", tableId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnObject|TABLE|%s", databaseRoleId.FullyQualifiedName(), tableId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnObject|TABLE|%s", databaseRole.ID().FullyQualifiedName(), tableId.FullyQualifiedName())),
 				),
 			},
 			{
@@ -359,19 +357,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject(t *testing.T)
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPrivilege(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	tableName := "test_database_role_table_name"
-	configVariables := config.Variables{
-		"name":       config.StringVariable(name),
-		"table_name": config.StringVariable(tableName),
-		"privileges": config.ListVariable(
-			config.StringVariable(string(sdk.SchemaObjectOwnership)),
-		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
-		"with_grant_option": config.BoolVariable(false),
-	}
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -381,12 +366,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
-					t.Cleanup(databaseRoleCleanup)
-				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject"),
-				ConfigVariables: configVariables,
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnObject_OwnershipPrivilege"),
+				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile("Unsupported privilege 'OWNERSHIP'"),
 			},
 		},
@@ -394,10 +375,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnObject_OwnershipPriv
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -406,8 +391,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeTables.String()),
 		"with_grant_option":  config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -417,14 +402,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeInsert)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -433,7 +414,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypeTables)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnAll|TABLES|InDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnAll|TABLES|InDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -448,18 +429,22 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_InDatabase(t *te
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeMonitor)),
 		),
 		"database":          config.StringVariable(acc.TestDatabaseName),
 		"with_grant_option": config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -469,14 +454,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllPipes"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeMonitor)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
@@ -484,7 +465,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypePipes)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MONITOR|OnSchemaObject|OnAll|PIPES|InDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MONITOR|OnSchemaObject|OnAll|PIPES|InDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -499,10 +480,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAllPipes(t *testing.
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeInsert)),
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -511,8 +496,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeTables.String()),
 		"with_grant_option":  config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -522,14 +507,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeInsert)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaObjectPrivilegeUpdate)),
@@ -538,7 +519,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.future.0.object_type_plural", string(sdk.PluralObjectTypeTables)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.future.0.in_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnFuture|TABLES|InDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|INSERT,UPDATE|OnSchemaObject|OnFuture|TABLES|InDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -555,9 +536,15 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_InDatabase(t 
 // TODO [SNOW-1272222]: fix the test when it starts working on Snowflake side
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_Streamlits_InDatabase(t *testing.T) {
 	t.Skip("Fix after it starts working on Snowflake side, reference: SNOW-1272222")
-	name := acc.TestClient().Ids.Alpha()
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
 	configVariables := config.Variables{
-		"name": config.StringVariable(name),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
 		),
@@ -575,10 +562,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_Streamlits_In
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFuture_InDatabase"),
 				ConfigVariables: configVariables,
 				ExpectError:     regexp.MustCompile("Unsupported feature 'STREAMLIT'"),
@@ -588,10 +571,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFuture_Streamlits_In
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDatabase(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
 		),
@@ -599,8 +586,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 		"object_type_plural": config.StringVariable(sdk.PluralObjectTypeStreamlits.String()),
 		"with_grant_option":  config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -610,14 +597,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnAll_InDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
@@ -625,7 +608,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnAll_Streamlits_InDat
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.object_type_plural", string(sdk.PluralObjectTypeStreamlits)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.all.0.in_database", acc.TestClient().Ids.DatabaseId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnAll|STREAMLITS|InDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnAll|STREAMLITS|InDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 		},
@@ -636,21 +619,23 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunctionWithArgument
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
 	function := acc.TestClient().Function.CreateSecure(t, sdk.DataTypeFloat)
 	configVariables := config.Variables{
-		"name":          config.StringVariable(databaseRoleId.FullyQualifiedName()),
+		"name":          config.StringVariable(databaseRole.ID().FullyQualifiedName()),
 		"function_name": config.StringVariable(function.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(function.ID().DatabaseName()),
+		"schema":            config.StringVariable(function.ID().SchemaName()),
 		"with_grant_option": config.BoolVariable(false),
 		"argument_type":     config.StringVariable(string(sdk.DataTypeFloat)),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -659,21 +644,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunctionWithArgument
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(roleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFunction"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_type", string(sdk.ObjectTypeFunction)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", function.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|%s", databaseRoleId.FullyQualifiedName(), function.ID().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|%s", databaseRole.ID().FullyQualifiedName(), function.ID().FullyQualifiedName())),
 				),
 			},
 			{
@@ -691,21 +672,23 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunctionWithoutArgum
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
 	function := acc.TestClient().Function.CreateSecure(t)
 	configVariables := config.Variables{
-		"name":          config.StringVariable(databaseRoleId.FullyQualifiedName()),
+		"name":          config.StringVariable(databaseRole.ID().FullyQualifiedName()),
 		"function_name": config.StringVariable(function.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaObjectPrivilegeUsage)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(function.ID().DatabaseName()),
+		"schema":            config.StringVariable(function.ID().SchemaName()),
 		"with_grant_option": config.BoolVariable(false),
 		"argument_type":     config.StringVariable(""),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -714,21 +697,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunctionWithoutArgum
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, roleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(roleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchemaObject_OnFunction"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaObjectPrivilegeUsage)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_type", string(sdk.ObjectTypeFunction)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema_object.0.object_name", function.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|%s", databaseRoleId.FullyQualifiedName(), function.ID().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|USAGE|OnSchemaObject|OnObject|FUNCTION|%s", databaseRole.ID().FullyQualifiedName(), function.ID().FullyQualifiedName())),
 				),
 			},
 			{
@@ -743,12 +722,16 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnSchemaObject_OnFunctionWithoutArgum
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := func(allPrivileges bool, privileges []sdk.AccountObjectPrivilege) config.Variables {
 		configVariables := config.Variables{
-			"name":     config.StringVariable(databaseRoleId.Name()),
-			"database": config.StringVariable(acc.TestDatabaseName),
+			"name":     config.StringVariable(databaseRole.ID().Name()),
+			"database": config.StringVariable(databaseRole.ID().DatabaseName()),
 		}
 		if allPrivileges {
 			configVariables["all_privileges"] = config.BoolVariable(allPrivileges)
@@ -762,8 +745,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 		}
 		return configVariables
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -773,10 +756,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges/privileges"),
 				ConfigVariables: configVariables(false, []sdk.AccountObjectPrivilege{
 					sdk.AccountObjectPrivilegeCreateSchema,
@@ -787,7 +766,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeModify)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,MODIFY|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,MODIFY|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -803,7 +782,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeCreateSchema)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeMonitor)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.2", string(sdk.AccountObjectPrivilegeUsage)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SCHEMA,USAGE,MONITOR|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -812,7 +791,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "all_privileges", "true"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -826,7 +805,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.AccountObjectPrivilegeModify)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.AccountObjectPrivilegeMonitor)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MODIFY,MONITOR|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|MODIFY,MONITOR|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 		},
@@ -834,13 +813,18 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
 
 	configVariables := func(allPrivileges bool, privileges []string, schemaName string) config.Variables {
 		configVariables := config.Variables{
-			"name":     config.StringVariable(databaseRoleId.Name()),
-			"database": config.StringVariable(acc.TestDatabaseName),
+			"name":     config.StringVariable(databaseRole.ID().Name()),
+			"database": config.StringVariable(databaseRole.ID().DatabaseName()),
 		}
 		if allPrivileges {
 			configVariables["all_privileges"] = config.BoolVariable(allPrivileges)
@@ -867,17 +851,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/privileges"),
 				ConfigVariables: configVariables(false, []string{
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
-					databaseRoleId,
+					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
 				),
@@ -886,7 +866,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
 				Check: queriedPrivilegesToDatabaseRoleContainAtLeast(
-					databaseRoleId,
+					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeCreateDatabaseRole.String(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -901,7 +881,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
-					databaseRoleId,
+					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				),
@@ -913,7 +893,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				}, schemaId.Name()),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
-					databaseRoleId,
+					databaseRole.ID(),
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				),
@@ -923,18 +903,22 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := func(alwaysApply bool) config.Variables {
 		return config.Variables{
-			"name":           config.StringVariable(databaseRoleId.Name()),
+			"name":           config.StringVariable(databaseRole.ID().Name()),
 			"all_privileges": config.BoolVariable(true),
 			"database":       config.StringVariable(acc.TestDatabaseName),
 			"always_apply":   config.BoolVariable(alwaysApply),
 		}
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -944,10 +928,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables: configVariables(false),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -957,7 +937,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 			{
@@ -965,7 +945,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -979,7 +959,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -993,7 +973,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1007,7 +987,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 		},
@@ -1016,10 +996,14 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply(t *testing.T) {
 
 // proved https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651
 func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
 			config.StringVariable(string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
@@ -1028,8 +1012,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 		"schema":            config.StringVariable(acc.TestSchemaName),
 		"with_grant_option": config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1039,21 +1023,17 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnSchema"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateSnowflakeMlAnomalyDetection)),
 					resource.TestCheckResourceAttr(resourceName, "privileges.1", string(sdk.SchemaPrivilegeCreateSnowflakeMlForecast)),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_schema.0.schema_name", acc.TestClient().Ids.SchemaId().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "with_grant_option", "false"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.SchemaId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE SNOWFLAKE.ML.ANOMALY_DETECTION,CREATE SNOWFLAKE.ML.FORECAST|OnSchema|OnSchema|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.SchemaId().FullyQualifiedName())),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -1067,14 +1047,18 @@ func TestAcc_GrantPrivilegesToDatabaseRole_MLPrivileges(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithGrantOptions(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	name := databaseRoleId.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
 	configVariables := config.Variables{
-		"name": config.StringVariable(name),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
+		"database":          config.StringVariable(databaseRole.ID().DatabaseName()),
 		"with_grant_option": config.BoolVariable(true),
 	}
 
@@ -1087,10 +1071,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1102,7 +1082,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 			{
 				PreConfig: func() {
 					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
-						t, databaseRoleId,
+						t, databaseRole.ID(),
 						acc.TestClient().Ids.DatabaseId(),
 						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 						false,
@@ -1122,14 +1102,18 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2459 is fixed
 func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraform_WithoutGrantOptions(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	name := databaseRoleId.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
 	configVariables := config.Variables{
-		"name": config.StringVariable(name),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
+		"database":          config.StringVariable(databaseRole.ID().DatabaseName()),
 		"with_grant_option": config.BoolVariable(false),
 	}
 
@@ -1142,10 +1126,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, name)
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1157,7 +1137,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 			{
 				PreConfig: func() {
 					revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
-						t, databaseRoleId,
+						t, databaseRole.ID(),
 						acc.TestClient().Ids.DatabaseId(),
 						[]sdk.AccountObjectPrivilege{sdk.AccountObjectPrivilegeCreateSchema},
 						true,
@@ -1177,19 +1157,24 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ChangeWithGrantOptionsOutsideOfTerraf
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseName := databaseId.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabase(t, database.ID())
+	t.Cleanup(databaseRoleCleanup)
+
 	configVariables := config.Variables{
-		"name":     config.StringVariable(name),
-		"database": config.StringVariable(databaseName),
+		"name":     config.StringVariable(databaseRole.ID().Name()),
+		"database": config.StringVariable(databaseRole.ID().DatabaseName()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
 		),
 		"with_grant_option": config.BoolVariable(true),
 	}
 
-	var databaseCleanup func()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1199,12 +1184,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseCleanup = acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(databaseCleanup)
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 			},
@@ -1221,19 +1200,24 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveGrantedObjectOutsideTerraform(t
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseName := databaseId.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabase(t, database.ID())
+	t.Cleanup(databaseRoleCleanup)
+
 	configVariables := config.Variables{
-		"name":     config.StringVariable(name),
-		"database": config.StringVariable(databaseName),
+		"name":     config.StringVariable(databaseRole.ID().Name()),
+		"database": config.StringVariable(databaseRole.ID().DatabaseName()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.AccountObjectPrivilegeCreateSchema)),
 		),
 		"with_grant_option": config.BoolVariable(true),
 	}
 
-	var databaseRoleCleanup func()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1243,12 +1227,6 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, dbCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(dbCleanup)
-					_, databaseRoleCleanup = acc.TestClient().DatabaseRole.CreateDatabaseRoleInDatabaseWithName(t, databaseId, name)
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnDatabase"),
 				ConfigVariables: configVariables,
 			},
@@ -1265,18 +1243,22 @@ func TestAcc_GrantPrivilegesToDatabaseRole_RemoveDatabaseRoleOutsideTerraform(t 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2689 is fixed
 func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := func(alwaysApply bool) config.Variables {
 		return config.Variables{
-			"name":           config.StringVariable(databaseRoleId.Name()),
+			"name":           config.StringVariable(databaseRole.ID().Name()),
 			"all_privileges": config.BoolVariable(true),
 			"database":       config.StringVariable(acc.TestDatabaseName),
 			"always_apply":   config.BoolVariable(alwaysApply),
 		}
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1286,16 +1268,12 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory:    acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/AlwaysApply"),
 				ConfigVariables:    configVariables(true),
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "always_apply", "true"),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 		},
@@ -1304,18 +1282,22 @@ func TestAcc_GrantPrivilegesToDatabaseRole_AlwaysApply_SetAfterCreate(t *testing
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2960
 func TestAcc_GrantPrivilegesToDatabaseRole_CreateNotebooks(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
 
 	configVariables := config.Variables{
-		"name": config.StringVariable(databaseRoleId.Name()),
+		"name": config.StringVariable(databaseRole.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(string(sdk.SchemaPrivilegeCreateNotebook)),
 		),
-		"database":          config.StringVariable(acc.TestDatabaseName),
+		"database":          config.StringVariable(databaseRole.ID().DatabaseName()),
 		"with_grant_option": config.BoolVariable(false),
 	}
-	resourceName := "snowflake_grant_privileges_to_database_role.test"
 
+	resourceName := "snowflake_grant_privileges_to_database_role.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1325,17 +1307,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_CreateNotebooks(t *testing.T) {
 		CheckDestroy: acc.CheckDatabaseRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRoleWithName(t, databaseRoleId.Name())
-					t.Cleanup(databaseRoleCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/OnAllSchemasInDatabase"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRole.ID().FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.SchemaPrivilegeCreateNotebook)),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE NOTEBOOK|OnSchema|OnAllSchemasInDatabase|%s", databaseRoleId.FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|CREATE NOTEBOOK|OnSchema|OnAllSchemasInDatabase|%s", databaseRole.ID().FullyQualifiedName(), acc.TestClient().Ids.DatabaseId().FullyQualifiedName())),
 				),
 			},
 		},
@@ -1362,6 +1340,7 @@ func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.Database
 	}, databaseRoleName, privileges...)
 }
 
+// TODO [SNOW-1431726]: Move to helpers
 func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 	t *testing.T,
 	databaseRoleId sdk.DatabaseObjectIdentifier,
@@ -1377,7 +1356,13 @@ func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
+	databaseRoleId := databaseRole.ID()
 	quotedDatabaseRoleId := fmt.Sprintf(`\"%s\".\"%s\"`, databaseRoleId.DatabaseName(), databaseRoleId.Name())
 
 	schemaId := acc.TestClient().Ids.SchemaId()
@@ -1397,7 +1382,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeW
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: grantPrivilegesToDatabaseRoleBasicConfig(acc.TestClient().Ids.DatabaseId().Name(), databaseRoleId.Name(), quotedDatabaseRoleId, quotedSchemaId),
+				Config: grantPrivilegesToDatabaseRoleBasicConfig(quotedDatabaseRoleId, quotedSchemaId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "id", fmt.Sprintf("%s|false|false|USAGE|OnSchema|OnSchema|%s", databaseRoleId.FullyQualifiedName(), schemaId.FullyQualifiedName())),
 				),
@@ -1405,7 +1390,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeW
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantPrivilegesToDatabaseRoleBasicConfig(acc.TestClient().Ids.DatabaseId().Name(), databaseRoleId.Name(), quotedDatabaseRoleId, quotedSchemaId),
+				Config:                   grantPrivilegesToDatabaseRoleBasicConfig(quotedDatabaseRoleId, quotedSchemaId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_database_role.test", plancheck.ResourceActionNoop),
@@ -1422,27 +1407,27 @@ func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeW
 	})
 }
 
-func grantPrivilegesToDatabaseRoleBasicConfig(databaseName string, databaseRoleName string, fullyQualifiedDatabaseRoleName string, fullyQualifiedSchemaName string) string {
+func grantPrivilegesToDatabaseRoleBasicConfig(fullyQualifiedDatabaseRoleName string, fullyQualifiedSchemaName string) string {
 	return fmt.Sprintf(`
-resource "snowflake_database_role" "test" {
-  name = "%[2]s"
-  database = "%[1]s"
-}
-
 resource "snowflake_grant_privileges_to_database_role" "test" {
-  depends_on = [ snowflake_database_role.test ]
-  database_role_name = "%[3]s"
+  database_role_name = "%[1]s"
   privileges         = ["USAGE"]
 
   on_schema {
-    schema_name = "%[4]s"
+    schema_name = "%[2]s"
   }
 }
-`, databaseName, databaseRoleName, fullyQualifiedDatabaseRoleName, fullyQualifiedSchemaName)
+`, fullyQualifiedDatabaseRoleName, fullyQualifiedSchemaName)
 }
 
 func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
-	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
+	databaseRoleId := databaseRole.ID()
 	unquotedDatabaseRoleId := fmt.Sprintf(`%s.%s`, databaseRoleId.DatabaseName(), databaseRoleId.Name())
 
 	schemaId := acc.TestClient().Ids.SchemaId()
@@ -1462,7 +1447,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *t
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: grantPrivilegesToDatabaseRoleBasicConfig(acc.TestClient().Ids.DatabaseId().Name(), databaseRoleId.Name(), unquotedDatabaseRoleId, unquotedSchemaId),
+				Config: grantPrivilegesToDatabaseRoleBasicConfig(unquotedDatabaseRoleId, unquotedSchemaId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "database_role_name", unquotedDatabaseRoleId),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "on_schema.0.schema_name", unquotedSchemaId),
@@ -1472,7 +1457,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *t
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantPrivilegesToDatabaseRoleBasicConfig(acc.TestClient().Ids.DatabaseId().Name(), databaseRoleId.Name(), unquotedDatabaseRoleId, unquotedSchemaId),
+				Config:                   grantPrivilegesToDatabaseRoleBasicConfig(unquotedDatabaseRoleId, unquotedSchemaId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_database_role.test", plancheck.ResourceActionNoop),
@@ -1493,8 +1478,10 @@ func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *t
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3050
 func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureModels_issue3050(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifier()
-	databaseName := acc.TestClient().Ids.DatabaseId().Name()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1511,13 +1498,13 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureModels_issue3050(t *testing.T
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config:             grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
+				Config:             grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseRoleId.DatabaseName()),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseName),
+				Config:                   grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseRoleId.DatabaseName()),
 			},
 		},
 	})
@@ -1546,12 +1533,14 @@ resource "snowflake_grant_privileges_to_database_role" "test" {
 
 // This test proves that managing grants on HYBRID TABLE is not supported in Snowflake. TABLE should be used instead.
 func TestAcc_GrantPrivileges_OnObject_HybridTable_ToDatabaseRole_Fails(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
-	t.Cleanup(hybridTableCleanup)
 
 	databaseRole, databaseRoleCleanup := acc.TestClient().DatabaseRole.CreateDatabaseRole(t)
 	t.Cleanup(databaseRoleCleanup)
+
+	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
+	t.Cleanup(hybridTableCleanup)
 
 	configVariables := func(objectType sdk.ObjectType) config.Variables {
 		cfg := config.Variables{
