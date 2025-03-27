@@ -6,23 +6,29 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
-	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_RowAccessPolicy(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_row_access_policy.test"
+	comment := random.Comment()
+	newComment := random.Comment()
 
 	body := "case when current_role() in ('ANALYST') then true else false end"
 	changedBody := "case when current_role() in ('CHANGED') then true else false end"
@@ -46,7 +52,17 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			Type: sdk.DataTypeTimestampNTZ,
 		},
 	}
-	policyModel := model.RowAccessPolicy("test", argument, body, id.DatabaseName(), id.Name(), id.SchemaName()).WithComment("Terraform acceptance test")
+
+	policyModel := model.RowAccessPolicy("test", argument, body, id.DatabaseName(), id.Name(), id.SchemaName()).
+		WithComment(comment)
+	changedPolicyModel := model.RowAccessPolicy("test", argument, changedBody, id.DatabaseName(), id.Name(), id.SchemaName()).
+		WithComment(newComment)
+	changedArgumentPolicyModel := model.RowAccessPolicy("test", argument, changedBody, id.DatabaseName(), id.Name(), id.SchemaName()).
+		WithComment(newComment).
+		WithArgument(changedArgument)
+	noCommentPolicyModel := model.RowAccessPolicy("test", argument, changedBody, id.DatabaseName(), id.Name(), id.SchemaName()).
+		WithComment("").
+		WithArgument(changedArgument)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -59,15 +75,15 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("Terraform acceptance test").
+					HasCommentString(comment).
 					HasBodyString(body).
 					HasArguments(argument),
-					resourceshowoutputassert.RowAccessPolicyShowOutput(t, resourceName).
+					resourceshowoutputassert.RowAccessPolicyShowOutput(t, policyModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasDatabaseName(id.DatabaseName()).
 						HasKind(string(sdk.PolicyKindRowAccessPolicy)).
@@ -76,27 +92,27 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE").
 						HasSchemaName(id.SchemaName()).
-						HasComment("Terraform acceptance test"),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.body", body)),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.name", id.Name())),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.return_type", "BOOLEAN")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.#", "2")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.0.name", "A")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.0.type", string(sdk.DataTypeVARCHAR))),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.name", "B")),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "describe_output.0.signature.1.type", string(sdk.DataTypeVARCHAR))),
+						HasComment(comment),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.body", body)),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.name", id.Name())),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.return_type", "BOOLEAN")),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.signature.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.signature.0.name", "A")),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.signature.0.type", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.signature.1.name", "B")),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "describe_output.0.signature.1.type", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			// change comment and expression
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithBody(changedBody).WithComment("Terraform acceptance test - changed comment")),
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, changedPolicyModel),
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, changedPolicyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("Terraform acceptance test - changed comment").
+					HasCommentString(newComment).
 					HasBodyString(changedBody).
 					HasArguments(argument),
 				),
@@ -104,13 +120,13 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			// change signature
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithArgument(changedArgument)),
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, changedArgumentPolicyModel),
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, changedArgumentPolicyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("Terraform acceptance test - changed comment").
+					HasCommentString(newComment).
 					HasBodyString(changedBody).
 					HasArguments(changedArgument),
 				),
@@ -118,7 +134,7 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			// external change on signature
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, changedArgumentPolicyModel),
 				PreConfig: func() {
 					arg := sdk.NewCreateRowAccessPolicyArgsRequest("A", sdk.DataTypeBoolean)
 					createRequest := sdk.NewCreateRowAccessPolicyRequest(id, []sdk.CreateRowAccessPolicyArgsRequest{*arg}, "case when current_role() in ('ANALYST') then false else true end")
@@ -126,15 +142,15 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, changedArgumentPolicyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("Terraform acceptance test - changed comment").
+					HasCommentString(newComment).
 					HasBodyString(changedBody).
 					HasArguments(changedArgument),
 				),
@@ -142,34 +158,34 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			// external change on body
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, changedArgumentPolicyModel),
 				PreConfig: func() {
 					acc.TestClient().RowAccessPolicy.Alter(t, *sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.Pointer("case when current_role() in ('EXTERNAL') then false else true end")))
 				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, changedArgumentPolicyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("Terraform acceptance test - changed comment").
+					HasCommentString(newComment).
 					HasBodyString(changedBody).
 					HasArguments(changedArgument),
 				),
 			},
 			{
-				ConfigVariables:   tfconfig.ConfigVariablesFromModel(t, policyModel),
-				ResourceName:      resourceName,
+				ConfigVariables:   tfconfig.ConfigVariablesFromModel(t, changedArgumentPolicyModel),
+				ResourceName:      policyModel.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// unset comment
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/complete"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithComment("")),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, noCommentPolicyModel),
 				PreConfig: func() {
 					acc.TestClient().RowAccessPolicy.Alter(t, *sdk.NewAlterRowAccessPolicyRequest(id).WithSetBody(sdk.Pointer("case when current_role() in ('EXTERNAL') then false else true end")))
 				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, noCommentPolicyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -181,8 +197,8 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ConfigVariables:   tfconfig.ConfigVariablesFromModel(t, policyModel),
-				ResourceName:      resourceName,
+				ConfigVariables:   tfconfig.ConfigVariablesFromModel(t, noCommentPolicyModel),
+				ResourceName:      noCommentPolicyModel.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -192,8 +208,10 @@ func TestAcc_RowAccessPolicy(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2053 is fixed
 func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
 	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -201,6 +219,7 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 			Type: sdk.DataTypeVARCHAR,
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
+
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -216,14 +235,14 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 					},
 				},
 				// these configs have "weird" format on purpose - to test against handling new lines during diff correctly
-				Config: rowAccessPolicy_v0_95_0_WithHeredoc(id, `    case
+				Config: rowAccessPolicyV0950WithHeredoc(id, `    case
       when current_role() in ('ANALYST') then true
       else false
     end
 `),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
 				ExpectNonEmptyPlan: true,
@@ -235,10 +254,10 @@ func TestAcc_RowAccessPolicy_Issue2053(t *testing.T) {
 				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasBodyString(`case
   when current_role() in ('ANALYST') then true
@@ -250,67 +269,7 @@ end`),
 	})
 }
 
-func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_row_access_policy.test"
-	body := "case when current_role() in ('ANALYST') then true else false end"
-	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
-		{
-			Name: "a",
-			Type: sdk.DataTypeVARCHAR,
-		},
-	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.RowAccessPolicy),
-		Steps: []resource.TestStep{
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
-					HasNameString(id.Name()).
-					HasFullyQualifiedNameString(id.FullyQualifiedName()),
-				),
-			},
-			// rename
-			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel.WithName(newId.Name())),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
-					HasNameString(newId.Name()).
-					HasFullyQualifiedNameString(newId.FullyQualifiedName()),
-				),
-			},
-		},
-	})
-}
-
-func rowAccessPolicy_v0_95_0(id sdk.SchemaObjectIdentifier, expr string) string {
-	return fmt.Sprintf(`
-resource "snowflake_row_access_policy" "test" {
-  name     = "%s"
-  database = "%s"
-  schema   = "%s"
-  signature = {
-    A = "VARCHAR",
-    b = "VARCHAR",
-  }
-  row_access_expression = "%s"
-}`, id.Name(), id.DatabaseName(), id.SchemaName(), expr)
-}
-
-func rowAccessPolicy_v0_95_0_WithHeredoc(id sdk.SchemaObjectIdentifier, expr string) string {
+func rowAccessPolicyV0950WithHeredoc(id sdk.SchemaObjectIdentifier, expr string) string {
 	return fmt.Sprintf(`
 resource "snowflake_row_access_policy" "test" {
   name     = "%s"
@@ -325,26 +284,65 @@ EOT
 }`, id.Name(), id.DatabaseName(), id.SchemaName(), expr)
 }
 
-func rowAccessPolicy_v0_96_0(id sdk.SchemaObjectIdentifier) string {
-	return fmt.Sprintf(`
-resource "snowflake_row_access_policy" "test" {
-  name     = "%s"
-  database = "%s"
-  schema   = "%s"
-  argument {
-    name = "A"
-    type = "VARCHAR"
-  }
-  row_access_expression = <<-EOT
-    case
-      when current_role() in ('ANALYST') then true
-      else false
-    end
-EOT
-}`, id.Name(), id.DatabaseName(), id.SchemaName())
+func TestAcc_RowAccessPolicy_Rename(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	body := "case when current_role() in ('ANALYST') then true else false end"
+
+	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
+		{
+			Name: "a",
+			Type: sdk.DataTypeVARCHAR,
+		},
+	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
+	renamedPolicyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
+		{
+			Name: "a",
+			Type: sdk.DataTypeVARCHAR,
+		},
+	}, body, newId.DatabaseName(), newId.Name(), newId.SchemaName())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.RowAccessPolicy),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
+					HasNameString(id.Name()).
+					HasFullyQualifiedNameString(id.FullyQualifiedName()),
+				),
+			},
+			// rename
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
+				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, renamedPolicyModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(renamedPolicyModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, renamedPolicyModel.ResourceReference()).
+					HasNameString(newId.Name()).
+					HasFullyQualifiedNameString(newId.FullyQualifiedName()),
+				),
+			},
+		},
+	})
 }
 
 func TestAcc_RowAccessPolicy_InvalidDataType(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	body := "case when current_role() in ('ANALYST') then true else false end"
@@ -354,6 +352,7 @@ func TestAcc_RowAccessPolicy_InvalidDataType(t *testing.T) {
 			Type: "invalid-type",
 		},
 	}, body, id.DatabaseName(), id.Name(), id.SchemaName())
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -371,8 +370,10 @@ func TestAcc_RowAccessPolicy_InvalidDataType(t *testing.T) {
 }
 
 func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
 	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -391,7 +392,7 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_RowAccessPolicy/basic"),
 				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasArguments([]sdk.TableColumnSignature{
 						{
@@ -406,8 +407,10 @@ func TestAcc_RowAccessPolicy_DataTypeAliases(t *testing.T) {
 }
 
 func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
 	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -434,22 +437,22 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: rowAccessPolicy_v0_95_0(id, body),
+				Config: rowAccessPolicyV0950(id, body),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						// expect change - arg name is lower case which causes a diff
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "row_access_expression", body)),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.A", string(sdk.DataTypeVARCHAR))),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.B", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "row_access_expression", body)),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "signature.A", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "signature.B", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			{
@@ -459,13 +462,13 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -488,8 +491,10 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_LowercaseArgName(t *testi
 }
 
 func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_row_access_policy.test"
 	body := "case when current_role() in ('ANALYST') then true else false end"
 	policyModel := model.RowAccessPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -516,22 +521,22 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: rowAccessPolicy_v0_95_0(id, body),
+				Config: rowAccessPolicyV0950(id, body),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						// expect change - arg name is lower case which causes a diff
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "row_access_expression", body)),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.A", string(sdk.DataTypeVARCHAR))),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "signature.B", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "row_access_expression", body)),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "signature.A", string(sdk.DataTypeVARCHAR))),
+					assert.Check(resource.TestCheckResourceAttr(policyModel.ResourceReference(), "signature.B", string(sdk.DataTypeVARCHAR))),
 				),
 			},
 			{
@@ -541,10 +546,10 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 				ConfigVariables:          tfconfig.ConfigVariablesFromModel(t, policyModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(policyModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, resourceName).
+				Check: assertThat(t, resourceassert.RowAccessPolicyResource(t, policyModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
@@ -564,4 +569,18 @@ func TestAcc_RowAccessPolicy_migrateFromVersion_0_95_0_UppercaseArgName(t *testi
 			},
 		},
 	})
+}
+
+func rowAccessPolicyV0950(id sdk.SchemaObjectIdentifier, expr string) string {
+	return fmt.Sprintf(`
+resource "snowflake_row_access_policy" "test" {
+  name     = "%s"
+  database = "%s"
+  schema   = "%s"
+  signature = {
+    A = "VARCHAR",
+    b = "VARCHAR",
+  }
+  row_access_expression = "%s"
+}`, id.Name(), id.DatabaseName(), id.SchemaName(), expr)
 }
