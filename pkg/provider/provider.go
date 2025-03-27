@@ -58,9 +58,6 @@ func init() {
 				desc = fmt.Sprintf("(Default: `%v`) %s", s.Default, s.Description)
 			}
 		}
-		if s.DefaultFunc != nil {
-			desc = fmt.Sprintf("(Default is computed based on environment variable) %s", s.Description)
-		}
 		return desc
 	}
 }
