@@ -49,7 +49,7 @@ var fieldsNamesToFilter = []string{
 }
 
 func main() {
-	file, err := os.OpenFile("cmd/sensitive/sensitive.csv", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	file, err := os.OpenFile("scripts/sensitive/sensitive.csv", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}
