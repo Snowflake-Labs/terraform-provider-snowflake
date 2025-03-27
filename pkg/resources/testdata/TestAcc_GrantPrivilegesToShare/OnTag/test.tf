@@ -6,7 +6,7 @@ resource "snowflake_tag" "test" {
 
 resource "snowflake_grant_privileges_to_share" "test_setup" {
   to_share    = var.to_share
-  privileges = ["USAGE"]
+  privileges  = ["USAGE"]
   on_database = var.database
 }
 
