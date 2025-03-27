@@ -23,7 +23,7 @@ func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -78,7 +78,7 @@ func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) 
 	acc.TestAccPreCheck(t)
 
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
-	_, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSetWithId(t, databaseId)
+	_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSetWithId(t, databaseId)
 	t.Cleanup(databaseCleanup)
 
 	databaseName := databaseId.Name()
@@ -131,7 +131,7 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -189,7 +189,7 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -247,7 +247,7 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -305,7 +305,7 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -367,7 +367,7 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithArguments_ToAccountRole(t *tes
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -420,7 +420,7 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t 
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -473,7 +473,7 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -528,7 +528,7 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -585,7 +585,7 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -640,7 +640,7 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -699,7 +699,7 @@ func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -729,7 +729,7 @@ func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -759,7 +759,7 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -817,7 +817,7 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	accountRole, cleanupAccountRole := acc.TestClient().Role.CreateRole(t)
@@ -876,7 +876,7 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -941,7 +941,7 @@ func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseName := database.ID().Name()
@@ -1024,7 +1024,7 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -1091,7 +1091,7 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
@@ -1420,7 +1420,7 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()
@@ -1575,7 +1575,7 @@ func TestAcc_GrantOwnership_IdentifierQuotingDiffSuppression(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseId := database.ID()

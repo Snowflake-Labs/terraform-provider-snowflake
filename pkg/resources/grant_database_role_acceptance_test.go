@@ -113,7 +113,7 @@ func TestAcc_GrantDatabaseRole_issue2402(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database.ID())
@@ -204,7 +204,7 @@ func TestAcc_GrantDatabaseRole_share(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database.ID())
@@ -252,7 +252,7 @@ func TestAcc_GrantDatabaseRole_shareWithDots(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	database, databaseCleanup := acc.TestClient().Database.DatabaseWithParametersSet(t)
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(databaseCleanup)
 
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database.ID())
