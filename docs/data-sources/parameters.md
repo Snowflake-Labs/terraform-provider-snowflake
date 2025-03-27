@@ -46,7 +46,7 @@ data "snowflake_parameters" "p3" {
 
 - `object_name` (String) If parameter_type is set to "OBJECT" then object_name is the name of the object to display object parameters for.
 - `object_type` (String) If parameter_type is set to "OBJECT" then object_type is the type of object to display object parameters for. Valid values are any object supported by the IN clause of the [SHOW PARAMETERS](https://docs.snowflake.com/en/sql-reference/sql/show-parameters.html#parameters) statement, including: WAREHOUSE | DATABASE | SCHEMA | TASK | TABLE
-- `parameter_type` (String) The type of parameter to filter by. Valid values are: "ACCOUNT", "SESSION", "OBJECT".
+- `parameter_type` (String) (Default: `ACCOUNT`) The type of parameter to filter by. Valid values are: "ACCOUNT", "SESSION", "OBJECT".
 - `pattern` (String) Allows limiting the list of parameters by name using LIKE clause. Refer to [Limiting the List of Parameters by Name](https://docs.snowflake.com/en/sql-reference/parameters.html#limiting-the-list-of-parameters-by-name)
 - `user` (String) If parameter_type is set to "SESSION" then user is the name of the user to display session parameters for.
 

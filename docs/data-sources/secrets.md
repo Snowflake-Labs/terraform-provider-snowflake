@@ -67,7 +67,7 @@ output "only_show_output" {
 
 - `in` (Block List, Max: 1) IN clause to filter the list of secrets (see [below for nested schema](#nestedblock--in))
 - `like` (String) Filters the output with **case-insensitive** pattern, with support for SQL wildcard characters (`%` and `_`).
-- `with_describe` (Boolean) Runs DESC SECRET for each secret returned by SHOW SECRETS. The output of describe is saved to the description field. By default this value is set to true.
+- `with_describe` (Boolean) (Default: `true`) Runs DESC SECRET for each secret returned by SHOW SECRETS. The output of describe is saved to the description field. By default this value is set to true.
 
 ### Read-Only
 

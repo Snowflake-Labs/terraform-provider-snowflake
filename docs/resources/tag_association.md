@@ -93,7 +93,7 @@ resource "snowflake_tag_association" "account_association" {
 
 ### Optional
 
-- `skip_validation` (Boolean) If true, skips validation of the tag association.
+- `skip_validation` (Boolean) (Default: `true`) If true, skips validation of the tag association.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
