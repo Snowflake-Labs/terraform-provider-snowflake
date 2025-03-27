@@ -61,7 +61,18 @@ body:
     type: textarea
     attributes:
       label: Terraform Configuration
-      description: Please copy and paste any relevant Terraform configuration. This will be automatically formatted into code, so no need for backticks.
+      description: |
+        IMPORTANT: Please make sure you do not send any sensitive values, especially if you paste the provider configuration.
+        Please copy and paste any relevant Terraform configuration. This includes the resource or data source definition and provider configuration, if relevant. If you use local variables or referenced values, provide them as well. This input will be automatically formatted into code, so no need for backticks.
+      placeholder: |
+        resource "snowflake_schema" "schema" {
+          name = "SCHEMA"
+          database = var.database_name
+        }
+        variable "database_name" {
+          type    = string
+          default = "DATABASE"
+        }
       render: terraform
 
   - id: category
