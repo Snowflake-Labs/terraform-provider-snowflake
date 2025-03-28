@@ -20,6 +20,8 @@ jobs:
         run: |
           echo \"${{ github.event.client_payload.pull_request.head.sha }}\"
           echo \"${{ github.event.client_payload.slash_command.args.named.sha }}\"
+          echo \"${{ github.event.client_payload.pull_request.head.repo.full_name }}\"
+          echo \"${{ github.event.client_payload.pull_request.head.ref }}\"
           SHAINPUT=$(echo ${{ github.event.client_payload.slash_command.args.named.sha }} | cut -c1-7)
           if [ ${#SHAINPUT} -le 6 ]; then echo "error::input sha not at least 7 characters long" ; exit 1
           else echo "done"
@@ -30,9 +32,6 @@ jobs:
           if [ "${SHAHEAD}" != "${SHAINPUT}" ]; then echo "sha input from slash command does not equal the head sha" ; exit 1
           else echo "shas are equal"
           fi
-          echo ========
-          echo \"${{ github.event.client_payload.pull_request.head.repo.full_name }}\"
-          echo \"${{ github.event.client_payload.pull_request.head.ref }}\"
 
       - name: Checkout Code (Repository Dispatch Event)
         if: (github.event_name == 'repository_dispatch')
