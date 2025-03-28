@@ -1,15 +1,15 @@
 package datasources_test
 
 import (
-	"maps"
 	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/datasourcemodel"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -50,7 +50,7 @@ func TestAcc_MaskingPolicies(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicies/optionals_set"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
+				ConfigVariables: accconfig.ConfigVariablesFromModel(t, policyModel),
 				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "masking_policies.#", "1")),
 
@@ -77,7 +77,7 @@ func TestAcc_MaskingPolicies(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicies/optionals_unset"),
-				ConfigVariables: tfconfig.ConfigVariablesFromModel(t, policyModel),
+				ConfigVariables: accconfig.ConfigVariablesFromModel(t, policyModel),
 
 				Check: assertThat(t,
 					assert.Check(resource.TestCheckResourceAttr(dsName, "masking_policies.#", "1")),
@@ -104,37 +104,35 @@ func TestAcc_MaskingPolicies_Filtering(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	prefix := random.AlphaN(4)
-	idOne := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
-	idTwo := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix(prefix)
-	idThree := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	databaseId := acc.TestClient().Ids.DatabaseId()
-	schemaId := acc.TestClient().Ids.SchemaId()
+	idOne := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
+	idTwo := acc.TestClient().Ids.RandomSchemaObjectIdentifierWithPrefix(prefix)
+	idThree := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
+
+	maskingPolicyModel1 := model.MaskingPolicyDynamicArguments("test_1", idOne, body, sdk.DataTypeVARCHAR)
+	maskingPolicyModel2 := model.MaskingPolicyDynamicArguments("test_2", idTwo, body, sdk.DataTypeVARCHAR)
+	maskingPolicyModel3 := model.MaskingPolicyDynamicArguments("test_3", idThree, body, sdk.DataTypeVARCHAR)
+	maskingPoliciesModelLikeFirstOne := datasourcemodel.MaskingPolicies("test").
+		WithLike(idOne.Name()).
+		WithDependsOn(maskingPolicyModel1.ResourceReference(), maskingPolicyModel2.ResourceReference(), maskingPolicyModel3.ResourceReference())
+	maskingPoliciesModelLikePrefix := datasourcemodel.MaskingPolicies("test").
+		WithLike(prefix+"%").
+		WithDependsOn(maskingPolicyModel1.ResourceReference(), maskingPolicyModel2.ResourceReference(), maskingPolicyModel3.ResourceReference())
+
 	commonVariables := config.Variables{
-		"name_1":   config.StringVariable(idOne.Name()),
-		"name_2":   config.StringVariable(idTwo.Name()),
-		"name_3":   config.StringVariable(idThree.Name()),
-		"schema":   config.StringVariable(schemaId.Name()),
-		"database": config.StringVariable(databaseId.Name()),
 		"arguments": config.SetVariable(
 			config.MapVariable(map[string]config.Variable{
 				"name": config.StringVariable("a"),
 				"type": config.StringVariable("VARCHAR"),
 			}),
 		),
-		"body":             config.StringVariable("case when current_role() in ('ANALYST') then 'true' else 'false' end"),
-		"return_data_type": config.StringVariable(string(sdk.DataTypeVARCHAR)),
 	}
 
-	likeConfig := config.Variables{
-		"like": config.StringVariable(idOne.Name()),
+	temporaryVariableDefinition := `
+	variable "arguments" {
+		type = set(map(string))
 	}
-	maps.Copy(likeConfig, commonVariables)
-
-	likeConfig2 := config.Variables{
-		"like": config.StringVariable(prefix + "%"),
-	}
-	maps.Copy(likeConfig2, commonVariables)
-
+`
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -144,15 +142,15 @@ func TestAcc_MaskingPolicies_Filtering(t *testing.T) {
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicies/like"),
-				ConfigVariables: likeConfig,
+				Config:          accconfig.FromModels(t, maskingPolicyModel1, maskingPolicyModel2, maskingPolicyModel3, maskingPoliciesModelLikeFirstOne) + temporaryVariableDefinition,
+				ConfigVariables: commonVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_masking_policies.test", "masking_policies.#", "1"),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_MaskingPolicies/like"),
-				ConfigVariables: likeConfig2,
+				Config:          accconfig.FromModels(t, maskingPolicyModel1, maskingPolicyModel2, maskingPolicyModel3, maskingPoliciesModelLikePrefix) + temporaryVariableDefinition,
+				ConfigVariables: commonVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_masking_policies.test", "masking_policies.#", "2"),
 				),

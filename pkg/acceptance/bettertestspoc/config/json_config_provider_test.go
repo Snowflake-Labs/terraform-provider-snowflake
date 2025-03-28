@@ -115,4 +115,32 @@ func Test_JsonConfigProvider(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, expectedResult, string(result))
 	})
+
+	t.Run("test dynamic block config", func(t *testing.T) {
+		dynamicBlock := config.NewDynamicBlock("argument", "arguments", []string{"name", "type"})
+		model := DynamicBlockExample("test", "abc").
+			WithDynamicBlock(dynamicBlock)
+		expectedResult := fmt.Sprintf(`{
+    "resource": {
+        "snowflake_share": {
+            "test": {
+                "name": "abc",
+                "dynamic": {
+                    "argument": {
+                        "for_each": "%[1]svar.arguments%[1]s",
+                        "content": {
+                            "name": "%[1]sargument.value[%[2]sname%[2]s]%[1]s",
+                            "type": "%[1]sargument.value[%[2]stype%[2]s]%[1]s"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}`, config.SnowflakeProviderConfigUnquoteMarker, config.SnowflakeProviderConfigQuoteMarker)
+
+		result, err := config.DefaultJsonConfigProvider.ResourceJsonFromModel(model)
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, string(result))
+	})
 }

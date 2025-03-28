@@ -152,4 +152,82 @@ EOT
 		require.NoError(t, err)
 		require.Equal(t, expectedResult, result)
 	})
+
+	t.Run("unquote value using placeholder", func(t *testing.T) {
+		resourceJson := fmt.Sprintf(`{
+            "resource": {
+                "snowflake_share": {
+                    "test": {
+						"name": "abc",
+						"unquoted": "%[1]svar.arguments%[1]s"
+                    }
+                }
+            }
+        }`, config.SnowflakeProviderConfigUnquoteMarker)
+		expectedResult := `resource "snowflake_share" "test" {
+  name = "abc"
+  unquoted = var.arguments
+}
+`
+
+		result, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, result)
+
+		fmt.Printf("%s", result)
+	})
+
+	t.Run("quote value using placeholder", func(t *testing.T) {
+		resourceJson := fmt.Sprintf(`{
+            "resource": {
+                "snowflake_share": {
+                    "test": {
+						"name": "abc",
+						"quoted": "%[1]svar.arguments[%[2]sname%[2]s]%[1]s"
+                    }
+                }
+            }
+        }`, config.SnowflakeProviderConfigUnquoteMarker, config.SnowflakeProviderConfigQuoteMarker)
+		expectedResult := `resource "snowflake_share" "test" {
+  name = "abc"
+  quoted = var.arguments["name"]
+}
+`
+
+		result, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, result)
+
+		fmt.Printf("%s", result)
+	})
+
+	t.Run("unquote dynamic block", func(t *testing.T) {
+		resourceJson := `{
+            "resource": {
+                "snowflake_share": {
+                    "test": {
+						"name": "abc",
+						"dynamic": {
+							"label": {
+								"some": "value"
+							}
+						}
+                    }
+                }
+            }
+        }`
+		expectedResult := `resource "snowflake_share" "test" {
+  name = "abc"
+  dynamic "label" {
+    some = "value"
+  }
+}
+`
+
+		result, err := config.DefaultHclConfigProvider.HclFromJson([]byte(resourceJson))
+		require.NoError(t, err)
+		assert.Equal(t, expectedResult, result)
+
+		fmt.Printf("%s", result)
+	})
 }

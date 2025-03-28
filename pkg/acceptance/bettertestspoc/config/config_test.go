@@ -91,6 +91,38 @@ EOT
 
 		require.Equal(t, expectedOutput, result)
 	})
+
+	t.Run("test dynamic block", func(t *testing.T) {
+		model := DynamicBlockExample("test", "abc").
+			WithDynamicBlock(config.NewDynamicBlock("argument", "arguments", []string{"name", "type"}))
+		expectedOutput := strings.TrimPrefix(`
+resource "snowflake_share" "test" {
+  name = "abc"
+  dynamic "argument" {
+    for_each = var.arguments
+    content {
+      name = argument.value["name"]
+      type = argument.value["type"]
+    }
+  }
+}
+`, "\n")
+		result := config.ResourceFromModel(t, model)
+
+		require.Equal(t, expectedOutput, result)
+	})
+
+	t.Run("test no dynamic block", func(t *testing.T) {
+		model := DynamicBlockExample("test", "abc")
+		expectedOutput := strings.TrimPrefix(`
+resource "snowflake_share" "test" {
+  name = "abc"
+}
+`, "\n")
+		result := config.ResourceFromModel(t, model)
+
+		require.Equal(t, expectedOutput, result)
+	})
 }
 
 func Test_DatasourceFromModelPoc(t *testing.T) {

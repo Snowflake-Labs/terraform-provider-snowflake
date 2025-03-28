@@ -10,7 +10,7 @@ import (
 	hclv1parser "github.com/hashicorp/hcl/json/parser"
 )
 
-var DefaultHclConfigProvider = NewHclV1ConfigProvider(replaceNullPlaceholders, removeSingleAttributeWorkaroundLines, unquoteBlockType, fixBlockArguments, replaceMultilinePlaceholders, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
+var DefaultHclConfigProvider = NewHclV1ConfigProvider(replaceNullPlaceholders, removeSingleAttributeWorkaroundLines, unquoteBlockType, fixBlockArguments, unquotePlaceholders, quotePlaceholders, replaceMultilinePlaceholders, unquoteArguments, removeDoubleNewlines, unquoteDependsOnReferences)
 
 // HclConfigProvider defines methods to generate .tf config from .tf.json configs.
 type HclConfigProvider interface {
@@ -68,7 +68,7 @@ func convertJsonToHclStringV1(jsonBytes []byte) (string, error) {
 // Conversion to HCL using hcl v1 does not unquote block types (i.e. `"resource"` instead of expected `resource`).
 // Check experiments subpackage for details.
 func unquoteBlockType(s string) (string, error) {
-	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider)"(( "\w+"){1,2} {)`)
+	blockTypeRegex := regexp.MustCompile(`"(resource|data|provider|dynamic)"(( "\w+"){1,2} {)`)
 	return blockTypeRegex.ReplaceAllString(s, `$1$2`), nil
 }
 
@@ -87,6 +87,16 @@ func replaceNullPlaceholders(s string) (string, error) {
 	} else {
 		return argumentRegex.ReplaceAllString(s, `null`), nil
 	}
+}
+
+func unquotePlaceholders(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(fmt.Sprintf(`"%[1]s(.*?)%[1]s"`, SnowflakeProviderConfigUnquoteMarker))
+	return argumentRegex.ReplaceAllString(s, `$1`), nil
+}
+
+func quotePlaceholders(s string) (string, error) {
+	argumentRegex := regexp.MustCompile(fmt.Sprintf(`%[1]s(.*?)%[1]s`, SnowflakeProviderConfigQuoteMarker))
+	return argumentRegex.ReplaceAllString(s, `"$1"`), nil
 }
 
 // TODO [SNOW-1501905]: fix new lines replacement totally in this method
