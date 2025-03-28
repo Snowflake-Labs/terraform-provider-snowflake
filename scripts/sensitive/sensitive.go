@@ -20,14 +20,16 @@ type Schema struct {
 type StringField struct {
 	ResourceName string
 	FieldName    string
-	IsSensitive  bool
+	Description  string
 	IsComputed   bool
+	IsSensitive  bool
 }
 
-func NewStringField(resourceName, fieldName string, isSensitive, isComputed bool) StringField {
+func NewStringField(resourceName, fieldName, description string, isSensitive, isComputed bool) StringField {
 	return StringField{
 		ResourceName: resourceName,
 		FieldName:    fieldName,
+		Description:  description,
 		IsSensitive:  isSensitive,
 		IsComputed:   isComputed,
 	}
@@ -112,16 +114,16 @@ func extractStringFieldsFromSchemaMap(resourceName string, parentName string, sc
 	for fieldName, v := range schemaMap {
 		switch v.Type {
 		case schema.TypeString, schema.TypeMap:
-			fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Sensitive, v.Computed))
+			fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Description, v.Sensitive, v.Computed))
 		case schema.TypeList, schema.TypeSet:
 			switch elem := v.Elem.(type) {
 			case *schema.Schema:
-				fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Sensitive, v.Computed))
+				fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Description, v.Sensitive, v.Computed))
 			case *schema.Resource:
 				// Check if the underlying schema contains typical names for parameter-like schema
 				// We could directly compare with schemas like elem == schemas.ShowParameterSchema, but we have more schemas like this, so went with easier approach.
 				if slices.ContainsFunc(maps.Keys(elem.Schema), func(name string) bool { return slices.Contains([]string{"key", "value", "default"}, name) }) {
-					fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Sensitive, v.Computed))
+					fields = append(fields, NewStringField(resourceName, parentName+fieldName, v.Description, v.Sensitive, v.Computed))
 				} else {
 					var parent string
 					if parentName != "" {
@@ -155,12 +157,12 @@ func filterFields(fields []StringField) []StringField {
 }
 
 func writeFields(writer *csv.Writer, fields []StringField) {
-	if err := writer.Write([]string{"ResourceName", "FieldName", "IsSensitive", "IsComputed"}); err != nil {
+	if err := writer.Write([]string{"ResourceName", "FieldName", "Description", "IsSensitive", "IsComputed"}); err != nil {
 		log.Fatal(err)
 	}
 
 	for _, field := range fields {
-		if err := writer.Write([]string{field.ResourceName, field.FieldName, strconv.FormatBool(field.IsSensitive), strconv.FormatBool(field.IsComputed)}); err != nil {
+		if err := writer.Write([]string{field.ResourceName, field.FieldName, field.Description, strconv.FormatBool(field.IsSensitive), strconv.FormatBool(field.IsComputed)}); err != nil {
 			log.Fatal(err)
 		}
 	}
