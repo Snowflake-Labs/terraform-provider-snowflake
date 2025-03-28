@@ -824,7 +824,8 @@ func TestAcc_Task_CallingProcedure(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	procedure := acc.TestClient().Procedure.Create(t, sdk.DataTypeNumber)
+	procedure, cleanupProcedure := acc.TestClient().Procedure.Create(t, sdk.DataTypeNumber)
+	t.Cleanup(cleanupProcedure)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := fmt.Sprintf("call %s(123)", procedure.Name)

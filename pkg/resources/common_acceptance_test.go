@@ -2,6 +2,8 @@ package resources_test
 
 import (
 	"context"
+	"testing"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	resourcenames "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -9,10 +11,9 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-func Test_SafeShowByIdOnAccountObjectIdentifier(t *testing.T) {
+func TestAcc_SafeShowByIdOnAccountObjectIdentifier(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -37,7 +38,7 @@ func Test_SafeShowByIdOnAccountObjectIdentifier(t *testing.T) {
 	assert.Contains(t, diags[0].Summary, "Failed to query account object.")
 }
 
-func Test_SafeShowByIdOnDatabaseObjectIdentifier(t *testing.T) {
+func TestAcc_SafeShowByIdOnDatabaseObjectIdentifier(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -72,7 +73,7 @@ func Test_SafeShowByIdOnDatabaseObjectIdentifier(t *testing.T) {
 	assert.Contains(t, diags[1].Summary, "Failed to query database for snowflake_database_role.")
 }
 
-func Test_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
+func TestAcc_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -117,7 +118,7 @@ func Test_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
 	assert.Contains(t, diags[1].Summary, "Failed to query schema for snowflake_table.")
 }
 
-func Test_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
+func TestAcc_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -128,14 +129,14 @@ func Test_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	database, cleanupDatabase := acc.TestClient().Database.CreateDatabase(t)
 	t.Cleanup(cleanupDatabase)
 	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
-	procedure := acc.TestClient().Procedure.CreateInSchema(t, schema.ID(), sdk.DataTypeInt)
+	procedure, cleanupProcedure := acc.TestClient().Procedure.CreateInSchema(t, schema.ID(), sdk.DataTypeInt)
 
 	value, shouldRemoveFromState, diags := resources.SafeShowById(resourcenames.ProcedureSql, acc.TestClient().Client(), procedureShowById, context.Background(), procedure.ID())
 	assert.NotNil(t, value)
 	assert.Equal(t, false, shouldRemoveFromState)
 	assert.Len(t, diags, 0)
 
-	acc.TestClient().Procedure.DropProcedureFunc(t, procedure.ID())()
+	cleanupProcedure()
 
 	value, shouldRemoveFromState, diags = resources.SafeShowById(resourcenames.ProcedureSql, acc.TestClient().Client(), procedureShowById, context.Background(), procedure.ID())
 	assert.Nil(t, value)

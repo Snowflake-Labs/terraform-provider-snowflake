@@ -217,7 +217,6 @@ func SafeShowById[T any, ID sdk.AccountObjectIdentifier | sdk.DatabaseObjectIden
 	id ID,
 ) (T, bool, diag.Diagnostics) {
 	result, err := showById(ctx, id)
-
 	if err != nil {
 		var zeroValue T
 

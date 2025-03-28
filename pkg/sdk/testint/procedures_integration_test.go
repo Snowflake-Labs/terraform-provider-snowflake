@@ -2160,8 +2160,10 @@ def filter_by_role(session, table_name, role):
 		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.LegacyDataTypeFrom(dataType))
 		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
 
-		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
-		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
+		e, cleanupProcedure := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
+		t.Cleanup(cleanupProcedure)
+		_, cleanupSecondProcedure := testClientHelper().Procedure.CreateWithIdentifier(t, id2)
+		t.Cleanup(cleanupSecondProcedure)
 
 		es, err := client.Procedures.ShowByID(ctx, id1)
 		require.NoError(t, err)

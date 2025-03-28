@@ -111,17 +111,18 @@ func (c *ProcedureClient) CreateScalaStaged(t *testing.T, id sdk.SchemaObjectIde
 	return function, c.DropProcedureFunc(t, id)
 }
 
-func (c *ProcedureClient) Create(t *testing.T, arguments ...sdk.DataType) *sdk.Procedure {
+func (c *ProcedureClient) Create(t *testing.T, arguments ...sdk.DataType) (*sdk.Procedure, func()) {
 	t.Helper()
-	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...))
+	id := c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...)
+	return c.CreateWithIdentifier(t, id)
 }
 
-func (c *ProcedureClient) CreateInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, arguments ...sdk.DataType) *sdk.Procedure {
+func (c *ProcedureClient) CreateInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, arguments ...sdk.DataType) (*sdk.Procedure, func()) {
 	t.Helper()
 	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId, arguments...))
 }
 
-func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *sdk.Procedure {
+func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) (*sdk.Procedure, func()) {
 	t.Helper()
 	ctx := context.Background()
 	argumentRequests := make([]sdk.ProcedureArgumentRequest, len(id.ArgumentDataTypes()))
@@ -136,14 +137,10 @@ func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObject
 	)
 	require.NoError(t, err)
 
-	t.Cleanup(func() {
-		require.NoError(t, c.context.client.Procedures.Drop(ctx, sdk.NewDropProcedureRequest(id).WithIfExists(true)))
-	})
-
 	procedure, err := c.client().ShowByID(ctx, id)
 	require.NoError(t, err)
 
-	return procedure
+	return procedure, c.DropProcedureFunc(t, id)
 }
 
 func (c *ProcedureClient) DropProcedureFunc(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) func() {
