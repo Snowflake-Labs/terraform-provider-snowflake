@@ -134,12 +134,13 @@ func TestAcc_LegacyServiceUser_BasicFlows(t *testing.T) {
 				ResourceName:            userModelNoAttributesRenamed.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "days_to_expiry", "mins_to_unlock", "login_name", "display_name", "disabled", "must_change_password"},
+				ImportStateVerifyIgnore: []string{"password", "days_to_expiry", "mins_to_unlock", "login_name", "display_name", "disabled", "must_change_password", "default_secondary_roles_option"},
 				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedLegacyServiceUserResource(t, id2.Name()).
 						HasLoginNameString(strings.ToUpper(id.Name())).
 						HasDisplayNameString(id.Name()).
 						HasDisabled(false).
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll).
 						HasMustChangePassword(false),
 				),
 			},

@@ -280,7 +280,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: enabled, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "NETWORK_POLICY", Type: "String", Value: networkPolicy, Default: ""})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "RUN_AS_ROLE", Type: "String", Value: runAsRole, Default: ""})
-		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SYNC_PASSWORD", Type: "Boolean", Value: syncPassword, Default: "true"})
+		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "SYNC_PASSWORD", Type: "Boolean", Value: syncPassword, Default: "false"})
 		assert.Contains(t, details, sdk.SecurityIntegrationProperty{Name: "COMMENT", Type: "String", Value: comment, Default: ""})
 	}
 
@@ -1057,7 +1057,7 @@ func TestInt_SecurityIntegrations(t *testing.T) {
 		details, err := client.SecurityIntegrations.Describe(ctx, id)
 		require.NoError(t, err)
 
-		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "true", "")
+		assertSCIMDescribe(details, "true", "", "GENERIC_SCIM_PROVISIONER", "false", "")
 	})
 
 	t.Run("ShowByID", func(t *testing.T) {

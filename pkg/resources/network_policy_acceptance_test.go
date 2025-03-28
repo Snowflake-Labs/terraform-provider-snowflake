@@ -27,16 +27,16 @@ func TestAcc_NetworkPolicy_Basic(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.Create(t)
+	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(allowedNetworkRule1Cleanup)
 
-	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.Create(t)
+	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(allowedNetworkRule2Cleanup)
 
-	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.Create(t)
+	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(blockedNetworkRule1Cleanup)
 
-	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.Create(t)
+	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(blockedNetworkRule2Cleanup)
 
 	allowedNetworkRuleId1 := allowedNetworkRule1.ID()
@@ -232,16 +232,16 @@ func TestAcc_NetworkPolicy_Complete(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.Create(t)
+	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(allowedNetworkRule1Cleanup)
 
-	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.Create(t)
+	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(allowedNetworkRule2Cleanup)
 
-	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.Create(t)
+	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(blockedNetworkRule1Cleanup)
 
-	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.Create(t)
+	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(blockedNetworkRule2Cleanup)
 
 	allowedNetworkRuleId1 := allowedNetworkRule1.ID()
@@ -435,16 +435,16 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.Create(t)
+	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(allowedNetworkRule1Cleanup)
 
-	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.Create(t)
+	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(allowedNetworkRule2Cleanup)
 
-	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.Create(t)
+	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(blockedNetworkRule1Cleanup)
 
-	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.Create(t)
+	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
 	t.Cleanup(blockedNetworkRule2Cleanup)
 
 	allowedNetworkRuleId1 := allowedNetworkRule1.ID()

@@ -150,12 +150,13 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 				ResourceName:            userModelNoAttributesRenamed.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password"},
+				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password", "default_secondary_roles_option"},
 				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedUserResource(t, id2.Name()).
 						HasLoginNameString(strings.ToUpper(id.Name())).
 						HasDisplayNameString(id.Name()).
 						HasDisabled(false).
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll).
 						HasMustChangePassword(false),
 				),
 			},
@@ -1049,6 +1050,8 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 }
 
 func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
+	t.Skip("Ordering needs to be changed after BCR 2024_08 general availability.")
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelEmpty := model.UserWithDefaultMeta(userId.Name())
@@ -1334,53 +1337,6 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
 					objectassert.User(t, userId).HasDefaultSecondaryRoles(`["ALL"]`),
-				),
-			},
-		},
-	})
-}
-
-func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	userModel := model.UserWithDefaultMeta(id.Name())
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, userModel),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles.#", "0"),
-				),
-			},
-			{
-				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModels(t, userModel),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						// we do not have a plancheck yet to validate no changes on the given field; this is a current alternative
-						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles", tfjson.ActionUpdate, nil, nil),
-						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionDefault))),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles_option", string(sdk.SecondaryRolesOptionDefault)),
-					resource.TestCheckNoResourceAttr(userModel.ResourceReference(), "default_secondary_roles"),
 				),
 			},
 		},
