@@ -2,7 +2,6 @@ package config_test
 
 import (
 	"encoding/json"
-
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
@@ -154,4 +153,44 @@ func (m *SomeOtherModel) WithName(name string) *SomeOtherModel {
 func (m *SomeOtherModel) WithDependsOn(values ...string) *SomeOtherModel {
 	m.SetDependsOn(values...)
 	return m
+}
+
+// ModelWithDynamicBlock is an example model struct to try dynamic block creation.
+type DynamicBlockExampleModel struct {
+	Name tfconfig.Variable `json:"name,omitempty"`
+
+	DynamicBlock *config.DynamicBlock `json:"dynamic,omitempty"`
+
+	*config.ResourceModelMeta
+}
+
+func DynamicBlockExample(
+	resourceName string,
+	name string,
+) *DynamicBlockExampleModel {
+	// resources enum is closed so using one of the existing ones
+	d := &DynamicBlockExampleModel{ResourceModelMeta: config.Meta(resourceName, resources.Share)}
+	d.WithName(name)
+	return d
+}
+
+func (m *DynamicBlockExampleModel) WithName(name string) *DynamicBlockExampleModel {
+	m.Name = tfconfig.StringVariable(name)
+	return m
+}
+
+func (m *DynamicBlockExampleModel) WithDynamicBlock(dynamicBlock *config.DynamicBlock) *DynamicBlockExampleModel {
+	m.DynamicBlock = dynamicBlock
+	return m
+}
+
+func (m *DynamicBlockExampleModel) MarshalJSON() ([]byte, error) {
+	type Alias DynamicBlockExampleModel
+	return json.Marshal(&struct {
+		*Alias
+		DependsOn []string `json:"depends_on,omitempty"`
+	}{
+		Alias:     (*Alias)(m),
+		DependsOn: m.DependsOn(),
+	})
 }
