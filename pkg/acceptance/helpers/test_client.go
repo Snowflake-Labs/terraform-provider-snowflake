@@ -146,6 +146,10 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 	}
 }
 
+func (c *TestClient) Client() *sdk.Client {
+	return c.context.client
+}
+
 type TestClientContext struct {
 	client           *sdk.Client
 	database         string

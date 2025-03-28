@@ -19,8 +19,9 @@ var (
 	ErrObjectNotFound = collections.ErrObjectNotFound
 
 	// go-snowflake errors.
-	ErrObjectNotExistOrAuthorized = NewError("object does not exist or not authorized")
-	ErrAccountIsEmpty             = NewError("account is empty")
+	ErrObjectNotExistOrAuthorized               = NewError("object does not exist or not authorized")
+	ErrDoesNotExistOrOperationCannotBePerformed = NewError("object does not exist, or operation cannot be performed")
+	ErrAccountIsEmpty                           = NewError("account is empty")
 
 	// snowflake-sdk errors.
 	ErrInvalidObjectIdentifier = NewError("invalid object identifier")
@@ -84,8 +85,9 @@ func decodeDriverError(err error) error {
 	}
 	log.Printf("[DEBUG] err: %v\n", err)
 	m := map[string]error{
-		"does not exist or not authorized": ErrObjectNotExistOrAuthorized,
-		"account is empty":                 ErrAccountIsEmpty,
+		"Object does not exist, or operation cannot be performed": ErrDoesNotExistOrOperationCannotBePerformed,
+		"does not exist or not authorized":                        ErrObjectNotExistOrAuthorized,
+		"account is empty":                                        ErrAccountIsEmpty,
 	}
 	for k, v := range m {
 		if strings.Contains(err.Error(), k) {

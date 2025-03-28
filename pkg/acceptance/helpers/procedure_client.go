@@ -116,6 +116,11 @@ func (c *ProcedureClient) Create(t *testing.T, arguments ...sdk.DataType) *sdk.P
 	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifierWithArguments(arguments...))
 }
 
+func (c *ProcedureClient) CreateInSchema(t *testing.T, schemaId sdk.DatabaseObjectIdentifier, arguments ...sdk.DataType) *sdk.Procedure {
+	t.Helper()
+	return c.CreateWithIdentifier(t, c.ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId, arguments...))
+}
+
 func (c *ProcedureClient) CreateWithIdentifier(t *testing.T, id sdk.SchemaObjectIdentifierWithArguments) *sdk.Procedure {
 	t.Helper()
 	ctx := context.Background()
