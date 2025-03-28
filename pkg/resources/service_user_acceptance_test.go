@@ -122,11 +122,12 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 				ResourceName:            userModelNoAttributesRenamed.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled"},
+				ImportStateVerifyIgnore: []string{"days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "default_secondary_roles_option"},
 				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedServiceUserResource(t, id2.Name()).
 						HasLoginNameString(strings.ToUpper(id.Name())).
 						HasDisplayNameString(id.Name()).
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll).
 						HasDisabled(false),
 				),
 			},
@@ -234,7 +235,9 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 
 func TestAcc_ServiceUser_AllParameters(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()

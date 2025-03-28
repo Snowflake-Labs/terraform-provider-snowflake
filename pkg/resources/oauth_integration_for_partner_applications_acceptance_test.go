@@ -16,36 +16,34 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	validUrl := "https://example.com"
 	comment := random.Comment()
 
-	configVariables := func(complete bool) config.Variables {
-		values := config.Variables{
-			"name":               config.StringVariable(id.Name()),
-			"oauth_client":       config.StringVariable(string(sdk.OauthSecurityIntegrationClientLooker)),
-			"oauth_redirect_uri": config.StringVariable(validUrl),
-		}
-		if complete {
-			values["enabled"] = config.BoolVariable(true)
-			values["blocked_roles_list"] = config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN"))
-			values["oauth_issue_refresh_tokens"] = config.BoolVariable(false)
-			values["oauth_refresh_token_validity"] = config.IntegerVariable(86400)
-			values["oauth_use_secondary_roles"] = config.StringVariable(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))
-			values["comment"] = config.StringVariable(comment)
-		}
-		return values
-	}
+	basicModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientLooker)).
+		WithOauthRedirectUri(validUrl)
+	completeModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientLooker)).
+		WithOauthRedirectUri(validUrl).
+		WithComment(comment).
+		WithEnabled(datasources.BooleanTrue).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN").
+		WithOauthIssueRefreshTokens(datasources.BooleanFalse).
+		WithOauthRefreshTokenValidity(86400).
+		WithOauthUseSecondaryRoles(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -57,49 +55,47 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with empty optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic"),
-				ConfigVariables: configVariables(false),
+				Config: accconfig.FromModels(t, basicModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "-1"),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles"),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", ""),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_redirect_uri", validUrl),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "enabled", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_issue_refresh_tokens", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_refresh_token_validity", "-1"),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "oauth_use_secondary_roles"),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "blocked_roles_list"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "comment", ""),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - LOOKER"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", ""),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - LOOKER"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.enabled", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.comment", ""),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", ""),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.enabled.0.value", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.comment.0.value", ""),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// import - without optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic"),
-				ConfigVariables: configVariables(false),
-				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
-				ImportState:     true,
+				Config:       accconfig.FromModels(t, basicModel),
+				ResourceName: "snowflake_oauth_integration_for_partner_applications.test",
+				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
@@ -113,54 +109,52 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 			},
 			// set optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete"),
-				ConfigVariables: configVariables(true),
+				Config: accconfig.FromModels(t, completeModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(completeModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", comment),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_redirect_uri", validUrl),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_refresh_token_validity", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "blocked_roles_list.#", "2"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - LOOKER"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - LOOKER"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.comment.0.value", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// import - complete
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete"),
-				ConfigVariables: configVariables(true),
-				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
-				ImportState:     true,
+				Config:       accconfig.FromModels(t, completeModel),
+				ResourceName: "snowflake_oauth_integration_for_partner_applications.test",
+				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
@@ -174,8 +168,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 			},
 			// change externally
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete"),
-				ConfigVariables: configVariables(true),
+				Config: accconfig.FromModels(t, completeModel),
 				PreConfig: func() {
 					acc.TestClient().SecurityIntegration.UpdateOauthForPartnerApplications(t, sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSet(
 						*sdk.NewOauthForPartnerApplicationsIntegrationSetRequest().
@@ -192,98 +185,97 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(completeModel.ResourceReference(), plancheck.ResourceActionUpdate),
 
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "enabled", sdk.String("true"), sdk.String("false")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "comment", sdk.String(comment), sdk.String("")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone))),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", sdk.String("86400"), sdk.String("3600")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "enabled", sdk.String("true"), sdk.String("false")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "comment", sdk.String(comment), sdk.String("")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "oauth_use_secondary_roles", sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone))),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "oauth_refresh_token_validity", sdk.String("86400"), sdk.String("3600")),
 
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "enabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "comment", tfjson.ActionUpdate, sdk.String(""), sdk.String(comment)),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", tfjson.ActionUpdate, sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", tfjson.ActionUpdate, sdk.String("3600"), sdk.String("86400")),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "enabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(""), sdk.String(comment)),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "oauth_use_secondary_roles", tfjson.ActionUpdate, sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "oauth_refresh_token_validity", tfjson.ActionUpdate, sdk.String("3600"), sdk.String("86400")),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", comment),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_redirect_uri", validUrl),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_refresh_token_validity", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "blocked_roles_list.#", "2"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - LOOKER"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - LOOKER"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.comment.0.value", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// unset
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic"),
-				ConfigVariables: configVariables(false),
+				Config: accconfig.FromModels(t, basicModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(basicModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri", validUrl),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "-1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", ""),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", ""),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientLooker)),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_redirect_uri", validUrl),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "enabled", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_issue_refresh_tokens", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_refresh_token_validity", "-1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_use_secondary_roles", ""),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "blocked_roles_list.#", "2"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "comment", ""),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - LOOKER"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", ""),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - LOOKER"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.enabled", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.comment", ""),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", ""),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypeConfidential)),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.enabled.0.value", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.comment.0.value", ""),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 		},
@@ -291,28 +283,24 @@ func TestAcc_OauthIntegrationForPartnerApplications_Basic(t *testing.T) {
 }
 
 func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
 
-	configVariables := func(complete bool) config.Variables {
-		values := config.Variables{
-			"name":               config.StringVariable(id.Name()),
-			"oauth_client":       config.StringVariable(string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
-			"blocked_roles_list": config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
-		}
-		if complete {
-			values["blocked_roles_list"] = config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN"), config.StringVariable(role.ID().Name()))
-			values["enabled"] = config.BoolVariable(true)
-			values["oauth_issue_refresh_tokens"] = config.BoolVariable(false)
-			values["oauth_refresh_token_validity"] = config.IntegerVariable(86400)
-			values["oauth_use_secondary_roles"] = config.StringVariable(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))
-			values["comment"] = config.StringVariable(comment)
-		}
-		return values
-	}
+	basicModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientTableauDesktop)).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN")
+	completeModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientTableauDesktop)).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN", role.ID().Name()).
+		WithComment(comment).
+		WithEnabled(datasources.BooleanTrue).
+		WithOauthIssueRefreshTokens(datasources.BooleanFalse).
+		WithOauthRefreshTokenValidity(86400).
+		WithOauthUseSecondaryRoles(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -324,49 +312,47 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 		Steps: []resource.TestStep{
 			// create with empty optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic_tableau"),
-				ConfigVariables: configVariables(false),
+				Config: accconfig.FromModels(t, basicModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "-1"),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", ""),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "oauth_redirect_uri"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "enabled", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_issue_refresh_tokens", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_refresh_token_validity", "-1"),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "oauth_use_secondary_roles"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "blocked_roles_list.#", "2"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "comment", ""),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", ""),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.enabled", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.comment", ""),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", ""),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.enabled.0.value", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.comment.0.value", ""),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// import - without optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic_tableau"),
-				ConfigVariables: configVariables(false),
-				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
-				ImportState:     true,
+				Config:       accconfig.FromModels(t, basicModel),
+				ResourceName: "snowflake_oauth_integration_for_partner_applications.test",
+				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
@@ -380,54 +366,52 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 			},
 			// set optionals
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete_tableau"),
-				ConfigVariables: configVariables(true),
+				Config: accconfig.FromModels(t, completeModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(completeModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "3"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", comment),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "oauth_redirect_uri"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_refresh_token_validity", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "blocked_roles_list.#", "3"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", comment),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.comment.0.value", comment),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// import - complete
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete_tableau"),
-				ConfigVariables: configVariables(true),
-				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
-				ImportState:     true,
+				Config:       accconfig.FromModels(t, completeModel),
+				ResourceName: "snowflake_oauth_integration_for_partner_applications.test",
+				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
@@ -441,8 +425,7 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 			},
 			// change externally
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete_tableau"),
-				ConfigVariables: configVariables(true),
+				Config: accconfig.FromModels(t, completeModel),
 				PreConfig: func() {
 					acc.TestClient().SecurityIntegration.UpdateOauthForPartnerApplications(t, sdk.NewAlterOauthForPartnerApplicationsSecurityIntegrationRequest(id).WithSet(
 						*sdk.NewOauthForPartnerApplicationsIntegrationSetRequest().
@@ -459,98 +442,97 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(completeModel.ResourceReference(), plancheck.ResourceActionUpdate),
 
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "enabled", sdk.String("true"), sdk.String("false")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "comment", sdk.String(comment), sdk.String("")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone))),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectDrift("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", sdk.String("86400"), sdk.String("3600")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "enabled", sdk.String("true"), sdk.String("false")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "comment", sdk.String(comment), sdk.String("")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "oauth_use_secondary_roles", sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone))),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectDrift(completeModel.ResourceReference(), "oauth_refresh_token_validity", sdk.String("86400"), sdk.String("3600")),
 
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "enabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "comment", tfjson.ActionUpdate, sdk.String(""), sdk.String(comment)),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", tfjson.ActionUpdate, sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
-						planchecks.ExpectChange("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", tfjson.ActionUpdate, sdk.String("3600"), sdk.String("86400")),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "enabled", tfjson.ActionUpdate, sdk.String("false"), sdk.String("true")),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "comment", tfjson.ActionUpdate, sdk.String(""), sdk.String(comment)),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "oauth_use_secondary_roles", tfjson.ActionUpdate, sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesNone)), sdk.String(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit))),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+						planchecks.ExpectChange(completeModel.ResourceReference(), "oauth_refresh_token_validity", tfjson.ActionUpdate, sdk.String("3600"), sdk.String("86400")),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "3"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", comment),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "oauth_redirect_uri"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_refresh_token_validity", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "blocked_roles_list.#", "3"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", comment),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "IMPLICIT"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.comment.0.value", comment),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// unset
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/basic_tableau"),
-				ConfigVariables: configVariables(false),
+				Config: accconfig.FromModels(t, basicModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(basicModel.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "default"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "-1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", ""),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", ""),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "oauth_redirect_uri"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "enabled", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_issue_refresh_tokens", "default"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_refresh_token_validity", "-1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "oauth_use_secondary_roles", ""),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "blocked_roles_list.#", "2"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "comment", ""),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", ""),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - TABLEAU_DESKTOP"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.enabled", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "show_output.0.comment", ""),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", ""),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.enabled.0.value", "false"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", "NONE"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "true"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "7776000"),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "describe_output.0.comment.0.value", ""),
+					resource.TestCheckNoResourceAttr(basicModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(basicModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 		},
@@ -558,18 +540,19 @@ func TestAcc_OauthIntegrationForPartnerApplications_BasicTableauDesktop(t *testi
 }
 
 func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
-	configVariables := config.Variables{
-		"name":                         config.StringVariable(id.Name()),
-		"oauth_client":                 config.StringVariable(string(sdk.OauthSecurityIntegrationClientTableauServer)),
-		"blocked_roles_list":           config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
-		"enabled":                      config.BoolVariable(true),
-		"oauth_issue_refresh_tokens":   config.BoolVariable(false),
-		"oauth_refresh_token_validity": config.IntegerVariable(86400),
-		"oauth_use_secondary_roles":    config.StringVariable(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-		"comment":                      config.StringVariable(comment),
-	}
+
+	completeModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientTableauServer)).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN").
+		WithEnabled(datasources.BooleanTrue).
+		WithOauthIssueRefreshTokens(datasources.BooleanFalse).
+		WithOauthRefreshTokenValidity(86400).
+		WithOauthUseSecondaryRoles(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)).
+		WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -580,50 +563,48 @@ func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.OauthIntegrationForPartnerApplications),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete_tableau"),
-				ConfigVariables: configVariables,
+				Config: accconfig.FromModels(t, completeModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauServer)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_redirect_uri"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_issue_refresh_tokens", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_refresh_token_validity", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "blocked_roles_list.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "comment", comment),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_client", string(sdk.OauthSecurityIntegrationClientTableauServer)),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "oauth_redirect_uri"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_issue_refresh_tokens", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_refresh_token_validity", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "oauth_use_secondary_roles", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "blocked_roles_list.#", "2"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.integration_type", "OAUTH - TABLEAU_SERVER"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.category", "SECURITY"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.comment", comment),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "show_output.0.created_on"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.name", id.Name()),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.integration_type", "OAUTH - TABLEAU_SERVER"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.category", "SECURITY"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.enabled", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "show_output.0.comment", comment),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "show_output.0.created_on"),
 
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_redirect_uri.0.value"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.enabled.0.value", "true"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_use_secondary_roles.0.value", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.comment.0.value", comment),
-					resource.TestCheckNoResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_client_id.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_authorization_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_token_endpoint.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
-					resource.TestCheckResourceAttrSet("snowflake_oauth_integration_for_partner_applications.test", "describe_output.0.oauth_allowed_token_endpoints.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.#", "1"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_type.0.value", string(sdk.OauthSecurityIntegrationClientTypePublic)),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_redirect_uri.0.value"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.enabled.0.value", "true"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_use_secondary_roles.0.value", string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.blocked_roles_list.0.value", "ACCOUNTADMIN,SECURITYADMIN"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_issue_refresh_tokens.0.value", "false"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_refresh_token_validity.0.value", "86400"),
+					resource.TestCheckResourceAttr(completeModel.ResourceReference(), "describe_output.0.comment.0.value", comment),
+					resource.TestCheckNoResourceAttr(completeModel.ResourceReference(), "describe_output.0.oauth_client_id.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_authorization_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_token_endpoint.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_authorization_endpoints.0.value"),
+					resource.TestCheckResourceAttrSet(completeModel.ResourceReference(), "describe_output.0.oauth_allowed_token_endpoints.0.value"),
 				),
 			},
 			// import - complete
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/complete_tableau"),
-				ConfigVariables: configVariables,
-				ResourceName:    "snowflake_oauth_integration_for_partner_applications.test",
-				ImportState:     true,
+				Config:       accconfig.FromModels(t, completeModel),
+				ResourceName: "snowflake_oauth_integration_for_partner_applications.test",
+				ImportState:  true,
 				ImportStateCheck: importchecks.ComposeAggregateImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "name", id.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "fully_qualified_name", id.FullyQualifiedName()),
@@ -641,21 +622,17 @@ func TestAcc_OauthIntegrationForPartnerApplications_Complete(t *testing.T) {
 }
 
 func TestAcc_OauthIntegrationForPartnerApplications_Invalid(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
-	invalidUseSecondaryRoles := config.Variables{
-		"name":                      config.StringVariable(id.Name()),
-		"oauth_client":              config.StringVariable(string(sdk.OauthSecurityIntegrationClientTableauDesktop)),
-		"oauth_use_secondary_roles": config.StringVariable("invalid"),
-		"blocked_roles_list":        config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
-	}
+	invalidUseSecondaryRolesModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientTableauDesktop)).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN").
+		WithOauthUseSecondaryRoles("invalid")
 
-	invalidOauthClient := config.Variables{
-		"name":                      config.StringVariable(id.Name()),
-		"oauth_client":              config.StringVariable("invalid"),
-		"oauth_use_secondary_roles": config.StringVariable(string(sdk.OauthSecurityIntegrationUseSecondaryRolesImplicit)),
-		"blocked_roles_list":        config.SetVariable(config.StringVariable("ACCOUNTADMIN"), config.StringVariable("SECURITYADMIN")),
-	}
+	invalidOauthClientModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), "invalid").
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -665,21 +642,29 @@ func TestAcc_OauthIntegrationForPartnerApplications_Invalid(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/invalid"),
-				ConfigVariables: invalidUseSecondaryRoles,
-				ExpectError:     regexp.MustCompile(`Error: invalid OauthSecurityIntegrationUseSecondaryRolesOption: INVALID`),
+				Config:      accconfig.FromModels(t, invalidUseSecondaryRolesModel),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Error: invalid OauthSecurityIntegrationUseSecondaryRolesOption: INVALID`),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_OauthIntegrationForPartnerApplications/invalid"),
-				ConfigVariables: invalidOauthClient,
-				ExpectError:     regexp.MustCompile(`Error: invalid OauthSecurityIntegrationClientOption: INVALID`),
+				Config:      accconfig.FromModels(t, invalidOauthClientModel),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Error: invalid OauthSecurityIntegrationClientOption: INVALID`),
 			},
 		},
 	})
 }
 
 func TestAcc_OauthIntegrationForPartnerApplications_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	validUrl := "https://example.com"
+
+	basicModel := model.OauthIntegrationForPartnerApplications("test", id.Name(), string(sdk.OauthSecurityIntegrationClientLooker)).
+		WithOauthRedirectUri(validUrl).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -696,17 +681,17 @@ func TestAcc_OauthIntegrationForPartnerApplications_migrateFromV0941_ensureSmoot
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: oauthIntegrationForPartnerApplicationsBasicConfig(id.Name()),
+				Config: accconfig.FromModels(t, basicModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   oauthIntegrationForPartnerApplicationsBasicConfig(id.Name()),
+				Config:                   accconfig.FromModels(t, basicModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},
@@ -714,8 +699,16 @@ func TestAcc_OauthIntegrationForPartnerApplications_migrateFromV0941_ensureSmoot
 }
 
 func TestAcc_OauthIntegrationForPartnerApplications_WithQuotedName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+	quotedId := fmt.Sprintf(`"%s"`, id.Name())
+	validUrl := "https://example.com"
+
+	basicModel := model.OauthIntegrationForPartnerApplications("test", quotedId, string(sdk.OauthSecurityIntegrationClientLooker)).
+		WithOauthRedirectUri(validUrl).
+		WithBlockedRolesList("ACCOUNTADMIN", "SECURITYADMIN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -733,50 +726,43 @@ func TestAcc_OauthIntegrationForPartnerApplications_WithQuotedName(t *testing.T)
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Config:             oauthIntegrationForPartnerApplicationsBasicConfig(quotedId),
+				Config:             accconfig.FromModels(t, basicModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   oauthIntegrationForPartnerApplicationsBasicConfig(quotedId),
+				Config:                   accconfig.FromModels(t, basicModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(basicModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_oauth_integration_for_partner_applications.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(basicModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_oauth_integration_for_partner_applications.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(basicModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func oauthIntegrationForPartnerApplicationsBasicConfig(name string) string {
-	return fmt.Sprintf(`
-resource "snowflake_oauth_integration_for_partner_applications" "test" {
-  name               = "%s"
-  oauth_client       = "LOOKER"
-  oauth_redirect_uri = "https://example.com"
-  blocked_roles_list = [ "ACCOUNTADMIN", "SECURITYADMIN" ]
-}
-`, name)
-}
-
 func TestAcc_OauthIntegrationForPartnerApplications_WithPrivilegedRolesBlockedList(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	// Use an identifier with this prefix to have this role in the end.
 	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifierWithPrefix("Z")
 	role, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
 	t.Cleanup(roleCleanup)
+
 	allRoles := []string{snowflakeroles.Accountadmin.Name(), snowflakeroles.SecurityAdmin.Name(), role.ID().Name()}
 	onlyPrivilegedRoles := []string{snowflakeroles.Accountadmin.Name(), snowflakeroles.SecurityAdmin.Name()}
 	customRoles := []string{role.ID().Name()}
@@ -842,6 +828,9 @@ func TestAcc_OauthIntegrationForPartnerApplications_WithPrivilegedRolesBlockedLi
 }
 
 func TestAcc_OauthIntegrationForPartnerApplications_DetectExternalChangesForOauthRedirectUri(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	oauthRedirectUri := "https://example.com"
 	otherOauthRedirectUri := "https://example2.com"

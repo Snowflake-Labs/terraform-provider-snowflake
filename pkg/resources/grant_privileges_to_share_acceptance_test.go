@@ -16,23 +16,24 @@ import (
 )
 
 func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configVariables := func(withGrant bool) config.Variables {
-		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-		}
-		if withGrant {
-			variables["privileges"] = config.ListVariable(
-				config.StringVariable(sdk.ObjectPrivilegeUsage.String()),
-			)
-		}
-		return variables
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	configVariables := config.Variables{
+		"to_share": config.StringVariable(share.ID().Name()),
+		"database": config.StringVariable(database.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.ObjectPrivilegeUsage.String()),
+		),
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -42,24 +43,23 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables: configVariables(true),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_database", databaseName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "on_database", database.ID().Name()),
 				),
 			},
 			{
 				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables:   configVariables(true),
+				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoGrant"),
-				ConfigVariables: configVariables(false),
 				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
@@ -67,14 +67,21 @@ func TestAcc_GrantPrivilegesToShare_OnDatabase(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database.ID())
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.Name()),
-			"database": config.StringVariable(databaseId.Name()),
+			"to_share": config.StringVariable(share.ID().Name()),
+			"database": config.StringVariable(database.ID().Name()),
 			"schema":   config.StringVariable(schemaId.Name()),
 		}
 		if withGrant {
@@ -84,8 +91,8 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 		}
 		return variables
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -97,7 +104,7 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnSchema"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
 					resource.TestCheckResourceAttr(resourceName, "on_schema", schemaId.FullyQualifiedName()),
@@ -120,16 +127,24 @@ func TestAcc_GrantPrivilegesToShare_OnSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.Name()),
-			"database": config.StringVariable(databaseId.Name()),
-			"schema":   config.StringVariable(schemaId.Name()),
+			"to_share": config.StringVariable(share.ID().Name()),
+			"database": config.StringVariable(database.ID().Name()),
+			"schema":   config.StringVariable(schema.ID().Name()),
 			"on_table": config.StringVariable(tableId.Name()),
 		}
 		if withGrant {
@@ -139,8 +154,8 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 		}
 		return variables
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -152,7 +167,7 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTable"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "on_table", tableId.FullyQualifiedName()),
@@ -175,25 +190,28 @@ func TestAcc_GrantPrivilegesToShare_OnTable(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configVariables := func(withGrant bool) config.Variables {
-		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.Name()),
-			"database": config.StringVariable(databaseId.Name()),
-			"schema":   config.StringVariable(schemaId.Name()),
-		}
-		if withGrant {
-			variables["privileges"] = config.ListVariable(
-				config.StringVariable(sdk.ObjectPrivilegeSelect.String()),
-			)
-		}
-		return variables
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	configVariables := config.Variables{
+		"to_share": config.StringVariable(share.ID().Name()),
+		"database": config.StringVariable(database.ID().Name()),
+		"schema":   config.StringVariable(schema.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.ObjectPrivilegeSelect.String()),
+		),
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -203,24 +221,23 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnAllTablesInSchema"),
-				ConfigVariables: configVariables(true),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_all_tables_in_schema", schemaId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "on_all_tables_in_schema", schema.ID().FullyQualifiedName()),
 				),
 			},
 			{
 				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnAllTablesInSchema"),
-				ConfigVariables:   configVariables(true),
+				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnAllTablesInSchema_NoGrant"),
-				ConfigVariables: configVariables(false),
 				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
@@ -228,19 +245,28 @@ func TestAcc_GrantPrivilegesToShare_OnAllTablesInSchema(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.Name()),
-			"database": config.StringVariable(databaseId.Name()),
-			"schema":   config.StringVariable(schemaId.Name()),
+			"to_share": config.StringVariable(share.ID().Name()),
+			"database": config.StringVariable(database.ID().Name()),
+			"schema":   config.StringVariable(schema.ID().Name()),
 			"on_table": config.StringVariable(tableId.Name()),
 			"on_view":  config.StringVariable(viewId.Name()),
 		}
@@ -251,8 +277,8 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 		}
 		return variables
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -264,7 +290,7 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnView"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeSelect.String()),
 					resource.TestCheckResourceAttr(resourceName, "on_view", viewId.FullyQualifiedName()),
@@ -287,16 +313,24 @@ func TestAcc_GrantPrivilegesToShare_OnView(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	tagId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareId.Name()),
-			"database": config.StringVariable(databaseId.Name()),
-			"schema":   config.StringVariable(schemaId.Name()),
+			"to_share": config.StringVariable(share.ID().Name()),
+			"database": config.StringVariable(database.ID().Name()),
+			"schema":   config.StringVariable(schema.ID().Name()),
 			"on_tag":   config.StringVariable(tagId.Name()),
 		}
 		if withGrant {
@@ -306,8 +340,8 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 		}
 		return variables
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -319,7 +353,7 @@ func TestAcc_GrantPrivilegesToShare_OnTag(t *testing.T) {
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnTag"),
 				ConfigVariables: configVariables(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeRead.String()),
 					resource.TestCheckResourceAttr(resourceName, "on_tag", tagId.FullyQualifiedName()),
@@ -347,7 +381,9 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithArguments(t *te
 
 	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
+
 	function := acc.TestClient().Function.CreateSecure(t, sdk.DataTypeFloat)
+
 	configVariables := config.Variables{
 		"name":          config.StringVariable(share.ID().Name()),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -358,8 +394,8 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithArguments(t *te
 		"schema":        config.StringVariable(acc.TestSchemaName),
 		"argument_type": config.StringVariable(string(sdk.DataTypeFloat)),
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -395,7 +431,9 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithoutArguments(t 
 
 	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
+
 	function := acc.TestClient().Function.CreateSecure(t)
+
 	configVariables := config.Variables{
 		"name":          config.StringVariable(share.ID().Name()),
 		"function_name": config.StringVariable(function.ID().Name()),
@@ -406,8 +444,8 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithoutArguments(t 
 		"schema":        config.StringVariable(acc.TestSchemaName),
 		"argument_type": config.StringVariable(""),
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -438,27 +476,31 @@ func TestAcc_GrantPrivilegesToShare_OnSchemaObject_OnFunctionWithoutArguments(t 
 }
 
 func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configVariables := func(withGrant bool, privileges []sdk.ObjectPrivilege) config.Variables {
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	configVariables := func(privileges []sdk.ObjectPrivilege) config.Variables {
 		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
+			"to_share": config.StringVariable(share.ID().Name()),
+			"database": config.StringVariable(database.ID().Name()),
 		}
-		if withGrant {
-			if len(privileges) > 0 {
-				configPrivileges := make([]config.Variable, len(privileges))
-				for i, privilege := range privileges {
-					configPrivileges[i] = config.StringVariable(privilege.String())
-				}
-				variables["privileges"] = config.ListVariable(configPrivileges...)
+		if len(privileges) > 0 {
+			configPrivileges := make([]config.Variable, len(privileges))
+			for i, privilege := range privileges {
+				configPrivileges[i] = config.StringVariable(privilege.String())
 			}
+			variables["privileges"] = config.ListVariable(configPrivileges...)
 		}
 		return variables
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -468,31 +510,31 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables: configVariables(true, []sdk.ObjectPrivilege{
+				ConfigVariables: configVariables([]sdk.ObjectPrivilege{
 					sdk.ObjectPrivilegeReferenceUsage,
 				}),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeReferenceUsage.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_database", databaseName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "on_database", database.ID().Name()),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables: configVariables(true, []sdk.ObjectPrivilege{
+				ConfigVariables: configVariables([]sdk.ObjectPrivilege{
 					sdk.ObjectPrivilegeUsage,
 				}),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeUsage.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_database", databaseName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "on_database", database.ID().Name()),
 				),
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables: configVariables(true, []sdk.ObjectPrivilege{
+				ConfigVariables: configVariables([]sdk.ObjectPrivilege{
 					sdk.ObjectPrivilegeUsage,
 				}),
 				ResourceName:      resourceName,
@@ -501,7 +543,6 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoGrant"),
-				ConfigVariables: configVariables(false, []sdk.ObjectPrivilege{}),
 				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
@@ -509,23 +550,24 @@ func TestAcc_GrantPrivilegesToShare_OnPrivilegeUpdate(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configVariables := func(withGrant bool) config.Variables {
-		variables := config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-		}
-		if withGrant {
-			variables["privileges"] = config.ListVariable(
-				config.StringVariable(sdk.ObjectPrivilegeReferenceUsage.String()),
-			)
-		}
-		return variables
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
+
+	configVariables := config.Variables{
+		"to_share": config.StringVariable(share.ID().Name()),
+		"database": config.StringVariable(database.ID().Name()),
+		"privileges": config.ListVariable(
+			config.StringVariable(sdk.ObjectPrivilegeReferenceUsage.String()),
+		),
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -535,24 +577,23 @@ func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *tes
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables: configVariables(true),
+				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "to_share", shareName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "to_share", share.ID().Name()),
 					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "privileges.0", sdk.ObjectPrivilegeReferenceUsage.String()),
-					resource.TestCheckResourceAttr(resourceName, "on_database", databaseName.Name()),
+					resource.TestCheckResourceAttr(resourceName, "on_database", database.ID().Name()),
 				),
 			},
 			{
 				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase"),
-				ConfigVariables:   configVariables(true),
+				ConfigVariables:   configVariables,
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoGrant"),
-				ConfigVariables: configVariables(false),
 				Check:           acc.CheckSharePrivilegesRevoked(t),
 			},
 		},
@@ -560,16 +601,6 @@ func TestAcc_GrantPrivilegesToShare_OnDatabaseWithReferenceUsagePrivilege(t *tes
 }
 
 func TestAcc_GrantPrivilegesToShare_NoPrivileges(t *testing.T) {
-	databaseName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	configVariables := func() config.Variables {
-		return config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"database": config.StringVariable(databaseName.Name()),
-		}
-	}
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -579,7 +610,7 @@ func TestAcc_GrantPrivilegesToShare_NoPrivileges(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnDatabase_NoPrivileges"),
-				ConfigVariables: configVariables(),
+				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile(`The argument "privileges" is required, but no definition was found.`),
 			},
 		},
@@ -587,17 +618,6 @@ func TestAcc_GrantPrivilegesToShare_NoPrivileges(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
-	shareName := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	configVariables := func() config.Variables {
-		return config.Variables{
-			"to_share": config.StringVariable(shareName.Name()),
-			"privileges": config.ListVariable(
-				config.StringVariable(sdk.ObjectPrivilegeReferenceUsage.String()),
-			),
-		}
-	}
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -607,7 +627,7 @@ func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/NoOnOption"),
-				ConfigVariables: configVariables(),
+				PlanOnly:        true,
 				ExpectError:     regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
@@ -616,19 +636,23 @@ func TestAcc_GrantPrivilegesToShare_NoOnOption(t *testing.T) {
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2621 doesn't apply to this resource
 func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareName := shareId.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
 
 	configVariables := config.Variables{
-		"to_share": config.StringVariable(shareName),
-		"database": config.StringVariable(databaseName),
+		"to_share": config.StringVariable(share.ID().Name()),
+		"database": config.StringVariable(database.ID().Name()),
 		"privileges": config.ListVariable(
 			config.StringVariable(sdk.ObjectPrivilegeUsage.String()),
 		),
 	}
 
-	var shareCleanup func()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -637,10 +661,6 @@ func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, shareCleanup = acc.TestClient().Share.CreateShareWithIdentifier(t, shareId)
-					t.Cleanup(shareCleanup)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToShare/OnCustomShare"),
 				ConfigVariables: configVariables,
 			},
@@ -656,16 +676,25 @@ func TestAcc_GrantPrivilegesToShare_RemoveShareOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".foo.bar")
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".foo.bar")
+	_, shareCleanup := acc.TestClient().Share.CreateShareWithIdentifier(t, shareId)
+	t.Cleanup(shareCleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 	configVariables := func(withGrant bool) config.Variables {
 		variables := config.Variables{
 			"to_share": config.StringVariable(shareId.Name()),
-			"database": config.StringVariable(databaseId.Name()),
-			"schema":   config.StringVariable(schemaId.Name()),
+			"database": config.StringVariable(tableId.DatabaseName()),
+			"schema":   config.StringVariable(tableId.SchemaName()),
 			"on_table": config.StringVariable(tableId.Name()),
 		}
 		if withGrant {
@@ -675,8 +704,8 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 		}
 		return variables
 	}
-	resourceName := "snowflake_grant_privileges_to_share.test"
 
+	resourceName := "snowflake_grant_privileges_to_share.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -711,8 +740,14 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 }
 
 func TestAcc_GrantPrivilegesToShare_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	share, shareCleanup := acc.TestClient().Share.CreateShare(t)
+	t.Cleanup(shareCleanup)
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -727,15 +762,15 @@ func TestAcc_GrantPrivilegesToShare_migrateFromV0941_ensureSmoothUpgradeWithNewR
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: grantPrivilegesToShareBasicConfig(databaseId.Name(), shareId.Name()),
+				Config: grantPrivilegesToShareBasicConfig(database.ID(), share.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, share.ID().FullyQualifiedName(), database.ID().FullyQualifiedName())),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantPrivilegesToShareBasicConfig(databaseId.Name(), shareId.Name()),
+				Config:                   grantPrivilegesToShareBasicConfig(database.ID(), share.ID()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_share.test", plancheck.ResourceActionNoop),
@@ -745,38 +780,31 @@ func TestAcc_GrantPrivilegesToShare_migrateFromV0941_ensureSmoothUpgradeWithNewR
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, share.ID().FullyQualifiedName(), database.ID().FullyQualifiedName())),
 				),
 			},
 		},
 	})
 }
 
-func grantPrivilegesToShareBasicConfig(databaseName string, shareName string) string {
+func grantPrivilegesToShareBasicConfig(databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-  name = "%[1]s"
-}
-
-resource "snowflake_share" "test" {
-  depends_on = [snowflake_database.test]
-  name       = "%[2]s"
-}
-
 resource "snowflake_grant_privileges_to_share" "test" {
-  to_share    = snowflake_share.test.name
+  to_share    = "%[2]s"
   privileges  = ["USAGE"]
-  on_database = snowflake_database.test.name
+  on_database = "%[1]s"
 }
-`, databaseName, shareName)
+`, databaseId.Name(), shareId.Name())
 }
 
 func TestAcc_GrantPrivilegesToShare_IdentifierQuotingDiffSuppression(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedDatabaseId := fmt.Sprintf(`\"%s\"`, databaseId.Name())
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
 
 	shareId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedShareId := fmt.Sprintf(`\"%s\"`, shareId.Name())
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -792,12 +820,12 @@ func TestAcc_GrantPrivilegesToShare_IdentifierQuotingDiffSuppression(t *testing.
 					},
 				},
 				ExpectError: regexp.MustCompile("Error: Provider produced inconsistent final plan"),
-				Config:      grantPrivilegesToShareBasicConfig(quotedDatabaseId, quotedShareId),
+				Config:      grantPrivilegesToShareQuotedIdentifiers(database.ID(), shareId),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   grantPrivilegesToShareBasicConfig(quotedDatabaseId, quotedShareId),
+				Config:                   grantPrivilegesToShareQuotedIdentifiers(database.ID(), shareId),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_grant_privileges_to_share.test", plancheck.ResourceActionCreate),
@@ -808,10 +836,26 @@ func TestAcc_GrantPrivilegesToShare_IdentifierQuotingDiffSuppression(t *testing.
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "to_share", shareId.Name()),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "on_database", databaseId.Name()),
-					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), databaseId.FullyQualifiedName())),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "on_database", database.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), database.ID().FullyQualifiedName())),
 				),
 			},
 		},
 	})
+}
+
+func grantPrivilegesToShareQuotedIdentifiers(databaseId sdk.AccountObjectIdentifier, shareId sdk.AccountObjectIdentifier) string {
+	quotedShareId := fmt.Sprintf(`\"%s\"`, shareId.Name())
+
+	return fmt.Sprintf(`
+resource "snowflake_share" "test" {
+  name       = "%[2]s"
+}
+
+resource "snowflake_grant_privileges_to_share" "test" {
+  to_share    = snowflake_share.test.name
+  privileges  = ["USAGE"]
+  on_database = "%[1]s"
+}
+`, databaseId.Name(), quotedShareId)
 }

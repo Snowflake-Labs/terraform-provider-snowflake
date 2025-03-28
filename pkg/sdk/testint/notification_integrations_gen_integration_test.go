@@ -134,7 +134,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
-		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "INBOUND", Default: "INBOUND"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "INBOUND", Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "GCP_PUBSUB_SUBSCRIPTION_NAME", Type: "String", Value: gcpPubsubSubscriptionName, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})
 
@@ -184,7 +184,7 @@ func TestInt_NotificationIntegrations(t *testing.T) {
 
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "ENABLED", Type: "Boolean", Value: "true", Default: "false"})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "NOTIFICATION_PROVIDER", Type: "String", Value: "AWS_SNS", Default: ""})
-		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "OUTBOUND", Default: "INBOUND"})
+		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "DIRECTION", Type: "String", Value: "OUTBOUND", Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_TOPIC_ARN", Type: "String", Value: awsSnsTopicArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "AWS_SNS_ROLE_ARN", Type: "String", Value: awsSnsRoleArn, Default: ""})
 		assert.Contains(t, details, sdk.NotificationIntegrationProperty{Name: "COMMENT", Type: "String", Value: "", Default: ""})

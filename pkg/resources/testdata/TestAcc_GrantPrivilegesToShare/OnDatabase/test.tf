@@ -1,14 +1,5 @@
-resource "snowflake_share" "test" {
-  depends_on = [snowflake_database.test]
-  name       = var.to_share
-}
-
-resource "snowflake_database" "test" {
-  name = var.database
-}
-
 resource "snowflake_grant_privileges_to_share" "test" {
-  to_share    = snowflake_share.test.name
+  to_share    = var.to_share
   privileges  = var.privileges
-  on_database = snowflake_database.test.name
+  on_database = var.database
 }

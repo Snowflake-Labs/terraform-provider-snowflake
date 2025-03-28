@@ -24,10 +24,19 @@ func TestAcc_NetworkPolicies_Complete(t *testing.T) {
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
-	allowedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	allowedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	blockedNetworkRuleId1 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	blockedNetworkRuleId2 := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	allowedNetworkRule1, allowedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
+	t.Cleanup(allowedNetworkRule1Cleanup)
+	allowedNetworkRule2, allowedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
+	t.Cleanup(allowedNetworkRule2Cleanup)
+	blockedNetworkRule1, blockedNetworkRule1Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
+	t.Cleanup(blockedNetworkRule1Cleanup)
+	blockedNetworkRule2, blockedNetworkRule2Cleanup := acc.TestClient().NetworkRule.CreateIngress(t)
+	t.Cleanup(blockedNetworkRule2Cleanup)
+
+	allowedNetworkRuleId1 := allowedNetworkRule1.ID()
+	allowedNetworkRuleId2 := allowedNetworkRule2.ID()
+	blockedNetworkRuleId1 := blockedNetworkRule1.ID()
+	blockedNetworkRuleId2 := blockedNetworkRule2.ID()
 
 	networkPolicyModel1 := model.NetworkPolicy("test", id.Name()).
 		WithComment(comment).
@@ -61,12 +70,6 @@ func TestAcc_NetworkPolicies_Complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId1)
-					acc.TestClient().NetworkRule.CreateWithIdentifier(t, allowedNetworkRuleId2)
-					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId1)
-					acc.TestClient().NetworkRule.CreateWithIdentifier(t, blockedNetworkRuleId2)
-				},
 				Config: accconfig.FromModels(t, networkPolicyModel1, networkPolicyModel2, networkPoliciesModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(networkPoliciesModel.DatasourceReference(), "network_policies.#", "1"),

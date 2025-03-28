@@ -5,19 +5,18 @@ import (
 	"regexp"
 	"testing"
 
-	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -25,7 +24,10 @@ import (
 )
 
 func TestAcc_ScimIntegration_basic(t *testing.T) {
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	role, role2 := snowflakeroles.GenericScimProvisioner, snowflakeroles.OktaProvisioner
@@ -79,7 +81,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.enabled.0.value", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.network_policy.0.value", ""),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.run_as_role.0.value", role.Name()),
-					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.sync_password.0.value", "true"),
+					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.sync_password.0.value", "false"),
 					resource.TestCheckResourceAttr("snowflake_scim_integration.test", "describe_output.0.comment.0.value", ""),
 				),
 			},
@@ -95,7 +97,7 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "scim_client", "GENERIC"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "run_as_role", role.Name()),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "network_policy", ""),
-					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "sync_password", "true"),
+					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "sync_password", "false"),
 					importchecks.TestCheckResourceAttrInstanceState(resourcehelpers.EncodeResourceIdentifier(id), "comment", ""),
 				),
 			},
@@ -164,7 +166,10 @@ func TestAcc_ScimIntegration_basic(t *testing.T) {
 }
 
 func TestAcc_ScimIntegration_complete(t *testing.T) {
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	role := snowflakeroles.GenericScimProvisioner
@@ -213,7 +218,10 @@ func TestAcc_ScimIntegration_complete(t *testing.T) {
 }
 
 func TestAcc_ScimIntegration_completeAzure(t *testing.T) {
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	role := snowflakeroles.GenericScimProvisioner
