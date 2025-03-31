@@ -9,6 +9,15 @@ across different versions.
 >
 > If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
 
+## v1.0.5 ➞ v1.1.0
+
+### Timeouts in resources and data sources
+By default, resource operation timeouts after 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). We already added configurable timeouts to `execute`, `tag_association` and `cortex_search_service` before.
+
+Now, we also allow setting them on other resource and data source config level (following [official documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts)).
+
+References: [#3355](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3355)
+
 ## v1.0.4 ➞ v1.0.5
 
 ### Changes in TOML configuration file requirements

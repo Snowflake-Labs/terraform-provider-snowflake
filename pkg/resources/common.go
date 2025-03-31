@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
@@ -205,4 +206,11 @@ func PreviewFeatureDeleteContextWrapper(featureRaw string, deleteFunc schema.Del
 		}
 		return deleteFunc(ctx, d, meta)
 	}
+}
+
+var defaultTimeouts = &schema.ResourceTimeout{
+	Create: schema.DefaultTimeout(60 * time.Minute),
+	Read:   schema.DefaultTimeout(60 * time.Minute),
+	Update: schema.DefaultTimeout(60 * time.Minute),
+	Delete: schema.DefaultTimeout(60 * time.Minute),
 }
