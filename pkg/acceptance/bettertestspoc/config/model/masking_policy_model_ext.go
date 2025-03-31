@@ -3,16 +3,32 @@ package model
 import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 )
 
+func MaskingPolicyDynamicArguments(
+	resourceName string,
+	id sdk.SchemaObjectIdentifier,
+	body string,
+	returnDataType sdk.DataType,
+) *MaskingPolicyModel {
+	m := &MaskingPolicyModel{ResourceModelMeta: config.Meta(resourceName, resources.MaskingPolicy)}
+	m.WithDatabase(id.DatabaseName())
+	m.WithSchema(id.SchemaName())
+	m.WithName(id.Name())
+	m.WithBody(body)
+	m.WithReturnDataType(string(returnDataType))
+	return m.WithDynamicBlock(config.NewDynamicBlock("argument", "arguments", []string{"name", "type"}))
+}
+
 func (p *MaskingPolicyModel) WithArgument(argument []sdk.TableColumnSignature) *MaskingPolicyModel {
-	maps := make([]config.Variable, len(argument))
+	maps := make([]tfconfig.Variable, len(argument))
 	for i, v := range argument {
-		maps[i] = config.MapVariable(map[string]config.Variable{
-			"name": config.StringVariable(v.Name),
-			"type": config.StringVariable(string(v.Type)),
+		maps[i] = tfconfig.MapVariable(map[string]tfconfig.Variable{
+			"name": tfconfig.StringVariable(v.Name),
+			"type": tfconfig.StringVariable(string(v.Type)),
 		})
 	}
 	p.Argument = tfconfig.SetVariable(maps...)

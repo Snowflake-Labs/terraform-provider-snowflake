@@ -23,6 +23,9 @@ type MaskingPolicyModel struct {
 	ReturnDataType      tfconfig.Variable `json:"return_data_type,omitempty"`
 	Schema              tfconfig.Variable `json:"schema,omitempty"`
 
+	// added manually as a PoC
+	DynamicBlock *config.DynamicBlock `json:"dynamic,omitempty"`
+
 	*config.ResourceModelMeta
 }
 
@@ -84,6 +87,12 @@ func (m *MaskingPolicyModel) MarshalJSON() ([]byte, error) {
 
 func (m *MaskingPolicyModel) WithDependsOn(values ...string) *MaskingPolicyModel {
 	m.SetDependsOn(values...)
+	return m
+}
+
+// added manually as a PoC
+func (m *MaskingPolicyModel) WithDynamicBlock(dynamicBlock *config.DynamicBlock) *MaskingPolicyModel {
+	m.DynamicBlock = dynamicBlock
 	return m
 }
 
