@@ -123,6 +123,7 @@ func userPasswordPolicyAttachmentConfigV087(userName, databaseName, schemaName, 
 	return fmt.Sprintf(`
 resource "snowflake_user" "user" {
 	name = "%[1]s"
+	default_secondary_roles = ["ALL"]
 }
 
 resource "snowflake_password_policy" "pp" {

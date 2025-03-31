@@ -2,13 +2,9 @@ resource "snowflake_account_role" "test" {
   name = var.account_role_name
 }
 
-resource "snowflake_database" "test" {
-  name = var.database_name
-}
-
 resource "snowflake_schema" "test" {
   name     = var.schema_name
-  database = snowflake_database.test.name
+  database = var.database_name
 }
 
 resource "snowflake_grant_ownership" "test" {
@@ -16,7 +12,7 @@ resource "snowflake_grant_ownership" "test" {
   on {
     future {
       object_type_plural = "TABLES"
-      in_schema          = "\"${snowflake_database.test.name}\".\"${snowflake_schema.test.name}\""
+      in_schema          = "\"${var.database_name}\".\"${snowflake_schema.test.name}\""
     }
   }
 }

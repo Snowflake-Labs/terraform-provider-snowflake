@@ -6,6 +6,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,10 +15,12 @@ import (
 )
 
 func TestAcc_CortexSearchService_basic(t *testing.T) {
-	resourceName := "snowflake_cortex_search_service.css"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	newWarehouseName := acc.TestClient().Ids.Alpha()
+	newWarehouseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(id.Name()),
@@ -32,10 +35,11 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 	}
 	variableSet2 := m()
 	variableSet2["attributes"] = config.SetVariable(config.StringVariable("SOME_OTHER_TEXT"))
-	variableSet2["warehouse"] = config.StringVariable(newWarehouseName)
+	variableSet2["warehouse"] = config.StringVariable(newWarehouseId.Name())
 	variableSet2["comment"] = config.StringVariable("Terraform acceptance test - updated")
 	variableSet2["query"] = config.StringVariable(fmt.Sprintf("select SOME_TEXT, SOME_OTHER_TEXT from %s", tableId.FullyQualifiedName()))
 
+	resourceName := "snowflake_cortex_search_service.css"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -82,7 +86,7 @@ func TestAcc_CortexSearchService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on", "SOME_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0", "SOME_OTHER_TEXT"),
-					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseName),
+					resource.TestCheckResourceAttr(resourceName, "warehouse", newWarehouseId.Name()),
 					resource.TestCheckResourceAttr(resourceName, "target_lag", "2 minutes"),
 					resource.TestCheckResourceAttr(resourceName, "comment", "Terraform acceptance test - updated"),
 					resource.TestCheckResourceAttr(resourceName, "query", fmt.Sprintf("select SOME_TEXT, SOME_OTHER_TEXT from %s", tableId.FullyQualifiedName())),

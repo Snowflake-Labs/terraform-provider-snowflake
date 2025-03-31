@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
@@ -13,10 +14,12 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectparametersassert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -26,7 +29,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-1991414]: discuss and address all the nondeterministic tests in this file
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -150,7 +160,13 @@ func TestAcc_Database_Basic(t *testing.T) {
 	})
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_ComputedValues(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -322,6 +338,9 @@ func TestAcc_Database_ComputedValues(t *testing.T) {
 }
 
 func TestAcc_Database_Complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
 	comment := random.Comment()
@@ -412,6 +431,9 @@ func TestAcc_Database_Complete(t *testing.T) {
 }
 
 func TestAcc_Database_Update(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -426,12 +448,8 @@ func TestAcc_Database_Update(t *testing.T) {
 	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
 	t.Cleanup(catalogCleanup)
 
-	basicConfigVariables := func(id sdk.AccountObjectIdentifier, comment string) config.Variables {
-		return config.Variables{
-			"name":    config.StringVariable(id.Name()),
-			"comment": config.StringVariable(comment),
-		}
-	}
+	databaseModel := model.DatabaseWithParametersSet("test", id.Name()).
+		WithComment(comment)
 
 	completeConfigVariables := config.Variables{
 		"name":                                     config.StringVariable(newId.Name()),
@@ -467,11 +485,10 @@ func TestAcc_Database_Update(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Database),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
-				ConfigVariables: basicConfigVariables(id, comment),
+				Config: accconfig.FromModels(t, databaseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(databaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(databaseModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
 				),
 			},
 			{
@@ -502,14 +519,23 @@ func TestAcc_Database_Update(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/basic"),
-				ConfigVariables: basicConfigVariables(id, comment),
+				Config: accconfig.FromModels(t, databaseModel),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(databaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(databaseModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+				),
 			},
 		},
 	})
 }
 
+// For now, this test can sometimes fail (if MAX_DATA_EXTENSION_TIME_IN_DAYS parameter is changed in the meantime).
+// We need to test behavior for the database when it is not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_HierarchicalValues(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -566,7 +592,13 @@ func TestAcc_Database_HierarchicalValues(t *testing.T) {
 	})
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_Replication(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
 
@@ -657,7 +689,13 @@ func TestAcc_Database_Replication(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1991414]: unskip
 func TestAcc_Database_IntParameter(t *testing.T) {
+	t.Skip("Skipping this test temporarily as it messes with the account settings and also depends on other tests.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	databaseBasicConfig := config.Variables{
@@ -681,8 +719,8 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create with setting one param
 			{
-				ConfigVariables: databaseWithIntParameterConfig(50),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/int_parameter/set"),
+				ConfigVariables: databaseWithIntParameterConfig(50),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
@@ -696,8 +734,8 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			},
 			// do not make any change (to check if there is no drift)
 			{
-				ConfigVariables: databaseWithIntParameterConfig(50),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/int_parameter/set"),
+				ConfigVariables: databaseWithIntParameterConfig(50),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -715,8 +753,8 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 			},
 			// change the param value in config
 			{
-				ConfigVariables: databaseWithIntParameterConfig(25),
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Database/int_parameter/set"),
+				ConfigVariables: databaseWithIntParameterConfig(25),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						planchecks.PrintPlanDetails("snowflake_database.test", "data_retention_time_in_days"),
@@ -916,7 +954,13 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1991414]: unskip
 func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *testing.T) {
+	t.Skip("Skipping this test temporarily as it messes with the account settings and also depends on other tests.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
@@ -967,7 +1011,13 @@ func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *te
 	})
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_UpgradeWithTheSameFieldsAsInTheOldOne(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 	dataRetentionTimeInDays := new(string)
@@ -1034,7 +1084,13 @@ resource "snowflake_database" "test" {
 `, id.Name(), comment)
 }
 
+// For now, this test can sometimes fail (if other account parameters are changed in the meantime).
+// We could set the known parameters here.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_UpgradeWithDataRetentionSet(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -1097,7 +1153,13 @@ resource "snowflake_database" "test" {
 `, id.Name(), comment, dataRetention)
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_WithReplication(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	secondaryAccountLocator := acc.SecondaryTestClient().GetAccountLocator()
 	secondaryAccountIdentifier := acc.SecondaryTestClient().Account.GetAccountIdentifier(t).FullyQualifiedName()
@@ -1181,7 +1243,13 @@ resource "snowflake_database" "test" {
 `, id.Name(), strconv.Quote(enableToAccount))
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -1216,7 +1284,13 @@ func TestAcc_Database_WithoutPublicSchema(t *testing.T) {
 	})
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_WithPublicSchema(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -1260,7 +1334,13 @@ resource "snowflake_database" "test" {
 `, id.Name(), strconv.FormatBool(withDropPublicSchema))
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -1301,7 +1381,13 @@ func databaseConfigBasic(name string) string {
 	}`, name)
 }
 
+// For now, this test can sometimes fail (if account parameters are changed in the meantime).
+// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
+// We could try ignoring the changes to parameters too.
 func TestAcc_Database_IdentifierQuotingDiffSuppression(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 

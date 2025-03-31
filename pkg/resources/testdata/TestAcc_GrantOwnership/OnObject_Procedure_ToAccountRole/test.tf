@@ -2,18 +2,14 @@ resource "snowflake_account_role" "test" {
   name = var.account_role_name
 }
 
-resource "snowflake_database" "test" {
-  name = var.database_name
-}
-
 resource "snowflake_schema" "test" {
   name     = var.schema_name
-  database = snowflake_database.test.name
+  database = var.database_name
 }
 
 resource "snowflake_procedure_javascript" "test" {
   name     = var.procedure_name
-  database = snowflake_database.test.name
+  database = var.database_name
   schema   = snowflake_schema.test.name
   arguments {
     arg_name      = "ARG1"

@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testvars"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -37,14 +37,16 @@ func createApp(t *testing.T) *sdk.Application {
 }
 
 func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	parentRole, cleanupParentRole := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(cleanupParentRole)
-	resourceName := "snowflake_grant_application_role.g"
-	applicationRoleName := testvars.ApplicationRole1
 
-	acc.TestAccPreCheck(t)
 	app := createApp(t)
+	applicationRoleName := testvars.ApplicationRole1
 	applicationRoleNameFullyQualified := sdk.NewDatabaseObjectIdentifier(app.Name, applicationRoleName).FullyQualifiedName()
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"parent_account_role_name": config.StringVariable(parentRole.ID().Name()),
@@ -52,6 +54,8 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 			"application_role_name":    config.StringVariable(applicationRoleName),
 		}
 	}
+
+	resourceName := "snowflake_grant_application_role.g"
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -82,12 +86,13 @@ func TestAcc_GrantApplicationRole_accountRole(t *testing.T) {
 }
 
 func TestAcc_GrantApplicationRole_application(t *testing.T) {
-	resourceName := "snowflake_grant_application_role.g"
-	applicationRoleName := testvars.ApplicationRole1
-
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	app := createApp(t)
 	app2 := createApp(t)
+	applicationRoleName := testvars.ApplicationRole1
+	applicationRoleNameFullyQualified := sdk.NewDatabaseObjectIdentifier(app.Name, applicationRoleName).FullyQualifiedName()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -96,7 +101,8 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 			"application_role_name": config.StringVariable(applicationRoleName),
 		}
 	}
-	applicationRoleNameFullyQualified := sdk.NewDatabaseObjectIdentifier(app.Name, applicationRoleName).FullyQualifiedName()
+
+	resourceName := "snowflake_grant_application_role.g"
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -127,12 +133,13 @@ func TestAcc_GrantApplicationRole_application(t *testing.T) {
 }
 
 func TestAcc_GrantApplicationRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
-	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	app := createApp(t)
 	applicationRoleName := testvars.ApplicationRole1
 	appRoleId := sdk.NewDatabaseObjectIdentifier(app.ID().Name(), applicationRoleName)
+	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -186,12 +193,13 @@ resource "snowflake_grant_application_role" "test" {
 }
 
 func TestAcc_GrantApplicationRole_IdentifierQuotingDiffSuppression(t *testing.T) {
-	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	app := createApp(t)
 	applicationRoleName := testvars.ApplicationRole1
 	appRoleId := sdk.NewDatabaseObjectIdentifier(app.ID().Name(), applicationRoleName)
+	parentRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	unquotedApplicationRoleId := fmt.Sprintf(`%s.%s`, appRoleId.DatabaseName(), appRoleId.Name())
 	quotedParentRoleId := fmt.Sprintf(`\"%s\"`, parentRoleId.Name())

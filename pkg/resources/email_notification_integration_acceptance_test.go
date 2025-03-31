@@ -6,6 +6,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -13,6 +14,9 @@ import (
 
 // TODO [SNOW-1007539]: use email of our service user (verified email address is required)
 func TestAcc_EmailNotificationIntegration(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	verifiedEmail := "artur.sawicki@snowflake.com"
 
@@ -56,7 +60,11 @@ resource "snowflake_email_notification_integration" "test" {
 // TestAcc_EmailNotificationIntegration_issue2223 proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2223 issue.
 // Snowflake allowed empty allowed recipients in https://docs.snowflake.com/en/release-notes/2023/7_40#email-notification-integrations-allowed-recipients-no-longer-required.
 func TestAcc_EmailNotificationIntegration_issue2223(t *testing.T) {
-	emailIntegrationName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	emailIntegrationName := id.Name()
 	verifiedEmail := "artur.sawicki@snowflake.com"
 
 	resource.Test(t, resource.TestCase{

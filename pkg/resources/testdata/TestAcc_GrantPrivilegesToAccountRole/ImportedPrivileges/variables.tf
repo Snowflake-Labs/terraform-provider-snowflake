@@ -10,6 +10,3 @@ variable "shared_database_name" {
   type = string
 }
 
-variable "external_share_name" {
-  type = string
-}

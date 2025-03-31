@@ -4,21 +4,24 @@ import (
 	"fmt"
 	"testing"
 
-	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func(complete bool) map[string]config.Variable {
 		c := map[string]config.Variable{
@@ -173,6 +176,9 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_basic(t *testing.
 }
 
 func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -254,6 +260,9 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_invalidIncomplete
 }
 
 func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -289,6 +298,9 @@ func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_migrateFromV0941_
 }
 
 func TestAcc_ApiAuthenticationIntegrationWithClientCredentials_WithQuotedName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 

@@ -9,6 +9,7 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -19,7 +20,13 @@ import (
 )
 
 func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
@@ -67,7 +74,13 @@ func TestAcc_GrantOwnership_OnObject_Database_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
+	_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSetWithId(t, databaseId)
+	t.Cleanup(databaseCleanup)
+
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
@@ -79,8 +92,8 @@ func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) 
 		"account_role_name": config.StringVariable(accountRoleName),
 		"database_name":     config.StringVariable(databaseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -115,7 +128,13 @@ func TestAcc_GrantOwnership_OnObject_Database_IdentifiersWithDots(t *testing.T) 
 }
 
 func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
@@ -131,8 +150,8 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 		"database_name":     config.StringVariable(databaseName),
 		"schema_name":       config.StringVariable(schemaName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -167,8 +186,15 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
+
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
 	schemaFullyQualifiedName := schemaId.FullyQualifiedName()
@@ -182,8 +208,8 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 		"database_name":      config.StringVariable(databaseName),
 		"schema_name":        config.StringVariable(schemaName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -218,8 +244,15 @@ func TestAcc_GrantOwnership_OnObject_Schema_ToDatabaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
+
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
@@ -233,8 +266,8 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 		"schema_name":       config.StringVariable(schemaName),
 		"table_name":        config.StringVariable(tableId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -269,10 +302,18 @@ func TestAcc_GrantOwnership_OnObject_Table_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
+
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
+
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	tableName := tableId.Name()
 	tableFullyQualifiedName := tableId.FullyQualifiedName()
@@ -287,8 +328,8 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 		"schema_name":        config.StringVariable(schemaName),
 		"table_name":         config.StringVariable(tableName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -323,7 +364,13 @@ func TestAcc_GrantOwnership_OnObject_Table_ToDatabaseRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnObject_ProcedureWithArguments_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	procedureId := acc.TestClient().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(acc.TestClient().Ids.Alpha(), schemaId, sdk.DataTypeFloat)
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -370,10 +417,15 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithArguments_ToAccountRole(t *tes
 }
 
 func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	procedureId := acc.TestClient().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(acc.TestClient().Ids.Alpha(), schemaId)
-
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 
 	configVariables := config.Variables{
@@ -382,8 +434,8 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t 
 		"schema_name":        config.StringVariable(schemaId.Name()),
 		"procedure_name":     config.StringVariable(procedureId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -418,7 +470,13 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t 
 }
 
 func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
@@ -431,8 +489,8 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 		"table_name":        config.StringVariable(tableId.Name()),
 		"second_table_name": config.StringVariable(secondTableId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -467,7 +525,13 @@ func TestAcc_GrantOwnership_OnAll_InDatabase_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	secondTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
@@ -482,8 +546,8 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 		"table_name":        config.StringVariable(tableId.Name()),
 		"second_table_name": config.StringVariable(secondTableId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -518,7 +582,13 @@ func TestAcc_GrantOwnership_OnAll_InSchema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
@@ -530,8 +600,8 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 		"account_role_name": config.StringVariable(accountRoleName),
 		"database_name":     config.StringVariable(databaseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -567,8 +637,15 @@ func TestAcc_GrantOwnership_OnFuture_InDatabase_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
+
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
 	schemaFullyQualifiedName := schemaId.FullyQualifiedName()
@@ -582,8 +659,8 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 		"database_name":     config.StringVariable(databaseName),
 		"schema_name":       config.StringVariable(schemaName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -619,9 +696,17 @@ func TestAcc_GrantOwnership_OnFuture_InSchema_ToAccountRole(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
 	configVariables := config.Variables{
-		"account_role_name": config.StringVariable(acc.TestClient().Ids.Alpha()),
-		"database_name":     config.StringVariable(acc.TestClient().Ids.Alpha()),
+		"account_role_name": config.StringVariable(roleId.Name()),
+		"database_name":     config.StringVariable(database.ID().Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -641,9 +726,17 @@ func TestAcc_GrantOwnership_InvalidConfiguration_EmptyObjectType(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
 	configVariables := config.Variables{
-		"account_role_name": config.StringVariable(acc.TestClient().Ids.Alpha()),
-		"database_name":     config.StringVariable(acc.TestClient().Ids.Alpha()),
+		"account_role_name": config.StringVariable(roleId.Name()),
+		"database_name":     config.StringVariable(database.ID().Name()),
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -663,7 +756,13 @@ func TestAcc_GrantOwnership_InvalidConfiguration_MultipleTargets(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
@@ -675,9 +774,8 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 		"account_role_name": config.StringVariable(accountRoleName),
 		"database_name":     config.StringVariable(databaseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
-	var cleanupDatabase func()
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -686,10 +784,6 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, cleanupDatabase = acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(cleanupDatabase)
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -708,7 +802,7 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 				PreConfig: func() {
 					currentRole := acc.TestClient().Context.CurrentRole(t)
 					acc.TestClient().Grant.GrantOwnershipToAccountRole(t, currentRole, sdk.ObjectTypeDatabase, databaseId)
-					cleanupDatabase()
+					databaseCleanup()
 				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/OnObject_Database_ToAccountRole_NoDatabaseResource"),
 				ConfigVariables: configVariables,
@@ -720,23 +814,29 @@ func TestAcc_GrantOwnership_TargetObjectRemovedOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	accountRole, cleanupAccountRole := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(cleanupAccountRole)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
-	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	accountRoleId := accountRole.ID()
 	accountRoleName := accountRoleId.Name()
 	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
-
-	_, cleanupAccountRole := acc.TestClient().Role.CreateRoleWithIdentifier(t, accountRoleId)
-	t.Cleanup(cleanupAccountRole)
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
 		"database_name":     config.StringVariable(databaseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -773,10 +873,18 @@ func TestAcc_GrantOwnership_AccountRoleRemovedOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
+
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	schemaName := schemaId.Name()
+
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	tableName := tableId.Name()
 	materializedViewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
@@ -792,8 +900,8 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 		"materialized_view_name": config.StringVariable(materializedViewId.Name()),
 		"warehouse_name":         config.StringVariable(acc.TestWarehouseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -830,9 +938,18 @@ func TestAcc_GrantOwnership_OnMaterializedView(t *testing.T) {
 func TestAcc_GrantOwnership_RoleBasedAccessControlUseCase(t *testing.T) {
 	t.Skip("Will be un-skipped in SNOW-1313849")
 
-	accountRoleName := acc.TestClient().Ids.Alpha()
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseName := database.ID().Name()
+	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database.ID())
+	schemaName := schemaId.Name()
+
+	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	accountRoleName := accountRoleId.Name()
 	userId := acc.TestClient().Context.CurrentUser(t)
 
 	resource.Test(t, resource.TestCase{
@@ -866,15 +983,11 @@ resource "snowflake_account_role" "test" {
   name = "%[1]s"
 }
 
-resource "snowflake_database" "test" {
-  name = "%[2]s"
-}
-
 resource "snowflake_grant_ownership" "test" {
   account_role_name = snowflake_role.test.name
   on {
     object_type = "DATABASE"
-    object_name = snowflake_database.test.name
+    object_name = "%[2]s"
   }
 }
 
@@ -895,10 +1008,10 @@ provider "snowflake" {
 resource "snowflake_schema" "test" {
   depends_on = [snowflake_grant_ownership.test, snowflake_grant_account_role.test]
   provider = snowflake.secondary
-  database = snowflake_database.test.name
-  name     = "%s"
+  database = "%[1]s"
+  name     = "%[2]s"
 }
-`, schemaName)
+`, databaseName, schemaName)
 
 	if withSecondaryProvider {
 		return fmt.Sprintf("%s\n%s", baseConfig, secondaryProviderConfig)
@@ -908,7 +1021,13 @@ resource "snowflake_schema" "test" {
 }
 
 func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
@@ -924,8 +1043,8 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 		"other_account_role_name": config.StringVariable(otherAccountRoleName),
 		"database_name":           config.StringVariable(databaseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -969,12 +1088,25 @@ func TestAcc_GrantOwnership_MoveOwnershipOutsideTerraform(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	newRole, newRoleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(newRoleCleanup)
+
+	acc.TestClient().Grant.GrantOwnershipToAccountRole(t, role.ID(), sdk.ObjectTypeDatabase, database.ID())
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 	databaseFullyQualifiedName := databaseId.FullyQualifiedName()
 
-	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newDatabaseOwningAccountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newDatabaseOwningAccountRoleId := newRole.ID()
 	newDatabaseOwningAccountRoleName := newDatabaseOwningAccountRoleId.Name()
 
 	configVariables := config.Variables{
@@ -991,15 +1123,6 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					role, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, accountRoleId)
-					t.Cleanup(roleCleanup)
-					_, newRoleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, newDatabaseOwningAccountRoleId)
-					t.Cleanup(newRoleCleanup)
-					database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-					t.Cleanup(databaseCleanup)
-					acc.TestClient().Grant.GrantOwnershipToAccountRole(t, role.ID(), sdk.ObjectTypeDatabase, database.ID())
-				},
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantOwnership/ForceOwnershipTransferOnCreate"),
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
@@ -1014,8 +1137,13 @@ func TestAcc_GrantOwnership_ForceOwnershipTransferOnCreate(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
-	stageName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageName := stageId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
@@ -1024,14 +1152,14 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(pipeId.DatabaseName()),
+		"schema":            config.StringVariable(pipeId.SchemaName()),
 		"stage":             config.StringVariable(stageName),
 		"table":             config.StringVariable(tableName),
 		"pipe":              config.StringVariable(pipeId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1062,25 +1190,31 @@ func TestAcc_GrantOwnership_OnPipe(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
-	stageName := acc.TestClient().Ids.Alpha()
-	tableName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	stageName := stageId.Name()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableName := tableId.Name()
 	pipeId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	secondPipeId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	accountRoleName := accountRoleId.Name()
 	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
+
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleName),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(pipeId.DatabaseName()),
+		"schema":            config.StringVariable(pipeId.SchemaName()),
 		"stage":             config.StringVariable(stageName),
 		"table":             config.StringVariable(tableName),
 		"pipe":              config.StringVariable(pipeId.Name()),
 		"second_pipe":       config.StringVariable(secondPipeId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1106,18 +1240,21 @@ func TestAcc_GrantOwnership_OnAllPipes(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnTask(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	taskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleId.Name()),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(taskId.DatabaseName()),
+		"schema":            config.StringVariable(taskId.SchemaName()),
 		"task":              config.StringVariable(taskId.Name()),
 		"warehouse":         config.StringVariable(acc.TestWarehouseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1148,20 +1285,23 @@ func TestAcc_GrantOwnership_OnTask(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnTask_Discussion2877(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	taskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleId.Name()),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(taskId.DatabaseName()),
+		"schema":            config.StringVariable(taskId.SchemaName()),
 		"task":              config.StringVariable(taskId.Name()),
 		"child":             config.StringVariable(childId.Name()),
 		"warehouse":         config.StringVariable(acc.TestWarehouseName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1235,19 +1375,22 @@ func TestAcc_GrantOwnership_OnTask_Discussion2877(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	taskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	secondTaskId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	configVariables := config.Variables{
 		"account_role_name": config.StringVariable(accountRoleId.Name()),
-		"database":          config.StringVariable(acc.TestDatabaseName),
-		"schema":            config.StringVariable(acc.TestSchemaName),
+		"database":          config.StringVariable(taskId.DatabaseName()),
+		"schema":            config.StringVariable(taskId.SchemaName()),
 		"task":              config.StringVariable(taskId.Name()),
 		"second_task":       config.StringVariable(secondTaskId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1274,7 +1417,13 @@ func TestAcc_GrantOwnership_OnAllTasks(t *testing.T) {
 }
 
 func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	databaseName := databaseId.Name()
 
 	databaseRoleId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
@@ -1288,8 +1437,8 @@ func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
 		"database_name":      config.StringVariable(databaseName),
 		"database_role_name": config.StringVariable(databaseRoleId.Name()),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1348,13 +1497,14 @@ func checkResourceOwnershipIsGranted(opts *sdk.ShowGrantOptions, grantOn sdk.Obj
 }
 
 func TestAcc_GrantOwnership_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	escapedFullyQualifiedName := fmt.Sprintf(`\"%s\".\"%s\".\"%s\"`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 
-	acc.TestAccPreCheck(t)
 	resourceName := "snowflake_grant_ownership.test"
-
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -1422,15 +1572,19 @@ resource "snowflake_grant_ownership" "test" {
 }
 
 func TestAcc_GrantOwnership_IdentifierQuotingDiffSuppression(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseId := database.ID()
 	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
 	accountRoleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	unescapedFullyQualifiedName := fmt.Sprintf(`%s.%s.%s`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 
-	acc.TestAccPreCheck(t)
 	resourceName := "snowflake_grant_ownership.test"
-
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -1477,18 +1631,14 @@ resource "snowflake_account_role" "test" {
 	name = "%[4]s"
 }
 
-resource "snowflake_database" "test" {
-	name = "%[1]s"
-}
-
 resource "snowflake_schema" "test" {
-	database = snowflake_database.test.name
+	database = "%[1]s"
 	name = "%[2]s"
 }
 
 resource "snowflake_table" "test" {
 	name     = "%[3]s"
-	database = snowflake_database.test.name
+	database = "%[1]s"
 	schema   = snowflake_schema.test.name
 
 	column {
@@ -1510,6 +1660,9 @@ resource "snowflake_grant_ownership" "test" {
 
 // confirms addition of resource monitor as part of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3318
 func TestAcc_GrantOwnership_OnObject_ResourceMonitor_ToAccountRole(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	resourceMonitorId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	resourceMonitorName := resourceMonitorId.Name()
 	resourceMonitorIdFullyQualifiedName := resourceMonitorId.FullyQualifiedName()
@@ -1522,8 +1675,8 @@ func TestAcc_GrantOwnership_OnObject_ResourceMonitor_ToAccountRole(t *testing.T)
 		"account_role_name":     config.StringVariable(accountRoleName),
 		"resource_monitor_name": config.StringVariable(resourceMonitorName),
 	}
-	resourceName := "snowflake_grant_ownership.test"
 
+	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1559,7 +1712,9 @@ func TestAcc_GrantOwnership_OnObject_ResourceMonitor_ToAccountRole(t *testing.T)
 
 // This test proves that managing grants on HYBRID TABLE is not supported in Snowflake. TABLE should be used instead.
 func TestAcc_GrantOwnership_OnObject_HybridTable_ToAccountRole_Fails(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	hybridTableId, hybridTableCleanup := acc.TestClient().HybridTable.Create(t)
 	t.Cleanup(hybridTableCleanup)
 

@@ -27,7 +27,7 @@ func (w *UserAssert) HasDefaults(name string) *UserAssert {
 		HasDefaultWarehouse("").
 		HasDefaultNamespace("").
 		HasDefaultRole("").
-		HasDefaultSecondaryRoles("").
+		HasDefaultSecondaryRoles(`["ALL"]`).
 		HasExtAuthnDuo(false).
 		HasExtAuthnUid("").
 		HasMinsToBypassMfa("").

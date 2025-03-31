@@ -9,7 +9,7 @@ body:
         # Thank you for raising a documentation issue!
 
         This form is meant to alert the maintainers to an issue with any of documentation connected with the provider, especially in:
-        - [Guide on creating issues + FAQ + Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) - If you would like to create a GitHub issue, please read our guide first. It contains useful links, FAQ, and commonly known issues with solutions that may already solve your case.
+        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
         - [Terraform Registry](https://registry.terraform.io/providers/hashicorp/snowflake/latest) (such as resource and data source documentation, guides and examples).
         - [Project README](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/README.md).
         - [Contribution Guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md).
@@ -28,14 +28,22 @@ body:
     type: dropdown
     attributes:
       label: Object type(s)
-      description: Choose for which object type(s) the documentation is incorrect (if any).
+      description: Choose object type(s) causing the issue (if any). Note that for some of the features, the label is shortened due to GitHub limitations.
       multiple: true
       options:
         - resource:account
+        - resource:account_authentication_policy_attachment
+        - resource:account_role
+        - resource:account_password_policy_attachment
         - resource:account_parameter
         - resource:account_password_policy
         - resource:alert
+        - resource:api_authn_integration_authz_code_grant
+        - resource:api_authn_integration_client_credentials
+        - resource:api_authn_integration_jwt_bearer
         - resource:api_integration
+        - resource:authentication_policy
+        - resource:cortex_search_service
         - resource:database
         - resource:database_role
         - resource:dynamic_table
@@ -44,39 +52,69 @@ body:
         - resource:external_function
         - resource:external_oauth_integration
         - resource:external_table
+        - resource:external_volume
         - resource:failover_group
         - resource:file_format
         - resource:function
+        - resource:function_java
+        - resource:function_javascript
+        - resource:function_python
+        - resource:function_scala
+        - resource:function_sql
         - resource:grant_account_role
+        - resource:grant_application_role
         - resource:grant_database_role
         - resource:grant_ownership
         - resource:grant_privileges_to_account_role
         - resource:grant_privileges_to_database_role
         - resource:grant_privileges_to_share
+        - resource:legacy_service_user
         - resource:managed_account
         - resource:masking_policy
         - resource:materialized_view
         - resource:network_policy
         - resource:network_policy_attachment
+        - resource:network_rule
         - resource:notification_integration
         - resource:oauth_integration
+        - resource:oauth_integration_for_partner_application
+        - resource:oauth_integration_for_custom_clients
         - resource:object_parameter
         - resource:password_policy
         - resource:pipe
+        - resource:primary_connection
         - resource:procedure
+        - resource:procedure_java
+        - resource:procedure_javascript
+        - resource:procedure_python
+        - resource:procedure_scala
+        - resource:procedure_sql
         - resource:resource_monitor
         - resource:role
         - resource:row_access_policy
         - resource:saml_integration
+        - resource:saml2_integration
         - resource:schema
         - resource:scim_integration
+        - resource:secondary_connection
+        - resource:secondary_database
+        - resource:secret_with_authorization_code_grant
+        - resource:secret_with_basic_authentication
+        - resource:secret_with_client_credentials
+        - resource:secret_with_generic_string
         - resource:sequence
         - resource:session_parameter
+        - resource:service_user
         - resource:share
         - resource:shared_database
         - resource:stage
         - resource:storage_integration
         - resource:stream
+        - resource:stream_on_directory_table
+        - resource:stream_on_external_table
+        - resource:stream_on_table
+        - resource:stream_on_view
+        - resource:streamlit
         - resource:table
         - resource:table_column_masking_policy_application
         - resource:table_constraint
@@ -86,15 +124,21 @@ body:
         - resource:task
         - resource:unsafe_execute
         - resource:user
+        - resource:user_authentication_policy_attachment
         - resource:user_password_policy_attachment
         - resource:user_public_keys
         - resource:view
         - resource:warehouse
+
         - data_source:accounts
+        - data_source:account_roles
         - data_source:alerts
+        - data_source:connections
+        - data_source:cortex_search_services
         - data_source:current_account
         - data_source:current_role
         - data_source:database
+        - data_source:database_role
         - data_source:database_roles
         - data_source:databases
         - data_source:dynamic_tables
@@ -106,6 +150,7 @@ body:
         - data_source:grants
         - data_source:masking_policies
         - data_source:materialized_views
+        - data_source:network_policies
         - data_source:parameters
         - data_source:pipes
         - data_source:procedures
@@ -113,16 +158,20 @@ body:
         - data_source:roles
         - data_source:row_access_policies
         - data_source:schemas
+        - data_source:secrets
+        - data_source:security_integrations
         - data_source:sequences
         - data_source:shares
         - data_source:stages
         - data_source:storage_integrations
         - data_source:streams
+        - data_source:streamlits
         - data_source:system_generate_scim_access_token
         - data_source:system_get_aws_sns_iam_policy
         - data_source:system_get_privatelink_config
         - data_source:system_get_snowflake_platform_info
         - data_source:tables
+        - data_source:tags
         - data_source:tasks
         - data_source:users
         - data_source:views

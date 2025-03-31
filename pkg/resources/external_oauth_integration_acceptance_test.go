@@ -7,17 +7,17 @@ import (
 	"strings"
 	"testing"
 
-	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -25,10 +25,15 @@ import (
 )
 
 func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
-	issuer := random.String()
 	t.Cleanup(roleCleanup)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	issuer := random.String()
+
 	m := func(complete, unset bool) map[string]config.Variable {
 		c := map[string]config.Variable{
 			"enabled":             config.BoolVariable(true),
@@ -333,10 +338,14 @@ func TestAcc_ExternalOauthIntegration_basic(t *testing.T) {
 }
 
 func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
-	issuer := random.String()
 	t.Cleanup(roleCleanup)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	issuer := random.String()
 
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
@@ -418,16 +427,25 @@ func TestAcc_ExternalOauthIntegration_completeWithJwsKeysUrlAndAllowedRolesList(
 	})
 }
 
+// TODO [SNOW-1991414]: unskip
 func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesList_paramSet(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	t.Skip("Skipping this test temporarily as it messes with the account settings which potentially affect all other tests in this file.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
+
+	paramCleanup := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList, "true")
+	t.Cleanup(paramCleanup)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	expectedRoles := []string{"ACCOUNTADMIN", "SECURITYADMIN", role.ID().Name()}
 	sort.Strings(expectedRoles)
 	issuer := random.String()
 	rsaKey, _ := random.GenerateRSAPublicKey(t)
-	paramCleanup := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList, "true")
-	t.Cleanup(paramCleanup)
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"comment":                                         config.StringVariable("foo"),
@@ -527,14 +545,23 @@ func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesLi
 	})
 }
 
+// TODO [SNOW-1991414]: unskip
 func TestAcc_ExternalOauthIntegration_completeWithRsaPublicKeysAndBlockedRolesList_paramUnset(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	t.Skip("Skipping this test temporarily as it messes with the account settings which potentially affect all other tests in this file.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
-	issuer := random.String()
-	rsaKey, _ := random.GenerateRSAPublicKey(t)
+
 	paramCleanup := acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterExternalOAuthAddPrivilegedRolesToBlockedList, "false")
 	t.Cleanup(paramCleanup)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	issuer := random.String()
+	rsaKey, _ := random.GenerateRSAPublicKey(t)
+
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"comment":                                         config.StringVariable("foo"),
@@ -759,11 +786,16 @@ func TestAcc_ExternalOauthIntegration_InvalidIncomplete(t *testing.T) {
 }
 
 func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withRsaPublicKeysAndBlockedRolesList(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	issuer := random.String()
 	rsaKey, _ := random.GenerateRSAPublicKey(t)
+
 	resourceName := "snowflake_external_oauth_integration.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -878,10 +910,15 @@ resource "snowflake_external_oauth_integration" "test" {
 }
 
 func TestAcc_ExternalOauthIntegration_migrateFromVersion092_withJwsKeysUrlAndAllowedRolesList(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	issuer := random.String()
+
 	resourceName := "snowflake_external_oauth_integration.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -982,6 +1019,9 @@ resource "snowflake_external_oauth_integration" "test" {
 }
 
 func TestAcc_ExternalOauthIntegration_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -1017,6 +1057,9 @@ func TestAcc_ExternalOauthIntegration_migrateFromV0941_ensureSmoothUpgradeWithNe
 }
 
 func TestAcc_ExternalOauthIntegration_WithQuotedName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
 

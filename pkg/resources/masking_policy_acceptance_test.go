@@ -5,27 +5,30 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
-	tfconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_MaskingPolicy_basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_masking_policy.test"
 
 	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
 	changedBody := "case when current_role() in ('CHANGED') then 'foo' else 'bar' end"
@@ -62,6 +65,7 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 	}
 	policyModel := model.MaskingPolicy("test", argument, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName())
 
+	resourceName := "snowflake_masking_policy.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -235,8 +239,10 @@ func TestAcc_MaskingPolicy_basic(t *testing.T) {
 }
 
 func TestAcc_MaskingPolicy_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_masking_policy.test"
 
 	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
 	argument := []sdk.TableColumnSignature{
@@ -251,6 +257,7 @@ func TestAcc_MaskingPolicy_complete(t *testing.T) {
 	}
 	policyModel := model.MaskingPolicy("test", argument, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName()).WithComment("foo").WithExemptOtherPolicies(r.BooleanTrue)
 
+	resourceName := "snowflake_masking_policy.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -295,12 +302,12 @@ func TestAcc_MaskingPolicy_complete(t *testing.T) {
 	})
 }
 
-func maskingPolicyConfig(name string, databaseName string, schemaName string) string {
+func maskingPolicyConfig(maskingPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
-	name = "%s"
-	database = "%s"
-	schema = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 	signature {
 		column {
 			name = "val"
@@ -310,36 +317,14 @@ resource "snowflake_masking_policy" "test" {
 	masking_expression = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 	return_data_type = "VARCHAR"
 }
-`, name, databaseName, schemaName)
-}
-
-func maskingPolicyConfigMultiline(name string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-	resource "snowflake_masking_policy" "test" {
-		name = "%s"
-		database = "%s"
-		schema = "%s"
-		argument {
-			name = "val"
-			type = "VARCHAR"
-		}
-		body = <<-EOF
-			case
-				when current_role() in ('ROLE_A') then
-					val
-				when is_role_in_session( 'ROLE_B' ) then
-					'ABC123'
-				else
-					'******'
-			end
-    	EOF
-		return_data_type = "VARCHAR"
-	}
-	`, name, databaseName, schemaName)
+`, maskingPolicyId.DatabaseName(), maskingPolicyId.SchemaName(), maskingPolicyId.Name())
 }
 
 func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -350,14 +335,14 @@ func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.MaskingPolicy),
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyConfigMultiColumn(accName, accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyConfigMultiColumn(id),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_masking_policy.test", "body", "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"),
@@ -373,12 +358,12 @@ func TestAcc_MaskingPolicyMultiColumns(t *testing.T) {
 	})
 }
 
-func maskingPolicyConfigMultiColumn(n string, name string, databaseName string, schemaName string) string {
+func maskingPolicyConfigMultiColumn(maskingPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
-	name = "%s"
-	database = "%s"
-	schema = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 	argument {
 		name = "val"
 		type = "VARCHAR"
@@ -391,12 +376,14 @@ resource "snowflake_masking_policy" "test" {
 	body = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 	return_data_type = "VARCHAR"
 }
-`, name, databaseName, schemaName)
+`, maskingPolicyId.DatabaseName(), maskingPolicyId.SchemaName(), maskingPolicyId.Name())
 }
 
 func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_masking_policy.test"
 	body := "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
 	policyModel := model.MaskingPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -405,6 +392,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 		},
 	}, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName())
 
+	resourceName := "snowflake_masking_policy.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -420,7 +408,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: maskingPolicyConfig(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyConfig(id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
@@ -442,9 +430,12 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 }
 
 func TestAcc_MaskingPolicy_Rename(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_masking_policy.test"
+
 	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
 	policyModel := model.MaskingPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -453,6 +444,7 @@ func TestAcc_MaskingPolicy_Rename(t *testing.T) {
 		},
 	}, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName())
 
+	resourceName := "snowflake_masking_policy.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -488,6 +480,9 @@ func TestAcc_MaskingPolicy_Rename(t *testing.T) {
 }
 
 func TestAcc_MaskingPolicy_InvalidDataType(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	body := "case when current_role() in ('ANALYST') then true else false end"
@@ -497,6 +492,7 @@ func TestAcc_MaskingPolicy_InvalidDataType(t *testing.T) {
 			Type: "invalid-type",
 		},
 	}, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName())
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -514,8 +510,11 @@ func TestAcc_MaskingPolicy_InvalidDataType(t *testing.T) {
 }
 
 func TestAcc_MaskingPolicy_DataTypeAliases(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_masking_policy.test"
+
 	body := "case when current_role() in ('ANALYST') then 'ok' else '***' end"
 	policyModel := model.MaskingPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -524,6 +523,7 @@ func TestAcc_MaskingPolicy_DataTypeAliases(t *testing.T) {
 		},
 	}, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName())
 
+	resourceName := "snowflake_masking_policy.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -550,9 +550,12 @@ func TestAcc_MaskingPolicy_DataTypeAliases(t *testing.T) {
 }
 
 func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_masking_policy.test"
-	comment := "Terraform test resource"
+
+	comment := random.Comment()
 	body := "case when current_role() in ('ANALYST') then 'true' else 'false' end"
 	policyModel := model.MaskingPolicy("test", []sdk.TableColumnSignature{
 		{
@@ -565,6 +568,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 		},
 	}, body, id.DatabaseName(), id.Name(), string(sdk.DataTypeVARCHAR), id.SchemaName()).WithComment(comment).WithExemptOtherPolicies(r.BooleanTrue)
 
+	resourceName := "snowflake_masking_policy.test"
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
@@ -579,7 +583,7 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: maskingPolicy_v0_95_0(id, body, comment),
+				Config: maskingPolicyV0950(id, body, comment),
 				Check: assertThat(t, resourceassert.MaskingPolicyResource(t, resourceName).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
@@ -631,12 +635,12 @@ func TestAcc_MaskingPolicy_migrateFromVersion_0_95_0(t *testing.T) {
 	})
 }
 
-func maskingPolicy_v0_95_0(id sdk.SchemaObjectIdentifier, expr, comment string) string {
+func maskingPolicyV0950(id sdk.SchemaObjectIdentifier, expr, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
-  name     = "%s"
-  database = "%s"
-  schema   = "%s"
+  database = "%[1]s"
+  schema   = "%[2]s"
+  name     = "%[3]s"
   signature {
 	column {
       name = "A"
@@ -648,8 +652,8 @@ resource "snowflake_masking_policy" "test" {
     }
   }
   return_data_type = "VARCHAR"
-  masking_expression = "%s"
+  masking_expression = "%[4]s"
   exempt_other_policies = true
-  comment = "%s"
-}`, id.Name(), id.DatabaseName(), id.SchemaName(), expr, comment)
+  comment = "%[5]s"
+}`, id.DatabaseName(), id.SchemaName(), id.Name(), expr, comment)
 }

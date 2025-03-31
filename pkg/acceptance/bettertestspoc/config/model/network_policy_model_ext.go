@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -17,11 +19,31 @@ func (n *NetworkPolicyModel) WithAllowedNetworkRules(rules ...sdk.SchemaObjectId
 	)
 }
 
+func (n *NetworkPolicyModel) WithAllowedNetworkRulesUnquotedNamePart(rules ...sdk.SchemaObjectIdentifier) *NetworkPolicyModel {
+	return n.WithAllowedNetworkRuleListValue(
+		tfconfig.SetVariable(
+			collections.Map(rules, func(rule sdk.SchemaObjectIdentifier) tfconfig.Variable {
+				return tfconfig.StringVariable(fmt.Sprintf("\"%s\".\"%s\".%s", rule.DatabaseName(), rule.SchemaName(), rule.Name()))
+			})...,
+		),
+	)
+}
+
 func (n *NetworkPolicyModel) WithBlockedNetworkRules(rules ...sdk.SchemaObjectIdentifier) *NetworkPolicyModel {
 	return n.WithBlockedNetworkRuleListValue(
 		tfconfig.SetVariable(
 			collections.Map(rules, func(rule sdk.SchemaObjectIdentifier) tfconfig.Variable {
 				return tfconfig.StringVariable(rule.FullyQualifiedName())
+			})...,
+		),
+	)
+}
+
+func (n *NetworkPolicyModel) WithBlockedNetworkRulesUnquotedNamePart(rules ...sdk.SchemaObjectIdentifier) *NetworkPolicyModel {
+	return n.WithBlockedNetworkRuleListValue(
+		tfconfig.SetVariable(
+			collections.Map(rules, func(rule sdk.SchemaObjectIdentifier) tfconfig.Variable {
+				return tfconfig.StringVariable(fmt.Sprintf("\"%s\".\"%s\".%s", rule.DatabaseName(), rule.SchemaName(), rule.Name()))
 			})...,
 		),
 	)

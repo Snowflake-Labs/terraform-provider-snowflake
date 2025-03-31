@@ -83,7 +83,7 @@ func GetSecondaryRolesOptionFrom(text string) SecondaryRolesOption {
 type userDBRow struct {
 	Name                  string         `db:"name"`
 	CreatedOn             time.Time      `db:"created_on"`
-	LoginName             string         `db:"login_name"`
+	LoginName             sql.NullString `db:"login_name"`
 	DisplayName           sql.NullString `db:"display_name"`
 	FirstName             sql.NullString `db:"first_name"`
 	LastName              sql.NullString `db:"last_name"`
@@ -97,7 +97,7 @@ type userDBRow struct {
 	DefaultWarehouse      sql.NullString `db:"default_warehouse"`
 	DefaultNamespace      sql.NullString `db:"default_namespace"`
 	DefaultRole           sql.NullString `db:"default_role"`
-	DefaultSecondaryRoles string         `db:"default_secondary_roles"`
+	DefaultSecondaryRoles sql.NullString `db:"default_secondary_roles"`
 	ExtAuthnDuo           sql.NullString `db:"ext_authn_duo"`
 	ExtAuthnUid           sql.NullString `db:"ext_authn_uid"`
 	MinsToBypassMfa       sql.NullString `db:"mins_to_bypass_mfa"`
@@ -105,22 +105,20 @@ type userDBRow struct {
 	LastSuccessLogin      sql.NullTime   `db:"last_success_login"`
 	ExpiresAtTime         sql.NullTime   `db:"expires_at_time"`
 	LockedUntilTime       sql.NullTime   `db:"locked_until_time"`
-	HasPassword           bool           `db:"has_password"`
-	HasRsaPublicKey       bool           `db:"has_rsa_public_key"`
+	HasPassword           sql.NullBool   `db:"has_password"`
+	HasRsaPublicKey       sql.NullBool   `db:"has_rsa_public_key"`
 	Type                  sql.NullString `db:"type"`
-	HasMfa                bool           `db:"has_mfa"`
+	HasMfa                sql.NullBool   `db:"has_mfa"`
 }
 
 func (row userDBRow) convert() *User {
 	user := &User{
-		Name:                  row.Name,
-		CreatedOn:             row.CreatedOn,
-		LoginName:             row.LoginName,
-		DefaultSecondaryRoles: row.DefaultSecondaryRoles,
-		Owner:                 row.Owner,
-		HasPassword:           row.HasPassword,
-		HasRsaPublicKey:       row.HasRsaPublicKey,
-		HasMfa:                row.HasMfa,
+		Name:      row.Name,
+		CreatedOn: row.CreatedOn,
+		Owner:     row.Owner,
+	}
+	if row.LoginName.Valid {
+		user.LoginName = row.LoginName.String
 	}
 	if row.DisplayName.Valid {
 		user.DisplayName = row.DisplayName.String
@@ -162,6 +160,9 @@ func (row userDBRow) convert() *User {
 	if row.DefaultRole.Valid {
 		user.DefaultRole = row.DefaultRole.String
 	}
+	if row.DefaultSecondaryRoles.Valid {
+		user.DefaultSecondaryRoles = row.DefaultSecondaryRoles.String
+	}
 	if row.LastSuccessLogin.Valid {
 		user.LastSuccessLogin = row.LastSuccessLogin.Time
 	}
@@ -171,8 +172,17 @@ func (row userDBRow) convert() *User {
 	if row.LockedUntilTime.Valid {
 		user.LockedUntilTime = row.LockedUntilTime.Time
 	}
+	if row.HasPassword.Valid {
+		user.HasPassword = row.HasPassword.Bool
+	}
+	if row.HasRsaPublicKey.Valid {
+		user.HasRsaPublicKey = row.HasRsaPublicKey.Bool
+	}
 	if row.Type.Valid {
 		user.Type = row.Type.String
+	}
+	if row.HasMfa.Valid {
+		user.HasMfa = row.HasMfa.Bool
 	}
 	return user
 }

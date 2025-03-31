@@ -205,4 +205,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "Streamlit",
 		schema: resources.Streamlit().Schema,
 	},
+	{
+		name:   "AccountRole",
+		schema: resources.AccountRole().Schema,
+	},
 }
