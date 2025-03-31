@@ -14,7 +14,6 @@ func MaskingPolicyDynamicArguments(
 	body string,
 	returnDataType sdk.DataType,
 ) *MaskingPolicyModel {
-	MaskingPolicy(resourceName, nil, body, id.DatabaseName(), id.Name(), string(returnDataType), id.SchemaName())
 	m := &MaskingPolicyModel{ResourceModelMeta: config.Meta(resourceName, resources.MaskingPolicy)}
 	m.WithDatabase(id.DatabaseName())
 	m.WithSchema(id.SchemaName())

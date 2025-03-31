@@ -42,7 +42,10 @@ type DynamicBlockContent struct {
 func NewDynamicBlock(label string, variableName string, values []string) *DynamicBlock {
 	args := make(map[string]string)
 	for _, v := range values {
-		args[v] = fmt.Sprintf(`%[3]s%[1]s.value[%[4]s%[2]s%[4]s]%[3]s`, label, v, SnowflakeProviderConfigUnquoteMarker, SnowflakeProviderConfigQuoteMarker)
+		quotedValue := fmt.Sprintf(`%[2]s%[1]s%[2]s`, v, SnowflakeProviderConfigQuoteMarker)
+		argumentReference := fmt.Sprintf(`%[1]s.value[%[2]s]`, label, quotedValue)
+		unquotedArgumentReference := fmt.Sprintf(`%[2]s%[1]s%[2]s`, argumentReference, SnowflakeProviderConfigUnquoteMarker)
+		args[v] = unquotedArgumentReference
 	}
 
 	return &DynamicBlock{
