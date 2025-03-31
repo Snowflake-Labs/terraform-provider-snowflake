@@ -77,3 +77,16 @@ resource "snowflake_execute" "test" {
   revert  = "DROP DATABASE ABC"
   query   = "SHOW DATABASES LIKE '%ABC%'"
 }
+
+# timeouts
+resource "snowflake_execute" "test" {
+  execute = "CREATE DATABASE ABC"
+  revert  = "DROP DATABASE ABC"
+  query   = "SHOW DATABASES LIKE '%ABC%'"
+
+  timeouts {
+    create = "10m"
+    update = "10m"
+    delete = "10m"
+  }
+}

@@ -97,6 +97,19 @@ resource "snowflake_execute" "test" {
   revert  = "DROP DATABASE ABC"
   query   = "SHOW DATABASES LIKE '%ABC%'"
 }
+
+# timeouts
+resource "snowflake_execute" "test" {
+  execute = "CREATE DATABASE ABC"
+  revert  = "DROP DATABASE ABC"
+  query   = "SHOW DATABASES LIKE '%ABC%'"
+
+  timeouts {
+    create = "10m"
+    update = "10m"
+    delete = "10m"
+  }
+}
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).
 <!-- TODO(SNOW-1634854): include an example showing both methods-->
