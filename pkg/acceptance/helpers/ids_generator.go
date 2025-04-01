@@ -55,6 +55,10 @@ func (c *IdsGenerator) NewDatabaseObjectIdentifier(name string) sdk.DatabaseObje
 	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), name)
 }
 
+func (c *IdsGenerator) NewDatabaseObjectIdentifierInDatabase(name string, databaseId sdk.AccountObjectIdentifier) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifierInDatabase(databaseId, name)
+}
+
 func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
 	return c.RandomDatabaseObjectIdentifierInDatabase(c.DatabaseId())
 }
