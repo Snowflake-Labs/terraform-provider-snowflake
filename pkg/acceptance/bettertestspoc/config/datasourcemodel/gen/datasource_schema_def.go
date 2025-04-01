@@ -47,6 +47,10 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		schema: datasources.Grants().Schema,
 	},
 	{
+		name:   "MaskingPolicies",
+		schema: datasources.MaskingPolicies().Schema,
+	},
+	{
 		name:   "NetworkPolicies",
 		schema: datasources.NetworkPolicies().Schema,
 	},
