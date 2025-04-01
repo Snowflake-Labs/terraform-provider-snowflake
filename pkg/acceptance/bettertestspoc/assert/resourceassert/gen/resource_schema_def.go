@@ -213,4 +213,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "SecondaryDatabase",
 		schema: resources.SecondaryDatabase().Schema,
 	},
+	{
+		name:   "SharedDatabase",
+		schema: resources.SharedDatabase().Schema,
+	},
 }
