@@ -47,7 +47,6 @@ func v092DatabaseStateUpgrader(ctx context.Context, rawState map[string]any, met
 					return account.AccountLocator == accountLocator
 				})
 				if err != nil {
-					// TODO: accountLocator
 					return nil, fmt.Errorf("couldn't find replication account locator '%s', err = %w", accountLocator, err)
 				}
 				foundReplicationAccount := *replicationAccount

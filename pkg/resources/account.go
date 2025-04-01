@@ -312,7 +312,6 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 
 		id, err := sdk.ParseAccountIdentifier(d.Id())
 		if err != nil {
-			// TODO: account ID
 			return diag.FromErr(err)
 		}
 
