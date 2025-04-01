@@ -38,8 +38,8 @@ func IsValidIdentifier[T sdk.AccountObjectIdentifier | sdk.DatabaseObjectIdentif
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "Invalid schema identifier type",
-					Detail:        fmt.Sprintf("Expected schema string type, but got: %T. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose", value),
+					Summary:       "Invalid object identifier type",
+					Detail:        fmt.Sprintf("Expected object string type, but got: %T. This is a provider error please file a report: https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new/choose", value),
 					AttributePath: path,
 				},
 			}
