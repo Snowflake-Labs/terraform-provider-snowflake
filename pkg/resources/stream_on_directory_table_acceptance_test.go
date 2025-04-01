@@ -27,12 +27,11 @@ import (
 func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceId := helpers.EncodeResourceIdentifier(id)
-	resourceName := "snowflake_stream_on_directory_table.test"
 
 	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	baseModel := func() *model.StreamOnDirectoryTableModel {
 		return model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
@@ -46,6 +45,8 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 		WithCopyGrants(true).
 		WithComment("bar")
 
+	resourceId := helpers.EncodeResourceIdentifier(id)
+	resourceName := modelWithExtraFields.ResourceReference()
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -269,15 +270,17 @@ func TestAcc_StreamOnDirectoryTable_Basic(t *testing.T) {
 func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_directory_table.test"
-
-	var createdOn string
 
 	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
 
-	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	streamOnDirectoryModelWithCopyGrants := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName()).WithCopyGrants(true)
+	streamOnDirectoryModelWithoutCopyGrants := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName()).WithCopyGrants(false)
+
+	var createdOn string
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -286,20 +289,20 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model.WithCopyGrants(true)),
-				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Config: config.FromModels(t, streamOnDirectoryModelWithCopyGrants),
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, streamOnDirectoryModelWithCopyGrants.ResourceReference()).
 					HasNameString(id.Name()),
-					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+					assert.Check(resource.TestCheckResourceAttrWith(streamOnDirectoryModelWithCopyGrants.ResourceReference(), "show_output.0.created_on", func(value string) error {
 						createdOn = value
 						return nil
 					})),
 				),
 			},
 			{
-				Config: config.FromModels(t, model.WithCopyGrants(false)),
-				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Config: config.FromModels(t, streamOnDirectoryModelWithoutCopyGrants),
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, streamOnDirectoryModelWithoutCopyGrants.ResourceReference()).
 					HasNameString(id.Name()),
-					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+					assert.Check(resource.TestCheckResourceAttrWith(streamOnDirectoryModelWithoutCopyGrants.ResourceReference(), "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
 							return fmt.Errorf("stream was recreated")
 						}
@@ -308,10 +311,10 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModels(t, model.WithCopyGrants(true)),
-				Check: assertThat(t, resourceassert.StreamOnTableResource(t, resourceName).
+				Config: config.FromModels(t, streamOnDirectoryModelWithCopyGrants),
+				Check: assertThat(t, resourceassert.StreamOnTableResource(t, streamOnDirectoryModelWithCopyGrants.ResourceReference()).
 					HasNameString(id.Name()),
-					assert.Check(resource.TestCheckResourceAttrWith(resourceName, "show_output.0.created_on", func(value string) error {
+					assert.Check(resource.TestCheckResourceAttrWith(streamOnDirectoryModelWithCopyGrants.ResourceReference(), "show_output.0.created_on", func(value string) error {
 						if value != createdOn {
 							return fmt.Errorf("stream was recreated")
 						}
@@ -326,8 +329,6 @@ func TestAcc_StreamOnDirectoryTable_CopyGrants(t *testing.T) {
 func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stream_on_directory_table.test"
 
 	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
@@ -337,6 +338,8 @@ func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
 
 	role, cleanupRole := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(cleanupRole)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	model1 := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName()).WithCopyGrants(true)
 	model1WithoutCopyGrants := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
@@ -351,7 +354,7 @@ func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model1) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config: config.FromModels(t, model1) + grantStreamPrivilegesConfig(model1.ResourceReference(), role.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// there should be more than one privilege, because we applied grant all privileges and initially there's always one which is ownership
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
@@ -359,14 +362,14 @@ func TestAcc_StreamOnDirectoryTable_CheckGrantsAfterRecreation(t *testing.T) {
 				),
 			},
 			{
-				Config: config.FromModels(t, model2) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config: config.FromModels(t, model2) + grantStreamPrivilegesConfig(model2.ResourceReference(), role.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.#", "2"),
 					resource.TestCheckResourceAttr("data.snowflake_grants.grants", "grants.1.privilege", "SELECT"),
 				),
 			},
 			{
-				Config:             config.FromModels(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(resourceName, role.ID()),
+				Config:             config.FromModels(t, model1WithoutCopyGrants) + grantStreamPrivilegesConfig(model1WithoutCopyGrants.ResourceReference(), role.ID()),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
@@ -406,22 +409,23 @@ data "snowflake_grants" "grants" {
 func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	resourceName := "snowflake_stream_on_directory_table.test"
+
+	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
+	t.Cleanup(cleanupStage)
 
 	schema, cleanupSchema := acc.TestClient().Schema.CreateSchemaWithOpts(t,
-		acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(acc.TestClient().Ids.DatabaseId()),
+		acc.TestClient().Ids.RandomDatabaseObjectIdentifier(),
 		&sdk.CreateSchemaOptions{
 			DataRetentionTimeInDays:    sdk.Pointer(0),
 			MaxDataExtensionTimeInDays: sdk.Pointer(0),
 		},
 	)
 	t.Cleanup(cleanupSchema)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
-	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
-	t.Cleanup(cleanupStage)
+	streamModel := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
 
-	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -430,11 +434,11 @@ func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model),
-				Check: assertThat(t, resourceassert.StreamOnDirectoryTableResource(t, resourceName).
+				Config: config.FromModels(t, streamModel),
+				Check: assertThat(t, resourceassert.StreamOnDirectoryTableResource(t, streamModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasStaleString(r.BooleanFalse),
-					assert.Check(resource.TestCheckResourceAttr(resourceName, "show_output.0.stale", "false")),
+					assert.Check(resource.TestCheckResourceAttr(streamModel.ResourceReference(), "show_output.0.stale", "false")),
 				),
 			},
 		},
@@ -442,6 +446,9 @@ func TestAcc_StreamOnDirectoryTable_RecreateWhenStale(t *testing.T) {
 }
 
 func TestAcc_StreamOnDirectoryTable_InvalidConfiguration(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	modelWithInvalidStageId := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), "invalid")
@@ -456,6 +463,7 @@ func TestAcc_StreamOnDirectoryTable_InvalidConfiguration(t *testing.T) {
 			// invalid stage id
 			{
 				Config:      config.FromModels(t, modelWithInvalidStageId),
+				PlanOnly:    true,
 				ExpectError: regexp.MustCompile("Error: Invalid identifier type"),
 			},
 		},
@@ -463,11 +471,15 @@ func TestAcc_StreamOnDirectoryTable_InvalidConfiguration(t *testing.T) {
 }
 
 func TestAcc_StreamOnDirectoryTable_ExternalStreamTypeChange(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
 	stage, cleanupStage := acc.TestClient().Stage.CreateStageWithDirectory(t)
 	t.Cleanup(cleanupStage)
-	model := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	streamModel := model.StreamOnDirectoryTable("test", id.DatabaseName(), id.Name(), id.SchemaName(), stage.ID().FullyQualifiedName())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -477,12 +489,12 @@ func TestAcc_StreamOnDirectoryTable_ExternalStreamTypeChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.StreamOnDirectoryTable),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model),
+				Config: config.FromModels(t, streamModel),
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.StreamOnDirectoryTableResource(t, model.ResourceReference()).
+						resourceassert.StreamOnDirectoryTableResource(t, streamModel.ResourceReference()).
 							HasStreamTypeString(string(sdk.StreamSourceTypeStage)),
-						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+						resourceshowoutputassert.StreamShowOutput(t, streamModel.ResourceReference()).
 							HasSourceType(sdk.StreamSourceTypeStage),
 					),
 				),
@@ -497,17 +509,17 @@ func TestAcc_StreamOnDirectoryTable_ExternalStreamTypeChange(t *testing.T) {
 					t.Cleanup(cleanup)
 					require.Equal(t, sdk.StreamSourceTypeTable, *externalChangeStream.SourceType)
 				},
-				Config: config.FromModels(t, model),
+				Config: config.FromModels(t, streamModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(streamModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.StreamOnDirectoryTableResource(t, model.ResourceReference()).
+						resourceassert.StreamOnDirectoryTableResource(t, streamModel.ResourceReference()).
 							HasStreamTypeString(string(sdk.StreamSourceTypeStage)),
-						resourceshowoutputassert.StreamShowOutput(t, model.ResourceReference()).
+						resourceshowoutputassert.StreamShowOutput(t, streamModel.ResourceReference()).
 							HasSourceType(sdk.StreamSourceTypeStage),
 					),
 				),
