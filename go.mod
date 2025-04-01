@@ -1,6 +1,7 @@
 module github.com/Snowflake-Labs/terraform-provider-snowflake
 
 go 1.23.6
+toolchain go1.24.1
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
@@ -19,7 +20,7 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.12.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/pelletier/go-toml/v2 v2.2.3
-	github.com/snowflakedb/gosnowflake v1.13.1
+	github.com/snowflakedb/gosnowflake v1.13.2
 	github.com/stretchr/testify v1.10.0
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78
 	golang.org/x/crypto v0.36.0
