@@ -323,8 +323,7 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 					diag.Diagnostic{
 						Severity: diag.Warning,
 						Summary:  "Failed to query account. Marking the resource as removed.",
-						// TODO: account ID
-						Detail: fmt.Sprintf("Account: %s, Err: %s", id.FullyQualifiedName(), err),
+						Detail:   fmt.Sprintf("Account: %s, Err: %s", id.FullyQualifiedName(), err),
 					},
 				}
 			}
