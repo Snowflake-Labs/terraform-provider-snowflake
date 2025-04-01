@@ -15,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -24,10 +25,8 @@ import (
 )
 
 func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	name := id.Name()
-	comment := random.Comment()
-	newComment := random.Comment()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
@@ -36,11 +35,18 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
+	comment := random.Comment()
+	newComment := random.Comment()
+
 	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"}).WithComment(comment)
 	secretModelTestInScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"test"}).WithComment(newComment)
 	secretModelFooInScopesWithComment := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo"}).WithComment(newComment)
 	secretModelFooInScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo"})
 	secretModelWithoutComment := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"})
+	secretModelWithoutCommentWithOauthScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"}).
+		WithOauthScopes([]string{"foo", "bar"})
 	secretName := secretModel.ResourceReference()
 
 	resource.Test(t, resource.TestCase{
@@ -186,7 +192,7 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 			},
 			// create without comment
 			{
-				Config: config.FromModels(t, secretModelWithoutComment.WithOauthScopes([]string{"foo", "bar"})),
+				Config: config.FromModels(t, secretModelWithoutCommentWithOauthScopes),
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
 						resourceassert.SecretWithClientCredentialsResource(t, "snowflake_secret_with_client_credentials.s").
@@ -221,18 +227,22 @@ func TestAcc_SecretWithClientCredentials_BasicFlow(t *testing.T) {
 }
 
 func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	name := id.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
-		sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "foo", "foo").
-			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}}),
+		sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(integrationId, true, "test_client_id", "test_client_secret").
+			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}, {Scope: "test"}}),
 	)
 	t.Cleanup(apiIntegrationCleanup)
 
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
+
 	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{})
 	secretModelEmptyScopes := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{})
+	secretModelWithScope := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{}).WithOauthScopes([]string{"foo"})
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -259,13 +269,11 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 			},
 			// Set oauth_scopes
 			{
-				Config: config.FromModels(t, secretModel.
-					WithOauthScopes([]string{"foo"}),
-				),
+				Config: config.FromModels(t, secretModelWithScope),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(secretModel.ResourceReference(), plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(secretModel.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
+						plancheck.ExpectResourceAction(secretModelWithScope.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(secretModelWithScope.ResourceReference(), "oauth_scopes", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[foo]")),
 					},
 				},
 				Check: assertThat(t,
@@ -301,8 +309,8 @@ func TestAcc_SecretWithClientCredentials_EmptyScopesList(t *testing.T) {
 }
 
 func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	name := id.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
@@ -310,6 +318,9 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}, {Scope: "test"}}),
 	)
 	t.Cleanup(apiIntegrationCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 
 	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"})
 
@@ -360,8 +371,8 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChange(t *testing.T) 
 }
 
 func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCodeGrant(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	name := id.Name()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	_, apiIntegrationCleanup := acc.TestClient().SecurityIntegration.CreateApiAuthenticationClientCredentialsWithRequest(t,
@@ -369,6 +380,9 @@ func TestAcc_SecretWithClientCredentials_ExternalSecretTypeChangeToOAuthAuthCode
 			WithOauthAllowedScopes([]sdk.AllowedScope{{Scope: "foo"}, {Scope: "bar"}, {Scope: "test"}}),
 	)
 	t.Cleanup(apiIntegrationCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 
 	secretModel := model.SecretWithClientCredentials("s", integrationId.Name(), id.DatabaseName(), id.SchemaName(), name, []string{"foo", "bar"})
 
