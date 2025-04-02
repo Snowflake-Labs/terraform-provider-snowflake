@@ -550,7 +550,7 @@ func TestInt_Schemas(t *testing.T) {
 	})
 
 	t.Run("show: missing schema", func(t *testing.T) {
-		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(testClientHelper().Ids.DatabaseId())
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		schema, err := client.Schemas.ShowByID(ctx, schemaId)
 		assert.Nil(t, schema)
 		assert.Error(t, err)

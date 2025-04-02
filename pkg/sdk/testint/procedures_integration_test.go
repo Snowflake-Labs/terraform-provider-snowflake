@@ -2183,7 +2183,7 @@ def filter_by_role(session, table_name, role):
 	})
 
 	t.Run("show procedure by id - missing schema", func(t *testing.T) {
-		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(testClientHelper().Ids.DatabaseId())
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
 		procedure, err := client.Procedures.ShowByID(ctx, procedureId)
 		assert.Nil(t, procedure)
