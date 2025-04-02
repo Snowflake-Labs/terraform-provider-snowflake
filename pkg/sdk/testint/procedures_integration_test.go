@@ -2157,8 +2157,8 @@ def filter_by_role(session, table_name, role):
 		dataType := testdatatypes.DataTypeFloat
 		name := testClientHelper().Ids.Alpha()
 
-		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.LegacyDataTypeFrom(dataType))
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.LegacyDataTypeFrom(dataType))
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeInt, sdk.DataTypeVARCHAR)
 
 		e, cleanupProcedure := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
 		t.Cleanup(cleanupProcedure)
