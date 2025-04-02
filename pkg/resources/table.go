@@ -648,12 +648,11 @@ func ReadTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	table, shouldRemoveFromState, diags := SafeShowById(resources.Table, client, client.Tables.ShowByID, ctx, id)
-	if diags != nil {
-		if shouldRemoveFromState {
-			d.SetId("")
-		}
-		return diags
+	table, err := client.Tables.ShowByID(ctx, id)
+	if err != nil {
+		log.Printf("[DEBUG] table (%s) not found", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	s, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))

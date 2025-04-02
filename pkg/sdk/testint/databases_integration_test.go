@@ -846,6 +846,13 @@ func TestInt_DatabasesShow(t *testing.T) {
 
 		assert.Equal(t, 0, len(databases))
 	})
+
+	t.Run("show by id: missing database", func(t *testing.T) {
+		database, err := client.Databases.ShowByID(ctx, testClientHelper().Ids.RandomAccountObjectIdentifier())
+		assert.Nil(t, database)
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
 }
 
 func TestInt_DatabasesDescribe(t *testing.T) {

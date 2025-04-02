@@ -549,6 +549,24 @@ func TestInt_Schemas(t *testing.T) {
 		assert.Equal(t, "ROLE", schema1.OwnerRoleType)
 	})
 
+	t.Run("show: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(testClientHelper().Ids.DatabaseId())
+		schema, err := client.Schemas.ShowByID(ctx, schemaId)
+		assert.Nil(t, schema)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
+
+	t.Run("show: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		schema, err := client.Schemas.ShowByID(ctx, schemaId)
+		assert.Nil(t, schema)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
 	t.Run("drop", func(t *testing.T) {
 		schema, cleanupSchema := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(cleanupSchema)

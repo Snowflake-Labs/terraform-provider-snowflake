@@ -2170,6 +2170,28 @@ def filter_by_role(session, table_name, role):
 		require.Equal(t, *e, *es)
 	})
 
+	t.Run("show procedure by id - missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
+		procedure, err := client.Procedures.ShowByID(ctx, procedureId)
+		assert.Nil(t, procedure)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show procedure by id - missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(testClientHelper().Ids.DatabaseId())
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
+		procedure, err := client.Procedures.ShowByID(ctx, procedureId)
+		assert.Nil(t, procedure)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
 	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for procedures.
 	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
 	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.

@@ -556,19 +556,21 @@ func (v *schemas) Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, 
 }
 
 func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error) {
-	schemas, err := v.client.Schemas.Show(ctx, &ShowSchemaOptions{
-		In: &SchemaIn{
-			Database: Bool(true),
-			Name:     id.DatabaseId(),
-		},
-		Like: &Like{
-			Pattern: String(id.Name()),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return collections.FindFirst(schemas, func(r Schema) bool { return r.Name == id.Name() })
+	return SafeShowById(v.client, func(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error) {
+		schemas, err := v.client.Schemas.Show(ctx, &ShowSchemaOptions{
+			In: &SchemaIn{
+				Database: Bool(true),
+				Name:     id.DatabaseId(),
+			},
+			Like: &Like{
+				Pattern: String(id.Name()),
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		return collections.FindFirst(schemas, func(r Schema) bool { return r.Name == id.Name() })
+	}, ctx, id)
 }
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {

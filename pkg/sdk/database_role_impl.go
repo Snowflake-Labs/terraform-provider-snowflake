@@ -44,13 +44,15 @@ func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleReque
 }
 
 func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error) {
-	request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(Like{Pointer(id.Name())})
-	databaseRoles, err := v.Show(ctx, request)
-	if err != nil {
-		return nil, err
-	}
+	return SafeShowById(v.client, func(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error) {
+		request := NewShowDatabaseRoleRequest(id.DatabaseId()).WithLike(Like{Pointer(id.Name())})
+		databaseRoles, err := v.Show(ctx, request)
+		if err != nil {
+			return nil, err
+		}
 
-	return collections.FindFirst(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
+		return collections.FindFirst(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
+	}, ctx, id)
 }
 
 func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {

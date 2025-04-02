@@ -975,4 +975,25 @@ func TestInt_TablesShowByID(t *testing.T) {
 		require.Len(t, descColumns, 2)
 		assert.NotEmpty(t, descColumns[1].SchemaEvolutionRecord)
 	})
+
+	t.Run("show by id: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+		table, err := client.Tables.ShowByID(ctx, tableId)
+		assert.Nil(t, table)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(testClientHelper().Ids.DatabaseId())
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+		table, err := client.Tables.ShowByID(ctx, tableId)
+		assert.Nil(t, table)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
 }

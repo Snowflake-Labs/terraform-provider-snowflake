@@ -785,15 +785,18 @@ func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Dat
 }
 
 func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
-	databases, err := v.client.Databases.Show(ctx, &ShowDatabasesOptions{
-		Like: &Like{
-			Pattern: String(id.Name()),
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	return collections.FindFirst(databases, func(r Database) bool { return r.Name == id.Name() })
+	return SafeShowById(v.client, func(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
+		databases, err := v.Show(ctx, &ShowDatabasesOptions{
+			Like: &Like{
+				Pattern: String(id.Name()),
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return collections.FindFirst(databases, func(r Database) bool { return r.Name == id.Name() })
+	}, ctx, id)
 }
 
 type DatabaseDetails struct {

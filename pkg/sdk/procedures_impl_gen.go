@@ -60,14 +60,16 @@ func (v *procedures) Show(ctx context.Context, request *ShowProcedureRequest) ([
 }
 
 func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
-	request := NewShowProcedureRequest().
-		WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).
-		WithLike(Like{Pattern: String(id.Name())})
-	procedures, err := v.Show(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	return collections.FindFirst(procedures, func(r Procedure) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
+	return SafeShowById(v.client, func(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
+		request := NewShowProcedureRequest().
+			WithIn(ExtendedIn{In: In{Schema: id.SchemaId()}}).
+			WithLike(Like{Pattern: String(id.Name())})
+		procedures, err := v.Show(ctx, request)
+		if err != nil {
+			return nil, err
+		}
+		return collections.FindFirst(procedures, func(r Procedure) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
+	}, ctx, id)
 }
 
 func (v *procedures) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ProcedureDetail, error) {
