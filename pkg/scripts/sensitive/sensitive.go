@@ -13,6 +13,15 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+/*
+This script is used to generate a CSV file with string fields that are sensitive in the Terraform provider.
+The script firstly gathers all Terraform schemas for provider, resources, and data sources.
+Then, it extracts all string fields from these schemas. During extraction and later on as a separate step,
+it filters out some fields. After that, the fields are saved to the CSV file.
+
+Note: Depending on the directory from which the script is run, the path to the CSV file may need to be adjusted.
+*/
+
 type Schema struct {
 	ResourceName string
 	SchemaMap    map[string]*schema.Schema
@@ -52,7 +61,7 @@ var fieldsNamesToFilter = []string{
 }
 
 func main() {
-	file, err := os.OpenFile("scripts/sensitive/sensitive.csv", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
+	file, err := os.OpenFile("pkg/scripts/sensitive/sensitive.csv", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}

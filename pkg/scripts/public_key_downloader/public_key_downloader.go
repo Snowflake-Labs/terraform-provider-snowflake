@@ -9,6 +9,16 @@ import (
 	"net/http"
 )
 
+/*
+This script is used to download all the public GPG keys from the Terraform registry for the Snowflake provider.
+It uses Terraform Registry API to get the list of all Snowflake provider versions.
+Then, it iterates over them to find all GPG keys and presents them in the terminal output at the end.
+
+Note: Before running the script, make sure the SnowflakeRegistryUrl is set to the correct value.
+*/
+
+const SnowflakeRegistryUrl = "https://registry.terraform.io/v1/providers/Snowflake-Labs/snowflake"
+
 type VersionsResponse struct {
 	Versions []Version `json:"versions"`
 }
@@ -30,7 +40,7 @@ type GpgPublicKeys struct {
 }
 
 func main() {
-	versionsBuffer := GetAndReturnBody("https://registry.terraform.io/v1/providers/Snowflake-Labs/snowflake/versions")
+	versionsBuffer := GetAndReturnBody(fmt.Sprintf("%s/versions", SnowflakeRegistryUrl))
 	var versionsResponse VersionsResponse
 	if err := json.Unmarshal(versionsBuffer.Bytes(), &versionsResponse); err != nil {
 		panic(err)
@@ -39,7 +49,7 @@ func main() {
 	versionsMap := make(map[string]int)
 
 	for _, version := range versionsResponse.Versions {
-		versionUrl := fmt.Sprintf("https://registry.terraform.io/v1/providers/Snowflake-Labs/snowflake/%s/download/darwin/amd64", version.Version)
+		versionUrl := fmt.Sprintf("%s/%s/download/darwin/amd64", SnowflakeRegistryUrl, version.Version)
 		versionBuffer := GetAndReturnBody(versionUrl)
 
 		var downloadResponse DownloadResponse
