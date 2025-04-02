@@ -694,7 +694,7 @@ func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModels(t, configModel),
-				ExpectError:              regexp.MustCompile("due to Snowflake limiltations you cannot create Resource Monitor with only triggers set"),
+				ExpectError:              regexp.MustCompile("due to Snowflake limitations you cannot create Resource Monitor with only triggers set"),
 			},
 		},
 	})

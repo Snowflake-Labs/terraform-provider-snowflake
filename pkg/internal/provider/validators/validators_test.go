@@ -24,7 +24,7 @@ func TestIsValidIdentifier(t *testing.T) {
 		{
 			Name:       "validation: invalid value type",
 			Value:      123,
-			Error:      "Expected schema string type, but got: int",
+			Error:      "Expected object string type, but got: int",
 			CheckingFn: accountObjectIdentifierCheck,
 		},
 		{
