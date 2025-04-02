@@ -31,6 +31,9 @@ import (
 // TODO [SNOW-1348103]: test changes of attributes separately
 
 func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -120,6 +123,9 @@ func TestAcc_ProcedureJava_InlineBasic(t *testing.T) {
 }
 
 func TestAcc_ProcedureJava_InlineEmptyArgs(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	returnDataType := testdatatypes.DataTypeVarchar_100
@@ -155,6 +161,9 @@ func TestAcc_ProcedureJava_InlineEmptyArgs(t *testing.T) {
 }
 
 func TestAcc_ProcedureJava_InlineBasicDefaultArg(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"
@@ -404,6 +413,9 @@ func TestAcc_ProcedureJava_StagedBasic(t *testing.T) {
 }
 
 func TestAcc_ProcedureJava_AllParameters(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"

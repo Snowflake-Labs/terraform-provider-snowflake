@@ -4,24 +4,30 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_PasswordPolicy(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
+
 	m := func(minLength int, maxLength int, minUpperCaseChars int, minLowerCaseChars int, minNumericChars int, minSpecialChars int, minAgeDays int, maxAgeDays int, maxRetries int, lockoutTimeMins int, history int, comment string) map[string]config.Variable {
 		return map[string]config.Variable{
-			"name":                 config.StringVariable(accName),
-			"database":             config.StringVariable(acc.TestDatabaseName),
-			"schema":               config.StringVariable(acc.TestSchemaName),
+			"name":                 config.StringVariable(id.Name()),
+			"database":             config.StringVariable(id.DatabaseName()),
+			"schema":               config.StringVariable(id.SchemaName()),
 			"min_length":           config.IntegerVariable(minLength),
 			"max_length":           config.IntegerVariable(maxLength),
 			"min_upper_case_chars": config.IntegerVariable(minUpperCaseChars),
@@ -36,8 +42,8 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 			"comment":              config.StringVariable(comment),
 		}
 	}
-	variables1 := m(10, 30, 2, 3, 4, 5, 6, 7, 8, 9, 10, "this is a test resource")
-	variables2 := m(20, 50, 1, 2, 3, 4, 5, 6, 7, 8, 9, "this is a test resource")
+	variables1 := m(10, 30, 2, 3, 4, 5, 6, 7, 8, 9, 10, comment)
+	variables2 := m(20, 50, 1, 2, 3, 4, 5, 6, 7, 8, 9, comment)
 	variables3 := m(20, 50, 1, 2, 3, 4, 5, 6, 7, 8, 9, "")
 
 	resource.Test(t, resource.TestCase{
@@ -49,10 +55,12 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.PasswordPolicy),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/basic"),
 				ConfigVariables: variables1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "10"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_length", "30"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_upper_case_chars", "2"),
@@ -64,11 +72,11 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_retries", "8"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "lockout_time_mins", "9"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "history", "10"),
-					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", "this is a test resource"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", comment),
 				),
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/basic"),
 				ConfigVariables: variables2,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "min_length", "20"),
@@ -82,18 +90,18 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_retries", "7"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "lockout_time_mins", "8"),
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "history", "9"),
-					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", "this is a test resource"),
+					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", comment),
 				),
 			},
 			{
-				ConfigDirectory: config.TestNameDirectory(),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/basic"),
 				ConfigVariables: variables3,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "comment", ""),
 				),
 			},
 			{
-				ConfigDirectory:   config.TestNameDirectory(),
+				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_PasswordPolicy/basic"),
 				ConfigVariables:   variables3,
 				ResourceName:      "snowflake_password_policy.pa",
 				ImportState:       true,
@@ -104,14 +112,17 @@ func TestAcc_PasswordPolicy(t *testing.T) {
 }
 
 func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	m := func(maxAgeDays int) map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":         config.StringVariable(oldId.Name()),
-			"database":     config.StringVariable(acc.TestDatabaseName),
-			"schema":       config.StringVariable(acc.TestSchemaName),
+			"database":     config.StringVariable(oldId.DatabaseName()),
+			"schema":       config.StringVariable(oldId.SchemaName()),
 			"max_age_days": config.IntegerVariable(maxAgeDays),
 		}
 	}
@@ -129,7 +140,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Creation sets zero properly
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_withMaxAgeDays"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/withMaxAgeDays"),
 				ConfigVariables: m(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
@@ -137,7 +148,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_withMaxAgeDays"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/withMaxAgeDays"),
 				ConfigVariables: m(10),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "10"),
@@ -145,7 +156,7 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 			},
 			// Update sets zero properly
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_withMaxAgeDays"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/withMaxAgeDays"),
 				ConfigVariables: m(0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_password_policy.pa", "max_age_days", "0"),
@@ -153,11 +164,11 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 			},
 			// Rename + Unsets properly
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_noOptionals"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/noOptionals"),
 				ConfigVariables: map[string]config.Variable{
 					"name":     config.StringVariable(newId.Name()),
-					"database": config.StringVariable(acc.TestDatabaseName),
-					"schema":   config.StringVariable(acc.TestSchemaName),
+					"database": config.StringVariable(newId.DatabaseName()),
+					"schema":   config.StringVariable(newId.SchemaName()),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -171,11 +182,11 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy_noOptionals"),
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_PasswordPolicy/noOptionals"),
 				ConfigVariables: map[string]config.Variable{
 					"name":     config.StringVariable(oldId.Name()),
-					"database": config.StringVariable(acc.TestDatabaseName),
-					"schema":   config.StringVariable(acc.TestSchemaName),
+					"database": config.StringVariable(oldId.DatabaseName()),
+					"schema":   config.StringVariable(oldId.SchemaName()),
 				},
 				ResourceName:      "snowflake_password_policy.pa",
 				ImportState:       true,
@@ -186,9 +197,12 @@ func TestAcc_PasswordPolicyMaxAgeDays(t *testing.T) {
 }
 
 func TestAcc_PasswordPolicy_migrateFromVersion_0_94_1(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_password_policy.pa"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resourceName := "snowflake_password_policy.pa"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -227,8 +241,8 @@ func TestAcc_PasswordPolicy_migrateFromVersion_0_94_1(t *testing.T) {
 func passwordPolicyBasicConfig(id sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_password_policy" "pa" {
-  name     = "%s"
-  database = "%s"
-  schema   = "%s"
-}`, id.Name(), id.DatabaseName(), id.SchemaName())
+  database = "%[1]s"
+  schema   = "%[2]s"
+  name     = "%[3]s"
+}`, id.DatabaseName(), id.SchemaName(), id.Name())
 }

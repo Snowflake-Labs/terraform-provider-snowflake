@@ -209,4 +209,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "AccountRole",
 		schema: resources.AccountRole().Schema,
 	},
+	{
+		name:   "SecondaryDatabase",
+		schema: resources.SecondaryDatabase().Schema,
+	},
 }
