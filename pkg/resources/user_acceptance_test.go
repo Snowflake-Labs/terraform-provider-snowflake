@@ -1666,7 +1666,7 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_defaults(t *testing.T) {
 					},
 				},
 				PreConfig: func() {
-					func() { acc.UnsetConfigPathEnv(t) }()
+					acc.UnsetConfigPathEnv(t)
 				},
 				Config: config.FromModels(t, userModel),
 				Check: assertThat(t,
