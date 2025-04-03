@@ -9,6 +9,19 @@ across different versions.
 >
 > If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
 
+## v1.0.5 ➞ v1.0.6
+### Fixes in `grant_privileges_to_account_role` resource
+When `grant_privileges_to_account_role` was used with `all_privileges=true`, it failed with
+```
+003011 (42501): Grant partially executed: privileges [MANAGE LISTING AUTO FULFILLMENT, MANAGE ORGANIZATION SUPPORT CASES,
+│ MANAGE POLARIS CONNECTIONS] not granted
+```
+
+This error is now fixed: the warning is returned and the operation execution continues. Note that for `all_privileges=true` the privileges list in the state is not populated, like before. If you want to detect differences in the privileges, use `privileges` list instead. If you want to make sure that the maximum privileges are granted, enable `always_apply`.
+
+References: [#3507](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3507)
+
+
 ## v1.0.4 ➞ v1.0.5
 
 ### Changes in TOML configuration file requirements

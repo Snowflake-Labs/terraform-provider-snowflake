@@ -99,10 +99,155 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3153(t *testing.T) {
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
-					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.GlobalPrivilegeManageShareTarget)),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|%s|OnAccount", roleFullyQualifiedName, sdk.GlobalPrivilegeManageShareTarget)),
+				),
+			},
+		},
+	})
+}
+
+// Proves https://github.com/snowflakedb/terraform-provider-snowflake/issues/3507 is fixed.
+func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	roleFullyQualifiedName := role.ID().FullyQualifiedName()
+	configVariables := config.Variables{
+		"name":         config.StringVariable(roleFullyQualifiedName),
+		"always_apply": config.BoolVariable(false),
+	}
+	configVariablesWithAlwaysApply := config.Variables{
+		"name":         config.StringVariable(roleFullyQualifiedName),
+		"always_apply": config.BoolVariable(true),
+	}
+
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
+				ConfigVariables: configVariables,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
+					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnAccount", roleFullyQualifiedName)),
+				),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
+				ConfigVariables: configVariablesWithAlwaysApply,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
+					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnAccount", roleFullyQualifiedName)),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToAccountRole_OnAccount_ErrorOnPrivilegesNotGranted(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	grantablePrivilege1 := config.StringVariable(string(sdk.GlobalPrivilegeCreateDatabase))
+	grantablePrivilege2 := config.StringVariable(string(sdk.GlobalPrivilegeApplyAggregationPolicy))
+	nonGrantablePrivilege := config.StringVariable("MANAGE LISTING AUTO FULFILLMENT")
+	roleFullyQualifiedName := role.ID().FullyQualifiedName()
+
+	configVariablesWithGrantablePrivileges := config.Variables{
+		"name":              config.StringVariable(roleFullyQualifiedName),
+		"privileges":        config.ListVariable(grantablePrivilege1),
+		"with_grant_option": config.BoolVariable(true),
+	}
+	configVariablesWithNonGrantablePrivileges := config.Variables{
+		"name":              config.StringVariable(roleFullyQualifiedName),
+		"privileges":        config.ListVariable(grantablePrivilege1, grantablePrivilege2, nonGrantablePrivilege),
+		"with_grant_option": config.BoolVariable(true),
+	}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
+				ConfigVariables: configVariablesWithNonGrantablePrivileges,
+				ExpectError:     regexp.MustCompile("grant partially executed"),
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
+				ConfigVariables: configVariablesWithGrantablePrivileges,
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
+				ConfigVariables: configVariablesWithNonGrantablePrivileges,
+				ExpectError:     regexp.MustCompile("grant partially executed"),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToAccountRole_OnAccount_ChangeListOfPrivilegesToAllPrivileges(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	grantablePrivilege1 := config.StringVariable(string(sdk.GlobalPrivilegeCreateDatabase))
+	roleFullyQualifiedName := role.ID().FullyQualifiedName()
+
+	configVariablesWithGrantablePrivileges := config.Variables{
+		"name":              config.StringVariable(roleFullyQualifiedName),
+		"privileges":        config.ListVariable(grantablePrivilege1),
+		"with_grant_option": config.BoolVariable(false),
+	}
+	configVariablesOnlyName := config.Variables{
+		"name": config.StringVariable(roleFullyQualifiedName),
+	}
+
+	resourceName := "snowflake_grant_privileges_to_account_role.test"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount"),
+				ConfigVariables: configVariablesWithGrantablePrivileges,
+			},
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
+				ConfigVariables: configVariablesOnlyName,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
+					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
+					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
+					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnAccount", roleFullyQualifiedName)),
 				),
 			},
 		},
