@@ -115,6 +115,7 @@ func ResourceMonitor() *schema.Resource {
 			ForceNewIfAllKeysAreNotSet("suspend_trigger", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 			ForceNewIfAllKeysAreNotSet("suspend_immediate_trigger", "notify_triggers", "suspend_trigger", "suspend_immediate_trigger"),
 		)),
+		Timeouts: defaultTimeouts,
 	}
 }
 

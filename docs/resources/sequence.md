@@ -49,12 +49,23 @@ resource "snowflake_sequence" "test_sequence" {
 - `comment` (String) (Default: ``) Specifies a comment for the sequence.
 - `increment` (Number) (Default: `1`) The amount the sequence will increase by each time it is used
 - `ordering` (String) (Default: `ORDER`) The ordering of the sequence. Either ORDER or NOORDER. Default is ORDER.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `next_value` (Number) The increment sequence interval.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

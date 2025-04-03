@@ -77,6 +77,9 @@ func TagAssociation() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
+			Update: schema.DefaultTimeout(defaultUpdateTimeout),
+			Delete: schema.DefaultTimeout(defaultDeleteTimeout),
+			Read:   schema.DefaultTimeout(defaultReadTimeout),
 		},
 
 		StateUpgraders: []schema.StateUpgrader{

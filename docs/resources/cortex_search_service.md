@@ -89,6 +89,8 @@ resource "snowflake_cortex_search_service" "test" {
 Optional:
 
 - `create` (String)
+- `delete` (String)
+- `read` (String)
 - `update` (String)
 
 ## Import

@@ -62,6 +62,7 @@ func SecondaryDatabase() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.SecondaryDatabase, ImportName[sdk.AccountObjectIdentifier]),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

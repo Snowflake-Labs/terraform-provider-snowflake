@@ -108,6 +108,9 @@ resource "snowflake_tag_association" "account_association" {
 Optional:
 
 - `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

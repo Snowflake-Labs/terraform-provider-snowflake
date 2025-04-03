@@ -122,6 +122,7 @@ func SCIMIntegration() *schema.Resource {
 				Upgrade: v093ScimIntegrationStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

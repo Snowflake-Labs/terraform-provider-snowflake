@@ -43,6 +43,7 @@ func ProcedureSql() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ProcedureSql, ImportProcedure),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

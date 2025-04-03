@@ -89,6 +89,7 @@ resource "snowflake_object_parameter" "o4" {
 - `object_identifier` (Block List) Specifies the object identifier for the object parameter. If no value is provided, then the resource will default to setting the object parameter at account level. (see [below for nested schema](#nestedblock--object_identifier))
 - `object_type` (String) Type of object to which the parameter applies. Valid values are those in [object types](https://docs.snowflake.com/en/sql-reference/parameters.html#object-types). If no value is provided, then the resource will default to setting the object parameter at account level.
 - `on_account` (Boolean) (Default: `false`) If true, the object parameter will be set on the account level.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -105,6 +106,17 @@ Optional:
 
 - `database` (String) Name of the database that the object was created in.
 - `schema` (String) Name of the schema that the object was created in.
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

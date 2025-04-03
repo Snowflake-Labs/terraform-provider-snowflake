@@ -63,11 +63,22 @@ resource "snowflake_grant_account_role" "g" {
 ### Optional
 
 - `parent_role_name` (String) The fully qualified name of the parent role which will create a parent-child relationship between the roles. For more information about this resource, see [docs](./account_role).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `user_name` (String) The fully qualified name of the user on which specified role will be granted. For more information about this resource, see [docs](./user).
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

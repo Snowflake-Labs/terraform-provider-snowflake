@@ -43,6 +43,7 @@ func FunctionJavascript() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.FunctionJavascript, ImportFunction),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -304,6 +304,7 @@ func GrantPrivilegesToAccountRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.GrantPrivilegesToAccountRole, ImportGrantPrivilegesToAccountRole()),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

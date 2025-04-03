@@ -208,9 +208,16 @@ func PreviewFeatureDeleteContextWrapper(featureRaw string, deleteFunc schema.Del
 	}
 }
 
+const (
+	defaultCreateTimeout = 20 * time.Minute
+	defaultReadTimeout   = 20 * time.Minute
+	defaultUpdateTimeout = 20 * time.Minute
+	defaultDeleteTimeout = 20 * time.Minute
+)
+
 var defaultTimeouts = &schema.ResourceTimeout{
-	Create: schema.DefaultTimeout(60 * time.Minute),
-	Read:   schema.DefaultTimeout(60 * time.Minute),
-	Update: schema.DefaultTimeout(60 * time.Minute),
-	Delete: schema.DefaultTimeout(60 * time.Minute),
+	Create: schema.DefaultTimeout(defaultCreateTimeout),
+	Read:   schema.DefaultTimeout(defaultReadTimeout),
+	Update: schema.DefaultTimeout(defaultUpdateTimeout),
+	Delete: schema.DefaultTimeout(defaultDeleteTimeout),
 }

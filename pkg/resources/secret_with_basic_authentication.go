@@ -52,6 +52,7 @@ func SecretWithBasicAuthentication() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.SecretWithBasicAuthentication, ImportSecretWithBasicAuthentication),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
