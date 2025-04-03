@@ -431,7 +431,7 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 	if errors.Is(err, sdk.ErrGrantPartiallyExecuted) && d.Get("all_privileges").(bool) {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
-			Summary:  "An error occurred when granting privileges to account role",
+			Summary:  "An error occurred when granting all privileges to account role",
 			Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
 		})
 	} else if err != nil {
@@ -615,10 +615,10 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				id.RoleName,
 				new(sdk.GrantPrivilegesToAccountRoleOptions),
 			)
-			if errors.Is(err, sdk.ErrGrantPartiallyExecuted) && d.Get("all_privileges").(bool) {
+			if errors.Is(err, sdk.ErrGrantPartiallyExecuted) {
 				diags = append(diags, diag.Diagnostic{
 					Severity: diag.Warning,
-					Summary:  "An error occurred when granting privileges to account role",
+					Summary:  "An error occurred when granting all privileges to account role",
 					Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
 				})
 			} else if err != nil {
@@ -656,7 +656,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 		if errors.Is(err, sdk.ErrGrantPartiallyExecuted) && d.Get("all_privileges").(bool) {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Warning,
-				Summary:  "An error occurred when granting privileges to account role",
+				Summary:  "An error occurred when granting all privileges to account role",
 				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
 			})
 		} else if err != nil {

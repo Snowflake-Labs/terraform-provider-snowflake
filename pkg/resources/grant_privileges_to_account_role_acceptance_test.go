@@ -144,6 +144,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnAccount", roleFullyQualifiedName)),
 				),
+				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
 			},
 			{
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
@@ -154,6 +155,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnAccount", roleFullyQualifiedName)),
 				),
+				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -249,6 +251,7 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_ChangeListOfPrivilegesToAllP
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnAccount", roleFullyQualifiedName)),
 				),
+				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
 			},
 		},
 	})

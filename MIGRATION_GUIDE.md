@@ -21,7 +21,6 @@ This error is now fixed: the warning is returned and the operation execution con
 
 References: [#3507](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3507)
 
-
 ## v1.0.4 ➞ v1.0.5
 
 ### Changes in TOML configuration file requirements
