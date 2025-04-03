@@ -74,7 +74,7 @@ func main() {
 func GetAndReturnBody(url string) *bytes.Buffer {
 	log.Printf("Calling %s", url)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		panic(err)
 	}
