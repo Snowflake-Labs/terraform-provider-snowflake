@@ -85,6 +85,16 @@ func (c *SchemaClient) UpdateDataRetentionTime(t *testing.T, id sdk.DatabaseObje
 	})
 }
 
+func (c *SchemaClient) UnsetDataRetentionTime(t *testing.T, id sdk.DatabaseObjectIdentifier) {
+	t.Helper()
+
+	c.Alter(t, id, &sdk.AlterSchemaOptions{
+		Unset: &sdk.SchemaUnset{
+			DataRetentionTimeInDays: sdk.Bool(true),
+		},
+	})
+}
+
 func (c *SchemaClient) Show(t *testing.T, id sdk.DatabaseObjectIdentifier) (*sdk.Schema, error) {
 	t.Helper()
 	ctx := context.Background()
