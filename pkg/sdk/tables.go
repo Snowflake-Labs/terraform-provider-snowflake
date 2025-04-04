@@ -26,6 +26,7 @@ type Tables interface {
 	Drop(ctx context.Context, req *DropTableRequest) error
 	Show(ctx context.Context, req *ShowTableRequest) ([]Table, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Table, error)
 	DescribeColumns(ctx context.Context, req *DescribeTableColumnsRequest) ([]TableColumnDetails, error)
 	DescribeStage(ctx context.Context, req *DescribeTableStageRequest) ([]TableStageDetails, error)
 }

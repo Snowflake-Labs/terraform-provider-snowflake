@@ -117,6 +117,13 @@ func (c *TableClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func
 	}
 }
 
+func (c *TableClient) Show(t *testing.T, id sdk.SchemaObjectIdentifier) (*sdk.Table, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}
+
 func (c *TableClient) SetDataRetentionTime(t *testing.T, id sdk.SchemaObjectIdentifier, days int) {
 	t.Helper()
 	ctx := context.Background()

@@ -24,7 +24,7 @@ func schemaObjectWithArgumentsShowByIDWrapper[T any](showByIdFn func(context.Con
 
 func TestInt_ShowSchemaObjectInNonExistingDatabase(t *testing.T) {
 	doesNotExistOrNotAuthorized := sdk.ErrObjectNotExistOrAuthorized.Error() // Database '\"non-existing-database\"' does not exist or not authorized
-	doesNotExistOrOperationCannotBePerformed := "Object does not exist, or operation cannot be performed"
+	doesNotExistOrOperationCannotBePerformed := sdk.ErrDoesNotExistOrOperationCannotBePerformed.Error()
 
 	testCases := []struct {
 		ObjectType  sdk.ObjectType
@@ -84,7 +84,7 @@ func TestInt_ShowSchemaObjectInNonExistingDatabase(t *testing.T) {
 
 func TestInt_ShowSchemaObjectInNonExistingSchema(t *testing.T) {
 	doesNotExistOrNotAuthorized := sdk.ErrObjectNotExistOrAuthorized.Error() // Schema '\"non-existing-schema\"' does not exist or not authorized
-	doesNotExistOrOperationCannotBePerformed := "Object does not exist, or operation cannot be performed"
+	doesNotExistOrOperationCannotBePerformed := sdk.ErrDoesNotExistOrOperationCannotBePerformed.Error()
 
 	database, databaseCleanup := testClientHelper().Database.CreateDatabase(t)
 	t.Cleanup(databaseCleanup)

@@ -67,3 +67,10 @@ func (c *NetworkPolicyClient) DropNetworkPolicyFunc(t *testing.T, id sdk.Account
 		require.NoError(t, err)
 	}
 }
+
+func (c *NetworkPolicyClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.NetworkPolicy, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().ShowByID(ctx, id)
+}
