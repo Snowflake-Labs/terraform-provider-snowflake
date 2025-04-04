@@ -251,14 +251,9 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: googleAutoConfig(id, gcpPubsubSubscriptionName),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            googleAutoConfig(id, gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
@@ -300,14 +295,9 @@ func TestAcc_NotificationIntegration_migrateFromVersion085_explicitType(t *testi
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: googleAutoConfigWithExplicitType(id, gcpPubsubSubscriptionName),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            googleAutoConfigWithExplicitType(id, gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 				),

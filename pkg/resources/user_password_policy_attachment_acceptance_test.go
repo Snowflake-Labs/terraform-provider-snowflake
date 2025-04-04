@@ -79,14 +79,9 @@ func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 	passwordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"snowflake": {
-				VersionConstraint: "=0.87.0",
-				Source:            "Snowflake-Labs/snowflake",
-			},
-		},
-		PreCheck:     func() { acc.TestAccPreCheck(t) },
-		CheckDestroy: acc.CheckUserPasswordPolicyAttachmentDestroy(t),
+		ExternalProviders: acc.ExternalProviderWithExactVersion("0.87.0"),
+		PreCheck:          func() { acc.TestAccPreCheck(t) },
+		CheckDestroy:      acc.CheckUserPasswordPolicyAttachmentDestroy(t),
 		Steps: []resource.TestStep{
 			// CREATE
 			{

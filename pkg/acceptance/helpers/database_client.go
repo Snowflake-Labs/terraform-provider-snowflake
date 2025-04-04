@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testDatabaseDataRetentionTimeInDays    = 1
+	testDatabaseMaxDataExtensionTimeInDays = 1
+)
+
+var testDatabaseCatalog = sdk.NewAccountObjectIdentifier("SNOWFLAKE")
+
 type DatabaseClient struct {
 	context *TestClientContext
 	ids     *IdsGenerator
@@ -42,12 +49,23 @@ func (c *DatabaseClient) CreateDatabaseWithParametersSetWithId(t *testing.T, id 
 	return c.CreateDatabaseWithOptions(t, id, c.testParametersSet())
 }
 
+// CreateTestDatabaseIfNotExists should be used to create the main database used throughout the acceptance tests.
+// It's created only if it does not exist already.
+func (c *DatabaseClient) CreateTestDatabaseIfNotExists(t *testing.T) (*sdk.Database, func()) {
+	t.Helper()
+
+	opts := c.testParametersSet()
+	opts.IfNotExists = sdk.Bool(true)
+
+	return c.CreateDatabaseWithOptions(t, c.ids.DatabaseId(), opts)
+}
+
 func (c *DatabaseClient) testParametersSet() *sdk.CreateDatabaseOptions {
 	return &sdk.CreateDatabaseOptions{
-		DataRetentionTimeInDays:    sdk.Int(1),
-		MaxDataExtensionTimeInDays: sdk.Int(1),
+		DataRetentionTimeInDays:    sdk.Int(testDatabaseDataRetentionTimeInDays),
+		MaxDataExtensionTimeInDays: sdk.Int(testDatabaseMaxDataExtensionTimeInDays),
 		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
-		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
+		Catalog: sdk.Pointer(testDatabaseCatalog),
 	}
 }
 
@@ -211,7 +229,7 @@ func (c *DatabaseClient) CreateDatabaseFromShare(t *testing.T, externalShareId s
 func (c *DatabaseClient) testParametersSetSharedDatabase() *sdk.CreateSharedDatabaseOptions {
 	return &sdk.CreateSharedDatabaseOptions{
 		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
-		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
+		Catalog: sdk.Pointer(testDatabaseCatalog),
 	}
 }
 
@@ -228,4 +246,19 @@ func (c *DatabaseClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opt
 
 	err := c.client().Alter(ctx, id, opts)
 	require.NoError(t, err)
+}
+
+func (c *DatabaseClient) TestDatabaseDataRetentionTimeInDays(t *testing.T) int {
+	t.Helper()
+	return testDatabaseDataRetentionTimeInDays
+}
+
+func (c *DatabaseClient) TestDatabaseMaxDataExtensionTimeInDays(t *testing.T) int {
+	t.Helper()
+	return testDatabaseMaxDataExtensionTimeInDays
+}
+
+func (c *DatabaseClient) TestDatabaseCatalog(t *testing.T) sdk.AccountObjectIdentifier {
+	t.Helper()
+	return testDatabaseCatalog
 }

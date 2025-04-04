@@ -40,6 +40,13 @@ func (c *WarehouseClient) CreateWarehouse(t *testing.T) (*sdk.Warehouse, func())
 	return c.CreateWarehouseWithOptions(t, c.ids.RandomAccountObjectIdentifier(), &sdk.CreateWarehouseOptions{})
 }
 
+// CreateTestWarehouseIfNotExists should be used to create the main warehouse used throughout the acceptance tests.
+// It's created only if it does not exist already.
+func (c *WarehouseClient) CreateTestWarehouseIfNotExists(t *testing.T) (*sdk.Warehouse, func()) {
+	t.Helper()
+	return c.CreateWarehouseWithOptions(t, c.ids.WarehouseId(), &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(true)})
+}
+
 func (c *WarehouseClient) CreateWarehouseWithOptions(t *testing.T, id sdk.AccountObjectIdentifier, opts *sdk.CreateWarehouseOptions) (*sdk.Warehouse, func()) {
 	t.Helper()
 	ctx := context.Background()

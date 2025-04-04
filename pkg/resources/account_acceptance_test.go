@@ -600,13 +600,8 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Account),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.99.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: accountConfig_v0_99_0(name, adminName, adminPassword, email, sdk.EditionStandard, firstName, lastName, true, region, 3, comment),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.99.0"),
+				Config:            accountConfig_v0_99_0(name, adminName, adminPassword, email, sdk.EditionStandard, firstName, lastName, true, region, 3, comment),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

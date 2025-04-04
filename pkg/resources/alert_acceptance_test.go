@@ -222,14 +222,9 @@ func TestAcc_Alert_Issue3117(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Alert),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.92.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId(), "test_alert"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.92.0"),
+				Config:            alertIssue3117Config(id, acc.TestClient().Ids.WarehouseId(), "test_alert"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_alert.test_alert", "name", id.Name()),
 				),

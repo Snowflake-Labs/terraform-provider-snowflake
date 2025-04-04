@@ -16,9 +16,12 @@ func TestAcc_Tables(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	externalTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchema(t)
+	t.Cleanup(schemaCleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+	externalTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,

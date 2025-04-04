@@ -464,12 +464,7 @@ func TestAcc_NetworkPolicy_Issue2236(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.93.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.93.0"),
 				// Identifier quoting mismatch (no diff suppression)
 				ExpectNonEmptyPlan: true,
 				PreConfig: func() {
@@ -520,14 +515,9 @@ func TestAcc_NetworkPolicy_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: accconfig.FromModels(t, networkPolicyModelBasic),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            accconfig.FromModels(t, networkPolicyModelBasic),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(networkPolicyModelBasic.ResourceReference(), "id", id.Name()),
 				),
@@ -558,13 +548,8 @@ func TestAcc_NetworkPolicy_WithQuotedName(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NetworkPolicy),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
 				Config:             networkPolicyConfigBasicWithQuotedName(id),
 				Check: resource.ComposeAggregateTestCheckFunc(

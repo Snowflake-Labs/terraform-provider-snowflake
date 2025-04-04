@@ -244,24 +244,14 @@ func TestAcc_Table_issue2535_newConstraint(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.86.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      tableConstraintUniqueConfigUsingTableId(id, "|"),
-				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.86.0"),
+				Config:            tableConstraintUniqueConfigUsingTableId(id, "|"),
+				ExpectError:       regexp.MustCompile(`.*table id is incorrect.*`),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.89.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: tableConstraintUniqueConfigUsingTableId(id, "|"),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.89.0"),
+				Config:            tableConstraintUniqueConfigUsingTableId(id, "|"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
 				),
@@ -299,28 +289,18 @@ func TestAcc_Table_issue2535_existingTable(t *testing.T) {
 		Steps: []resource.TestStep{
 			// reference done by table.id in 0.85.0
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: tableConstraintUniqueConfigUsingTableId(id, "|"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            tableConstraintUniqueConfigUsingTableId(id, "|"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table_constraint.unique", "type", "UNIQUE"),
 				),
 			},
 			// switched to qualified_name in 0.86.0
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.86.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      tableConstraintUniqueConfigUsingQualifiedName(id),
-				ExpectError: regexp.MustCompile(`.*table id is incorrect.*`),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.86.0"),
+				Config:            tableConstraintUniqueConfigUsingQualifiedName(id),
+				ExpectError:       regexp.MustCompile(`.*table id is incorrect.*`),
 			},
 			// fixed in the current version
 			{

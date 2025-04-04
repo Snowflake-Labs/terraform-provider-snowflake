@@ -130,33 +130,13 @@ func TestAccPreCheck(t *testing.T) {
 	once.Do(func() {
 		ctx := context.Background()
 
-		dbId := TestClient().Ids.DatabaseId()
-		schemaId := TestClient().Ids.SchemaId()
-		warehouseId := TestClient().Ids.WarehouseId()
+		_, _ = TestClient().Database.CreateTestDatabaseIfNotExists(t)
+		_, _ = TestClient().Schema.CreateTestSchemaIfNotExists(t)
+		_, _ = TestClient().Warehouse.CreateTestWarehouseIfNotExists(t)
 
-		if err := atc.client.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := atc.client.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{IfNotExists: sdk.Bool(true)}); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := atc.client.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := atc.secondaryClient.Databases.Create(ctx, dbId, &sdk.CreateDatabaseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := atc.secondaryClient.Schemas.Create(ctx, schemaId, &sdk.CreateSchemaOptions{IfNotExists: sdk.Bool(true)}); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := atc.secondaryClient.Warehouses.Create(ctx, warehouseId, &sdk.CreateWarehouseOptions{IfNotExists: sdk.Bool(true)}); err != nil {
-			t.Fatal(err)
-		}
+		_, _ = SecondaryTestClient().Database.CreateTestDatabaseIfNotExists(t)
+		_, _ = SecondaryTestClient().Schema.CreateTestSchemaIfNotExists(t)
+		_, _ = SecondaryTestClient().Warehouse.CreateTestWarehouseIfNotExists(t)
 
 		if err := helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(atc.client, ctx); err != nil {
 			t.Fatal(err)
