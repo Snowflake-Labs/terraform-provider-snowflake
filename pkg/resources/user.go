@@ -212,6 +212,7 @@ func User() *schema.Resource {
 				Upgrade: v094UserStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

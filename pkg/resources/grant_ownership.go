@@ -164,6 +164,7 @@ func GrantOwnership() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.GrantOwnership, ImportGrantOwnership()),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

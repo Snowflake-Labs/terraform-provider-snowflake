@@ -261,6 +261,7 @@ func GrantPrivilegesToDatabaseRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.GrantPrivilegesToDatabaseRole, ImportGrantPrivilegesToDatabaseRole),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

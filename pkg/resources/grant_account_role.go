@@ -80,6 +80,7 @@ func GrantAccountRole() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			}),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

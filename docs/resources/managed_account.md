@@ -48,6 +48,7 @@ variable "admin_password" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the managed account.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `type` (String) (Default: `READER`) Specifies the type of managed account.
 
 ### Read-Only
@@ -59,6 +60,16 @@ variable "admin_password" {
 - `locator` (String) Display name of the managed account.
 - `region` (String) Snowflake Region in which the managed account is located.
 - `url` (String) URL for accessing the managed account, particularly through the web interface.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

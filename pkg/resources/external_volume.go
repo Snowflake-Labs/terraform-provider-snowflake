@@ -133,6 +133,7 @@ func ExternalVolume() *schema.Resource {
 			ComputedIfAnyAttributeChanged(externalVolumeSchema, ShowOutputAttributeName, "name", "allow_writes", "comment"),
 			ComputedIfAnyAttributeChanged(externalVolumeSchema, DescribeOutputAttributeName, "name", "allow_writes", "comment", "storage_location"),
 		)),
+		Timeouts: defaultTimeouts,
 	}
 }
 

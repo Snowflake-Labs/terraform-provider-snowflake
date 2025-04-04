@@ -72,6 +72,7 @@ resource "snowflake_failover_group" "target_failover_group" {
 - `ignore_edition_check` (Boolean) (Default: `false`) Allows replicating objects to accounts on lower editions.
 - `object_types` (Set of String) Type(s) of objects for which you are enabling replication and failover from the source account to the target account. The following object types are supported: "ACCOUNT PARAMETERS", "DATABASES", "INTEGRATIONS", "NETWORK POLICIES", "RESOURCE MONITORS", "ROLES", "SHARES", "USERS", "WAREHOUSES"
 - `replication_schedule` (Block List, Max: 1) Specifies the schedule for refreshing secondary failover groups. (see [below for nested schema](#nestedblock--replication_schedule))
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -103,6 +104,18 @@ Required:
 
 - `expression` (String) Specifies the cron expression for the replication schedule. The cron expression must be in the following format: "minute hour day-of-month month day-of-week". The following values are supported: minute: 0-59 hour: 0-23 day-of-month: 1-31 month: 1-12 day-of-week: 0-6 (0 is Sunday)
 - `time_zone` (String) Specifies the time zone for secondary group refresh.
+
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

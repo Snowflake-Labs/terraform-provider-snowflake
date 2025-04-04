@@ -153,6 +153,7 @@ func OauthIntegrationForPartnerApplications() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.OauthIntegrationForPartnerApplications, ImportOauthForPartnerApplicationIntegration),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

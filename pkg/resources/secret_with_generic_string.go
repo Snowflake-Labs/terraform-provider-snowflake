@@ -46,6 +46,7 @@ func SecretWithGenericString() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.SecretWithGenericString, ImportSecretWithGenericString),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -142,6 +142,7 @@ func MaskingPolicy() *schema.Resource {
 				Upgrade: v0_95_0_MaskingPolicyStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

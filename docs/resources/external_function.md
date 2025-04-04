@@ -63,6 +63,7 @@ resource "snowflake_external_function" "test_ext_func" {
 - `request_translator` (String) This specifies the name of the request translator function
 - `response_translator` (String) This specifies the name of the response translator function.
 - `return_null_allowed` (Boolean) (Default: `true`) Indicates whether the function can return NULL values (true) or must return only NON-NULL values (false).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -86,6 +87,17 @@ Required:
 
 - `name` (String) Header name
 - `value` (String) Header value
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

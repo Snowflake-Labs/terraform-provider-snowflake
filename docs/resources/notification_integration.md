@@ -65,6 +65,7 @@ resource "snowflake_notification_integration" "integration" {
 - `enabled` (Boolean) (Default: `true`)
 - `gcp_pubsub_subscription_name` (String) The subscription id that Snowflake will listen to when using the GCP_PUBSUB provider.
 - `gcp_pubsub_topic_name` (String) The topic id that Snowflake will use to push notifications.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `type` (String, Deprecated) (Default: `QUEUE`) A type of integration
 
 ### Read-Only
@@ -77,6 +78,16 @@ resource "snowflake_notification_integration" "integration" {
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `gcp_pubsub_service_account` (String) The GCP service account identifier that Snowflake will use when assuming the GCP role
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

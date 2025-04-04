@@ -78,6 +78,7 @@ func DatabaseRole() *schema.Resource {
 				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

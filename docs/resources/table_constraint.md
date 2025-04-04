@@ -123,6 +123,7 @@ resource "snowflake_table_constraint" "unique" {
 - `foreign_key_properties` (Block List, Max: 1) Additional properties when type is set to foreign key. Not applicable for primary/unique keys (see [below for nested schema](#nestedblock--foreign_key_properties))
 - `initially` (String) (Default: `DEFERRED`) Whether the constraint is initially deferred or immediate
 - `rely` (Boolean) (Default: `true`) Specifies whether a constraint in NOVALIDATE mode is taken into account during query rewrite.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `validate` (Boolean) (Default: `false`) Specifies whether to validate existing data on the table when a constraint is created. Only used in conjunction with the ENABLE property.
 
 ### Read-Only
@@ -149,6 +150,18 @@ Required:
 
 - `columns` (List of String) Columns to use in foreign key reference
 - `table_id` (String) Name of constraint
+
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

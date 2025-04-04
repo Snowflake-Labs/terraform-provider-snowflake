@@ -81,6 +81,20 @@ resource "snowflake_table_column_masking_policy_application" "application" {
 - `masking_policy` (String) Fully qualified name (`database.schema.policyname`) of the policy to apply.
 - `table` (String) The fully qualified name (`database.schema.table`) of the table to apply the masking policy to.
 
+### Optional
+
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)

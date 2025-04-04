@@ -54,6 +54,7 @@ resource "snowflake_row_access_policy" "example_row_access_policy" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the row access policy.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -69,6 +70,17 @@ Required:
 
 - `name` (String) The argument name
 - `type` (String) The argument type. VECTOR data types are not yet supported. For more information about data types, check [Snowflake docs](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types).
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 
 <a id="nestedatt--describe_output"></a>

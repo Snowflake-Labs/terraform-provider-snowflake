@@ -63,6 +63,7 @@ func StreamOnExternalTable() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.StreamOnExternalTable, ImportStreamOnExternalTable),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

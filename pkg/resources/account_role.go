@@ -59,6 +59,7 @@ func AccountRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.AccountRole, ImportName[sdk.AccountObjectIdentifier]),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

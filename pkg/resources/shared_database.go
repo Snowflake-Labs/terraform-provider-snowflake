@@ -63,6 +63,7 @@ func SharedDatabase() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.SharedDatabase, ImportName[sdk.AccountObjectIdentifier]),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

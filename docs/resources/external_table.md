@@ -75,6 +75,7 @@ resource "snowflake_external_table" "external_table_with_location" {
 - `refresh_on_create` (Boolean) (Default: `true`) Specifies weather to refresh when an external table is created.
 - `table_format` (String) Identifies the external table table type. For now, only "delta" for Delta Lake table format is supported.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -104,6 +105,17 @@ Optional:
 
 - `database` (String) Name of the database that the tag was created in.
 - `schema` (String) Name of the schema that the tag was created in.
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

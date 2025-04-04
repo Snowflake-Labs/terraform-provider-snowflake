@@ -86,6 +86,7 @@ resource "snowflake_external_oauth_integration" "test" {
 - `external_oauth_rsa_public_key_2` (String) Specifies a second RSA public key, without the -----BEGIN PUBLIC KEY----- and -----END PUBLIC KEY----- headers. Used for key rotation. If removed from the config, the resource is recreated.
 - `external_oauth_scope_delimiter` (String) Specifies the scope delimiter in the authorization token.
 - `external_oauth_scope_mapping_attribute` (String) Specifies the access token claim to map the access token to an account role. If removed from the config, the resource is recreated.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -94,6 +95,17 @@ resource "snowflake_external_oauth_integration" "test" {
 - `id` (String) The ID of this resource.
 - `related_parameters` (List of Object) Parameters related to this security integration. (see [below for nested schema](#nestedatt--related_parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATIONS` for the given security integration. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

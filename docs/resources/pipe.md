@@ -52,6 +52,7 @@ resource "snowflake_pipe" "pipe" {
 - `comment` (String) Specifies a comment for the pipe.
 - `error_integration` (String) Specifies the name of the notification integration used for error notifications.
 - `integration` (String) Specifies an integration for the pipe.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -59,6 +60,16 @@ resource "snowflake_pipe" "pipe" {
 - `id` (String) The ID of this resource.
 - `notification_channel` (String) Amazon Resource Name of the Amazon SQS queue for the stage named in the DEFINITION column.
 - `owner` (String) Name of the role that owns the pipe.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

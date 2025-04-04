@@ -43,6 +43,7 @@ func ProcedureJavascript() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ProcedureJavascript, ImportProcedure),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

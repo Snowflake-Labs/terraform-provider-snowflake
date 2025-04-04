@@ -44,6 +44,7 @@ func ProcedureScala() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ProcedureScala, ImportProcedure),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

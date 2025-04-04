@@ -65,6 +65,7 @@ resource "snowflake_api_integration" "gcp" {
 - `comment` (String)
 - `enabled` (Boolean) (Default: `true`) Specifies whether this API integration is enabled or disabled. If the API integration is disabled, any external function that relies on it will not work.
 - `google_audience` (String) (Default: ``) The audience claim when generating the JWT (JSON Web Token) to authenticate to the Google API Gateway.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -75,6 +76,16 @@ resource "snowflake_api_integration" "gcp" {
 - `created_on` (String) Date and time when the API integration was created.
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

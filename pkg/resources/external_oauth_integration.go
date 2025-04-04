@@ -188,6 +188,7 @@ func ExternalOauthIntegration() *schema.Resource {
 				Upgrade: v092ExternalOauthIntegrationStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

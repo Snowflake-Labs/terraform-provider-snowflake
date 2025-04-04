@@ -118,6 +118,7 @@ func AuthenticationPolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.AuthenticationPolicy, ImportAuthenticationPolicy),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

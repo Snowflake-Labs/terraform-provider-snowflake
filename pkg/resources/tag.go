@@ -134,6 +134,7 @@ func Tag() *schema.Resource {
 				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

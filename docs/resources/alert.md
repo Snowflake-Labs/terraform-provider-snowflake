@@ -51,6 +51,7 @@ resource "snowflake_alert" "alert" {
 - `alert_schedule` (Block List, Max: 1) The schedule for periodically running an alert. (see [below for nested schema](#nestedblock--alert_schedule))
 - `comment` (String) Specifies a comment for the alert.
 - `enabled` (Boolean) (Default: `false`) Specifies if an alert should be 'started' (enabled) after creation or should remain 'suspended' (default).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -72,6 +73,18 @@ Required:
 
 - `expression` (String) Specifies the cron expression for the alert. The cron expression must be in the following format: "minute hour day-of-month month day-of-week". The following values are supported: minute: 0-59 hour: 0-23 day-of-month: 1-31 month: 1-12 day-of-week: 0-6 (0 is Sunday)
 - `time_zone` (String) Specifies the time zone for alert refresh.
+
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

@@ -43,6 +43,7 @@ func FunctionSql() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.FunctionSql, ImportFunction),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -58,6 +58,7 @@ variable "oauth_refresh_token" {
 ### Optional
 
 - `comment` (String) Specifies a comment for the secret.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -66,6 +67,17 @@ variable "oauth_refresh_token" {
 - `id` (String) The ID of this resource.
 - `secret_type` (String) Specifies a type for the secret. This field is used for checking external changes and recreating the resources if needed.
 - `show_output` (List of Object) Outputs the result of `SHOW SECRETS` for the given secret. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

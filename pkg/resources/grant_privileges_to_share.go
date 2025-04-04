@@ -116,6 +116,7 @@ func GrantPrivilegesToShare() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.GrantPrivilegesToShare, ImportGrantPrivilegesToShare()),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

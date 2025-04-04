@@ -44,6 +44,7 @@ func ProcedurePython() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ProcedurePython, ImportProcedure),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

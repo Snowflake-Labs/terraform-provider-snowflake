@@ -116,10 +116,21 @@ resource "snowflake_grant_privileges_to_share" "example" {
 - `on_table` (String) The fully qualified name of the table on which privileges will be granted. For more information about this resource, see [docs](./table).
 - `on_tag` (String) The fully qualified name of the tag on which privileges will be granted. For more information about this resource, see [docs](./tag).
 - `on_view` (String) The fully qualified name of the view on which privileges will be granted. For more information about this resource, see [docs](./view).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Known limitations
 - Setting the `CREATE SNOWFLAKE.ML.ANOMALY_DETECTION` or `CREATE SNOWFLAKE.ML.FORECAST` privileges on schema results in a permadiff because of the probably incorrect Snowflake's behavior of `SHOW GRANTS ON <object_type> <object_name>`. More in the [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651#issuecomment-2022634952).

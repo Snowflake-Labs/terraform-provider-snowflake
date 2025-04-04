@@ -58,6 +58,7 @@ func Share() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.Share, ImportName[sdk.AccountObjectIdentifier]),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

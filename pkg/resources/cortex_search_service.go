@@ -94,7 +94,9 @@ func CortexSearchService() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(defaultDeleteTimeout),
 			Update: schema.DefaultTimeout(60 * time.Minute),
+			Read:   schema.DefaultTimeout(defaultReadTimeout),
 		},
 	}
 }

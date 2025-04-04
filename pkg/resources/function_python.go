@@ -43,6 +43,7 @@ func FunctionPython() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.FunctionPython, ImportFunction),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

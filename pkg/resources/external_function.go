@@ -215,6 +215,7 @@ func ExternalFunction() *schema.Resource {
 				Upgrade: v0941ResourceIdentifierWithArguments,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

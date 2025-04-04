@@ -59,6 +59,7 @@ func SecretWithAuthorizationCodeGrant() *schema.Resource {
 			ComputedIfAnyAttributeChanged(secretAuthorizationCodeGrantSchema, DescribeOutputAttributeName, "oauth_refresh_token_expiry_time", "api_authentication"),
 			RecreateWhenSecretTypeChangedExternally(sdk.SecretTypeOAuth2AuthorizationCodeGrant),
 		)),
+		Timeouts: defaultTimeouts,
 	}
 }
 

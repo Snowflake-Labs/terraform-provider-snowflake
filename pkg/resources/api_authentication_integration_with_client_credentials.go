@@ -47,6 +47,7 @@ func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, ImportApiAuthenticationWithClientCredentials),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
