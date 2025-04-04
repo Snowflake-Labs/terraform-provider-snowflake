@@ -18,8 +18,14 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	user1, user1Cleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(user1Cleanup)
+
+	user2, user2Cleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(user2Cleanup)
+
+	userId := user1.ID()
+	newUserId := user2.ID()
 	passwordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newPasswordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
@@ -66,7 +72,10 @@ func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	user, userCleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(userCleanup)
+
+	userId := user.ID()
 	passwordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -101,10 +110,6 @@ func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 
 func userPasswordPolicyAttachmentConfig(userId sdk.AccountObjectIdentifier, passwordPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_user" "user" {
-	name = "%[1]s"
-}
-
 resource "snowflake_password_policy" "pp" {
 	database   = "%[2]s"
 	schema     = "%[3]s"
@@ -113,18 +118,13 @@ resource "snowflake_password_policy" "pp" {
 
 resource "snowflake_user_password_policy_attachment" "ppa" {
 	password_policy_name = snowflake_password_policy.pp.fully_qualified_name
-	user_name = snowflake_user.user.name
+	user_name = "%[1]s"
 }
 `, userId.Name(), passwordPolicyId.DatabaseName(), passwordPolicyId.SchemaName(), passwordPolicyId.Name())
 }
 
 func userPasswordPolicyAttachmentConfigV087(userId sdk.AccountObjectIdentifier, passwordPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_user" "user" {
-	name = "%[1]s"
-	default_secondary_roles = ["ALL"]
-}
-
 resource "snowflake_password_policy" "pp" {
 	database   = "%[2]s"
 	schema     = "%[3]s"
@@ -134,7 +134,7 @@ resource "snowflake_password_policy" "pp" {
 resource "snowflake_user_password_policy_attachment" "ppa" {
 	depends_on = [snowflake_password_policy.pp]
 	password_policy_name = "\"%[2]s\".\"%[3]s\".\"%[4]s\""
-	user_name = snowflake_user.user.name
+	user_name =  "%[1]s"
 }
 `, userId.Name(), passwordPolicyId.DatabaseName(), passwordPolicyId.SchemaName(), passwordPolicyId.Name())
 }

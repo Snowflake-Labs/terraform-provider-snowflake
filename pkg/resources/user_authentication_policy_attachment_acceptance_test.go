@@ -18,8 +18,14 @@ func TestAcc_UserAuthenticationPolicyAttachment(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	user1, user1Cleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(user1Cleanup)
+
+	user2, user2Cleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(user2Cleanup)
+
+	userId := user1.ID()
+	newUserId := user2.ID()
 	authenticationPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newAuthenticationPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
@@ -58,10 +64,6 @@ func TestAcc_UserAuthenticationPolicyAttachment(t *testing.T) {
 
 func userAuthenticationPolicyAttachmentConfig(userId sdk.AccountObjectIdentifier, authenticationPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_user" "user" {
-	name = "%[1]s"
-}
-
 resource "snowflake_authentication_policy" "ap" {
 	database   = "%[2]s"
 	schema     = "%[3]s"
@@ -70,7 +72,7 @@ resource "snowflake_authentication_policy" "ap" {
 
 resource "snowflake_user_authentication_policy_attachment" "apa" {
 	authentication_policy_name = snowflake_authentication_policy.ap.fully_qualified_name
-	user_name = snowflake_user.user.name
+	user_name =  "%[1]s"
 }
 `, userId.Name(), authenticationPolicyId.DatabaseName(), authenticationPolicyId.SchemaName(), authenticationPolicyId.Name())
 }
