@@ -65,6 +65,12 @@ func (v *tables) Drop(ctx context.Context, request *DropTableRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	// TODO: Either this way or refactor the method to accept only ID and implicitly set the IfExists flag
+	// TODO: Check other Drops if they contain other usefull options than "If exists"
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropTableRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *tables) Show(ctx context.Context, request *ShowTableRequest) ([]Table, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[tableDBRow](v.client, ctx, opts)

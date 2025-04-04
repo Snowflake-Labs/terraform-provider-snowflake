@@ -24,6 +24,7 @@ type Tables interface {
 	CreateClone(ctx context.Context, req *CreateTableCloneRequest) error
 	Alter(ctx context.Context, req *AlterTableRequest) error
 	Drop(ctx context.Context, req *DropTableRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, req *ShowTableRequest) ([]Table, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Table, error)

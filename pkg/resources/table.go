@@ -210,11 +210,13 @@ var tableSchema = map[string]*schema.Schema{
 }
 
 func Table() *schema.Resource {
+	deleteTable := CommonDelete(func(client *sdk.Client) DropFunc { return client.Tables.DropSafely })
+
 	return &schema.Resource{
 		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.TableResource), TrackingCreateWrapper(resources.Table, CreateTable)),
 		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.TableResource), TrackingReadWrapper(resources.Table, ReadTable)),
 		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.TableResource), TrackingUpdateWrapper(resources.Table, UpdateTable)),
-		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableResource), TrackingDeleteWrapper(resources.Table, DeleteTable)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableResource), TrackingDeleteWrapper(resources.Table, deleteTable)),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Table, customdiff.All(
 			ComputedIfAnyAttributeChanged(tableSchema, FullyQualifiedNameAttributeName, "name"),
@@ -960,20 +962,4 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	}
 
 	return ReadTable(ctx, d, meta)
-}
-
-// DeleteTable implements schema.DeleteFunc.
-func DeleteTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-
-	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
-
-	err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(id))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId("")
-
-	return nil
 }
