@@ -42,6 +42,17 @@ func (c *DatabaseClient) CreateDatabaseWithParametersSetWithId(t *testing.T, id 
 	return c.CreateDatabaseWithOptions(t, id, c.testParametersSet())
 }
 
+// CreateTestDatabaseIfNotExists should be used to create the main database used throughout the acceptance tests.
+// It's created only if it does not exist already.
+func (c *DatabaseClient) CreateTestDatabaseIfNotExists(t *testing.T) (*sdk.Database, func()) {
+	t.Helper()
+
+	opts := c.testParametersSet()
+	opts.IfNotExists = sdk.Bool(true)
+
+	return c.CreateDatabaseWithOptions(t, c.ids.DatabaseId(), opts)
+}
+
 func (c *DatabaseClient) testParametersSet() *sdk.CreateDatabaseOptions {
 	return &sdk.CreateDatabaseOptions{
 		DataRetentionTimeInDays:    sdk.Int(1),

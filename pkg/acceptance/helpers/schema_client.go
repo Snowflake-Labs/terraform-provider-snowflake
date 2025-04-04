@@ -29,6 +29,13 @@ func (c *SchemaClient) CreateSchema(t *testing.T) (*sdk.Schema, func()) {
 	return c.CreateSchemaInDatabase(t, c.ids.DatabaseId())
 }
 
+// CreateTestSchemaIfNotExists should be used to create the main schema used throughout the acceptance tests.
+// It's created only if it does not exist already.
+func (c *SchemaClient) CreateTestSchemaIfNotExists(t *testing.T) (*sdk.Schema, func()) {
+	t.Helper()
+	return c.CreateSchemaWithOpts(t, c.ids.SchemaId(), &sdk.CreateSchemaOptions{IfNotExists: sdk.Bool(true)})
+}
+
 func (c *SchemaClient) CreateSchemaInDatabase(t *testing.T, databaseId sdk.AccountObjectIdentifier) (*sdk.Schema, func()) {
 	t.Helper()
 	return c.CreateSchemaWithIdentifier(t, c.ids.RandomDatabaseObjectIdentifierInDatabase(databaseId))
