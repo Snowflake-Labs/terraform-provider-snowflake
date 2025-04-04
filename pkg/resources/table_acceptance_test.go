@@ -2297,9 +2297,12 @@ func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {
 				Config:      tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
 				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
 			},
+			// The New version removes table from the state which ends up with create operation
+			// and the "error creating table" error (because of the missing underlying schema).
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+				ExpectError:              regexp.MustCompile("error creating table"),
 			},
 		},
 	})
