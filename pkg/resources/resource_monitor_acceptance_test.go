@@ -548,23 +548,13 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 		Steps: []resource.TestStep{
 			// Create resource monitor
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.69.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, configModel),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.69.0"),
+				Config:            config.FromModels(t, configModel),
 			},
 			// Same configuration, but we drop resource monitor externally
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.69.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.69.0"),
 				PreConfig: func() {
 					acc.TestClient().ResourceMonitor.DropResourceMonitorFunc(t, id)()
 				},
@@ -573,14 +563,9 @@ func TestAcc_ResourceMonitor_Issue1990_RemovingResourceMonitorOutsideOfTerraform
 			},
 			// Same configuration, but it's the last version where it's still not working
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.95.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      config.FromModels(t, configModel),
-				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.95.0"),
+				Config:            config.FromModels(t, configModel),
+				ExpectError:       regexp.MustCompile("object does not exist or not authorized"),
 			},
 			// Same configuration, but it's the latest version of the provider (0.96.0 and above)
 			{
@@ -623,46 +608,26 @@ func TestAcc_ResourceMonitor_Issue_TimestampInfinitePlan(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create resource monitor without the timestamps
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, configModel),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModel),
 			},
 			// Alter resource timestamps to have the following format: 2006-01-02 (produces a plan because of the format difference)
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.90.0"),
 				Config:             config.FromModels(t, configModelWithDateStartTimestamp),
 				ExpectNonEmptyPlan: true,
 			},
 			// Alter resource timestamps to have the following format: 2006-01-02 15:04 (won't produce plan because of the internal format mapping to this exact format)
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, configModelWithDateTimeFormat),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModelWithDateTimeFormat),
 			},
 			// Destroy the resource
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:  config.FromModels(t, configModelWithDateTimeFormat),
-				Destroy: true,
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModelWithDateTimeFormat),
+				Destroy:           true,
 			},
 			// Create resource monitor without the timestamps
 			{
@@ -707,15 +672,10 @@ func TestAcc_ResourceMonitor_Issue1500_CreatingWithOnlyTriggers(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create resource monitor with only triggers (old version)
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      config.FromModels(t, configModel),
-				ExpectError: regexp.MustCompile("SQL compilation error"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModel),
+				ExpectError:       regexp.MustCompile("SQL compilation error"),
 			},
 			// Create resource monitor with only triggers (the latest version)
 			{
@@ -764,35 +724,20 @@ func TestAcc_ResourceMonitor_Issue1500_AlteringWithOnlyTriggers(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, configModelWithCreditQuota),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModelWithCreditQuota),
 			},
 			// Update only triggers (not allowed in Snowflake)
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, configModelWithUpdatedTriggers),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModelWithUpdatedTriggers),
 				// For some reason, not returning error (SQL compilation error should be returned in this case; most likely update was handled incorrectly, or it was handled similarly as in the current version)
 			},
 			// Remove all triggers (not allowed in Snowflake)
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, configModelWithoutTriggers),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
+				Config:            config.FromModels(t, configModelWithoutTriggers),
 				// For some reason, not returning the correct error (SQL compilation error should be returned in this case; most likely update was processed incorrectly)
 				ExpectError: regexp.MustCompile(`at least one of AlterResourceMonitorOptions fields \[Set Triggers] must be set`),
 			},
@@ -944,13 +889,8 @@ func TestAcc_ResourceMonitor_SetForWarehouse(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ResourceMonitor),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.90.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.90.0"),
 				Config: fmt.Sprintf(`
 resource "snowflake_resource_monitor" "test" {
 	name = "%[1]s"
