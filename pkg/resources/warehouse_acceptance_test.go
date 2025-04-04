@@ -9,6 +9,7 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
+	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -1635,6 +1636,18 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
+	warehouseModelFull := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanTrue).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
+
+	warehouseModelFullWithBoolean := model.WarehouseSnowflakeDefaultWithoutParameters(id, "new comment").
+		WithEnableQueryAccelerationValue(tfconfig.BoolVariable(false)).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1651,43 +1664,43 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseFullMigrationConfig(id.Name(), true),
+				Config: warehouseV092Config(id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "wait_for_provisioning", "true"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "resource_monitor", "null"),
+					resource.TestCheckResourceAttr(warehouseModelFull.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFull.ResourceReference(), "wait_for_provisioning", "true"),
+					resource.TestCheckResourceAttr(warehouseModelFull.ResourceReference(), "resource_monitor", "null"),
 				),
 			},
 			{
-				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseFullMigrationConfig(id.Name(), false),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
+				Config:                   config.FromModels(t, warehouseModelFull),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "wait_for_provisioning"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
+					resource.TestCheckResourceAttr(warehouseModelFull.ResourceReference(), "name", id.Name()),
+					resource.TestCheckNoResourceAttr(warehouseModelFull.ResourceReference(), "wait_for_provisioning"),
+					resource.TestCheckNoResourceAttr(warehouseModelFull.ResourceReference(), "resource_monitor"),
+					resource.TestCheckResourceAttr(warehouseModelFull.ResourceReference(), "enable_query_acceleration", "true"),
 				),
 			},
 			// let's try to change the value of the parameter that was earlier a bool and now is a string
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   config.FromModels(t, warehouseModelFullWithBoolean),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+						plancheck.ExpectResourceAction(warehouseModelFullWithBoolean.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(warehouseModelFullWithBoolean.ResourceReference(), "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
 					},
 				},
-				Config: warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "new comment", false, 8),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "new comment"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "comment", "new comment"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "enable_query_acceleration", "false"),
 				),
 			},
 		},
@@ -1695,7 +1708,16 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration(t *t
 }
 
 func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_booleanChangeRightAfter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModelFullWithBoolean := model.WarehouseSnowflakeDefaultWithoutParameters(id, "new comment").
+		WithEnableQueryAccelerationValue(tfconfig.BoolVariable(false)).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1713,29 +1735,29 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_bool
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseFullMigrationConfig(id.Name(), true),
+				Config: warehouseV092Config(id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "wait_for_provisioning", "true"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "resource_monitor", "null"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "wait_for_provisioning", "true"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "resource_monitor", "null"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "enable_query_acceleration", "true"),
 				),
 			},
 			// let's try to change the value of the parameter that was earlier a bool and now is a string
 			{
-				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
+				Config:                   config.FromModels(t, warehouseModelFullWithBoolean),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
+						plancheck.ExpectResourceAction(warehouseModelFullWithBoolean.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(warehouseModelFullWithBoolean.ResourceReference(), "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
 					},
 				},
-				Config: warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "new comment", false, 8),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", "new comment"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "comment", "new comment"),
+					resource.TestCheckResourceAttr(warehouseModelFullWithBoolean.ResourceReference(), "enable_query_acceleration", "false"),
 				),
 			},
 		},
@@ -1744,7 +1766,16 @@ func TestAcc_Warehouse_migrateFromVersion092_allFieldsFilledBeforeMigration_bool
 
 // The result of removing the custom conditional logic for enable_query_acceleration and query_acceleration_max_scale_factor.
 func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sameConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModelFullDefault := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanFalse).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1762,28 +1793,28 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseFullDefaultConfig(id.Name(), ""),
+				Config: config.FromModels(t, warehouseModelFullDefault),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "name", id.Name()),
+					resource.TestCheckNoResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor"),
 				),
 			},
 			{
-				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseFullDefaultConfig(id.Name(), ""),
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
+				Config:                   config.FromModels(t, warehouseModelFullDefault),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
-						planchecks.PrintPlanDetails("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.ShowOutputAttributeName),
+						planchecks.PrintPlanDetails(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor", r.ShowOutputAttributeName),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "8"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor", "8"),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "8"),
 				),
 			},
 		},
@@ -1792,7 +1823,23 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 
 // The result of removing the custom conditional logic for enable_query_acceleration and query_acceleration_max_scale_factor.
 func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noInConfigAfter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModelFullDefault := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanFalse).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
+
+	warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanFalse).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800).
+		WithQueryAccelerationMaxScaleFactorValue(nil)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1810,28 +1857,28 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseFullDefaultConfig(id.Name(), ""),
+				Config: config.FromModels(t, warehouseModelFullDefault),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "name", id.Name()),
+					resource.TestCheckNoResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor"),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseFullDefaultConfigWithQueryAccelerationMaxScaleFactorRemoved(id.Name(), ""),
+				Config:                   config.FromModels(t, warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.PrintPlanDetails("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.ShowOutputAttributeName),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String(r.IntDefaultString)),
+						planchecks.PrintPlanDetails(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "query_acceleration_max_scale_factor", r.ShowOutputAttributeName),
+						planchecks.ExpectChange(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String(r.IntDefaultString)),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.IntDefaultString),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "query_acceleration_max_scale_factor", r.IntDefaultString),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "8"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "8"),
 				),
 			},
 		},
@@ -1840,7 +1887,23 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 
 // The result of removing the custom conditional logic for enable_query_acceleration and query_acceleration_max_scale_factor.
 func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_differentConfigAfterMigration(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModelFullDefault := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanFalse).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
+
+	warehouseModelFullDefaultWithQueryAcceleration := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanTrue).
+		WithQueryAccelerationMaxScaleFactor(10).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1858,28 +1921,28 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_dif
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseFullDefaultConfig(id.Name(), ""),
+				Config: config.FromModels(t, warehouseModelFullDefault),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "name", id.Name()),
+					resource.TestCheckNoResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor"),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "", true, 10),
+				Config:                   config.FromModels(t, warehouseModelFullDefaultWithQueryAcceleration),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.PrintPlanDetails("snowflake_warehouse.w", "query_acceleration_max_scale_factor", r.ShowOutputAttributeName),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String("10")),
+						planchecks.PrintPlanDetails(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "query_acceleration_max_scale_factor", r.ShowOutputAttributeName),
+						planchecks.ExpectChange(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String("10")),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "10"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "query_acceleration_max_scale_factor", "10"),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "show_output.0.query_acceleration_max_scale_factor", "10"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "show_output.#", "1"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "10"),
 				),
 			},
 		},
@@ -1887,7 +1950,21 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_dif
 }
 
 func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModelBasicConfigWithQueryAcceleration := model.Warehouse("test", id.Name()).
+		WithEnableQueryAcceleration(r.BooleanTrue).
+		WithQueryAccelerationMaxScaleFactor(8)
+
+	warehouseModelFullDefaultWithQueryAcceleration := model.WarehouseSnowflakeDefaultWithoutParameters(id, "").
+		WithEnableQueryAcceleration(r.BooleanTrue).
+		WithQueryAccelerationMaxScaleFactor(8).
+		WithMaxConcurrencyLevel(8).
+		WithStatementQueuedTimeoutInSeconds(0).
+		WithStatementTimeoutInSeconds(172800)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1906,37 +1983,37 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 					},
 				},
 				// query acceleration is needed here because of the custom logic that was removed
-				Config: warehouseBasicConfigWithQueryAcceleration(id.Name()),
+				Config: config.FromModels(t, warehouseModelBasicConfigWithQueryAcceleration),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModelBasicConfigWithQueryAcceleration.ResourceReference(), "name", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseFullDefaultConfigWithQueryAcceleration(id.Name(), "", true, 8),
+				Config:                   config.FromModels(t, warehouseModelFullDefaultWithQueryAcceleration),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeStandard)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_cluster_count", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "scaling_policy", string(sdk.ScalingPolicyStandard)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "600"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "true"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "resource_monitor"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", ""),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "true"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor", "8"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "max_cluster_count", "1"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "min_cluster_count", "1"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "scaling_policy", string(sdk.ScalingPolicyStandard)),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "auto_suspend", "600"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "auto_resume", "true"),
+					resource.TestCheckNoResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "initially_suspended"),
+					resource.TestCheckNoResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "resource_monitor"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "comment", ""),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "enable_query_acceleration", "true"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "query_acceleration_max_scale_factor", "8"),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "max_concurrency_level", "8"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "statement_queued_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAcceleration.ResourceReference(), "statement_timeout_in_seconds", "172800"),
 				),
 			},
 		},
@@ -1944,7 +2021,12 @@ func TestAcc_Warehouse_migrateFromVersion092_noConfigToFullConfig(t *testing.T) 
 }
 
 func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModel := model.Warehouse("test", id.Name()).WithWarehouseSizeEnum(sdk.WarehouseSizeXSmall)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -1962,51 +2044,51 @@ func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeXSmall)),
+				Config: config.FromModels(t, warehouseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "name", id.Name()),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_type", string(sdk.WarehouseTypeStandard)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "warehouse_size", string(sdk.WarehouseSizeXSmall)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_cluster_count", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "min_cluster_count", "1"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "scaling_policy", string(sdk.ScalingPolicyStandard)),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_suspend", "600"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "auto_resume", "true"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "initially_suspended"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "resource_monitor", "null"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "comment", ""),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "enable_query_acceleration", "false"),
-					resource.TestCheckNoResourceAttr("snowflake_warehouse.w", "query_acceleration_max_scale_factor"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "warehouse_type", string(sdk.WarehouseTypeStandard)),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "warehouse_size", string(sdk.WarehouseSizeXSmall)),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "max_cluster_count", "1"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "min_cluster_count", "1"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "scaling_policy", string(sdk.ScalingPolicyStandard)),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "auto_suspend", "600"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "auto_resume", "true"),
+					resource.TestCheckNoResourceAttr(warehouseModel.ResourceReference(), "initially_suspended"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "resource_monitor", "null"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "comment", ""),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "enable_query_acceleration", "false"),
+					resource.TestCheckNoResourceAttr(warehouseModel.ResourceReference(), "query_acceleration_max_scale_factor"),
 
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "max_concurrency_level", "8"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", "0"),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "statement_timeout_in_seconds", "172800"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "max_concurrency_level", "8"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "statement_queued_timeout_in_seconds", "0"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "statement_timeout_in_seconds", "172800"),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseWithSizeConfig(id.Name(), string(sdk.WarehouseSizeXSmall)),
+				Config:                   config.FromModels(t, warehouseModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_type", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseTypeStandard)), nil),
-						planchecks.ExpectChange("snowflake_warehouse.w", "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
-						planchecks.ExpectChange("snowflake_warehouse.w", "max_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
-						planchecks.ExpectChange("snowflake_warehouse.w", "min_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
-						planchecks.ExpectChange("snowflake_warehouse.w", "scaling_policy", tfjson.ActionUpdate, sdk.String(string(sdk.ScalingPolicyStandard)), nil),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String(r.IntDefaultString)),
-						planchecks.ExpectChange("snowflake_warehouse.w", "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String(r.BooleanDefault)),
-						planchecks.ExpectChange("snowflake_warehouse.w", "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("false"), sdk.String(r.BooleanDefault)),
-						planchecks.ExpectChange("snowflake_warehouse.w", "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String(r.IntDefaultString)),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "warehouse_type", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseTypeStandard)), nil),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "warehouse_size", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseSizeXSmall)), sdk.String(string(sdk.WarehouseSizeXSmall))),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "max_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "min_cluster_count", tfjson.ActionUpdate, sdk.String("1"), nil),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "scaling_policy", tfjson.ActionUpdate, sdk.String(string(sdk.ScalingPolicyStandard)), nil),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "auto_suspend", tfjson.ActionUpdate, sdk.String("600"), sdk.String(r.IntDefaultString)),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String(r.BooleanDefault)),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("false"), sdk.String(r.BooleanDefault)),
+						planchecks.ExpectChange(warehouseModel.ResourceReference(), "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String("8"), sdk.String(r.IntDefaultString)),
 
-						planchecks.ExpectComputed("snowflake_warehouse.w", "max_concurrency_level", true),
-						planchecks.ExpectComputed("snowflake_warehouse.w", "statement_queued_timeout_in_seconds", true),
-						planchecks.ExpectComputed("snowflake_warehouse.w", "statement_timeout_in_seconds", true),
+						planchecks.ExpectComputed(warehouseModel.ResourceReference(), "max_concurrency_level", true),
+						planchecks.ExpectComputed(warehouseModel.ResourceReference(), "statement_queued_timeout_in_seconds", true),
+						planchecks.ExpectComputed(warehouseModel.ResourceReference(), "statement_timeout_in_seconds", true),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "name", id.Name()),
 				),
 			},
 		},
@@ -2014,7 +2096,12 @@ func TestAcc_Warehouse_migrateFromVersion092_defaultsRemoved(t *testing.T) {
 }
 
 func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModel := model.Warehouse("test", id.Name())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -2032,22 +2119,22 @@ func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *tes
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseBasicConfig(id.Name()),
+				Config: config.FromModels(t, warehouseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "name", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseBasicConfig(id.Name()),
+				Config:                   config.FromModels(t, warehouseModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionDestroyBeforeCreate),
+						plancheck.ExpectResourceAction(warehouseModel.ResourceReference(), plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "name", id.Name()),
 				),
 			},
 		},
@@ -2055,7 +2142,12 @@ func TestAcc_Warehouse_migrateFromVersion092_warehouseSizeCausingForceNew(t *tes
 }
 
 func TestAcc_Warehouse_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	warehouseModel := model.Warehouse("test", id.Name())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -2072,17 +2164,17 @@ func TestAcc_Warehouse_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
-				Config: warehouseBasicConfig(id.Name()),
+				Config: config.FromModels(t, warehouseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseBasicConfig(id.Name()),
+				Config:                   config.FromModels(t, warehouseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},
@@ -2090,8 +2182,13 @@ func TestAcc_Warehouse_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *
 }
 
 func TestAcc_Warehouse_IdentifierQuotingDiffSuppression(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+	quotedId := fmt.Sprintf(`"%s"`, id.Name())
+
+	warehouseModel := model.Warehouse("test", quotedId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -2109,58 +2206,36 @@ func TestAcc_Warehouse_IdentifierQuotingDiffSuppression(t *testing.T) {
 					},
 				},
 				ExpectNonEmptyPlan: true,
-				Config:             warehouseBasicConfig(quotedId),
+				Config:             config.FromModels(t, warehouseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   warehouseBasicConfig(quotedId),
+				Config:                   config.FromModels(t, warehouseModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(warehouseModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_warehouse.w", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(warehouseModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_warehouse.w", "id", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func warehouseBasicConfig(name string) string {
+func warehouseV092Config(id sdk.AccountObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name           = "%s"
-}
-`, name)
-}
-
-func warehouseBasicConfigWithQueryAcceleration(name string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name                                = "%s"
-	enable_query_acceleration           = "true"
-	query_acceleration_max_scale_factor = "8"
-}
-`, name)
-}
-
-func warehouseFullMigrationConfig(name string, withDeprecatedAttribute bool) string {
-	deprecatedAttribute := ""
-	if withDeprecatedAttribute {
-		deprecatedAttribute = "wait_for_provisioning = true"
-	}
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
+resource "snowflake_warehouse" "test" {
 	name                                = "%[1]s"
 	warehouse_type                      = "STANDARD"
 	warehouse_size                      = "XSMALL"
@@ -2177,65 +2252,7 @@ resource "snowflake_warehouse" "w" {
     statement_queued_timeout_in_seconds = 0
     statement_timeout_in_seconds        = 172800
 
-    %s
+    wait_for_provisioning = true
 }
-`, name, deprecatedAttribute)
-}
-
-func warehouseFullDefaultConfig(name string, comment string) string {
-	return warehouseFullDefaultConfigWithQueryAcceleration(name, comment, false, 8)
-}
-
-func warehouseFullDefaultConfigWithQueryAcceleration(name string, comment string, enableQueryAcceleration bool, queryAccelerationMaxScaleFactor int) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name                                = "%[1]s"
-	warehouse_type                      = "STANDARD"
-	warehouse_size                      = "XSMALL"
-	max_cluster_count                   = 1
-	min_cluster_count                   = 1
-	scaling_policy                      = "STANDARD"
-	auto_suspend                        = 600
-	auto_resume                         = true
-	initially_suspended                 = false
-	comment                             = "%[2]s"
-    enable_query_acceleration           = %[3]t
-    query_acceleration_max_scale_factor = %[4]d
-
-    max_concurrency_level               = 8
-    statement_queued_timeout_in_seconds = 0
-    statement_timeout_in_seconds        = 172800
-}
-`, name, comment, enableQueryAcceleration, queryAccelerationMaxScaleFactor)
-}
-
-func warehouseFullDefaultConfigWithQueryAccelerationMaxScaleFactorRemoved(name string, comment string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name                                = "%[1]s"
-	warehouse_type                      = "STANDARD"
-	warehouse_size                      = "XSMALL"
-	max_cluster_count                   = 1
-	min_cluster_count                   = 1
-	scaling_policy                      = "STANDARD"
-	auto_suspend                        = 600
-	auto_resume                         = true
-	initially_suspended                 = false
-	comment                             = "%[2]s"
-    enable_query_acceleration           = false
-
-    max_concurrency_level               = 8
-    statement_queued_timeout_in_seconds = 0
-    statement_timeout_in_seconds        = 172800
-}
-`, name, comment)
-}
-
-func warehouseWithSizeConfig(name string, size string) string {
-	return fmt.Sprintf(`
-resource "snowflake_warehouse" "w" {
-	name           = "%s"
-	warehouse_size = "%s"
-}
-`, name, size)
+`, id.Name())
 }
