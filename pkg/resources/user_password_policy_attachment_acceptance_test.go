@@ -7,23 +7,21 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // TODO [SNOW-1423486]: Fix using warehouse; remove unsetting testenvs.ConfigureClientOnce
 func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	userName := userId.Name()
 	newUserId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newUserName := newUserId.Name()
 	passwordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	passwordPolicyName := passwordPolicyId.Name()
 	newPasswordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	newPasswordPolicyName := newPasswordPolicyId.Name()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -32,18 +30,18 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				Config: userPasswordPolicyAttachmentConfig(userName, acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName),
+				Config: userPasswordPolicyAttachmentConfig(userId, passwordPolicyId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userName),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userId.Name()),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", passwordPolicyId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", userId.FullyQualifiedName(), passwordPolicyId.FullyQualifiedName())),
 				),
 			},
 			// UPDATE
 			{
-				Config: userPasswordPolicyAttachmentConfig(newUserName, acc.TestDatabaseName, acc.TestSchemaName, newPasswordPolicyName),
+				Config: userPasswordPolicyAttachmentConfig(newUserId, newPasswordPolicyId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", newUserName),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", newUserId.Name()),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", newPasswordPolicyId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", newUserId.FullyQualifiedName(), newPasswordPolicyId.FullyQualifiedName())),
 				),
@@ -65,10 +63,11 @@ func TestAcc_UserPasswordPolicyAttachment(t *testing.T) {
 // The behavior was fixed in https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2627
 // so the problem should not occur in the newest provider versions.
 func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	userName := userId.Name()
 	passwordPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	passwordPolicyName := passwordPolicyId.Name()
 
 	resource.Test(t, resource.TestCase{
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -83,9 +82,9 @@ func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 			// CREATE
 			{
 				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				Config:    userPasswordPolicyAttachmentConfigV087(userName, acc.TestDatabaseName, acc.TestSchemaName, passwordPolicyName),
+				Config:    userPasswordPolicyAttachmentConfigV087(userId, passwordPolicyId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userName),
+					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "user_name", userId.Name()),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "password_policy_name", passwordPolicyId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_user_password_policy_attachment.ppa", "id", fmt.Sprintf("%s|%s", userId.FullyQualifiedName(), passwordPolicyId.FullyQualifiedName())),
 				),
@@ -100,26 +99,26 @@ func TestAcc_UserPasswordPolicyAttachment_gh3005(t *testing.T) {
 	})
 }
 
-func userPasswordPolicyAttachmentConfig(userName, databaseName, schemaName, passwordPolicyName string) string {
+func userPasswordPolicyAttachmentConfig(userId sdk.AccountObjectIdentifier, passwordPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_user" "user" {
-	name = "%s"
+	name = "%[1]s"
 }
 
 resource "snowflake_password_policy" "pp" {
-	database   = "%s"
-	schema     = "%s"
-	name       = "%s"
+	database   = "%[2]s"
+	schema     = "%[3]s"
+	name       = "%[4]s"
 }
 
 resource "snowflake_user_password_policy_attachment" "ppa" {
 	password_policy_name = snowflake_password_policy.pp.fully_qualified_name
 	user_name = snowflake_user.user.name
 }
-`, userName, databaseName, schemaName, passwordPolicyName)
+`, userId.Name(), passwordPolicyId.DatabaseName(), passwordPolicyId.SchemaName(), passwordPolicyId.Name())
 }
 
-func userPasswordPolicyAttachmentConfigV087(userName, databaseName, schemaName, passwordPolicyName string) string {
+func userPasswordPolicyAttachmentConfigV087(userId sdk.AccountObjectIdentifier, passwordPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_user" "user" {
 	name = "%[1]s"
@@ -137,5 +136,5 @@ resource "snowflake_user_password_policy_attachment" "ppa" {
 	password_policy_name = "\"%[2]s\".\"%[3]s\".\"%[4]s\""
 	user_name = snowflake_user.user.name
 }
-`, userName, databaseName, schemaName, passwordPolicyName)
+`, userId.Name(), passwordPolicyId.DatabaseName(), passwordPolicyId.SchemaName(), passwordPolicyId.Name())
 }
