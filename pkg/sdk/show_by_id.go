@@ -16,7 +16,12 @@ func SafeShowById[T any, ID AccountObjectIdentifier | DatabaseObjectIdentifier |
 	id ID,
 ) (T, error) {
 	result, err := showById(ctx, id)
-	if errors.Is(err, ErrObjectNotFound) {
+
+	// ErrObjectNotExistOrAuthorized or ErrDoesNotExistOrOperationCannotBePerformed can only happen
+	// when the higher hierarchy object is not accessible for some reason during the "main" showById.
+	shouldCheckHigherHierarchies := errors.Is(err, ErrObjectNotExistOrAuthorized) || errors.Is(err, ErrDoesNotExistOrOperationCannotBePerformed)
+
+	if errors.Is(err, ErrObjectNotFound) || !shouldCheckHigherHierarchies {
 		return result, err
 	}
 
@@ -24,50 +29,31 @@ func SafeShowById[T any, ID AccountObjectIdentifier | DatabaseObjectIdentifier |
 		var zeroValue T
 		errs := []error{err}
 
-		// ErrObjectNotExistOrAuthorized or ErrDoesNotExistOrOperationCannotBePerformed can only happen
-		// when the higher hierarchy object is not accessible for some reason during the "main" showById.
-		shouldCheckHigherHierarchies := errors.Is(err, ErrObjectNotExistOrAuthorized) || errors.Is(err, ErrDoesNotExistOrOperationCannotBePerformed)
-
 		switch id := any(id).(type) {
 		case AccountObjectIdentifier:
-			return result, err
+			return zeroValue, err
 		case DatabaseObjectIdentifier:
-			if shouldCheckHigherHierarchies {
-				if _, err := client.Databases.ShowByID(ctx, id.DatabaseId()); err != nil {
-					errs = append(errs, err)
-				}
+			if _, err := client.Databases.ShowByID(ctx, id.DatabaseId()); err != nil {
+				errs = append(errs, err)
 			}
 
 			return zeroValue, errors.Join(errs...)
-		case SchemaObjectIdentifier:
-			if shouldCheckHigherHierarchies {
-				if _, err := client.Schemas.ShowByID(ctx, id.SchemaId()); err != nil {
-					errs = append(errs, err)
+		case SchemaObjectIdentifier, SchemaObjectIdentifierWithArguments:
+			schemaObjectId := id.(interface {
+				SchemaId() DatabaseObjectIdentifier
+				DatabaseId() AccountObjectIdentifier
+			})
 
-					if errors.Is(err, ErrObjectNotFound) {
-						return zeroValue, errors.Join(errs...)
-					}
-				}
+			if _, err := client.Schemas.ShowByID(ctx, schemaObjectId.SchemaId()); err != nil {
+				errs = append(errs, err)
 
-				if _, err := client.Databases.ShowByID(ctx, id.DatabaseId()); err != nil {
-					errs = append(errs, err)
+				if errors.Is(err, ErrObjectNotFound) {
+					return zeroValue, errors.Join(errs...)
 				}
 			}
 
-			return zeroValue, errors.Join(errs...)
-		case SchemaObjectIdentifierWithArguments:
-			if shouldCheckHigherHierarchies {
-				if _, err := client.Schemas.ShowByID(ctx, id.SchemaId()); err != nil {
-					errs = append(errs, err)
-
-					if errors.Is(err, ErrObjectNotFound) {
-						return zeroValue, errors.Join(errs...)
-					}
-				}
-
-				if _, err := client.Databases.ShowByID(ctx, id.DatabaseId()); err != nil {
-					errs = append(errs, err)
-				}
+			if _, err := client.Databases.ShowByID(ctx, schemaObjectId.DatabaseId()); err != nil {
+				errs = append(errs, err)
 			}
 
 			return zeroValue, errors.Join(errs...)

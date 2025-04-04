@@ -27,6 +27,7 @@ type Schemas interface {
 	Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]SchemaDetails, error)
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
+	ShowByIDSafely(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error)
 	Use(ctx context.Context, id DatabaseObjectIdentifier) error
 	ShowParameters(ctx context.Context, id DatabaseObjectIdentifier) ([]*Parameter, error)
 }
@@ -556,21 +557,23 @@ func (v *schemas) Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, 
 }
 
 func (v *schemas) ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error) {
-	return SafeShowById(v.client, func(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error) {
-		schemas, err := v.client.Schemas.Show(ctx, &ShowSchemaOptions{
-			In: &SchemaIn{
-				Database: Bool(true),
-				Name:     id.DatabaseId(),
-			},
-			Like: &Like{
-				Pattern: String(id.Name()),
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-		return collections.FindFirst(schemas, func(r Schema) bool { return r.Name == id.Name() })
-	}, ctx, id)
+	schemas, err := v.client.Schemas.Show(ctx, &ShowSchemaOptions{
+		In: &SchemaIn{
+			Database: Bool(true),
+			Name:     id.DatabaseId(),
+		},
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindFirst(schemas, func(r Schema) bool { return r.Name == id.Name() })
+}
+
+func (v *schemas) ShowByIDSafely(ctx context.Context, id DatabaseObjectIdentifier) (*Schema, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *schemas) Use(ctx context.Context, id DatabaseObjectIdentifier) error {

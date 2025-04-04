@@ -22,8 +22,8 @@ func TestInt_SafeShowByIdOnAccountObjectIdentifier(t *testing.T) {
 
 	cleanupNetworkPolicy()
 
-	value, err = sdk.SafeShowById(testClient(t), networkPolicyShowById, testContext(t), networkPolicy.ID())
-	assert.Nil(t, value)
+	_, err = sdk.SafeShowById(testClient(t), networkPolicyShowById, testContext(t), networkPolicy.ID())
+	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 }
 
@@ -33,6 +33,7 @@ func TestInt_SafeShowByIdOnDatabaseObjectIdentifier(t *testing.T) {
 	}
 
 	databaseRole, cleanupDatabaseRole := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(cleanupDatabaseRole)
 
 	value, err := sdk.SafeShowById(testClient(t), databaseRoleShowById, testContext(t), databaseRole.ID())
 	assert.NotNil(t, value)
@@ -40,15 +41,14 @@ func TestInt_SafeShowByIdOnDatabaseObjectIdentifier(t *testing.T) {
 
 	cleanupDatabaseRole()
 
-	value, err = sdk.SafeShowById(testClient(t), databaseRoleShowById, testContext(t), databaseRole.ID())
-	assert.Nil(t, value)
+	_, err = sdk.SafeShowById(testClient(t), databaseRoleShowById, testContext(t), databaseRole.ID())
+	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 
 	invalidDatabaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 	invalidDatabaseRoleId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(invalidDatabaseId)
 
-	value, err = sdk.SafeShowById(testClient(t), databaseRoleShowById, testContext(t), invalidDatabaseRoleId)
-	assert.Nil(t, value)
+	_, err = sdk.SafeShowById(testClient(t), databaseRoleShowById, testContext(t), invalidDatabaseRoleId)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -60,6 +60,7 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
 	}
 
 	table, cleanupTable := testClientHelper().Table.Create(t)
+	t.Cleanup(cleanupTable)
 
 	value, err := sdk.SafeShowById(testClient(t), tableShowById, testContext(t), table.ID())
 	assert.NotNil(t, value)
@@ -68,7 +69,6 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
 	cleanupTable()
 
 	value, err = sdk.SafeShowById(testClient(t), tableShowById, testContext(t), table.ID())
-	assert.Nil(t, value)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 
@@ -76,7 +76,6 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
 	invalidTableIdOnValidDatabase := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(invalidSchemaIdOnValidDatabase)
 
 	value, err = sdk.SafeShowById(testClient(t), tableShowById, testContext(t), invalidTableIdOnValidDatabase)
-	assert.Nil(t, value)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
@@ -86,7 +85,6 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifier(t *testing.T) {
 	invalidTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(invalidSchemaId)
 
 	value, err = sdk.SafeShowById(testClient(t), tableShowById, testContext(t), invalidTableId)
-	assert.Nil(t, value)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
@@ -98,6 +96,7 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	}
 
 	procedure, cleanupProcedure := testClientHelper().Procedure.Create(t, sdk.DataTypeInt)
+	t.Cleanup(cleanupProcedure)
 
 	value, err := sdk.SafeShowById(testClient(t), procedureShowById, testContext(t), procedure.ID())
 	assert.NotNil(t, value)
@@ -106,7 +105,6 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	cleanupProcedure()
 
 	value, err = sdk.SafeShowById(testClient(t), procedureShowById, testContext(t), procedure.ID())
-	assert.Nil(t, value)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 
@@ -114,7 +112,6 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	invalidProcedureIdOnValidDatabase := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(invalidSchemaIdOnValidDatabase)
 
 	value, err = sdk.SafeShowById(testClient(t), procedureShowById, testContext(t), invalidProcedureIdOnValidDatabase)
-	assert.Nil(t, value)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
@@ -124,7 +121,6 @@ func TestInt_SafeShowByIdOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	invalidProcedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(invalidSchemaId)
 
 	value, err = sdk.SafeShowById(testClient(t), procedureShowById, testContext(t), invalidProcedureId)
-	assert.Nil(t, value)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)

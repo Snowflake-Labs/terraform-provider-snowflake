@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"regexp"
 	"strconv"
 	"testing"
@@ -2259,4 +2260,47 @@ resource "snowflake_table" "test_table" {
     }
 }
 `, tableId.Name(), tableId.DatabaseName(), tableId.SchemaName(), dataType)
+}
+
+func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchema(t)
+	t.Cleanup(schemaCleanup)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=1.0.5",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				Config: tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"snowflake": {
+						VersionConstraint: "=1.0.5",
+						Source:            "Snowflake-Labs/snowflake",
+					},
+				},
+				PreConfig:   func() { schemaCleanup() },
+				Config:      tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+			},
+		},
+	})
 }

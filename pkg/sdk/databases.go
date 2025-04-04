@@ -37,6 +37,7 @@ type Databases interface {
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*DatabaseDetails, error)
 	Use(ctx context.Context, id AccountObjectIdentifier) error
 	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
@@ -785,18 +786,20 @@ func (v *databases) Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Dat
 }
 
 func (v *databases) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
-	return SafeShowById(v.client, func(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
-		databases, err := v.Show(ctx, &ShowDatabasesOptions{
-			Like: &Like{
-				Pattern: String(id.Name()),
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
+	databases, err := v.Show(ctx, &ShowDatabasesOptions{
+		Like: &Like{
+			Pattern: String(id.Name()),
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
 
-		return collections.FindFirst(databases, func(r Database) bool { return r.Name == id.Name() })
-	}, ctx, id)
+	return collections.FindFirst(databases, func(r Database) bool { return r.Name == id.Name() })
+}
+
+func (v *databases) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Database, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 type DatabaseDetails struct {

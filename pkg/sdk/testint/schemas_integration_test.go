@@ -549,19 +549,38 @@ func TestInt_Schemas(t *testing.T) {
 		assert.Equal(t, "ROLE", schema1.OwnerRoleType)
 	})
 
-	t.Run("show: missing schema", func(t *testing.T) {
+	t.Run("show by id: missing schema", func(t *testing.T) {
 		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
-		schema, err := client.Schemas.ShowByID(ctx, schemaId)
-		assert.Nil(t, schema)
+		_, err := client.Schemas.ShowByID(ctx, schemaId)
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
-	t.Run("show: missing database", func(t *testing.T) {
+	t.Run("show by id: missing database", func(t *testing.T) {
 		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
 		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-		schema, err := client.Schemas.ShowByID(ctx, schemaId)
-		assert.Nil(t, schema)
+		_, err := client.Schemas.ShowByID(ctx, schemaId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id safely", func(t *testing.T) {
+		schema, err := client.Schemas.ShowByIDSafely(ctx, testClientHelper().Ids.SchemaId())
+		assert.NotNil(t, schema)
+		assert.NoError(t, err)
+	})
+
+	t.Run("show by id safely: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		_, err := client.Schemas.ShowByIDSafely(ctx, schemaId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
+
+	t.Run("show by id safely: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		_, err := client.Schemas.ShowByIDSafely(ctx, schemaId)
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)

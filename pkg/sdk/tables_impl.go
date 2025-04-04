@@ -78,14 +78,16 @@ func (v *tables) Show(ctx context.Context, request *ShowTableRequest) ([]Table, 
 }
 
 func (v *tables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
-	return SafeShowById(v.client, func(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
-		request := NewShowTableRequest().WithIn(&In{Schema: id.SchemaId()}).WithLikePattern(id.Name())
-		returnedTables, err := v.Show(ctx, request)
-		if err != nil {
-			return nil, err
-		}
-		return collections.FindFirst(returnedTables, func(r Table) bool { return r.Name == id.Name() })
-	}, ctx, id)
+	request := NewShowTableRequest().WithIn(&In{Schema: id.SchemaId()}).WithLikePattern(id.Name())
+	returnedTables, err := v.Show(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	return collections.FindFirst(returnedTables, func(r Table) bool { return r.Name == id.Name() })
+}
+
+func (v *tables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Table, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *tables) DescribeColumns(ctx context.Context, req *DescribeTableColumnsRequest) ([]TableColumnDetails, error) {
