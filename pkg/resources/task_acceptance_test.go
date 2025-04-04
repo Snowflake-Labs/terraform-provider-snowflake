@@ -38,6 +38,7 @@ func TestAcc_Task_Basic(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
+
 	configModel := model.TaskWithId("test", id, false, statement)
 
 	resource.Test(t, resource.TestCase{
@@ -828,6 +829,7 @@ func TestAcc_Task_CallingProcedure(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := fmt.Sprintf("call %s(123)", procedure.Name)
+
 	configModel := model.TaskWithId("test", id, false, statement).WithUserTaskManagedInitialWarehouseSizeEnum(sdk.WarehouseSizeXSmall)
 
 	resource.Test(t, resource.TestCase{
@@ -871,6 +873,7 @@ func TestAcc_Task_CronAndMinutes(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	minutes := 5
 	cron := "*/5 * * * * UTC"
+
 	configModelWithoutSchedule := model.TaskWithId("test", id, false, "SELECT 1")
 	configModelWithMinutes := model.TaskWithId("test", id, true, "SELECT 1").WithScheduleMinutes(minutes)
 	configModelWithCron := model.TaskWithId("test", id, true, "SELECT 1").WithScheduleCron(cron)
@@ -1008,6 +1011,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	minutes := 5
 	cron := "*/5 * * * * UTC"
+
 	configModelWithoutSchedule := model.TaskWithId("test", id, false, "SELECT 1")
 	configModelWithMinutes := model.TaskWithId("test", id, false, "SELECT 1").WithScheduleMinutes(minutes)
 	configModelWithCron := model.TaskWithId("test", id, false, "SELECT 1").WithScheduleCron(cron)
@@ -1154,6 +1158,7 @@ func TestAcc_Task_CronAndMinutes_ExternalChanges(t *testing.T) {
 
 func TestAcc_Task_ScheduleSchemaValidation(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
@@ -1206,6 +1211,7 @@ func TestAcc_Task_AllParameters(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
+
 	configModel := model.TaskWithId("test", id, true, statement).
 		WithScheduleMinutes(5)
 	configModelWithAllParametersSet := model.TaskWithId("test", id, true, statement).
@@ -1511,6 +1517,7 @@ func TestAcc_Task_Enabled(t *testing.T) {
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
+
 	configModelEnabled := model.TaskWithId("test", id, true, statement).
 		WithScheduleMinutes(5)
 	configModelDisabled := model.TaskWithId("test", id, false, statement).
@@ -1762,6 +1769,9 @@ func TestAcc_Task_ConvertStandaloneTaskToFinalizer(t *testing.T) {
 }
 
 func TestAcc_Task_SwitchScheduledWithAfter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	rootId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	childId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT 1"
@@ -2409,8 +2419,8 @@ func TestAcc_Task_StateUpgrade_NoOptionalFields(t *testing.T) {
 				},
 				Config: taskNoOptionalFieldsConfigV0980(id),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test", "enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "allow_overlapping_execution", "false"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "enabled", "false"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "allow_overlapping_execution", "false"),
 				),
 			},
 			{
@@ -2461,12 +2471,12 @@ func TestAcc_Task_StateUpgrade(t *testing.T) {
 				},
 				Config: taskBasicConfigV0980(id, condition),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test", "enabled", "false"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "allow_overlapping_execution", "true"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "schedule", "5 MINUTES"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "suspend_task_after_num_failures", "10"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "when", condition),
-					resource.TestCheckResourceAttr("snowflake_task.test", "user_task_managed_initial_warehouse_size", "XSMALL"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "enabled", "false"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "allow_overlapping_execution", "true"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "schedule", "5 MINUTES"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "suspend_task_after_num_failures", "10"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "when", condition),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "user_task_managed_initial_warehouse_size", "XSMALL"),
 				),
 			},
 			{
@@ -2526,14 +2536,14 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 				},
 				Config: taskCompleteConfigV0980(id, rootTask.ID(), acc.TestClient().Ids.WarehouseId(), 50, comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_task.test", "after.#", "1"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "after.0", rootTask.ID().Name()),
-					resource.TestCheckResourceAttr("snowflake_task.test", "warehouse", acc.TestClient().Ids.WarehouseId().Name()),
-					resource.TestCheckResourceAttr("snowflake_task.test", "user_task_timeout_ms", "50"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "comment", comment),
-					resource.TestCheckResourceAttr("snowflake_task.test", "session_parameters.LOG_LEVEL", "INFO"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "session_parameters.AUTOCOMMIT", "false"),
-					resource.TestCheckResourceAttr("snowflake_task.test", "session_parameters.JSON_INDENT", "4"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "after.#", "1"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "after.0", rootTask.ID().Name()),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "warehouse", acc.TestClient().Ids.WarehouseId().Name()),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "user_task_timeout_ms", "50"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "comment", comment),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "session_parameters.LOG_LEVEL", "INFO"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "session_parameters.AUTOCOMMIT", "false"),
+					resource.TestCheckResourceAttr(configModel.ResourceReference(), "session_parameters.JSON_INDENT", "4"),
 				),
 			},
 			{

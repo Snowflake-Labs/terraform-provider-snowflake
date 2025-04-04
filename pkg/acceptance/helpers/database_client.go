@@ -181,25 +181,12 @@ func (c *DatabaseClient) Describe(t *testing.T, id sdk.AccountObjectIdentifier) 
 func (c *DatabaseClient) CreateDatabaseFromShareTemporarily(t *testing.T, externalShareId sdk.ExternalObjectIdentifier) {
 	t.Helper()
 
-	databaseId := c.ids.RandomAccountObjectIdentifier()
-	err := c.client().CreateShared(context.Background(), databaseId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
-	require.NoError(t, err)
+	db, _ := c.CreateDatabaseFromShare(t, externalShareId)
 
-	require.Eventually(t, func() bool {
-		database, err := c.Show(t, databaseId)
-		if err != nil {
-			return false
-		}
-		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
-		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
-		return database.Origin != nil
-	}, time.Minute, time.Second*6)
-
-	err = c.DropDatabase(t, databaseId)
+	err := c.DropDatabase(t, db.ID())
 	require.NoError(t, err)
 }
 
-// CreateDatabaseFromShare logic is duplicated from CreateDatabaseFromShareTemporarily.
 func (c *DatabaseClient) CreateDatabaseFromShare(t *testing.T, externalShareId sdk.ExternalObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
 

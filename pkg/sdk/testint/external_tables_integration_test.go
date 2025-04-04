@@ -15,9 +15,7 @@ func TestInt_ExternalTables(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
+	stage, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t)
 	t.Cleanup(stageCleanup)
 
 	tag, tagCleanup := testClientHelper().Tag.CreateTag(t)
@@ -41,14 +39,14 @@ func TestInt_ExternalTables(t *testing.T) {
 	minimalCreateExternalTableReq := func(id sdk.SchemaObjectIdentifier) *sdk.CreateExternalTableRequest {
 		return sdk.NewCreateExternalTableRequest(
 			id,
-			stageLocation,
+			stage.Location(),
 		).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
 	}
 
 	createExternalTableWithManualPartitioningReq := func(id sdk.SchemaObjectIdentifier) *sdk.CreateWithManualPartitioningExternalTableRequest {
 		return sdk.NewCreateWithManualPartitioningExternalTableRequest(
 			id,
-			stageLocation,
+			stage.Location(),
 		).
 			WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON)).
 			WithOrReplace(true).
@@ -71,7 +69,7 @@ func TestInt_ExternalTables(t *testing.T) {
 
 	t.Run("Create: with raw file format", func(t *testing.T) {
 		externalTableID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableID, stageLocation).WithRawFileFormat("TYPE = JSON"))
+		err := client.ExternalTables.Create(ctx, sdk.NewCreateExternalTableRequest(externalTableID, stage.Location()).WithRawFileFormat("TYPE = JSON"))
 		require.NoError(t, err)
 
 		externalTable, err := client.ExternalTables.ShowByID(ctx, externalTableID)
@@ -86,7 +84,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			sdk.NewCreateExternalTableRequest(
 				externalTableID,
-				stageLocation,
+				stage.Location(),
 			).
 				WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON)).
 				WithOrReplace(true).
@@ -114,12 +112,12 @@ func TestInt_ExternalTables(t *testing.T) {
 		require.NoError(t, err)
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '%s', FILE_FORMAT=>'%s', ignore_case => true))`, stageLocation, fileFormat.ID().FullyQualifiedName())
+		query := fmt.Sprintf(`SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) WITHIN GROUP (ORDER BY order_id) FROM TABLE (INFER_SCHEMA(location => '%s', FILE_FORMAT=>'%s', ignore_case => true))`, stage.Location(), fileFormat.ID().FullyQualifiedName())
 		err = client.ExternalTables.CreateUsingTemplate(
 			ctx,
 			sdk.NewCreateExternalTableUsingTemplateRequest(
 				id,
-				stageLocation,
+				stage.Location(),
 			).
 				WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithName(fileFormat.ID().FullyQualifiedName())).
 				WithQuery(query).
@@ -148,7 +146,7 @@ func TestInt_ExternalTables(t *testing.T) {
 			ctx,
 			sdk.NewCreateDeltaLakeExternalTableRequest(
 				externalTableID,
-				stageLocation,
+				stage.Location(),
 			).
 				WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeParquet)).
 				WithOrReplace(true).
@@ -362,11 +360,9 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)
 
-	stage := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stage)
+	stage, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t)
 	t.Cleanup(stageCleanup)
 
-	stageLocation := fmt.Sprintf("@%s", stage.FullyQualifiedName())
 	cleanupExternalTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
 		t.Helper()
 		return func() {
@@ -381,7 +377,7 @@ func TestInt_ExternalTablesShowByID(t *testing.T) {
 	createExternalTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
 
-		request := sdk.NewCreateExternalTableRequest(id, stageLocation).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
+		request := sdk.NewCreateExternalTableRequest(id, stage.Location()).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
 		err := client.ExternalTables.Create(ctx, request)
 		require.NoError(t, err)
 		t.Cleanup(cleanupExternalTableHandle(t, id))

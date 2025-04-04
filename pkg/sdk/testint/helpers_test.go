@@ -146,10 +146,9 @@ func createStream(t *testing.T) (*sdk.Stream, func()) {
 
 func createExternalTable(t *testing.T) (*sdk.ExternalTable, func()) {
 	t.Helper()
-	stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-	_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
+
+	stage, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t)
 	t.Cleanup(stageCleanup)
 
-	return testClientHelper().ExternalTable.CreateWithLocation(t, stageLocation)
+	return testClientHelper().ExternalTable.CreateWithLocation(t, stage.Location())
 }
