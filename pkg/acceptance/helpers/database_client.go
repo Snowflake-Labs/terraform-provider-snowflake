@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testDatabaseDataRetentionTimeInDays = 1
-const testDatabaseMaxDataExtensionTimeInDays = 1
+const (
+	testDatabaseDataRetentionTimeInDays    = 1
+	testDatabaseMaxDataExtensionTimeInDays = 1
+)
 
 var testDatabaseCatalog = sdk.NewAccountObjectIdentifier("SNOWFLAKE")
 
