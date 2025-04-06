@@ -10,17 +10,22 @@ import (
 	"sync"
 	"testing"
 
+	provider2 "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random/acceptancetests"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,6 +50,9 @@ var (
 	v5Server        tfprotov5.ProviderServer
 	v6Server        tfprotov6.ProviderServer
 	atc             acceptanceTestContext
+
+	configureClientErrorDiag diag.Diagnostics
+	configureProviderCtx     *provider2.Context
 )
 
 func init() {
@@ -57,6 +65,7 @@ func init() {
 
 	TestAccProvider = provider.Provider()
 	TestAccProvider.ResourcesMap["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
+	TestAccProvider.ConfigureContextFunc = ConfigureProviderWithConfigCache
 
 	v5Server = TestAccProvider.GRPCProvider()
 	var err error
@@ -123,6 +132,53 @@ var testAccProtoV6ProviderFactoriesNew = map[string]func() (tfprotov6.ProviderSe
 			provider.Provider().GRPCProvider,
 		)
 	},
+}
+
+func ConfigureProviderWithConfigCache(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
+	if err != nil {
+		accTestEnabled = false
+		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
+	}
+	configureClientOnceEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE")
+	if err != nil {
+		configureClientOnceEnabled = false
+		log.Printf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v, using %v as a default value", err, configureClientOnceEnabled)
+	}
+	// hacky way to speed up our acceptance tests
+	if accTestEnabled && configureClientOnceEnabled {
+		log.Printf("[DEBUG] Returning cached provider configuration result")
+		if configureProviderCtx != nil {
+			log.Printf("[DEBUG] Returning cached provider configuration context")
+			return configureProviderCtx, nil
+		}
+		if configureClientErrorDiag.HasError() {
+			log.Printf("[DEBUG] Returning cached provider configuration error")
+			return nil, configureClientErrorDiag
+		}
+	}
+	log.Printf("[DEBUG] No cached provider configuration found or cacheing is not enabled; configuring a new provider")
+
+	providerCtx, clientErrorDiag := provider.ConfigureProvider(ctx, d)
+
+	if accTestEnabled && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
+		providerCtx.(*provider2.Context).EnabledFeatures = previewfeatures.AllPreviewFeatures
+	}
+
+	// needed for tests verifying different provider setups
+	if accTestEnabled && configureClientOnceEnabled {
+		configureProviderCtx = providerCtx.(*provider2.Context)
+		configureClientErrorDiag = clientErrorDiag
+	} else {
+		configureProviderCtx = nil
+		configureClientErrorDiag = make(diag.Diagnostics, 0)
+	}
+
+	if clientErrorDiag.HasError() {
+		return nil, clientErrorDiag
+	}
+
+	return providerCtx, nil
 }
 
 var once sync.Once
