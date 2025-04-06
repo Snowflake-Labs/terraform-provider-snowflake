@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -399,7 +398,7 @@ func Provider() *schema.Provider {
 }
 
 func getResources() map[string]*schema.Resource {
-	resourceList := map[string]*schema.Resource{
+	return map[string]*schema.Resource{
 		"snowflake_account": resources.Account(),
 		"snowflake_account_authentication_policy_attachment":                     resources.AccountAuthenticationPolicyAttachment(),
 		"snowflake_account_role":                                                 resources.AccountRole(),
@@ -489,23 +488,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_view":                                                         resources.View(),
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
-
-	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
-	if err != nil {
-		accTestEnabled = false
-		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
-	}
-	objectRenamingTestEnabled, err := oswrapper.GetenvBool(string(testenvs.EnableObjectRenamingTest))
-	if err != nil {
-		objectRenamingTestEnabled = false
-		log.Printf("%s environmental variable has incorrect format: %v, using %v as a default value", string(testenvs.EnableObjectRenamingTest), err, objectRenamingTestEnabled)
-	}
-
-	if accTestEnabled && objectRenamingTestEnabled {
-		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
-	}
-
-	return resourceList
 }
 
 func getDataSources() map[string]*schema.Resource {
