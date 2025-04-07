@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
@@ -464,6 +465,46 @@ func TestAcc_DynamicTable_issue2329_with_matching_comment(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableName),
 					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
 				),
+			},
+		},
+	})
+}
+
+func TestAcc_DynamicTable_issue3355_timeout(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	query := fmt.Sprintf(`with temp as (select "id" from "%v"."%v"."%v") select * from temp`, acc.TestDatabaseName, acc.TestSchemaName, tableId.Name())
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"name":       config.StringVariable(dynamicTableId.Name()),
+			"database":   config.StringVariable(acc.TestDatabaseName),
+			"schema":     config.StringVariable(acc.TestSchemaName),
+			"warehouse":  config.StringVariable(acc.TestWarehouseName),
+			"query":      config.StringVariable(query),
+			"table_name": config.StringVariable(tableId.Name()),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.DynamicTable),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_DynamicTable_timeouts"),
+				ConfigVariables: m(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "name", dynamicTableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_dynamic_table.dt", "query", query),
+				),
+				ExpectError: regexp.MustCompile("context deadline exceeded"),
 			},
 		},
 	})

@@ -375,7 +375,9 @@ provider "snowflake" {
 ## Features
 
 ### Operation Timeouts
-By default, resource operation timeouts after 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). The provider enables configuration of these values in `timeouts` block in each resource.
+By default, Terraform sets resource operation timeouts to 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). Now, the provider enables configuration of these values by users in `timeouts` block in each resource.
+The default timeouts are in general aligned with the Terraform defaults. If a resource has different timeouts, it is specified in the resource documentation.
+
 Data sources will be supported in the future.
 Read more in following [official documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts)).
 
