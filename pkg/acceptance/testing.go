@@ -161,7 +161,7 @@ func ConfigureProviderWithConfigCache(ctx context.Context, d *schema.ResourceDat
 
 	providerCtx, clientErrorDiag := provider.ConfigureProvider(ctx, d)
 
-	if accTestEnabled && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
+	if providerCtx != nil && accTestEnabled && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
 		providerCtx.(*provider2.Context).EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
 
