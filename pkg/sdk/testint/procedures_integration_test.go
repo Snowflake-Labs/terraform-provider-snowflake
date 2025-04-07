@@ -2213,6 +2213,13 @@ def filter_by_role(session, table_name, role):
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
+	t.Run("show by id safely - missing procedure", func(t *testing.T) {
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt)
+		_, err := client.Procedures.ShowByIDSafely(ctx, procedureId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
+
 	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for procedures.
 	// For SHOW, data type is generalized both for argument and return type (to e.g. VARCHAR and NUMBER).
 	// FOR DESCRIBE, data type is generalized for argument and works weirdly for the return type: type is generalized to the canonical one, but we also get the attributes.

@@ -3,6 +3,7 @@ package resources_test
 import (
 	"context"
 	"fmt"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"regexp"
 	"strconv"
 	"testing"
@@ -2285,7 +2286,18 @@ func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {
 						Source:            "Snowflake-Labs/snowflake",
 					},
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionNoop),
+					},
+				},
 				Config: tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "id", helpers.EncodeSnowflakeID(tableId)),
+				),
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
