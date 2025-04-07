@@ -5,7 +5,7 @@ on:
       - main
   workflow_dispatch:
 jobs:
-    security:
+    Snyk_Scan:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@master
