@@ -273,7 +273,7 @@ type changedColumn struct {
 	newColumn             column // our new column
 	changedDataType       bool
 	changedNullConstraint bool
-	dropedDefault         bool
+	droppedDefault        bool
 	changedComment        bool
 	changedMaskingPolicy  bool
 	changedCollate        bool
@@ -291,7 +291,7 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 				changeColumn.changedNullConstraint = true
 			}
 			if cO.name == cN.name && cO._default != nil && cN._default == nil {
-				changeColumn.dropedDefault = true
+				changeColumn.droppedDefault = true
 			}
 
 			if cO.name == cN.name && cO.comment != cN.comment {
@@ -863,7 +863,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
-			if cA.dropedDefault {
+			if cA.droppedDefault {
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDropDefault(sdk.Bool(true))})))
 				if err != nil {
 					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))

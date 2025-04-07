@@ -275,7 +275,7 @@ func unsetOnUser(ctx context.Context, user string, data *schema.ResourceData, me
 
 	err := client.Users.Alter(ctx, sdk.NewAccountObjectIdentifier(user), &sdk.AlterUserOptions{Unset: &sdk.UserUnset{ObjectParameters: &sdk.UserObjectParametersUnset{NetworkPolicy: sdk.Bool(true)}}})
 	if err != nil {
-		return fmt.Errorf("error unsetting network policy %v on user %v", policyName, user)
+		return fmt.Errorf("error unsetting network policy %v on user %v err = %w", policyName, user, err)
 	}
 
 	return nil
@@ -288,7 +288,7 @@ func ensureUserAlterPrivileges(ctx context.Context, users []string, meta interfa
 	for _, user := range users {
 		_, err := client.Users.Describe(ctx, sdk.NewAccountObjectIdentifier(user))
 		if err != nil {
-			return fmt.Errorf("error altering network policy of user %v", user)
+			return fmt.Errorf("error describing user %v err = %w", user, err)
 		}
 	}
 

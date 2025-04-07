@@ -161,8 +161,8 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedInternally(t *testing.T) {
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaName := acc.TestClient().Ids.Alpha()
 
-			databaseConfigModel := model.Database("test", databaseId.Name())
-			databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+			databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
+			databaseConfigModelWithNewId := model.DatabaseWithParametersSet("test", newDatabaseId.Name())
 
 			var schemaConfigAfterRename string
 			var preApplyChecksAfterRename []plancheck.PlanCheck
@@ -243,8 +243,8 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally(t *testing.T) {
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaName := acc.TestClient().Ids.Alpha()
 
-			databaseConfigModel := model.Database("test", databaseId.Name())
-			databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+			databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
+			databaseConfigModelWithNewId := model.DatabaseWithParametersSet("test", newDatabaseId.Name())
 
 			var databaseConfigAfterRename string
 			var schemaConfigAfterRename string
@@ -308,7 +308,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := acc.TestClient().Ids.Alpha()
 
-	databaseConfigModel := model.Database("test", databaseId.Name())
+	databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
 	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
 
 	resource.Test(t, resource.TestCase{
@@ -352,7 +352,7 @@ func TestAcc_ShallowHierarchy_IsInConfig_RenamedExternally_WithoutDependency_Aft
 	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	schemaName := acc.TestClient().Ids.Alpha()
 
-	databaseConfigModel := model.Database("test", databaseId.Name())
+	databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
 	schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
 
 	resource.Test(t, resource.TestCase{
@@ -398,8 +398,11 @@ func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+		t.Cleanup(databaseCleanup)
+
 		t.Run(fmt.Sprintf("TestAcc_ referencing new database name: %t", testCase.IsReferencingNewDatabaseName), func(t *testing.T) {
-			databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+			databaseId := database.ID()
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			schemaName := acc.TestClient().Ids.Alpha()
 			schemaModelConfig := model.Schema("test", databaseId.Name(), schemaName)
@@ -419,10 +422,6 @@ func TestAcc_ShallowHierarchy_IsNotInConfig_RenamedExternally(t *testing.T) {
 				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 				Steps: []resource.TestStep{
 					{
-						PreConfig: func() {
-							_, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithIdentifier(t, databaseId)
-							t.Cleanup(databaseCleanup)
-						},
 						Config: config.FromModels(t, schemaModelConfig),
 					},
 					{
@@ -492,8 +491,8 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedInternally(t *testing.T) {
 			schemaName := acc.TestClient().Ids.Alpha()
 			tableName := acc.TestClient().Ids.Alpha()
 
-			databaseConfigModel := model.Database("test", databaseId.Name())
-			databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+			databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
+			databaseConfigModelWithNewId := model.DatabaseWithParametersSet("test", newDatabaseId.Name())
 
 			testSteps := []resource.TestStep{
 				{
@@ -563,7 +562,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedInternally(t *testing.T) {
 			newSchemaName := acc.TestClient().Ids.Alpha()
 			tableName := acc.TestClient().Ids.Alpha()
 
-			databaseConfigModel := model.Database("test", databaseId.Name())
+			databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
 
 			testSteps := []resource.TestStep{
 				{
@@ -635,8 +634,8 @@ func TestAcc_DeepHierarchy_AreInConfig_DatabaseRenamedExternally(t *testing.T) {
 			schemaName := acc.TestClient().Ids.Alpha()
 			tableName := acc.TestClient().Ids.Alpha()
 
-			databaseConfigModel := model.Database("test", databaseId.Name())
-			databaseConfigModelWithNewId := model.Database("test", newDatabaseId.Name())
+			databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
+			databaseConfigModelWithNewId := model.DatabaseWithParametersSet("test", newDatabaseId.Name())
 
 			testSteps := []resource.TestStep{
 				{
@@ -706,7 +705,7 @@ func TestAcc_DeepHierarchy_AreInConfig_SchemaRenamedExternally(t *testing.T) {
 			newSchemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
 			tableName := acc.TestClient().Ids.Alpha()
 
-			databaseConfigModel := model.Database("test", databaseId.Name())
+			databaseConfigModel := model.DatabaseWithParametersSet("test", databaseId.Name())
 
 			testSteps := []resource.TestStep{
 				{
@@ -762,7 +761,7 @@ func TestAcc_DeepHierarchy_AreNotInConfig_DatabaseRenamedExternally(t *testing.T
 			newDatabaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 			tableName := acc.TestClient().Ids.Alpha()
 
-			database, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
+			database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 			t.Cleanup(databaseCleanup)
 
 			// not cleaning up, because the schema will be dropped with the database anyway
@@ -816,7 +815,7 @@ func TestAcc_DeepHierarchy_AreNotInConfig_SchemaRenamedExternally(t *testing.T) 
 
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("TestAcc_ use new database after rename: %t", testCase.UseNewSchemaNameAfterRename), func(t *testing.T) {
-			database, databaseCleanup := acc.TestClient().Database.CreateDatabase(t)
+			database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
 			t.Cleanup(databaseCleanup)
 
 			newSchemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(database.ID())

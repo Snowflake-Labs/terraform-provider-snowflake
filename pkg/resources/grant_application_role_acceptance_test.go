@@ -147,14 +147,9 @@ func TestAcc_GrantApplicationRole_migrateFromV0941_ensureSmoothUpgradeWithNewRes
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: grantApplicationRoleBasicConfig(fmt.Sprintf(`\"%s\".\"%s\"`, appRoleId.DatabaseName(), appRoleId.Name()), parentRoleId.Name()),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            grantApplicationRoleBasicConfig(fmt.Sprintf(`\"%s\".\"%s\"`, appRoleId.DatabaseName(), appRoleId.Name()), parentRoleId.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_application_role.test", "id", fmt.Sprintf(`%s|ACCOUNT_ROLE|%s`, appRoleId.FullyQualifiedName(), parentRoleId.FullyQualifiedName())),
 				),
@@ -210,15 +205,10 @@ func TestAcc_GrantApplicationRole_IdentifierQuotingDiffSuppression(t *testing.T)
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				ExpectError: regexp.MustCompile("Error: Provider produced inconsistent final plan"),
-				Config:      grantApplicationRoleBasicConfig(unquotedApplicationRoleId, quotedParentRoleId),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				ExpectError:       regexp.MustCompile("Error: Provider produced inconsistent final plan"),
+				Config:            grantApplicationRoleBasicConfig(unquotedApplicationRoleId, quotedParentRoleId),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },

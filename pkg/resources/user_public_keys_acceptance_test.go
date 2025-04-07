@@ -7,13 +7,19 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_UserPublicKeys(t *testing.T) {
-	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	user, userCleanup := acc.TestClient().User.CreateUser(t)
+	t.Cleanup(userCleanup)
+
 	key1, _ := random.GenerateRSAPublicKey(t)
 	key2, _ := random.GenerateRSAPublicKey(t)
 
@@ -26,11 +32,7 @@ func TestAcc_UserPublicKeys(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					_, userCleanup := acc.TestClient().User.CreateUserWithOptions(t, userId, nil)
-					t.Cleanup(userCleanup)
-				},
-				Config: uPublicKeysConfig(userId, key1, key2),
+				Config: uPublicKeysConfig(user.ID(), key1, key2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_user_public_keys.foobar", "rsa_public_key", key1),
 					resource.TestCheckResourceAttr("snowflake_user_public_keys.foobar", "rsa_public_key_2", key2),
@@ -44,14 +46,14 @@ func TestAcc_UserPublicKeys(t *testing.T) {
 func uPublicKeysConfig(userId sdk.AccountObjectIdentifier, key1 string, key2 string) string {
 	return fmt.Sprintf(`
 resource "snowflake_user_public_keys" "foobar" {
-	name = %s
+	name = "%[1]s"
 	rsa_public_key = <<KEY
-%s
+%[2]s
 	KEY
 
 	rsa_public_key_2 = <<KEY
-%s
+%[3]s
 	KEY
 }
-`, userId.FullyQualifiedName(), key1, key2)
+`, userId.Name(), key1, key2)
 }

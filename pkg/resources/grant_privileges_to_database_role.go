@@ -682,7 +682,7 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if id.AllPrivileges {
-		log.Printf("[INFO] Show with all_privileges option is skipped. No changes in privileges in Snowflake will be detected. Consider specyfying all privileges in 'privileges' block.")
+		log.Printf("[INFO] Show with all_privileges option is skipped. No changes in privileges in Snowflake will be detected. Consider specifying all privileges in 'privileges' block.")
 		return nil
 	}
 

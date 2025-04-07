@@ -14,15 +14,11 @@ import (
 
 func TestAcc_ObjectParameter(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	// TODO(SNOW-1528546): Remove after parameter-setting resources are using UNSET in the delete operation.
-	t.Cleanup(func() {
-		acc.TestClient().Database.Alter(t, acc.TestClient().Ids.DatabaseId(), &sdk.AlterDatabaseOptions{
-			Unset: &sdk.DatabaseUnset{
-				UserTaskTimeoutMs: sdk.Bool(true),
-			},
-		})
-	})
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -32,9 +28,9 @@ func TestAcc_ObjectParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: objectParameterConfigBasic("USER_TASK_TIMEOUT_MS", "1000", acc.TestDatabaseName),
+				Config: objectParameterConfigBasic(database.ID(), sdk.DatabaseParameterUserTaskTimeoutMs, "1000"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "USER_TASK_TIMEOUT_MS"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", string(sdk.DatabaseParameterUserTaskTimeoutMs)),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "1000"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "false"),
 				),
@@ -43,13 +39,26 @@ func TestAcc_ObjectParameter(t *testing.T) {
 	})
 }
 
-func TestAcc_ObjectParameterAccount(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+func objectParameterConfigBasic(databaseId sdk.AccountObjectIdentifier, key sdk.DatabaseParameter, value string) string {
+	return fmt.Sprintf(`
+resource "snowflake_object_parameter" "p" {
+	key = "%[2]s"
+	value = "%[3]s"
+	object_type = "DATABASE"
+	object_identifier {
+		name = "%[1]s"
+	}
+}
+`, databaseId.Name(), key, value)
+}
 
-	// TODO(SNOW-1528546): Remove after parameter-setting resources are using UNSET in the delete operation.
-	t.Cleanup(func() {
-		acc.TestClient().Parameter.UnsetAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
-	})
+func TestAcc_ObjectParameterAccount(t *testing.T) {
+	// TODO [SNOW-2010844]: unskip
+	t.Skip("Skipping temporarily as it messes with the account level setting.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -59,10 +68,10 @@ func TestAcc_ObjectParameterAccount(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: objectParameterConfigOnAccount("DATA_RETENTION_TIME_IN_DAYS", "0"),
+				Config: objectParameterConfigOnAccount(sdk.AccountParameterDataRetentionTimeInDays, "5"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "DATA_RETENTION_TIME_IN_DAYS"),
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "0"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", string(sdk.AccountParameterDataRetentionTimeInDays)),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "5"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "true"),
 				),
 			},
@@ -70,8 +79,19 @@ func TestAcc_ObjectParameterAccount(t *testing.T) {
 	})
 }
 
+func objectParameterConfigOnAccount(key sdk.AccountParameter, value string) string {
+	return fmt.Sprintf(`
+resource "snowflake_object_parameter" "p" {
+	key = "%[1]s"
+	value = "%[2]s"
+	on_account = true
+}
+`, key, value)
+}
+
 func TestAcc_UserParameter(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	user, userCleanup := acc.TestClient().User.CreateUser(t)
 	t.Cleanup(userCleanup)
@@ -85,9 +105,9 @@ func TestAcc_UserParameter(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: userParameterConfigBasic(user.ID(), "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR", "true"),
+				Config: userParameterConfigBasic(user.ID(), sdk.UserParameterEnableUnredactedQuerySyntaxError, "true"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", "ENABLE_UNREDACTED_QUERY_SYNTAX_ERROR"),
+					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "key", string(sdk.UserParameterEnableUnredactedQuerySyntaxError)),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "value", "true"),
 					resource.TestCheckResourceAttr("snowflake_object_parameter.p", "on_account", "false"),
 				),
@@ -96,40 +116,15 @@ func TestAcc_UserParameter(t *testing.T) {
 	})
 }
 
-func objectParameterConfigOnAccount(key, value string) string {
-	s := `
-resource "snowflake_object_parameter" "p" {
-	key = "%s"
-	value = "%s"
-	on_account = true
-}
-`
-	return fmt.Sprintf(s, key, value)
-}
-
-func objectParameterConfigBasic(key, value, databaseName string) string {
-	s := `
-resource "snowflake_object_parameter" "p" {
-	key = "%s"
-	value = "%s"
-	object_type = "DATABASE"
-	object_identifier {
-		name = "%s"
-	}
-}
-`
-	return fmt.Sprintf(s, key, value, databaseName)
-}
-
-func userParameterConfigBasic(userId sdk.AccountObjectIdentifier, key string, value string) string {
+func userParameterConfigBasic(userId sdk.AccountObjectIdentifier, key sdk.UserParameter, value string) string {
 	return fmt.Sprintf(`
 resource "snowflake_object_parameter" "p" {
 	key = "%[2]s"
 	value = "%[3]s"
 	object_type = "USER"
 	object_identifier {
-		name = %[1]s
+		name = "%[1]s"
 	}
 }
-`, userId.FullyQualifiedName(), key, value)
+`, userId.Name(), key, value)
 }

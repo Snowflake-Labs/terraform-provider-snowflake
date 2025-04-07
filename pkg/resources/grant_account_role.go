@@ -110,7 +110,7 @@ func CreateGrantAccountRole(ctx context.Context, d *schema.ResourceData, meta in
 			return diag.FromErr(err)
 		}
 	} else {
-		return diag.FromErr(fmt.Errorf("invalid role grant specified: %v", d))
+		return diag.FromErr(fmt.Errorf("invalid role grant specified: both parent_role_name and user_name are empty"))
 	}
 	d.SetId(snowflakeResourceID)
 	return ReadGrantAccountRole(ctx, d, meta)

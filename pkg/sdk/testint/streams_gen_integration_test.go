@@ -108,13 +108,11 @@ func TestInt_Streams(t *testing.T) {
 	})
 
 	t.Run("CreateOnExternalTable", func(t *testing.T) {
-		stageID := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-		_, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t, stageID)
+		stage, stageCleanup := testClientHelper().Stage.CreateStageWithURL(t)
 		t.Cleanup(stageCleanup)
 
 		externalTableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
-		externalTableReq := sdk.NewCreateExternalTableRequest(externalTableId, stageLocation).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
+		externalTableReq := sdk.NewCreateExternalTableRequest(externalTableId, stage.Location()).WithFileFormat(*sdk.NewExternalTableFileFormatRequest().WithFileFormatType(sdk.ExternalTableFileFormatTypeJSON))
 		_, externalTableCleanup := testClientHelper().ExternalTable.CreateWithRequest(t, externalTableReq)
 		t.Cleanup(externalTableCleanup)
 

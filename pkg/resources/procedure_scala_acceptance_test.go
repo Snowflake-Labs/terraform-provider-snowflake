@@ -29,6 +29,9 @@ import (
 // TODO [SNOW-1348103]: test changes of attributes separately
 
 func TestAcc_ProcedureScala_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	className := "TestFunc"
 	funcName := "echoVarchar"
 	argName := "x"

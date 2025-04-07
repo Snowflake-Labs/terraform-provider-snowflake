@@ -29,6 +29,7 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(id)
 	statement := "SELECT ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	columnNames := []string{"ROLE_NAME"}
+	testDatabaseCatalogName := acc.TestClient().Database.TestDatabaseCatalog(t).Name()
 
 	schemaModel := model.Schema("test", id.DatabaseName(), id.Name()).
 		WithComment(comment).
@@ -77,7 +78,7 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.data_retention_time_in_days.0.value"),
 					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.max_data_extension_time_in_days.0.value"),
 					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.external_volume.0.value", ""),
-					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.catalog.0.value", ""),
+					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.catalog.0.value", testDatabaseCatalogName),
 					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.replace_invalid_characters.0.value"),
 					resource.TestCheckResourceAttr(schemasModel.DatasourceReference(), "schemas.0.parameters.0.default_ddl_collation.0.value", ""),
 					resource.TestCheckResourceAttrSet(schemasModel.DatasourceReference(), "schemas.0.parameters.0.storage_serialization_policy.0.value"),

@@ -30,6 +30,9 @@ import (
 )
 
 func TestAcc_User_BasicFlows(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -287,6 +290,9 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 has been fixed
 // done on user, to not interfere with other parallel tests on the same account
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("u", userId.Name())
@@ -334,6 +340,9 @@ func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 // The problem was with a dot in user identifier.
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
 
 	userModel1 := model.User("w", userId.Name())
@@ -660,6 +669,9 @@ func TestAcc_User_AllParameters(t *testing.T) {
 }
 
 func TestAcc_User_issue2836(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	defaultRole := "SOME ROLE WITH SPACE case sensitive"
 	defaultRoleQuoted := fmt.Sprintf(`"%s"`, defaultRole)
@@ -687,6 +699,9 @@ func TestAcc_User_issue2836(t *testing.T) {
 }
 
 func TestAcc_User_issue2970(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	pass := random.Password()
 	key, _ := random.GenerateRSAPublicKey(t)
@@ -753,6 +768,9 @@ func TestAcc_User_issue2970(t *testing.T) {
 }
 
 func TestAcc_User_issue1572(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.UserWithDefaultMeta(userId.Name())
@@ -796,6 +814,9 @@ func TestAcc_User_issue1572(t *testing.T) {
 }
 
 func TestAcc_User_issue1535_withNullPassword(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	pass := random.Password()
 
@@ -837,6 +858,9 @@ func TestAcc_User_issue1535_withNullPassword(t *testing.T) {
 }
 
 func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	pass := random.Password()
 
@@ -877,6 +901,9 @@ func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
 }
 
 func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelWithoutDaysToExpiry := model.UserWithDefaultMeta(userId.Name())
@@ -976,6 +1003,9 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 }
 
 func TestAcc_User_handleExternalTypeChange(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.UserWithDefaultMeta(userId.Name())
@@ -1051,6 +1081,9 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 
 func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 	t.Skip("Ordering needs to be changed after BCR 2024_08 general availability.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -1344,6 +1377,9 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
 }
 
 func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelWithOptionAll := model.UserWithDefaultMeta(id.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll)
@@ -1356,13 +1392,8 @@ func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
 				Config: fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
@@ -1396,6 +1427,9 @@ resource "snowflake_user" "test" {
 }
 
 func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("w", id.Name()).
@@ -1433,6 +1467,9 @@ func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
 }
 
 func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -1602,13 +1639,8 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_generallyEnabled(t *testing
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, userModel),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				Config:            config.FromModels(t, userModel),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
@@ -1648,25 +1680,15 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_defaults(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.97.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				PreConfig:   func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				Config:      config.FromModels(t, userModel),
-				ExpectError: regexp.MustCompile("\"default_namespace\": converting NULL to string is unsupported"),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				Config:            config.FromModels(t, userModel),
+				ExpectError:       regexp.MustCompile("\"default_namespace\": converting NULL to string is unsupported"),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
 				PreConfig: func() {
-					func() { acc.UnsetConfigPathEnv(t) }()
+					acc.UnsetConfigPathEnv(t)
 				},
 				Config: config.FromModels(t, userModel),
 				Check: assertThat(t,

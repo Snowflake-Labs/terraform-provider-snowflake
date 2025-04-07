@@ -216,7 +216,7 @@ func (opts *CreateResourceMonitorOptions) validate() error {
 		errs = append(errs, errors.Join(ErrInvalidObjectIdentifier))
 	}
 	if valueSet(opts.With) && everyValueNil(opts.With.CreditQuota, opts.With.Frequency, opts.With.StartTimestamp, opts.With.EndTimestamp, opts.With.NotifyUsers) && valueSet(opts.With.Triggers) {
-		errs = append(errs, fmt.Errorf("due to Snowflake limiltations you cannot create Resource Monitor with only triggers set"))
+		errs = append(errs, fmt.Errorf("due to Snowflake limitations you cannot create Resource Monitor with only triggers set"))
 	}
 	return errors.Join(errs...)
 }

@@ -7,7 +7,9 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
@@ -15,6 +17,10 @@ import (
 // TODO [SNOW-1284394]: Unskip the test
 func TestAcc_Share(t *testing.T) {
 	t.Skip("second and third account must be set for Share acceptance tests")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	var account2 string
 	var account3 string
 
@@ -30,7 +36,7 @@ func TestAcc_Share(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Share),
 		Steps: []resource.TestStep{
 			{
-				Config: shareConfig(id.Name(), shareComment),
+				Config: shareConfig(id, shareComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_share.test", "fully_qualified_name", id.FullyQualifiedName()),
@@ -39,7 +45,7 @@ func TestAcc_Share(t *testing.T) {
 				),
 			},
 			{
-				Config: shareConfigTwoAccounts(id.Name(), shareComment, account2, account3),
+				Config: shareConfigTwoAccounts(id, shareComment, account2, account3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "2"),
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.0", account2),
@@ -47,14 +53,14 @@ func TestAcc_Share(t *testing.T) {
 				),
 			},
 			{
-				Config: shareConfigOneAccount(id.Name(), shareComment, account2),
+				Config: shareConfigOneAccount(id, shareComment, account2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "1"),
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.0", account2),
 				),
 			},
 			{
-				Config: shareConfig(id.Name(), shareComment),
+				Config: shareConfig(id, shareComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_share.test", "accounts.#", "0"),
 				),
@@ -70,7 +76,10 @@ func TestAcc_Share(t *testing.T) {
 }
 
 func TestAcc_Share_validateAccounts(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -81,42 +90,42 @@ func TestAcc_Share_validateAccounts(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Share),
 		Steps: []resource.TestStep{
 			{
-				Config:      shareConfigOneAccount(name, "any comment", "incorrect"),
+				Config:      shareConfigOneAccount(id, "any comment", "incorrect"),
 				ExpectError: regexp.MustCompile("Unable to parse the account identifier"),
 			},
 			{
-				Config:      shareConfigTwoAccounts(name, "any comment", "correct.one", "incorrect"),
+				Config:      shareConfigTwoAccounts(id, "any comment", "correct.one", "incorrect"),
 				ExpectError: regexp.MustCompile("Unable to parse the account identifier"),
 			},
 		},
 	})
 }
 
-func shareConfig(name string, comment string) string {
+func shareConfig(shareId sdk.AccountObjectIdentifier, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_share" "test" {
-	name           = "%v"
-	comment        = "%v"
+	name           = "%s"
+	comment        = "%s"
 }
-`, name, comment)
+`, shareId.Name(), comment)
 }
 
-func shareConfigOneAccount(name string, comment string, account string) string {
+func shareConfigOneAccount(shareId sdk.AccountObjectIdentifier, comment string, account string) string {
 	return fmt.Sprintf(`
 resource "snowflake_share" "test" {
-	name           = "%v"
-	comment        = "%v"
-	accounts       = ["%v"]
+	name           = "%s"
+	comment        = "%s"
+	accounts       = ["%s"]
 }
-`, name, comment, account)
+`, shareId.Name(), comment, account)
 }
 
-func shareConfigTwoAccounts(name string, comment string, account string, account2 string) string {
+func shareConfigTwoAccounts(shareId sdk.AccountObjectIdentifier, comment string, account string, account2 string) string {
 	return fmt.Sprintf(`
 resource "snowflake_share" "test" {
-	name           = "%v"
-	comment        = "%v"
-	accounts       = ["%v", "%v"]
+	name           = "%s"
+	comment        = "%s"
+	accounts       = ["%s", "%s"]
 }
-`, name, comment, account, account2)
+`, shareId.Name(), comment, account, account2)
 }

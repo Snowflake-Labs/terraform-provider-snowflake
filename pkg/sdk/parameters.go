@@ -1946,7 +1946,7 @@ func (v *parameters) ShowObjectParameter(ctx context.Context, parameter ObjectPa
 	case ObjectTypeProcedure:
 		opts.In.Procedure = object.Name.(SchemaObjectIdentifierWithArguments)
 	default:
-		return nil, fmt.Errorf("unsupported object type %s", object.Name)
+		return nil, fmt.Errorf("unsupported object type %s", object.ObjectType)
 	}
 	parameters, err := v.ShowParameters(ctx, opts)
 	if err != nil {

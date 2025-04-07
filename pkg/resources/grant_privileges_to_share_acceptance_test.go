@@ -755,14 +755,9 @@ func TestAcc_GrantPrivilegesToShare_migrateFromV0941_ensureSmoothUpgradeWithNewR
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: grantPrivilegesToShareBasicConfig(database.ID(), share.ID()),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            grantPrivilegesToShareBasicConfig(database.ID(), share.ID()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_share.test", "id", fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, share.ID().FullyQualifiedName(), database.ID().FullyQualifiedName())),
 				),
@@ -812,15 +807,10 @@ func TestAcc_GrantPrivilegesToShare_IdentifierQuotingDiffSuppression(t *testing.
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				ExpectError: regexp.MustCompile("Error: Provider produced inconsistent final plan"),
-				Config:      grantPrivilegesToShareQuotedIdentifiers(database.ID(), shareId),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				ExpectError:       regexp.MustCompile("Error: Provider produced inconsistent final plan"),
+				Config:            grantPrivilegesToShareQuotedIdentifiers(database.ID(), shareId),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },

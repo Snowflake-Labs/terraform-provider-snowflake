@@ -182,7 +182,7 @@ func ImportAccount(ctx context.Context, d *schema.ResourceData, meta any) ([]*sc
 		return nil, err
 	}
 	if !isOrgAdmin {
-		return nil, errors.New("current user doesn't have the orgadmin role in session")
+		return nil, errors.New("current user does not have the ORGADMIN role in session")
 	}
 
 	id, err := sdk.ParseAccountIdentifier(d.Id())
@@ -230,7 +230,7 @@ func CreateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 		return diag.FromErr(err)
 	}
 	if !isOrgAdmin {
-		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+		return diag.FromErr(errors.New("current user does not have the ORGADMIN role in session"))
 	}
 
 	id := sdk.NewAccountObjectIdentifier(d.Get("name").(string))
@@ -308,7 +308,7 @@ func ReadAccount(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 		if !isOrgAdmin {
-			return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+			return diag.FromErr(errors.New("current user does not have the ORGADMIN role in session"))
 		}
 
 		id, err := sdk.ParseAccountIdentifier(d.Id())
@@ -397,7 +397,7 @@ func UpdateAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 		return diag.FromErr(err)
 	}
 	if !isOrgAdmin {
-		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+		return diag.FromErr(errors.New("current user does not have the ORGADMIN role in session"))
 	}
 
 	id, err := sdk.ParseAccountIdentifier(d.Id())
@@ -471,7 +471,7 @@ func DeleteAccount(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 		return diag.FromErr(err)
 	}
 	if !isOrgAdmin {
-		return diag.FromErr(errors.New("current user doesn't have the orgadmin role in session"))
+		return diag.FromErr(errors.New("current user does not have the ORGADMIN role in session"))
 	}
 
 	id, err := sdk.ParseAccountIdentifier(d.Id())

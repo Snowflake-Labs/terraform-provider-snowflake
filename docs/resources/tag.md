@@ -2,14 +2,14 @@
 page_title: "snowflake_tag Resource - terraform-provider-snowflake"
 subcategory: "Stable"
 description: |-
-  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag. For asssigning tags to Snowflake objects, see tag_association resource ./tag_association.
+  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag. For assigning tags to Snowflake objects, see tag_association resource ./tag_association.
 ---
 
 ~> **Required warehouse** For this resource, the provider now uses [tag references](https://docs.snowflake.com/en/sql-reference/functions/tag_references) to get information about masking policies attached to tags. This function requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
 
 # snowflake_tag (Resource)
 
-Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For asssigning tags to Snowflake objects, see [tag_association resource](./tag_association).
+Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For assigning tags to Snowflake objects, see [tag_association resource](./tag_association).
 
 ## Example Usage
 
