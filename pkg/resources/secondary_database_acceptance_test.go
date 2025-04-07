@@ -518,14 +518,9 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: accconfig.FromModels(t, secondaryDatabaseModel),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
@@ -568,13 +563,8 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
 				Config:             accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(

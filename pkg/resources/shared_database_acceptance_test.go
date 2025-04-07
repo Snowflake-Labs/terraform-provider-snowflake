@@ -3,23 +3,29 @@ package resources_test
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"testing"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+// TODO [SNOW-1991414]: discuss and address all the nondeterministic tests in this file
 func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	shareExternalId := createShareableDatabase(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -43,15 +49,10 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 		accountEnableConsoleOutput                     = new(string)
 	)
 
-	configVariables := func(id sdk.AccountObjectIdentifier, shareName sdk.ExternalObjectIdentifier, comment string) config.Variables {
-		return config.Variables{
-			"name":       config.StringVariable(id.Name()),
-			"from_share": config.StringVariable(shareName.FullyQualifiedName()),
-			"comment":    config.StringVariable(comment),
-		}
-	}
-
-	shareExternalId := createShareableDatabase(t)
+	sharedDatabaseModel := model.SharedDatabase("test", shareExternalId.FullyQualifiedName(), id.Name()).
+		WithComment(comment)
+	sharedDatabaseModelRenamed := model.SharedDatabase("test", shareExternalId.FullyQualifiedName(), newId.Name()).
+		WithComment(newComment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -79,65 +80,62 @@ func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
 					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
 				},
-				ConfigVariables: configVariables(id, shareExternalId, comment),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/basic"),
+				Config: accconfig.FromModels(t, sharedDatabaseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", shareExternalId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "from_share", shareExternalId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModel.ResourceReference(), "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			{
-				ConfigVariables: configVariables(newId, shareExternalId, newComment),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/basic"),
+				Config: accconfig.FromModels(t, sharedDatabaseModelRenamed),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_shared_database.test", plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(sharedDatabaseModelRenamed.ResourceReference(), plancheck.ResourceActionUpdate),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", shareExternalId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", newComment),
+					resource.TestCheckResourceAttr(sharedDatabaseModelRenamed.ResourceReference(), "name", newId.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelRenamed.ResourceReference(), "fully_qualified_name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelRenamed.ResourceReference(), "from_share", shareExternalId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelRenamed.ResourceReference(), "comment", newComment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_shared_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr(sharedDatabaseModelRenamed.ResourceReference(), "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			// Import all values
 			{
-				ConfigVariables:   configVariables(newId, shareExternalId, newComment),
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_SharedDatabase/basic"),
-				ResourceName:      "snowflake_shared_database.test",
+				Config:            accconfig.FromModels(t, sharedDatabaseModelRenamed),
+				ResourceName:      sharedDatabaseModelRenamed.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -149,8 +147,6 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	comment := random.Comment()
 	externalShareId := createShareableDatabase(t)
 
 	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
@@ -159,28 +155,25 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
 	t.Cleanup(catalogCleanup)
 
-	configVariables := config.Variables{
-		"name":       config.StringVariable(id.Name()),
-		"from_share": config.StringVariable(externalShareId.FullyQualifiedName()),
-		"comment":    config.StringVariable(comment),
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
 
-		"external_volume":                               config.StringVariable(externalVolumeId.Name()),
-		"catalog":                                       config.StringVariable(catalogId.Name()),
-		"replace_invalid_characters":                    config.BoolVariable(true),
-		"default_ddl_collation":                         config.StringVariable("en_US"),
-		"storage_serialization_policy":                  config.StringVariable(string(sdk.StorageSerializationPolicyOptimized)),
-		"log_level":                                     config.StringVariable(string(sdk.LogLevelInfo)),
-		"trace_level":                                   config.StringVariable(string(sdk.TraceLevelOnEvent)),
-		"suspend_task_after_num_failures":               config.IntegerVariable(20),
-		"task_auto_retry_attempts":                      config.IntegerVariable(20),
-		"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeXLarge)),
-		"user_task_timeout_ms":                          config.IntegerVariable(1200000),
-		"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(120),
-		"quoted_identifiers_ignore_case":                config.BoolVariable(true),
-		"enable_console_output":                         config.BoolVariable(true),
-	}
-
-	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+	sharedDatabaseModelComplete := model.SharedDatabase("test", externalShareId.FullyQualifiedName(), id.Name()).
+		WithComment(comment).
+		WithExternalVolume(externalVolumeId.Name()).
+		WithCatalog(catalogId.Name()).
+		WithReplaceInvalidCharacters(true).
+		WithDefaultDdlCollation("en_US").
+		WithStorageSerializationPolicy(string(sdk.StorageSerializationPolicyOptimized)).
+		WithLogLevel(string(sdk.LogLevelInfo)).
+		WithTraceLevel(string(sdk.TraceLevelOnEvent)).
+		WithSuspendTaskAfterNumFailures(20).
+		WithTaskAutoRetryAttempts(20).
+		WithUserTaskManagedInitialWarehouseSize(string(sdk.WarehouseSizeXLarge)).
+		WithUserTaskTimeoutMs(1200000).
+		WithUserTaskMinimumTriggerIntervalInSeconds(120).
+		WithQuotedIdentifiersIgnoreCase(true).
+		WithEnableConsoleOutput(true)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -191,35 +184,33 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
 		Steps: []resource.TestStep{
 			{
-				ConfigVariables: configVariables,
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
+				Config: accconfig.FromModels(t, sharedDatabaseModelComplete),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "from_share", externalShareId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "comment", comment),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "from_share", externalShareId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "external_volume", externalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "catalog", catalogId.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "replace_invalid_characters", "true"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "default_ddl_collation", "en_US"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "log_level", string(sdk.LogLevelInfo)),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "trace_level", string(sdk.TraceLevelOnEvent)),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "suspend_task_after_num_failures", "20"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "task_auto_retry_attempts", "20"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "user_task_managed_initial_warehouse_size", string(sdk.WarehouseSizeXLarge)),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "user_task_timeout_ms", "1200000"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "user_task_minimum_trigger_interval_in_seconds", "120"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "quoted_identifiers_ignore_case", "true"),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "enable_console_output", "true"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "replace_invalid_characters", "true"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "default_ddl_collation", "en_US"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "log_level", string(sdk.LogLevelInfo)),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "trace_level", string(sdk.TraceLevelOnEvent)),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "suspend_task_after_num_failures", "20"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "task_auto_retry_attempts", "20"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "user_task_managed_initial_warehouse_size", string(sdk.WarehouseSizeXLarge)),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "user_task_timeout_ms", "1200000"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "quoted_identifiers_ignore_case", "true"),
+					resource.TestCheckResourceAttr(sharedDatabaseModelComplete.ResourceReference(), "enable_console_output", "true"),
 				),
 			},
 			// Import all values
 			{
-				ConfigVariables:   configVariables,
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
-				ResourceName:      "snowflake_shared_database.test",
+				Config:            accconfig.FromModels(t, sharedDatabaseModelComplete),
+				ResourceName:      sharedDatabaseModelComplete.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -228,28 +219,17 @@ func TestAcc_CreateSharedDatabase_complete(t *testing.T) {
 }
 
 func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	comment := random.Comment()
 
-	configVariables := config.Variables{
-		"name":       config.StringVariable("name"),
-		"from_share": config.StringVariable("org.acc.name"),
-		"comment":    config.StringVariable(comment),
-
-		"external_volume":                               config.StringVariable(""),
-		"catalog":                                       config.StringVariable(""),
-		"replace_invalid_characters":                    config.BoolVariable(false),
-		"default_ddl_collation":                         config.StringVariable(""),
-		"storage_serialization_policy":                  config.StringVariable("invalid_value"),
-		"log_level":                                     config.StringVariable("invalid_value"),
-		"trace_level":                                   config.StringVariable("invalid_value"),
-		"suspend_task_after_num_failures":               config.IntegerVariable(0),
-		"task_auto_retry_attempts":                      config.IntegerVariable(0),
-		"user_task_managed_initial_warehouse_size":      config.StringVariable(""),
-		"user_task_timeout_ms":                          config.IntegerVariable(0),
-		"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(0),
-		"quoted_identifiers_ignore_case":                config.BoolVariable(false),
-		"enable_console_output":                         config.BoolVariable(false),
-	}
+	sharedDatabaseModelInvalid := model.SharedDatabase("test", "org.acc.name", "org.acc.name").
+		WithComment(comment).
+		WithStorageSerializationPolicy("invalid_value").
+		WithLogLevel("invalid_value").
+		WithTraceLevel("invalid_value").
+		WithUserTaskManagedInitialWarehouseSize("invalid_value")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -260,8 +240,7 @@ func TestAcc_CreateSharedDatabase_InvalidValues(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
 		Steps: []resource.TestStep{
 			{
-				ConfigVariables: configVariables,
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SharedDatabase/complete"),
+				Config: accconfig.FromModels(t, sharedDatabaseModelInvalid),
 				ExpectError: regexp.MustCompile(`(unknown log level: invalid_value)|` +
 					`(unknown trace level: invalid_value)|` +
 					`(unknown storage serialization policy: invalid_value)|` +
@@ -279,7 +258,7 @@ func createShareableDatabase(t *testing.T) sdk.ExternalObjectIdentifier {
 	share, shareCleanup := acc.SecondaryTestClient().Share.CreateShare(t)
 	t.Cleanup(shareCleanup)
 
-	sharedDatabase, sharedDatabaseCleanup := acc.SecondaryTestClient().Database.CreateDatabase(t)
+	sharedDatabase, sharedDatabaseCleanup := acc.SecondaryTestClient().Database.CreateDatabaseWithParametersSet(t)
 	t.Cleanup(sharedDatabaseCleanup)
 
 	revoke := acc.SecondaryTestClient().Grant.GrantPrivilegeOnDatabaseToShare(t, sharedDatabase.ID(), share.ID(), []sdk.ObjectPrivilege{sdk.ObjectPrivilegeUsage})
@@ -287,17 +266,22 @@ func createShareableDatabase(t *testing.T) sdk.ExternalObjectIdentifier {
 
 	acc.SecondaryTestClient().Share.SetAccountOnShare(t, acc.TestClient().Account.GetAccountIdentifier(t), share.ID())
 
-	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
+	externalShareId := sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
+
+	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+
+	return externalShareId
 }
 
 func TestAcc_SharedDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	externalShareId := createShareableDatabase(t)
 
-	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	sharedDatabaseModel := model.SharedDatabase("test", externalShareId.FullyQualifiedName(), id.Name())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -307,48 +291,36 @@ func TestAcc_SharedDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceI
 		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            accconfig.FromModels(t, sharedDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   sharedDatabaseConfigBasic(id.Name(), externalShareId.FullyQualifiedName()),
+				Config:                   accconfig.FromModels(t, sharedDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func sharedDatabaseConfigBasic(name, externalShareId string) string {
-	return fmt.Sprintf(`resource "snowflake_shared_database" "test" {
-		name = "%v"
-		from_share = %v
-	}`, name, strconv.Quote(externalShareId))
-}
-
 func TestAcc_SharedDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
-
 	externalShareId := createShareableDatabase(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	quotedId := fmt.Sprintf(`"%s"`, id.Name())
 	unquotedExternalShareId := fmt.Sprintf("%s.%s.%s", externalShareId.AccountIdentifier().OrganizationName(), externalShareId.AccountIdentifier().AccountName(), externalShareId.Name())
 
-	acc.TestClient().Database.CreateDatabaseFromShareTemporarily(t, externalShareId)
+	sharedDatabaseModel := model.SharedDatabase("test", unquotedExternalShareId, quotedId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
@@ -358,35 +330,30 @@ func TestAcc_SharedDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SharedDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
-				Config:             sharedDatabaseConfigBasic(quotedId, unquotedExternalShareId),
+				Config:             accconfig.FromModels(t, sharedDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   sharedDatabaseConfigBasic(quotedId, unquotedExternalShareId),
+				Config:                   accconfig.FromModels(t, sharedDatabaseModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_shared_database.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(sharedDatabaseModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_shared_database.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(sharedDatabaseModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_shared_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(sharedDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},

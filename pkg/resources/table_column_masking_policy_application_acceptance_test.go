@@ -6,11 +6,19 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	maskingPolicyId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -20,9 +28,9 @@ func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: maskingPolicyApplicationTestConfig(acc.TestDatabaseName, acc.TestSchemaName),
+				Config: maskingPolicyApplicationTestConfig(tableId, maskingPolicyId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table_column_masking_policy_application.mpa", "table", fmt.Sprintf(`"%s"."%s"."table"`, acc.TestDatabaseName, acc.TestSchemaName)),
+					resource.TestCheckResourceAttr("snowflake_table_column_masking_policy_application.mpa", "table", tableId.FullyQualifiedName()),
 				),
 			},
 			{
@@ -34,12 +42,12 @@ func TestAcc_TableColumnMaskingPolicyApplication(t *testing.T) {
 	})
 }
 
-func maskingPolicyApplicationTestConfig(databaseName string, schemaName string) string {
+func maskingPolicyApplicationTestConfig(tableId sdk.SchemaObjectIdentifier, maskingPolicyId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_masking_policy" "test" {
-	name               = "mypolicy"
-	database           = "%s"
-	schema             = "%s"
+	database           = "%[1]s"
+	schema             = "%[2]s"
+	name               = "%[4]s"
 	argument {
 		name = "val"
 		type = "VARCHAR"
@@ -50,9 +58,9 @@ resource "snowflake_masking_policy" "test" {
 }
 
 resource "snowflake_table" "table" {
-	database = "%s"
-	schema   = "%s"
-	name     = "table"
+	database           = "%[1]s"
+	schema             = "%[2]s"
+	name               = "%[3]s"
 
 	column {
 	  name     = "secret"
@@ -68,5 +76,5 @@ resource "snowflake_table_column_masking_policy_application" "mpa" {
 	table          = snowflake_table.table.fully_qualified_name
 	column         = "secret"
 	masking_policy = snowflake_masking_policy.test.fully_qualified_name
-}`, databaseName, schemaName, databaseName, schemaName)
+}`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), maskingPolicyId.Name())
 }

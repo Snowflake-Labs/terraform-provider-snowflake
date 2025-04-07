@@ -13,6 +13,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -22,14 +23,19 @@ import (
 )
 
 func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
 	comment := random.Comment()
 
 	secretModel := model.SecretWithGenericString("s", id.DatabaseName(), name, id.SchemaName(), "foo")
+	secretModelWithComment := model.SecretWithGenericString("s", id.DatabaseName(), name, id.SchemaName(), "bar").
+		WithComment(comment)
 	secretModelEmptySecretString := model.SecretWithGenericString("s", id.DatabaseName(), name, id.SchemaName(), "")
 
-	secretName := secretModel.ResourceReference()
+	resourceReference := secretModel.ResourceReference()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -59,30 +65,26 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 							HasComment(""),
 					),
 
-					resource.TestCheckResourceAttr(secretName, "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttrSet(secretName, "describe_output.0.created_on"),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.name", name),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.database_name", id.DatabaseName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.schema_name", id.SchemaName()),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.secret_type", string(sdk.SecretTypeGenericString)),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.username", ""),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", ""),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_access_token_expiry_time", ""),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_refresh_token_expiry_time", ""),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.integration_name", ""),
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.oauth_scopes.#", "0"),
+					resource.TestCheckResourceAttr(resourceReference, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttrSet(resourceReference, "describe_output.0.created_on"),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.name", name),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.database_name", id.DatabaseName()),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.schema_name", id.SchemaName()),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.secret_type", string(sdk.SecretTypeGenericString)),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.username", ""),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.comment", ""),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.oauth_access_token_expiry_time", ""),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.oauth_refresh_token_expiry_time", ""),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.integration_name", ""),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.oauth_scopes.#", "0"),
 				),
 			},
 			// set secret_string and comment
 			{
-				Config: config.FromModels(t, secretModel.
-					WithSecretString("bar").
-					WithComment(comment),
-				),
-
+				Config: config.FromModels(t, secretModelWithComment),
 				Check: resource.ComposeTestCheckFunc(
 					assertThat(t,
-						resourceassert.SecretWithGenericStringResource(t, secretName).
+						resourceassert.SecretWithGenericStringResource(t, resourceReference).
 							HasNameString(name).
 							HasDatabaseString(id.DatabaseName()).
 							HasSchemaString(id.SchemaName()).
@@ -94,7 +96,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 							HasComment(comment),
 					),
 
-					resource.TestCheckResourceAttr(secretName, "describe_output.0.comment", comment),
+					resource.TestCheckResourceAttr(resourceReference, "describe_output.0.comment", comment),
 				),
 			},
 			// set comment externally, external changes for secret_string are not being detected
@@ -106,16 +108,16 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 						),
 					)
 				},
-				Config: config.FromModels(t, secretModel),
+				Config: config.FromModels(t, secretModelWithComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(secretName, plancheck.ResourceActionUpdate),
-						planchecks.ExpectDrift(secretName, "comment", sdk.String(comment), sdk.String("test_comment")),
-						planchecks.ExpectChange(secretName, "comment", tfjson.ActionUpdate, sdk.String("test_comment"), sdk.String(comment)),
+						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
+						planchecks.ExpectDrift(resourceReference, "comment", sdk.String(comment), sdk.String("test_comment")),
+						planchecks.ExpectChange(resourceReference, "comment", tfjson.ActionUpdate, sdk.String("test_comment"), sdk.String(comment)),
 					},
 				},
 				Check: assertThat(t,
-					resourceassert.SecretWithGenericStringResource(t, secretName).
+					resourceassert.SecretWithGenericStringResource(t, resourceReference).
 						HasNameString(name).
 						HasDatabaseString(id.DatabaseName()).
 						HasSchemaString(id.SchemaName()).
@@ -125,7 +127,7 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 			},
 			// import
 			{
-				ResourceName:            secretName,
+				ResourceName:            resourceReference,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"secret_string"},
@@ -187,8 +189,12 @@ func TestAcc_SecretWithGenericString_BasicFlow(t *testing.T) {
 }
 
 func TestAcc_SecretWithGenericString_ExternalSecretTypeChange(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	name := id.Name()
+
 	secretModel := model.SecretWithGenericString("s", id.DatabaseName(), name, id.SchemaName(), "test_usr")
 
 	resource.Test(t, resource.TestCase{
