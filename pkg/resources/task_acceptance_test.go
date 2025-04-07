@@ -2368,15 +2368,10 @@ func TestAcc_Task_issue3113(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.97.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      taskConfigWithErrorIntegration(id, errorNotificationIntegration.ID()),
-				ExpectError: regexp.MustCompile("error_integration: '' expected type 'string', got unconvertible type 'sdk.AccountObjectIdentifier'"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
+				Config:            taskConfigWithErrorIntegration(id, errorNotificationIntegration.ID()),
+				ExpectError:       regexp.MustCompile("error_integration: '' expected type 'string', got unconvertible type 'sdk.AccountObjectIdentifier'"),
 			},
 			{
 				PreConfig: func() {
@@ -2411,13 +2406,8 @@ func TestAcc_Task_StateUpgrade_NoOptionalFields(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: taskNoOptionalFieldsConfigV0980(id),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				Config:            taskNoOptionalFieldsConfigV0980(id),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(configModel.ResourceReference(), "enabled", "false"),
 					resource.TestCheckResourceAttr(configModel.ResourceReference(), "allow_overlapping_execution", "false"),
@@ -2463,13 +2453,8 @@ func TestAcc_Task_StateUpgrade(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: taskBasicConfigV0980(id, condition),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				Config:            taskBasicConfigV0980(id, condition),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(configModel.ResourceReference(), "enabled", "false"),
 					resource.TestCheckResourceAttr(configModel.ResourceReference(), "allow_overlapping_execution", "true"),
@@ -2528,13 +2513,8 @@ func TestAcc_Task_StateUpgradeWithAfter(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Task),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: taskCompleteConfigV0980(id, rootTask.ID(), acc.TestClient().Ids.WarehouseId(), 50, comment),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				Config:            taskCompleteConfigV0980(id, rootTask.ID(), acc.TestClient().Ids.WarehouseId(), 50, comment),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(configModel.ResourceReference(), "after.#", "1"),
 					resource.TestCheckResourceAttr(configModel.ResourceReference(), "after.0", rootTask.ID().Name()),

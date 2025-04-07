@@ -1392,13 +1392,8 @@ func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
 				Config: fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
@@ -1644,13 +1639,8 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_generallyEnabled(t *testing
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, userModel),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				Config:            config.FromModels(t, userModel),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
@@ -1690,23 +1680,13 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_defaults(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.97.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				PreConfig:   func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				Config:      config.FromModels(t, userModel),
-				ExpectError: regexp.MustCompile("\"default_namespace\": converting NULL to string is unsupported"),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				Config:            config.FromModels(t, userModel),
+				ExpectError:       regexp.MustCompile("\"default_namespace\": converting NULL to string is unsupported"),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.98.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
 				PreConfig: func() {
 					acc.UnsetConfigPathEnv(t)
 				},

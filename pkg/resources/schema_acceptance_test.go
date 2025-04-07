@@ -48,8 +48,8 @@ func TestAcc_Schema_basic(t *testing.T) {
 		WithComment(comment).
 		WithWithManagedAccess(r.BooleanTrue).
 		WithIsTransient(r.BooleanFalse).
-		WithDataRetentionTimeInDays(1).
-		WithMaxDataExtensionTimeInDays(1).
+		WithDataRetentionTimeInDays(5).
+		WithMaxDataExtensionTimeInDays(3).
 		WithExternalVolume(externalVolumeId.Name()).
 		WithCatalog(catalogId.Name()).
 		WithReplaceInvalidCharacters(true).
@@ -72,10 +72,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 		WithIsTransient(r.BooleanTrue)
 
 	var (
-		accountDataRetentionTimeInDays                 = new(string)
-		accountMaxDataExtensionTimeInDays              = new(string)
+		testDatabaseDataRetentionTimeInDays            = new(string)
+		testDatabaseMaxDataExtensionTimeInDays         = new(string)
 		accountExternalVolume                          = new(string)
-		accountCatalog                                 = new(string)
+		testDatabaseCatalog                            = new(string)
 		accountReplaceInvalidCharacters                = new(string)
 		accountDefaultDdlCollation                     = new(string)
 		accountStorageSerializationPolicy              = new(string)
@@ -102,10 +102,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					params := acc.TestClient().Parameter.ShowAccountParameters(t)
-					*accountDataRetentionTimeInDays = acchelpers.FindParameter(t, params, sdk.AccountParameterDataRetentionTimeInDays).Value
-					*accountMaxDataExtensionTimeInDays = acchelpers.FindParameter(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays).Value
+					*testDatabaseDataRetentionTimeInDays = strconv.Itoa(acc.TestClient().Database.TestDatabaseDataRetentionTimeInDays(t))
+					*testDatabaseMaxDataExtensionTimeInDays = strconv.Itoa(acc.TestClient().Database.TestDatabaseMaxDataExtensionTimeInDays(t))
 					*accountExternalVolume = acchelpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
-					*accountCatalog = acchelpers.FindParameter(t, params, sdk.AccountParameterCatalog).Value
+					*testDatabaseCatalog = acc.TestClient().Database.TestDatabaseCatalog(t).Name()
 					*accountReplaceInvalidCharacters = acchelpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
 					*accountDefaultDdlCollation = acchelpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
 					*accountStorageSerializationPolicy = acchelpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value
@@ -127,10 +127,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(basicSchemaModel.ResourceReference(), "with_managed_access", r.BooleanDefault),
 					resource.TestCheckResourceAttr(basicSchemaModel.ResourceReference(), "is_transient", r.BooleanDefault),
 
-					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "data_retention_time_in_days", testDatabaseDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "max_data_extension_time_in_days", testDatabaseMaxDataExtensionTimeInDays),
 					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "catalog", testDatabaseCatalog),
 					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
 					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
 					resource.TestCheckResourceAttrPtr(basicSchemaModel.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
@@ -181,8 +181,8 @@ func TestAcc_Schema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "is_transient", "false"),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "data_retention_time_in_days", "1"),
-					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "max_data_extension_time_in_days", "1"),
+					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "data_retention_time_in_days", "5"),
+					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "max_data_extension_time_in_days", "3"),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "external_volume", externalVolumeId.Name()),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "catalog", catalogId.Name()),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "replace_invalid_characters", "true"),
@@ -208,8 +208,8 @@ func TestAcc_Schema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "show_output.0.comment", comment),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "show_output.0.options", "MANAGED ACCESS"),
 
-					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.data_retention_time_in_days.0.value", "1"),
-					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.max_data_extension_time_in_days.0.value", "1"),
+					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.data_retention_time_in_days.0.value", "5"),
+					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.max_data_extension_time_in_days.0.value", "3"),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.external_volume.0.value", externalVolumeId.Name()),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.catalog.0.value", catalogId.Name()),
 					resource.TestCheckResourceAttr(fullSchemaModel.ResourceReference(), "parameters.0.replace_invalid_characters.0.value", "true"),
@@ -248,10 +248,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(schemaModelWithExplicitTransientFalse.ResourceReference(), "with_managed_access", r.BooleanDefault),
 					resource.TestCheckResourceAttr(schemaModelWithExplicitTransientFalse.ResourceReference(), "is_transient", "false"),
 
-					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "data_retention_time_in_days", testDatabaseDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "max_data_extension_time_in_days", testDatabaseMaxDataExtensionTimeInDays),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "catalog", testDatabaseCatalog),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientFalse.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
@@ -281,10 +281,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(schemaModelWithExplicitTransientTrue.ResourceReference(), "with_managed_access", r.BooleanDefault),
 					resource.TestCheckResourceAttr(schemaModelWithExplicitTransientTrue.ResourceReference(), "is_transient", "true"),
 
-					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "data_retention_time_in_days", testDatabaseDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "max_data_extension_time_in_days", testDatabaseMaxDataExtensionTimeInDays),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "catalog", testDatabaseCatalog),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
 					resource.TestCheckResourceAttrPtr(schemaModelWithExplicitTransientTrue.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
@@ -452,24 +452,14 @@ func TestAcc_Schema_ManagePublicVersion_0_94_0(t *testing.T) {
 		Steps: []resource.TestStep{
 			// PUBLIC can not be created in v0.93
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.93.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      schemaV093(schemaId),
-				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.93.0"),
+				Config:            schemaV093(schemaId),
+				ExpectError:       regexp.MustCompile("Error: error creating schema PUBLIC"),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: schemaV094WithPipeExecutionPaused(schemaId, true),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.0"),
+				Config:            schemaV094WithPipeExecutionPaused(schemaId, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_schema.test", "name", schemaId.Name()),
 					resource.TestCheckResourceAttr("snowflake_schema.test", "database", schemaId.DatabaseName()),
@@ -477,12 +467,7 @@ func TestAcc_Schema_ManagePublicVersion_0_94_0(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.0"),
 				PreConfig: func() {
 					// In v0.94 `CREATE OR REPLACE` was called, so we should see a DROP event.
 					schemas := acc.TestClient().Schema.ShowWithOptions(t, &sdk.ShowSchemaOptions{
@@ -533,15 +518,10 @@ func TestAcc_Schema_ManagePublicVersion_0_94_1(t *testing.T) {
 		Steps: []resource.TestStep{
 			// PUBLIC can not be created in v0.93
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.93.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config:      schemaV093(schemaId),
-				ExpectError: regexp.MustCompile("Error: error creating schema PUBLIC"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.93.0"),
+				Config:            schemaV093(schemaId),
+				ExpectError:       regexp.MustCompile("Error: error creating schema PUBLIC"),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
@@ -938,14 +918,9 @@ func TestAcc_Schema_migrateFromVersion093WithoutManagedAccess(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.93.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: schemaV093(id),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.93.0"),
+				Config:            schemaV093(id),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "is_managed", "false"),
@@ -982,14 +957,9 @@ func TestAcc_Schema_migrateFromVersion093(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.93.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: schemaV093WithIsManagedAndDataRetentionDays(id, tag.ID(), "foo", true, 10),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.93.0"),
+				Config:            schemaV093WithIsManagedAndDataRetentionDays(id, tag.ID(), "foo", true, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "is_managed", "true"),
@@ -1088,14 +1058,9 @@ func TestAcc_Schema_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *tes
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: accconfig.FromModels(t, basicSchemaModel),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            accconfig.FromModels(t, basicSchemaModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(basicSchemaModel.ResourceReference(), "id", helpers.EncodeSnowflakeID(id)),
 				),
@@ -1130,13 +1095,8 @@ func TestAcc_Schema_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
 				Config:             accconfig.FromModels(t, basicSchemaModelWithQuotes),
 				Check: resource.ComposeAggregateTestCheckFunc(
