@@ -1,0 +1,15 @@
+name: Snyk Scan
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+    security:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@master
+        - name: Run Snyk to check for vulnerabilities
+          uses: snyk/actions/golang@master
+          env:
+            SNYK_TOKEN: ${{ secrets.SNYK_GITHUB_INTEGRATION_TOKEN_PUBLIC_REPO }}
