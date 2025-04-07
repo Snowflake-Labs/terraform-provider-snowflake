@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	provider2 "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random/acceptancetests"
@@ -52,7 +52,7 @@ var (
 	atc             acceptanceTestContext
 
 	configureClientErrorDiag diag.Diagnostics
-	configureProviderCtx     *provider2.Context
+	configureProviderCtx     *internalprovider.Context
 )
 
 func init() {
@@ -134,7 +134,7 @@ var testAccProtoV6ProviderFactoriesNew = map[string]func() (tfprotov6.ProviderSe
 	},
 }
 
-func ConfigureProviderWithConfigCache(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func ConfigureProviderWithConfigCache(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
 	if err != nil {
 		accTestEnabled = false
@@ -157,17 +157,17 @@ func ConfigureProviderWithConfigCache(ctx context.Context, d *schema.ResourceDat
 			return nil, configureClientErrorDiag
 		}
 	}
-	log.Printf("[DEBUG] No cached provider configuration found or cacheing is not enabled; configuring a new provider")
+	log.Printf("[DEBUG] No cached provider configuration found or caching is not enabled; configuring a new provider")
 
 	providerCtx, clientErrorDiag := provider.ConfigureProvider(ctx, d)
 
 	if providerCtx != nil && accTestEnabled && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
-		providerCtx.(*provider2.Context).EnabledFeatures = previewfeatures.AllPreviewFeatures
+		providerCtx.(*internalprovider.Context).EnabledFeatures = previewfeatures.AllPreviewFeatures
 	}
 
 	// needed for tests verifying different provider setups
 	if accTestEnabled && configureClientOnceEnabled {
-		configureProviderCtx = providerCtx.(*provider2.Context)
+		configureProviderCtx = providerCtx.(*internalprovider.Context)
 		configureClientErrorDiag = clientErrorDiag
 	} else {
 		configureProviderCtx = nil
