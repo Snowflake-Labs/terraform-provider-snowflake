@@ -47,7 +47,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Grant all privileges on the account role. When all privileges can not be granted, the provider returns a warning.",
+		Description: "Grant all privileges on the account role. When all privileges cannot be granted, the provider returns a warning, which is aligned with the Snowsight behavior.",
 		ExactlyOneOf: []string{
 			"privileges",
 			"all_privileges",

@@ -11,13 +11,13 @@ across different versions.
 
 ## v1.0.5 ➞ v1.0.6
 ### Fixes in `grant_privileges_to_account_role` resource
-When `grant_privileges_to_account_role` was used with `all_privileges=true`, it failed with
+Using `grant_privileges_to_account_role` with `all_privileges=true` and `on_account = true` option started to fail recently due to newly introduced privileges in Snowflake:
 ```
 003011 (42501): Grant partially executed: privileges [MANAGE LISTING AUTO FULFILLMENT, MANAGE ORGANIZATION SUPPORT CASES,
 │ MANAGE POLARIS CONNECTIONS] not granted
 ```
 
-This error is now fixed: the warning is returned and the operation execution continues. Note that for `all_privileges=true` the privileges list in the state is not populated, like before. If you want to detect differences in the privileges, use `privileges` list instead. If you want to make sure that the maximum privileges are granted, enable `always_apply`.
+Instead of failing the whole action, we return a warning instead and the operation execution continues, which aligns with the behavior in Snowsight. Note that for `all_privileges=true` the privileges list in the state is not populated, like before. If you want to detect differences in the privileges, use `privileges` list instead. If you want to make sure that the maximum privileges are granted, enable `always_apply`.
 
 References: [#3507](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3507)
 

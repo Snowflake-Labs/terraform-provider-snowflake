@@ -99,7 +99,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3153(t *testing.T) {
 				ConfigVariables: configVariables,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
-					resource.TestCheckResourceAttr(resourceName, "privileges.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "privileges.0", string(sdk.GlobalPrivilegeManageShareTarget)),
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|%s|OnAccount", roleFullyQualifiedName, sdk.GlobalPrivilegeManageShareTarget)),
 				),
@@ -128,27 +129,35 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
 
 	resourceName := "snowflake_grant_privileges_to_account_role.test"
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
-				ConfigVariables: configVariables,
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
+				Config:            grantAllPrivilegesToAccountRoleBasicConfig(role.ID()),
+				ExpectError:       regexp.MustCompile(`Error: 003011 \(42501\): Grant partially executed`),
+			},
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
+				ConfigVariables:          configVariables,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
 					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnAccount", roleFullyQualifiedName)),
+					queriedAccountRolePrivilegesContainAtLeast(role.ID(), string(sdk.GlobalPrivilegeCreateDatabase)),
+					queriedAccountRolePrivilegesDoNotContain(role.ID(), string(sdk.GlobalPrivilegeManageListingAutoFulfillment), string(sdk.GlobalPrivilegeManageOrganizationSupportCases), string(sdk.GlobalPrivilegeManagePolarisConnections)),
 				),
 				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
-				ConfigVariables: configVariablesWithAlwaysApply,
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/OnAccount_AllPrivileges"),
+				ConfigVariables:          configVariablesWithAlwaysApply,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_role_name", roleFullyQualifiedName),
 					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
@@ -160,6 +169,16 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
 			},
 		},
 	})
+}
+
+func grantAllPrivilegesToAccountRoleBasicConfig(roleId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_grant_privileges_to_account_role" "test" {
+	account_role_name = "%s"
+	all_privileges    = true
+	on_account        = true
+}
+`, roleId.Name())
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_OnAccount_ErrorOnPrivilegesNotGranted(t *testing.T) {
@@ -1884,6 +1903,16 @@ func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdenti
 			},
 		})
 	}, roleName, privileges...)
+}
+
+func queriedAccountRolePrivilegesDoNotContain(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesDoNotContain(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
+		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+			To: &sdk.ShowGrantsTo{
+				Role: roleName,
+			},
+		})
+	}, privileges...)
 }
 
 func TestAcc_GrantPrivilegesToAccountRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
