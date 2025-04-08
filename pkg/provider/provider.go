@@ -4,15 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"net/url"
 	"slices"
 	"strings"
 
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
@@ -399,7 +396,7 @@ func Provider() *schema.Provider {
 }
 
 func getResources() map[string]*schema.Resource {
-	resourceList := map[string]*schema.Resource{
+	return map[string]*schema.Resource{
 		"snowflake_account": resources.Account(),
 		"snowflake_account_authentication_policy_attachment":                     resources.AccountAuthenticationPolicyAttachment(),
 		"snowflake_account_role":                                                 resources.AccountRole(),
@@ -489,23 +486,6 @@ func getResources() map[string]*schema.Resource {
 		"snowflake_view":                                                         resources.View(),
 		"snowflake_warehouse":                                                    resources.Warehouse(),
 	}
-
-	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
-	if err != nil {
-		accTestEnabled = false
-		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
-	}
-	objectRenamingTestEnabled, err := oswrapper.GetenvBool(string(testenvs.EnableObjectRenamingTest))
-	if err != nil {
-		objectRenamingTestEnabled = false
-		log.Printf("%s environmental variable has incorrect format: %v, using %v as a default value", string(testenvs.EnableObjectRenamingTest), err, objectRenamingTestEnabled)
-	}
-
-	if accTestEnabled && objectRenamingTestEnabled {
-		resourceList["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
-	}
-
-	return resourceList
 }
 
 func getDataSources() map[string]*schema.Resource {
@@ -558,32 +538,7 @@ func getDataSources() map[string]*schema.Resource {
 	}
 }
 
-var (
-	configureClientError error //nolint:errname
-	configureProviderCtx *provider.Context
-)
-
 func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
-	accTestEnabled, err := oswrapper.GetenvBool("TF_ACC")
-	if err != nil {
-		accTestEnabled = false
-		log.Printf("TF_ACC environmental variable has incorrect format: %v, using %v as a default value", err, accTestEnabled)
-	}
-	configureClientOnceEnabled, err := oswrapper.GetenvBool("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE")
-	if err != nil {
-		configureClientOnceEnabled = false
-		log.Printf("SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE environmental variable has incorrect format: %v, using %v as a default value", err, configureClientOnceEnabled)
-	}
-	// hacky way to speed up our acceptance tests
-	if accTestEnabled && configureClientOnceEnabled {
-		if configureProviderCtx != nil {
-			return configureProviderCtx, nil
-		}
-		if configureClientError != nil {
-			return nil, diag.FromErr(configureClientError)
-		}
-	}
-
 	config, err := getDriverConfigFromTerraform(s)
 	if err != nil {
 		return nil, diag.FromErr(err)
@@ -610,18 +565,6 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 
 	if v, ok := s.GetOk("preview_features_enabled"); ok {
 		providerCtx.EnabledFeatures = expandStringList(v.(*schema.Set).List())
-	}
-	if oswrapper.Getenv("TF_ACC") != "" && oswrapper.Getenv("SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES") == "true" {
-		providerCtx.EnabledFeatures = previewfeatures.AllPreviewFeatures
-	}
-
-	// needed for tests verifying different provider setups
-	if accTestEnabled && configureClientOnceEnabled {
-		configureProviderCtx = providerCtx
-		configureClientError = clientErr
-	} else {
-		configureProviderCtx = nil
-		configureClientError = nil
 	}
 
 	if clientErr != nil {
