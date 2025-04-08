@@ -1892,18 +1892,21 @@ func createSharedDatabaseOnSecondaryAccount(t *testing.T) sdk.ExternalObjectIden
 }
 
 func queriedAccountRolePrivilegesEqualTo(t *testing.T, roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
 	return queriedPrivilegesEqualTo(func() ([]sdk.Grant, error) {
 		return acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleName)
 	}, privileges...)
 }
 
 func queriedAccountRolePrivilegesContainAtLeast(t *testing.T, roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
 	return queriedPrivilegesContainAtLeast(func() ([]sdk.Grant, error) {
 		return acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleName)
 	}, roleName, privileges...)
 }
 
 func queriedAccountRolePrivilegesDoNotContain(t *testing.T, roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
 	return queriedPrivilegesDoNotContain(func() ([]sdk.Grant, error) {
 		return acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleName)
 	}, privileges...)

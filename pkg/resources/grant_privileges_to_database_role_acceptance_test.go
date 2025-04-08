@@ -1323,19 +1323,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_CreateNotebooks(t *testing.T) {
 	})
 }
 
+// TODO [SNOW-1431726]: Move to helpers
 func queriedPrivilegesToDatabaseRoleEqualTo(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
 	return queriedPrivilegesEqualTo(func() ([]sdk.Grant, error) {
 		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, privileges...)
 }
 
 func queriedPrivilegesToDatabaseRoleContainAtLeast(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
 	return queriedPrivilegesContainAtLeast(func() ([]sdk.Grant, error) {
 		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, databaseRoleName, privileges...)
 }
 
-// TODO [SNOW-1431726]: Move to helpers
 func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 	t *testing.T,
 	databaseRoleId sdk.DatabaseObjectIdentifier,
