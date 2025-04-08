@@ -3,10 +3,11 @@ package resources_test
 import (
 	"context"
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"regexp"
 	"strconv"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
@@ -16,7 +17,6 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -2265,12 +2265,7 @@ func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=1.0.5",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionCreate),
@@ -2279,27 +2274,22 @@ func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {
 						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionNoop),
 					},
 				},
-				Config: tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+				Config: tableConfig(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "id", helpers.EncodeSnowflakeID(tableId)),
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=1.0.5",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				PreConfig:   func() { schemaCleanup() },
-				Config:      tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
-				ExpectError: regexp.MustCompile("object does not exist or not authorized"),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
+				PreConfig:         func() { schemaCleanup() },
+				Config:            tableConfig(tableId),
+				ExpectError:       regexp.MustCompile("object does not exist or not authorized"),
 			},
 			// The New version removes table from the state which ends up with create operation
 			// and the "error creating table" error (because of the missing underlying schema).
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfig(tableId.Name(), tableId.DatabaseName(), tableId.SchemaName()),
+				Config:                   tableConfig(tableId),
 				ExpectError:              regexp.MustCompile("error creating table"),
 			},
 		},

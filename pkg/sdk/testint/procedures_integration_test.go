@@ -2131,6 +2131,12 @@ def filter_by_role(session, table_name, role):
 		require.NoError(t, err)
 	})
 
+	t.Run("show by id", func(t *testing.T) {
+		procedure, err := client.Procedures.ShowByID(ctx, tmpJavaProcedure.FunctionId)
+		assert.NotNil(t, procedure)
+		assert.NoError(t, err)
+	})
+
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -2187,8 +2193,8 @@ def filter_by_role(session, table_name, role):
 		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
 	})
 
-	t.Run("show by id safely - missing database", func(t *testing.T) {
-		procedure, err := client.Procedures.ShowByID(ctx, tmpJavaProcedure.FunctionId)
+	t.Run("show by id safely", func(t *testing.T) {
+		procedure, err := client.Procedures.ShowByIDSafely(ctx, tmpJavaProcedure.FunctionId)
 		assert.NotNil(t, procedure)
 		assert.NoError(t, err)
 	})
