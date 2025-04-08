@@ -102,10 +102,10 @@ func TestAcc_Schema_basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					params := acc.TestClient().Parameter.ShowAccountParameters(t)
-					*testDatabaseDataRetentionTimeInDays = strconv.Itoa(acc.TestClient().Database.TestDatabaseDataRetentionTimeInDays(t))
-					*testDatabaseMaxDataExtensionTimeInDays = strconv.Itoa(acc.TestClient().Database.TestDatabaseMaxDataExtensionTimeInDays(t))
+					*testDatabaseDataRetentionTimeInDays = strconv.Itoa(acc.TestClient().Database.TestDatabaseDataRetentionTimeInDays())
+					*testDatabaseMaxDataExtensionTimeInDays = strconv.Itoa(acc.TestClient().Database.TestDatabaseMaxDataExtensionTimeInDays())
 					*accountExternalVolume = acchelpers.FindParameter(t, params, sdk.AccountParameterExternalVolume).Value
-					*testDatabaseCatalog = acc.TestClient().Database.TestDatabaseCatalog(t).Name()
+					*testDatabaseCatalog = acc.TestClient().Database.TestDatabaseCatalog().Name()
 					*accountReplaceInvalidCharacters = acchelpers.FindParameter(t, params, sdk.AccountParameterReplaceInvalidCharacters).Value
 					*accountDefaultDdlCollation = acchelpers.FindParameter(t, params, sdk.AccountParameterDefaultDDLCollation).Value
 					*accountStorageSerializationPolicy = acchelpers.FindParameter(t, params, sdk.AccountParameterStorageSerializationPolicy).Value

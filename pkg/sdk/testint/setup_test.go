@@ -138,7 +138,10 @@ func (itc *integrationTestContext) initialize() error {
 		defer func() { _ = c.Sessions.UseRole(context.Background(), snowflakeroles.Orgadmin) }()
 	}
 
-	db, dbCleanup, err := createDb(itc.client, itc.ctx, false)
+	// TODO [SNOW-1763603]: we can't use test client because of the testing.T parameter that is not present here; discuss
+	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
+
+	db, dbCleanup, err := createDb(itc.client, itc.ctx, false, itc.testClient)
 	itc.databaseCleanup = dbCleanup
 	if err != nil {
 		return err
@@ -159,8 +162,6 @@ func (itc *integrationTestContext) initialize() error {
 	}
 	itc.warehouse = wh
 
-	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
-
 	// TODO [SNOW-1763603]: improve setup; this is a quick workaround for faster local testing
 	if os.Getenv(string(testenvs.SimplifiedIntegrationTestsSetup)) == "" {
 		config, err := sdk.ProfileConfig(testprofiles.Secondary, true)
@@ -179,7 +180,9 @@ func (itc *integrationTestContext) initialize() error {
 		itc.secondaryClient = secondaryClient
 		itc.secondaryCtx = context.Background()
 
-		secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true)
+		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
+
+		secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true, itc.secondaryTestClient)
 		itc.secondaryDatabaseCleanup = secondaryDbCleanup
 		if err != nil {
 			return err
@@ -199,8 +202,6 @@ func (itc *integrationTestContext) initialize() error {
 			return err
 		}
 		itc.secondaryWarehouse = secondaryWarehouse
-
-		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
 
 		err = helpers.EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.client, itc.ctx)
 		if err != nil {
@@ -227,12 +228,14 @@ func (itc *integrationTestContext) initialize() error {
 	return nil
 }
 
-func createDb(client *sdk.Client, ctx context.Context, ifNotExists bool) (*sdk.Database, func(), error) {
+func createDb(client *sdk.Client, ctx context.Context, ifNotExists bool, testClient *helpers.TestClient) (*sdk.Database, func(), error) {
 	id := sdk.NewAccountObjectIdentifier(TestDatabaseName)
 	cleanup := func() {
 		_ = client.Databases.Drop(ctx, id, &sdk.DropDatabaseOptions{IfExists: sdk.Bool(true)})
 	}
-	err := client.Databases.Create(ctx, id, &sdk.CreateDatabaseOptions{IfNotExists: sdk.Bool(ifNotExists)})
+	opts := testClient.Database.TestParametersSet()
+	opts.IfNotExists = sdk.Bool(ifNotExists)
+	err := client.Databases.Create(ctx, id, opts)
 	if err != nil {
 		return nil, cleanup, err
 	}

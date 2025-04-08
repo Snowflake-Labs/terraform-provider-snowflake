@@ -29,7 +29,7 @@ func TestAcc_Schemas_Complete(t *testing.T) {
 	viewId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(id)
 	statement := "SELECT ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
 	columnNames := []string{"ROLE_NAME"}
-	testDatabaseCatalogName := acc.TestClient().Database.TestDatabaseCatalog(t).Name()
+	testDatabaseCatalogName := acc.TestClient().Database.TestDatabaseCatalog().Name()
 
 	schemaModel := model.Schema("test", id.DatabaseName(), id.Name()).
 		WithComment(comment).

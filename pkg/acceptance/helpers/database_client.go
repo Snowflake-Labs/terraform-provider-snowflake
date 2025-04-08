@@ -46,7 +46,7 @@ func (c *DatabaseClient) CreateDatabaseWithParametersSet(t *testing.T) (*sdk.Dat
 // CreateDatabaseWithParametersSetWithId should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
 func (c *DatabaseClient) CreateDatabaseWithParametersSetWithId(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
-	return c.CreateDatabaseWithOptions(t, id, c.testParametersSet())
+	return c.CreateDatabaseWithOptions(t, id, c.TestParametersSet())
 }
 
 // CreateTestDatabaseIfNotExists should be used to create the main database used throughout the acceptance tests.
@@ -54,13 +54,13 @@ func (c *DatabaseClient) CreateDatabaseWithParametersSetWithId(t *testing.T, id 
 func (c *DatabaseClient) CreateTestDatabaseIfNotExists(t *testing.T) (*sdk.Database, func()) {
 	t.Helper()
 
-	opts := c.testParametersSet()
+	opts := c.TestParametersSet()
 	opts.IfNotExists = sdk.Bool(true)
 
 	return c.CreateDatabaseWithOptions(t, c.ids.DatabaseId(), opts)
 }
 
-func (c *DatabaseClient) testParametersSet() *sdk.CreateDatabaseOptions {
+func (c *DatabaseClient) TestParametersSet() *sdk.CreateDatabaseOptions {
 	return &sdk.CreateDatabaseOptions{
 		DataRetentionTimeInDays:    sdk.Int(testDatabaseDataRetentionTimeInDays),
 		MaxDataExtensionTimeInDays: sdk.Int(testDatabaseMaxDataExtensionTimeInDays),
@@ -248,17 +248,14 @@ func (c *DatabaseClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opt
 	require.NoError(t, err)
 }
 
-func (c *DatabaseClient) TestDatabaseDataRetentionTimeInDays(t *testing.T) int {
-	t.Helper()
+func (c *DatabaseClient) TestDatabaseDataRetentionTimeInDays() int {
 	return testDatabaseDataRetentionTimeInDays
 }
 
-func (c *DatabaseClient) TestDatabaseMaxDataExtensionTimeInDays(t *testing.T) int {
-	t.Helper()
+func (c *DatabaseClient) TestDatabaseMaxDataExtensionTimeInDays() int {
 	return testDatabaseMaxDataExtensionTimeInDays
 }
 
-func (c *DatabaseClient) TestDatabaseCatalog(t *testing.T) sdk.AccountObjectIdentifier {
-	t.Helper()
+func (c *DatabaseClient) TestDatabaseCatalog() sdk.AccountObjectIdentifier {
 	return testDatabaseCatalog
 }
