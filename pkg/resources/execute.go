@@ -96,7 +96,6 @@ func CreateExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	}
 
 	d.SetId(id)
-	log.Printf(`[INFO] SQL "%s" applied successfully\n`, executeStatement)
 
 	return ReadExecute(ctx, d, meta)
 }
@@ -127,10 +126,13 @@ func ReadExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 	} else {
 		rows, err := client.QueryUnsafe(ctx, readStatement)
 		if err != nil {
-			log.Printf(`[WARN] SQL query "%s" failed with err %v`, readStatement, err)
-			return setNilResults()
+			return append(setNilResults(), diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "SQL query statement failed",
+				Detail:   fmt.Sprintf("Err: %v", err),
+			})
 		}
-		log.Printf(`[INFO] SQL query "%s" executed successfully, returned rows count: %d`, readStatement, len(rows))
+		log.Printf(`[INFO] SQL query statement executed successfully, returned rows count: %d`, len(rows))
 		rowsTransformed := make([]map[string]any, len(rows))
 		for i, row := range rows {
 			t := make(map[string]any)
@@ -169,7 +171,7 @@ func DeleteExecute(ctx context.Context, d *schema.ResourceData, meta any) diag.D
 	}
 
 	d.SetId("")
-	log.Printf(`[INFO] SQL "%s" applied successfully\n`, revertStatement)
+	log.Printf("[INFO] Revert SQL applied successfully")
 
 	return nil
 }

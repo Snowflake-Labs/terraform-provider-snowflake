@@ -117,17 +117,18 @@ func IgnoreChangeToCurrentSnowflakePlainValueInOutput(attrName, keyInOutput stri
 			queryOutputList := queryOutput.([]any)
 			if len(queryOutputList) == 1 {
 				result := queryOutputList[0].(map[string]any)[keyInOutput]
-				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
 				if new == fmt.Sprintf("%v", result) {
+					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: new value for key %s.%s is the same as the old one, suppressing the difference", attrName, keyInOutput)
 					return true
 				}
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutput: new value for key %s.%s is different from the old one, proceeding with plan", attrName, keyInOutput)
 			}
 		}
 		return false
 	}
 }
 
-// IgnoreChangeToCurrentSnowflakePlainValueInOutput should be used to ignore changes to the given attribute when its value is equal to value in provided `attrName`.
+// IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping should be used to ignore changes to the given attribute when its value is equal to value in provided `attrName`.
 func IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(attrName, keyInOutput string, mapping func(any) any) schema.SchemaDiffSuppressFunc {
 	return func(_, _, new string, d *schema.ResourceData) bool {
 		if d.Id() == "" {
@@ -138,10 +139,11 @@ func IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping(attrName, keyIn
 			queryOutputList := queryOutput.([]any)
 			if len(queryOutputList) == 1 {
 				result := mapping(queryOutputList[0].(map[string]any)[keyInOutput])
-				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping: value for key %s is %v, new value is %s, comparison result is: %t", keyInOutput, result, new, new == fmt.Sprintf("%v", result))
 				if new == fmt.Sprintf("%v", result) {
+					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping: new value for key %s.%s is the same as the old one, suppressing the difference", attrName, keyInOutput)
 					return true
 				}
+				log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakePlainValueInOutputWithMapping: new value for key %s.%s is different from the old one, proceeding with plan", attrName, keyInOutput)
 			}
 		}
 		return false
@@ -162,10 +164,11 @@ func IgnoreChangeToCurrentSnowflakeListValueInDescribe(keyInDescribeOutput strin
 				newValueInDescribeList := result[keyInDescribeOutput].([]any)
 				if len(newValueInDescribeList) == 1 {
 					newValueInDescribe := newValueInDescribeList[0].(map[string]any)["value"]
-					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeListValueInDescribe: value for key %s is %v, new value is %s, comparison result is: %t", keyInDescribeOutput, newValueInDescribe, new, new == fmt.Sprintf("%v", newValueInDescribe))
 					if new == fmt.Sprintf("%v", newValueInDescribe) {
+						log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeListValueInDescribe: new value for key %s.%s is the same as the old one, suppressing the difference", DescribeOutputAttributeName, keyInDescribeOutput)
 						return true
 					}
+					log.Printf("[DEBUG] IgnoreChangeToCurrentSnowflakeListValueInDescribe: new value for key %s.%s is different from the old one, proceeding with plan", DescribeOutputAttributeName, keyInDescribeOutput)
 				}
 			}
 		}

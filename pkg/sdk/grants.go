@@ -262,7 +262,7 @@ func (row grantRow) convert() *Grant {
 		name, err = ParseObjectIdentifierString(row.Name)
 	}
 	if err != nil {
-		log.Printf("Failed to parse identifier [%s], err = \"%s\"; falling back to fully qualified name conversion", row.Name, err)
+		log.Printf("[DEBUG] Failed to parse identifier [%s], err = \"%s\"; falling back to fully qualified name conversion", row.Name, err)
 		name = NewObjectIdentifierFromFullyQualifiedName(row.Name)
 	}
 

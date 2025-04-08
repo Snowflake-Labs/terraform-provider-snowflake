@@ -46,18 +46,18 @@ func execute(m *testing.M) int {
 }
 
 func setup() {
-	log.Println("Running integration tests setup")
+	log.Println("[DEBUG] Running integration tests setup")
 
 	err := itc.initialize()
 	if err != nil {
-		log.Printf("Integration test context initialisation failed with: `%s`\n", err)
+		log.Printf("[DEBUG] Integration test context initialisation failed with: `%s`", err)
 		cleanup()
 		os.Exit(1)
 	}
 }
 
 func cleanup() {
-	log.Println("Running integration tests cleanup")
+	log.Println("[DEBUG] Running integration tests cleanup")
 	if itc.databaseCleanup != nil {
 		defer itc.databaseCleanup()
 	}
@@ -105,7 +105,7 @@ type integrationTestContext struct {
 }
 
 func (itc *integrationTestContext) initialize() error {
-	log.Println("Initializing integration test context")
+	log.Println("[DEBUG] Initializing integration test context")
 
 	testObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.TestObjectsSuffix))
 	requireTestObjectSuffix := os.Getenv(fmt.Sprintf("%v", testenvs.RequireTestObjectsSuffix))
@@ -273,7 +273,7 @@ func createWh(client *sdk.Client, ctx context.Context, ifNotExists bool) (*sdk.W
 func timer(name string) func() {
 	start := time.Now()
 	return func() {
-		log.Printf("[DEBUG] %s took %v\n", name, time.Since(start))
+		log.Printf("[DEBUG] %s took %v", name, time.Since(start))
 	}
 }
 

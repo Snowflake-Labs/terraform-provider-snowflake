@@ -140,7 +140,7 @@ func ReadManagedAccount(ctx context.Context, d *schema.ResourceData, meta any) d
 	err = util.Retry(5, 3*time.Second, func() (error, bool) {
 		managedAccount, err = client.ManagedAccounts.ShowByID(ctx, id)
 		if err != nil {
-			log.Printf("[DEBUG] retryable operation resulted in error: %v\n", err)
+			log.Printf("[DEBUG] retryable operation resulted in error: %v", err)
 			return nil, false
 		}
 		return nil, true

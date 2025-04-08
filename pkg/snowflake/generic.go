@@ -101,7 +101,6 @@ func (ab *AlterPropertiesBuilder) SetTags(tags []TagValue) {
 func (ab *AlterPropertiesBuilder) GetTagValueString() string {
 	var q strings.Builder
 	for _, v := range ab.tags {
-		fmt.Println(v)
 		if v.Schema != "" {
 			if v.Database != "" {
 				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))
@@ -202,7 +201,6 @@ func (b *CreateBuilder) SetTags(tags []TagValue) {
 func (b *CreateBuilder) GetTagValueString() string {
 	var q strings.Builder
 	for _, v := range b.tags {
-		fmt.Println(v)
 		if v.Schema != "" {
 			if v.Database != "" {
 				q.WriteString(fmt.Sprintf(`"%v".`, v.Database))

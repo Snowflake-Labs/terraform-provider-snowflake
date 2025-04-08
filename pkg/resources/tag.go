@@ -323,7 +323,7 @@ func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta any) dia
 		}
 	}
 	if len(removedPolicies) > 0 {
-		log.Printf("[DEBUG] unsetting masking policies before dropping tag: %s\n", id.FullyQualifiedName())
+		log.Printf("[DEBUG] unsetting masking policies before dropping tag: %s", id.FullyQualifiedName())
 		if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(sdk.NewTagUnsetRequest().WithMaskingPolicies(removedPolicies))); err != nil {
 			return diag.FromErr(err)
 		}

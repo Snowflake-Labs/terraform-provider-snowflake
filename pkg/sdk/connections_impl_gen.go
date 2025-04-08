@@ -125,20 +125,20 @@ func (r connectionRow) convert() *Connection {
 
 	parsedIsPrimary, err := strconv.ParseBool(r.IsPrimary)
 	if err != nil {
-		log.Printf("unable to parse bool is_primary for connection: %v, err = %s", r.IsPrimary, err)
+		log.Printf("[DEBUG] Unable to parse bool is_primary for connection: %v, err = %s", r.IsPrimary, err)
 	} else {
 		c.IsPrimary = parsedIsPrimary
 	}
 
 	primaryExternalId, err := ParseExternalObjectIdentifier(r.Primary)
 	if err != nil {
-		log.Printf("unable to parse primary connection external identifier: %v, err = %s", r.Primary, err)
+		log.Printf("[DEBUG] Unable to parse primary connection external identifier: %v, err = %s", r.Primary, err)
 	} else {
 		c.Primary = primaryExternalId
 	}
 
 	if allowedToAccounts, err := ParseCommaSeparatedAccountIdentifierArray(r.FailoverAllowedToAccounts); err != nil {
-		log.Printf("unable to parse account identifier list for 'enable failover to accounts': %s, err = %v", r.FailoverAllowedToAccounts, err)
+		log.Printf("[DEBUG] Unable to parse account identifier list for 'enable failover to accounts': %s, err = %v", r.FailoverAllowedToAccounts, err)
 	} else {
 		c.FailoverAllowedToAccounts = allowedToAccounts
 	}

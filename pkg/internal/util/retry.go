@@ -15,7 +15,7 @@ func Retry(attempts int, sleepDuration time.Duration, f func() (error, bool)) er
 		if done {
 			return nil
 		} else {
-			log.Printf("[INFO] operation not finished yet, retrying in %v seconds\n", sleepDuration.Seconds())
+			log.Printf("[INFO] operation not finished yet, retrying in %v seconds", sleepDuration.Seconds())
 			time.Sleep(sleepDuration)
 		}
 	}

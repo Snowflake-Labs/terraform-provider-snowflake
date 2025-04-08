@@ -41,7 +41,7 @@ func AuthenticationPolicyDescriptionToSchema(authenticationPolicyDescription []s
 		if slices.Contains(AuthenticationPolicyNames, property.Property) {
 			authenticationPolicySchema[strings.ToLower(property.Property)] = property.Value
 		} else {
-			log.Printf("[WARN] unexpected property %v in authentication policy returned from Snowflake", property.Value)
+			log.Printf("[WARN] unexpected property %v in authentication policy returned from Snowflake", property.Property)
 		}
 	}
 	return authenticationPolicySchema

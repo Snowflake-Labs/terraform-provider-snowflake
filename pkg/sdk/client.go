@@ -109,7 +109,7 @@ func NewDryRunClient() *Client {
 func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 	var err error
 	if cfg == nil {
-		log.Printf("[DEBUG] Searching for default config in credentials chain...\n")
+		log.Printf("[DEBUG] Searching for default config in credentials chain...")
 		cfg = DefaultConfig(true)
 	}
 
@@ -146,7 +146,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 		return nil, fmt.Errorf("get current session: %w", err)
 	}
 	client.sessionID = sessionID
-	log.Printf("[DEBUG] connection success! Account: %s, Session identifier: %s\n", currentAccount, sessionID)
+	log.Printf("[DEBUG] connection success! Account: %s, Session identifier: %s", currentAccount, sessionID)
 
 	return client, nil
 }
@@ -234,7 +234,8 @@ var snowflakeAccountLocatorContextKey accountLocatorContextKey
 func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 	if c.dryRun {
 		c.traceLogs = append(c.traceLogs, sql)
-		log.Printf("[DEBUG] sql-conn-exec-dry: %v\n", sql)
+		// TODO(SNOW-926146): Decide what to do with logs during plugin framework poc
+		// log.Printf("[DEBUG] sql-conn-exec-dry: %v", sql)
 		return nil, nil
 	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
@@ -247,7 +248,8 @@ func (c *Client) exec(ctx context.Context, sql string) (sql.Result, error) {
 func (c *Client) query(ctx context.Context, dest interface{}, sql string) error {
 	if c.dryRun {
 		c.traceLogs = append(c.traceLogs, sql)
-		log.Printf("[DEBUG] sql-conn-query-dry: %v\n", sql)
+		// TODO(SNOW-926146): Decide what to do with logs during plugin framework poc
+		// log.Printf("[DEBUG] sql-conn-query-dry: %v", sql)
 		return nil
 	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
@@ -259,7 +261,8 @@ func (c *Client) query(ctx context.Context, dest interface{}, sql string) error 
 func (c *Client) queryOne(ctx context.Context, dest interface{}, sql string) error {
 	if c.dryRun {
 		c.traceLogs = append(c.traceLogs, sql)
-		log.Printf("[DEBUG] sql-conn-query-one-dry: %v\n", sql)
+		// TODO(SNOW-926146): Decide what to do with logs during plugin framework poc
+		// log.Printf("[DEBUG] sql-conn-query-one-dry: %v", sql)
 		return nil
 	}
 	ctx = context.WithValue(ctx, snowflakeAccountLocatorContextKey, c.accountLocator)
@@ -271,7 +274,7 @@ func appendQueryMetadata(ctx context.Context, sql string) string {
 	if metadata, ok := tracking.FromContext(ctx); ok {
 		newSql, err := tracking.AppendMetadata(sql, metadata)
 		if err != nil {
-			log.Printf("[ERROR] failed to append metadata tracking: %v\n", err)
+			log.Printf("[ERROR] failed to append metadata tracking: %v", err)
 			return sql
 		}
 		return newSql
