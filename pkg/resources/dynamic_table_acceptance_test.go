@@ -477,7 +477,7 @@ func TestAcc_DynamicTable_issue3355_timeout(t *testing.T) {
 	dynamicTableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	query := fmt.Sprintf(`with temp as (select "id" from "%v"."%v"."%v") select * from temp`, acc.TestDatabaseName, acc.TestSchemaName, tableId.Name())
+	query := fmt.Sprintf(`with temp as (select "id" from %v) select * from temp`, tableId.FullyQualifiedName())
 	m := func() map[string]config.Variable {
 		return map[string]config.Variable{
 			"name":       config.StringVariable(dynamicTableId.Name()),

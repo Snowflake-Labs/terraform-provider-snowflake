@@ -14,12 +14,12 @@ across different versions.
 ### Timeouts in resources and data sources
 By default, resource operation timeout after 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). This caused some long running operations to timeout.
 
-We already added configurable timeouts to [execute](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.4/docs/resources/execute#nested-schema-for-timeouts), [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.4/docs/resources/tag_association#nested-schema-for-timeouts) and [cortex_search_service](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.4/docs/resources/cortex_search_service#nested-schema-for-timeouts) before. Now, we also allow setting them on all other resources.
+We already added configurable timeouts to [execute](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.4/docs/resources/execute#nested-schema-for-timeouts), [tag_association](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.4/docs/resources/tag_association#nested-schema-for-timeouts) and [cortex_search_service](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.4/docs/resources/cortex_search_service#nested-schema-for-timeouts) before. Now, we also allow setting them on all other resources.
 Data sources will be supported in the future.
 
 Read more about resource timeouts in the [Terraform documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts).
 
-References: [#3355](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3355)
+References: [#3355](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3355)
 
 ## v1.0.4 ➞ v1.0.5
 
