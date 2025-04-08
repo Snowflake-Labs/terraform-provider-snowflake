@@ -1325,22 +1325,12 @@ func TestAcc_GrantPrivilegesToDatabaseRole_CreateNotebooks(t *testing.T) {
 
 func queriedPrivilegesToDatabaseRoleEqualTo(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
 	return queriedPrivilegesEqualTo(func() ([]sdk.Grant, error) {
-		// return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-		// 	To: &sdk.ShowGrantsTo{
-		// 		DatabaseRole: databaseRoleName,
-		// 	},
-		// })
 		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, privileges...)
 }
 
 func queriedPrivilegesToDatabaseRoleContainAtLeast(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
 	return queriedPrivilegesContainAtLeast(func() ([]sdk.Grant, error) {
-		// return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-		// 	To: &sdk.ShowGrantsTo{
-		// 		DatabaseRole: databaseRoleName,
-		// 	},
-		// })
 		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, databaseRoleName, privileges...)
 }
