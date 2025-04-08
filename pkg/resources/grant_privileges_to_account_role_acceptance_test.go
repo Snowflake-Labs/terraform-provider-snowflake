@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -149,8 +148,8 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|false|ALL|OnAccount", roleFullyQualifiedName)),
-					queriedAccountRolePrivilegesContainAtLeast(role.ID(), string(sdk.GlobalPrivilegeCreateDatabase)),
-					queriedAccountRolePrivilegesDoNotContain(role.ID(), string(sdk.GlobalPrivilegeManageListingAutoFulfillment), string(sdk.GlobalPrivilegeManageOrganizationSupportCases), string(sdk.GlobalPrivilegeManagePolarisConnections)),
+					queriedAccountRolePrivilegesContainAtLeast(t, role.ID(), string(sdk.GlobalPrivilegeCreateDatabase)),
+					queriedAccountRolePrivilegesDoNotContain(t, role.ID(), string(sdk.GlobalPrivilegeManageListingAutoFulfillment), string(sdk.GlobalPrivilegeManageOrganizationSupportCases), string(sdk.GlobalPrivilegeManagePolarisConnections)),
 				),
 				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
 			},
@@ -163,9 +162,12 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccount_gh3507(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "privileges.#"),
 					resource.TestCheckResourceAttr(resourceName, "on_account", "true"),
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|false|true|ALL|OnAccount", roleFullyQualifiedName)),
+					queriedAccountRolePrivilegesContainAtLeast(t, role.ID(), string(sdk.GlobalPrivilegeCreateDatabase)),
+					queriedAccountRolePrivilegesDoNotContain(t, role.ID(), string(sdk.GlobalPrivilegeManageListingAutoFulfillment), string(sdk.GlobalPrivilegeManageOrganizationSupportCases), string(sdk.GlobalPrivilegeManagePolarisConnections)),
 				),
-				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
+				// We expect the plan to be non-empty because in this step we set `always_apply`, causing the permadiff.
 				ExpectNonEmptyPlan: true,
+				// Due to limitations in the plugin SDK, returned warnings can not be asserted (see https://github.com/hashicorp/terraform-plugin-testing/issues/69).
 			},
 		},
 	})
@@ -1217,6 +1219,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 					sdk.AccountObjectPrivilegeModify.String(),
 				}, ""),
 				Check: queriedAccountRolePrivilegesEqualTo(
+					t,
 					roleId,
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -1226,6 +1229,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToAccountRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
 				Check: queriedAccountRolePrivilegesContainAtLeast(
+					t,
 					roleId,
 					sdk.AccountObjectPrivilegeCreateDatabaseRole.String(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -1241,6 +1245,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				}, ""),
 				Check: queriedAccountRolePrivilegesEqualTo(
+					t,
 					roleId,
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
@@ -1253,6 +1258,7 @@ func TestAcc_GrantPrivilegesToAccountRole_UpdatePrivileges_SnowflakeChecked(t *t
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				}, schemaId.Name()),
 				Check: queriedAccountRolePrivilegesEqualTo(
+					t,
 					roleId,
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
@@ -1885,33 +1891,21 @@ func createSharedDatabaseOnSecondaryAccount(t *testing.T) sdk.ExternalObjectIden
 	return sdk.NewExternalObjectIdentifier(acc.SecondaryTestClient().Account.GetAccountIdentifier(t), share.ID())
 }
 
-func queriedAccountRolePrivilegesEqualTo(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesEqualTo(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				Role: roleName,
-			},
-		})
+func queriedAccountRolePrivilegesEqualTo(t *testing.T, roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesEqualTo(func() ([]sdk.Grant, error) {
+		return acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleName)
 	}, privileges...)
 }
 
-func queriedAccountRolePrivilegesContainAtLeast(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesContainAtLeast(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				Role: roleName,
-			},
-		})
+func queriedAccountRolePrivilegesContainAtLeast(t *testing.T, roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesContainAtLeast(func() ([]sdk.Grant, error) {
+		return acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleName)
 	}, roleName, privileges...)
 }
 
-func queriedAccountRolePrivilegesDoNotContain(roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesDoNotContain(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				Role: roleName,
-			},
-		})
+func queriedAccountRolePrivilegesDoNotContain(t *testing.T, roleName sdk.AccountObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesDoNotContain(func() ([]sdk.Grant, error) {
+		return acc.TestClient().Grant.ShowGrantsToAccountRole(t, roleName)
 	}, privileges...)
 }
 

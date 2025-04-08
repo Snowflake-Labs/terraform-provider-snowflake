@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -857,6 +856,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeModify.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
+					t,
 					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -866,6 +866,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
 				Check: queriedPrivilegesToDatabaseRoleContainAtLeast(
+					t,
 					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeCreateDatabaseRole.String(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -881,6 +882,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
+					t,
 					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
@@ -893,6 +895,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				}, schemaId.Name()),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
+					t,
 					databaseRole.ID(),
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
@@ -1320,23 +1323,25 @@ func TestAcc_GrantPrivilegesToDatabaseRole_CreateNotebooks(t *testing.T) {
 	})
 }
 
-func queriedPrivilegesToDatabaseRoleEqualTo(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesEqualTo(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				DatabaseRole: databaseRoleName,
-			},
-		})
+func queriedPrivilegesToDatabaseRoleEqualTo(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesEqualTo(func() ([]sdk.Grant, error) {
+		// return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+		// 	To: &sdk.ShowGrantsTo{
+		// 		DatabaseRole: databaseRoleName,
+		// 	},
+		// })
+		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, privileges...)
 }
 
-func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesContainAtLeast(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				DatabaseRole: databaseRoleName,
-			},
-		})
+func queriedPrivilegesToDatabaseRoleContainAtLeast(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	return queriedPrivilegesContainAtLeast(func() ([]sdk.Grant, error) {
+		// return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
+		// 	To: &sdk.ShowGrantsTo{
+		// 		DatabaseRole: databaseRoleName,
+		// 	},
+		// })
+		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, databaseRoleName, privileges...)
 }
 
