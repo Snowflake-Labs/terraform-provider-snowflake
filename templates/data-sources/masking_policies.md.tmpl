@@ -19,4 +19,6 @@ description: |-
 {{ tffile (printf "examples/data-sources/%s/data-source.tf" .Name)}}
 {{- end }}
 
+-> **Note** If a field has a default value, it is shown next to the type in the schema.
+
 {{ .SchemaMarkdown | trimspace }}

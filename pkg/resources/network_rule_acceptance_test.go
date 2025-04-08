@@ -6,17 +6,20 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-const (
-	networkRuleComment = "CREATED BY A TERRAFORM ACCEPTANCE TEST"
-)
-
 func TestAcc_NetworkRule(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -28,12 +31,12 @@ func TestAcc_NetworkRule(t *testing.T) {
 		Steps: []resource.TestStep{
 			// basic
 			{
-				Config: networkRuleIpv4(name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: networkRuleIpv4(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_rule.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_network_rule.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_network_rule.test", "comment", networkRuleComment),
+					resource.TestCheckResourceAttr("snowflake_network_rule.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "type", "IPV4"),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "mode", "INGRESS"),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "value_list.#", "2"),
@@ -47,12 +50,12 @@ func TestAcc_NetworkRule(t *testing.T) {
 			},
 			//// CHANGE PROPERTIES - set to empty
 			{
-				Config: networkRuleIpv4Empty(name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: networkRuleIpv4Empty(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_rule.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_network_rule.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_network_rule.test", "comment", networkRuleComment),
+					resource.TestCheckResourceAttr("snowflake_network_rule.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "type", "IPV4"),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "mode", "INGRESS"),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "value_list.#", "0"),
@@ -65,12 +68,12 @@ func TestAcc_NetworkRule(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: networkRuleHost(name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: networkRuleHost(id, comment),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_network_rule.test", "name", name),
+					resource.TestCheckResourceAttr("snowflake_network_rule.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_network_rule.test", "comment", networkRuleComment),
+					resource.TestCheckResourceAttr("snowflake_network_rule.test", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "type", "HOST_PORT"),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "mode", "EGRESS"),
 					resource.TestCheckResourceAttr("snowflake_network_rule.test", "value_list.#", "2"),
@@ -80,52 +83,56 @@ func TestAcc_NetworkRule(t *testing.T) {
 	})
 }
 
-func networkRuleIpv4(name string, database string, schema string) string {
+func networkRuleIpv4(id sdk.SchemaObjectIdentifier, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_network_rule" "test" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	database        = "%[1]s"
+	schema          = "%[2]s"
+	name            = "%[3]s"
+	comment         = "%[4]s"
     type            = "IPV4"
     mode			= "INGRESS"
 	value_list      = ["192.168.0.100/24", "29.254.123.20"]
 }
-`, name, database, schema, networkRuleComment)
+`, id.DatabaseName(), id.SchemaName(), id.Name(), comment)
 }
 
-func networkRuleIpv4Empty(name string, database string, schema string) string {
+func networkRuleIpv4Empty(id sdk.SchemaObjectIdentifier, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_network_rule" "test" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	database        = "%[1]s"
+	schema          = "%[2]s"
+	name            = "%[3]s"
+	comment         = "%[4]s"
     type            = "IPV4"
     mode			= "INGRESS"
 	value_list      = []
 }
-`, name, database, schema, networkRuleComment)
+`, id.DatabaseName(), id.SchemaName(), id.Name(), comment)
 }
 
-func networkRuleHost(name string, database string, schema string) string {
+func networkRuleHost(id sdk.SchemaObjectIdentifier, comment string) string {
 	return fmt.Sprintf(`
 resource "snowflake_network_rule" "test" {
-	name            = "%v"
-	database        = "%v"
-	schema          = "%v"
-	comment         = "%v"
+	database        = "%[1]s"
+	schema          = "%[2]s"
+	name            = "%[3]s"
+	comment         = "%[4]s"
     type            = "HOST_PORT"
     mode			= "EGRESS"
 	value_list      = ["example.com", "company.com:443"]
 }
-`, name, database, schema, networkRuleComment)
+`, id.DatabaseName(), id.SchemaName(), id.Name(), comment)
 }
 
 func TestAcc_NetworkRule_migrateFromVersion_0_94_1(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_network_rule.test"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
+
+	resourceName := "snowflake_network_rule.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -134,14 +141,9 @@ func TestAcc_NetworkRule_migrateFromVersion_0_94_1(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: networkRuleIpv4(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            networkRuleIpv4(id, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
@@ -150,7 +152,7 @@ func TestAcc_NetworkRule_migrateFromVersion_0_94_1(t *testing.T) {
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   networkRuleIpv4(id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config:                   networkRuleIpv4(id, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
 					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),

@@ -250,9 +250,11 @@ func TestAcc_Secrets_Filtering(t *testing.T) {
 
 	secretsModelWithLike := datasourcemodel.Secrets("test").
 		WithLike(idOne.Name()).
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(allReferences...)
 	secretsModelWithLikePrefix := datasourcemodel.Secrets("test").
 		WithLike(prefix + "%").
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(allReferences...)
 	secretsModelInSchema := datasourcemodel.Secrets("test").
 		WithInSchema(idFive.SchemaId()).

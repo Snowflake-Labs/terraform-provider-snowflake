@@ -6,13 +6,18 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
@@ -27,7 +32,7 @@ func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				Config: googleAutoConfig(id.Name(), gcpPubsubSubscriptionName),
+				Config: googleAutoConfig(id, gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
@@ -40,7 +45,7 @@ func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
 			},
 			// change parameters
 			{
-				Config: googleAutoConfig(id.Name(), gcpOtherPubsubSubscriptionName),
+				Config: googleAutoConfig(id, gcpOtherPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
@@ -62,7 +67,11 @@ func TestAcc_NotificationIntegration_AutoGoogle(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_AutoAzure(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
 	const azureStorageQueuePrimaryUri = "azure://great-bucket/great-path/"
 	const azureOtherStorageQueuePrimaryUri = "azure://great-bucket/other-great-path/"
 	const azureTenantId = "00000000-0000-0000-0000-000000000000"
@@ -77,26 +86,26 @@ func TestAcc_NotificationIntegration_AutoAzure(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				Config: azureAutoConfig(accName, azureStorageQueuePrimaryUri, azureTenantId),
+				Config: azureAutoConfig(id, azureStorageQueuePrimaryUri, azureTenantId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AZURE_STORAGE_QUEUE"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", azureStorageQueuePrimaryUri),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_tenant_id", azureTenantId),
-					resource.TestCheckNoResourceAttr("snowflake_notification_integration.test", "direction"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
 				),
 			},
 			// change parameters
 			{
-				Config: azureAutoConfig(accName, azureOtherStorageQueuePrimaryUri, azureOtherTenantId),
+				Config: azureAutoConfig(id, azureOtherStorageQueuePrimaryUri, azureOtherTenantId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AZURE_STORAGE_QUEUE"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_storage_queue_primary_uri", azureOtherStorageQueuePrimaryUri),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "azure_tenant_id", azureOtherTenantId),
-					resource.TestCheckNoResourceAttr("snowflake_notification_integration.test", "direction"),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
 				),
 			},
 			// IMPORT
@@ -112,7 +121,11 @@ func TestAcc_NotificationIntegration_AutoAzure(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
 	const awsOtherSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:OtherTopic"
 	const awsSnsRoleArn = "arn:aws:iam::000000000001:/role/test"
@@ -127,10 +140,10 @@ func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				Config: amazonPushConfig(accName, awsSnsTopicArn, awsSnsRoleArn),
+				Config: amazonPushConfig(id, awsSnsTopicArn, awsSnsRoleArn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AWS_SNS"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_topic_arn", awsSnsTopicArn),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_role_arn", awsSnsRoleArn),
@@ -141,10 +154,10 @@ func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
 			},
 			// change parameters
 			{
-				Config: amazonPushConfig(accName, awsOtherSnsTopicArn, awsOtherSnsRoleArn),
+				Config: amazonPushConfig(id, awsOtherSnsTopicArn, awsOtherSnsRoleArn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AWS_SNS"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_topic_arn", awsOtherSnsTopicArn),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_role_arn", awsOtherSnsRoleArn),
@@ -164,7 +177,10 @@ func TestAcc_NotificationIntegration_PushAmazon(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_changeNotificationProvider(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 	const awsSnsTopicArn = "arn:aws:sns:us-east-2:123456789012:MyTopic"
@@ -179,10 +195,10 @@ func TestAcc_NotificationIntegration_changeNotificationProvider(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				Config: googleAutoConfig(accName, gcpPubsubSubscriptionName),
+				Config: googleAutoConfig(id, gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "GCP_PUBSUB"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "gcp_pubsub_subscription_name", gcpPubsubSubscriptionName),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
@@ -191,10 +207,10 @@ func TestAcc_NotificationIntegration_changeNotificationProvider(t *testing.T) {
 			},
 			// change provider to AWS
 			{
-				Config: amazonPushConfig(accName, awsSnsTopicArn, awsSnsRoleArn),
+				Config: amazonPushConfig(id, awsSnsTopicArn, awsSnsRoleArn),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "notification_provider", "AWS_SNS"),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_topic_arn", awsSnsTopicArn),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "aws_sns_role_arn", awsSnsRoleArn),
@@ -220,7 +236,10 @@ func TestAcc_NotificationIntegration_PushAzure(t *testing.T) {
 
 // proves issue https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2501
 func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 
@@ -232,24 +251,19 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: googleAutoConfig(accName, gcpPubsubSubscriptionName),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            googleAutoConfig(id, gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   googleAutoConfigWithoutDirection(accName, gcpPubsubSubscriptionName),
+				Config:                   googleAutoConfigWithoutDirection(id, gcpPubsubSubscriptionName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -257,7 +271,7 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "direction", "INBOUND"),
 				),
 			},
@@ -266,7 +280,10 @@ func TestAcc_NotificationIntegration_migrateFromVersion085(t *testing.T) {
 }
 
 func TestAcc_NotificationIntegration_migrateFromVersion085_explicitType(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	const gcpPubsubSubscriptionName = "projects/project-1234/subscriptions/sub2"
 
@@ -278,92 +295,82 @@ func TestAcc_NotificationIntegration_migrateFromVersion085_explicitType(t *testi
 		CheckDestroy: acc.CheckDestroy(t, resources.NotificationIntegration),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: googleAutoConfigWithExplicitType(accName, gcpPubsubSubscriptionName),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            googleAutoConfigWithExplicitType(id, gcpPubsubSubscriptionName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   googleAutoConfig(accName, gcpPubsubSubscriptionName),
+				Config:                   googleAutoConfig(id, gcpPubsubSubscriptionName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_notification_integration.test", "name", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func googleAutoConfig(name string, gcpPubsubSubscriptionName string) string {
-	s := `
+func googleAutoConfig(id sdk.AccountObjectIdentifier, gcpPubsubSubscriptionName string) string {
+	return fmt.Sprintf(`
 resource "snowflake_notification_integration" "test" {
-  name                            = "%s"
-  notification_provider           = "%s"
-  gcp_pubsub_subscription_name    = "%s"
+  name                            = "%[1]s"
+  notification_provider           = "GCP_PUBSUB"
+  gcp_pubsub_subscription_name    = "%[2]s"
   direction                       = "INBOUND"
 }
-`
-	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
+`, id.Name(), gcpPubsubSubscriptionName)
 }
 
-func googleAutoConfigWithoutDirection(name string, gcpPubsubSubscriptionName string) string {
-	s := `
+func googleAutoConfigWithoutDirection(id sdk.AccountObjectIdentifier, gcpPubsubSubscriptionName string) string {
+	return fmt.Sprintf(`
 resource "snowflake_notification_integration" "test" {
-  name                            = "%s"
-  notification_provider           = "%s"
-  gcp_pubsub_subscription_name    = "%s"
+  name                            = "%[1]s"
+  notification_provider           = "GCP_PUBSUB"
+  gcp_pubsub_subscription_name    = "%[2]s"
 }
-`
-	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
+`, id.Name(), gcpPubsubSubscriptionName)
 }
 
-func googleAutoConfigWithExplicitType(name string, gcpPubsubSubscriptionName string) string {
-	s := `
+func googleAutoConfigWithExplicitType(id sdk.AccountObjectIdentifier, gcpPubsubSubscriptionName string) string {
+	return fmt.Sprintf(`
 resource "snowflake_notification_integration" "test" {
   type                            = "QUEUE"
-  name                            = "%s"
-  notification_provider           = "%s"
-  gcp_pubsub_subscription_name    = "%s"
+  name                            = "%[1]s"
+  notification_provider           = "GCP_PUBSUB"
+  gcp_pubsub_subscription_name    = "%[2]s"
   direction                       = "INBOUND"
 }
-`
-	return fmt.Sprintf(s, name, "GCP_PUBSUB", gcpPubsubSubscriptionName)
+`, id.Name(), gcpPubsubSubscriptionName)
 }
 
-func azureAutoConfig(name string, azureStorageQueuePrimaryUri string, azureTenantId string) string {
-	s := `
+func azureAutoConfig(id sdk.AccountObjectIdentifier, azureStorageQueuePrimaryUri string, azureTenantId string) string {
+	return fmt.Sprintf(`
 resource "snowflake_notification_integration" "test" {
-  name                            = "%s"
-  notification_provider			  = "%s"
-  azure_storage_queue_primary_uri = "%s"
-  azure_tenant_id                 = "%s"
+  name                            = "%[1]s"
+  notification_provider			  = "AZURE_STORAGE_QUEUE"
+  azure_storage_queue_primary_uri = "%[2]s"
+  azure_tenant_id                 = "%[3]s"
 }
-`
-	return fmt.Sprintf(s, name, "AZURE_STORAGE_QUEUE", azureStorageQueuePrimaryUri, azureTenantId)
+`, id.Name(), azureStorageQueuePrimaryUri, azureTenantId)
 }
 
-func amazonPushConfig(name string, awsSnsTopicArn string, awsSnsRoleArn string) string {
-	s := `
+func amazonPushConfig(id sdk.AccountObjectIdentifier, awsSnsTopicArn string, awsSnsRoleArn string) string {
+	return fmt.Sprintf(`
 resource "snowflake_notification_integration" "test" {
-  name                            = "%s"
-  notification_provider           = "%s"
-  aws_sns_topic_arn               = "%s"
-  aws_sns_role_arn                = "%s"
+  name                            = "%[1]s"
+  notification_provider           = "AWS_SNS"
+  aws_sns_topic_arn               = "%[2]s"
+  aws_sns_role_arn                = "%[3]s"
   direction                       = "OUTBOUND"
 }
-`
-	return fmt.Sprintf(s, name, "AWS_SNS", awsSnsTopicArn, awsSnsRoleArn)
+`, id.Name(), awsSnsTopicArn, awsSnsRoleArn)
 }

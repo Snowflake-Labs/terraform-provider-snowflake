@@ -30,6 +30,9 @@ import (
 )
 
 func TestAcc_User_BasicFlows(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -150,12 +153,13 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 				ResourceName:            userModelNoAttributesRenamed.ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password"},
+				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "login_name", "display_name", "disabled", "must_change_password", "default_secondary_roles_option"},
 				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedUserResource(t, id2.Name()).
 						HasLoginNameString(strings.ToUpper(id.Name())).
 						HasDisplayNameString(id.Name()).
 						HasDisabled(false).
+						HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionAll).
 						HasMustChangePassword(false),
 				),
 			},
@@ -286,6 +290,9 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2353 has been fixed
 // done on user, to not interfere with other parallel tests on the same account
 func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("u", userId.Name())
@@ -333,6 +340,9 @@ func TestAcc_User_RemovedOutsideOfTerraform(t *testing.T) {
 // The problem was with a dot in user identifier.
 // Before the fix it results in panic: interface conversion: sdk.ObjectIdentifier is sdk.DatabaseObjectIdentifier, not sdk.AccountObjectIdentifier error.
 func TestAcc_User_issue2058(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifierContaining(".")
 
 	userModel1 := model.User("w", userId.Name())
@@ -357,7 +367,9 @@ func TestAcc_User_issue2058(t *testing.T) {
 
 func TestAcc_User_AllParameters(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicy(t)
+	acc.TestAccPreCheck(t)
+
+	networkPolicy, networkPolicyCleanup := acc.TestClient().NetworkPolicy.CreateNetworkPolicyNotEmpty(t)
 	t.Cleanup(networkPolicyCleanup)
 
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
@@ -657,6 +669,9 @@ func TestAcc_User_AllParameters(t *testing.T) {
 }
 
 func TestAcc_User_issue2836(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	defaultRole := "SOME ROLE WITH SPACE case sensitive"
 	defaultRoleQuoted := fmt.Sprintf(`"%s"`, defaultRole)
@@ -684,6 +699,9 @@ func TestAcc_User_issue2836(t *testing.T) {
 }
 
 func TestAcc_User_issue2970(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	pass := random.Password()
 	key, _ := random.GenerateRSAPublicKey(t)
@@ -750,6 +768,9 @@ func TestAcc_User_issue2970(t *testing.T) {
 }
 
 func TestAcc_User_issue1572(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.UserWithDefaultMeta(userId.Name())
@@ -793,6 +814,9 @@ func TestAcc_User_issue1572(t *testing.T) {
 }
 
 func TestAcc_User_issue1535_withNullPassword(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	pass := random.Password()
 
@@ -834,6 +858,9 @@ func TestAcc_User_issue1535_withNullPassword(t *testing.T) {
 }
 
 func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	pass := random.Password()
 
@@ -874,6 +901,9 @@ func TestAcc_User_issue1535_withRemovedPassword(t *testing.T) {
 }
 
 func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelWithoutDaysToExpiry := model.UserWithDefaultMeta(userId.Name())
@@ -973,6 +1003,9 @@ func TestAcc_User_issue1155_handleChangesToDaysToExpiry(t *testing.T) {
 }
 
 func TestAcc_User_handleExternalTypeChange(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.UserWithDefaultMeta(userId.Name())
@@ -1047,6 +1080,11 @@ func TestAcc_User_handleExternalTypeChange(t *testing.T) {
 }
 
 func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
+	t.Skip("Ordering needs to be changed after BCR 2024_08 general availability.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelEmpty := model.UserWithDefaultMeta(userId.Name())
@@ -1194,6 +1232,9 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles(t *testing.T) {
 }
 
 func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelEmpty := model.UserWithDefaultMeta(userId.Name())
@@ -1214,9 +1255,6 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
 		Steps: []resource.TestStep{
 			// 1. create without default secondary roles option set (DEFAULT will be used)
 			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-				},
 				Config: config.FromModels(t, userModelEmpty),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelEmpty.ResourceReference()).HasDefaultSecondaryRolesOption(sdk.SecondaryRolesOptionDefault),
@@ -1338,54 +1376,10 @@ func TestAcc_User_handleChangesToDefaultSecondaryRoles_bcr202408(t *testing.T) {
 	})
 }
 
-func TestAcc_User_migrateFromVersion094_noDefaultSecondaryRolesSet(t *testing.T) {
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	userModel := model.UserWithDefaultMeta(id.Name())
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.User),
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: config.FromModels(t, userModel),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles.#", "0"),
-				),
-			},
-			{
-				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModels(t, userModel),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						// we do not have a plancheck yet to validate no changes on the given field; this is a current alternative
-						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles", tfjson.ActionUpdate, nil, nil),
-						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionDefault))),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(userModel.ResourceReference(), "default_secondary_roles_option", string(sdk.SecondaryRolesOptionDefault)),
-					resource.TestCheckNoResourceAttr(userModel.ResourceReference(), "default_secondary_roles"),
-				),
-			},
-		},
-	})
-}
-
 func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelWithOptionAll := model.UserWithDefaultMeta(id.Name()).WithDefaultSecondaryRolesOptionEnum(sdk.SecondaryRolesOptionAll)
@@ -1398,13 +1392,8 @@ func TestAcc_User_migrateFromVersion094_defaultSecondaryRolesSet(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
 				Config: fmt.Sprintf(`
 resource "snowflake_user" "test" {
 	name = "%s"
@@ -1438,6 +1427,9 @@ resource "snowflake_user" "test" {
 }
 
 func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("w", id.Name()).
@@ -1475,6 +1467,9 @@ func TestAcc_User_ParameterValidationsAndDiffSuppressions(t *testing.T) {
 }
 
 func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
@@ -1591,6 +1586,9 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 // https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
 // https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
 func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModelNoAttributes := model.User("w", userId.Name())
@@ -1605,9 +1603,6 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-				},
 				Config: config.FromModels(t, userModelNoAttributes),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelNoAttributes.ResourceReference()).
@@ -1628,7 +1623,10 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_gh3125(t *testing.T) {
 // https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
 // https://docs.snowflake.com/release-notes/bcr-bundles/2024_08/bcr-1692
 // https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3125
-func TestAcc_User_handleChangesToShowUsers_bcr202408_migration(t *testing.T) {
+func TestAcc_User_handleChangesToShowUsers_bcr202408_generallyEnabled(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	userModel := model.User("w", userId.Name())
@@ -1641,38 +1639,61 @@ func TestAcc_User_handleChangesToShowUsers_bcr202408_migration(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.User),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.97.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				Config:    config.FromModels(t, userModel),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				Config:            config.FromModels(t, userModel),
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
 				),
 			},
 			{
-				PreConfig: func() {
-					acc.TestClient().BcrBundles.EnableBcrBundle(t, "2024_08")
-					func() { acc.UnsetConfigPathEnv(t) }()
-				},
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModels(t, userModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						planchecks.ExpectDrift(userModel.ResourceReference(), "default_secondary_roles_option", sdk.String(string(sdk.SecondaryRolesOptionDefault)), sdk.String(string(sdk.SecondaryRolesOptionAll))),
-						planchecks.ExpectChange(userModel.ResourceReference(), "default_secondary_roles_option", tfjson.ActionUpdate, sdk.String(string(sdk.SecondaryRolesOptionAll)), sdk.String(string(sdk.SecondaryRolesOptionDefault))),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModel.ResourceReference()).
 						HasAllDefaults(userId, sdk.SecondaryRolesOptionDefault),
+				),
+			},
+		},
+	})
+}
+
+// https://docs.snowflake.com/en/release-notes/bcr-bundles/2024_08/bcr-1798
+func TestAcc_User_handleChangesToShowUsers_bcr202408_defaults(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+
+	userModel := model.User("w", userId.Name())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.97.0"),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				Config:            config.FromModels(t, userModel),
+				ExpectError:       regexp.MustCompile("\"default_namespace\": converting NULL to string is unsupported"),
+			},
+			{
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
+				PreConfig: func() {
+					acc.UnsetConfigPathEnv(t)
+				},
+				Config: config.FromModels(t, userModel),
+				Check: assertThat(t,
+					resourceassert.UserResource(t, userModel.ResourceReference()).
+						HasNoDefaultNamespace(),
 				),
 			},
 		},

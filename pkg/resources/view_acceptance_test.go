@@ -31,9 +31,10 @@ import (
 
 // TODO(SNOW-1423486): Fix using warehouse in all tests and remove unsetting testenvs.ConfigureClientOnce
 func TestAcc_View_basic(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	rowAccessPolicy, rowAccessPolicyCleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeNumber)
 	t.Cleanup(rowAccessPolicyCleanup)
@@ -379,11 +380,14 @@ func TestAcc_View_basic(t *testing.T) {
 }
 
 func TestAcc_View_recursive(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	basicView := config.Variables{
 		"name":         config.StringVariable(id.Name()),
 		"database":     config.StringVariable(id.DatabaseName()),
@@ -434,15 +438,20 @@ func TestAcc_View_recursive(t *testing.T) {
 	})
 }
 
+// TODO [next PR]: currently this test is always skipped, try to fix the set up
 func TestAcc_View_temporary(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	// we use one configured client, so a temporary view should be visible after creation
 	_ = testenvs.GetOrSkipTest(t, testenvs.ConfigureClientOnce)
-	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -464,17 +473,17 @@ func TestAcc_View_temporary(t *testing.T) {
 }
 
 func TestAcc_View_complete(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceId := helpers.EncodeResourceIdentifier(id)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	table, tableCleanup := acc.TestClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
 		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
 		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
 	})
 	t.Cleanup(tableCleanup)
-	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
+
 	rowAccessPolicy, rowAccessPolicyCleanup := acc.TestClient().RowAccessPolicy.CreateRowAccessPolicyWithDataType(t, sdk.DataTypeNumber)
 	t.Cleanup(rowAccessPolicyCleanup)
 
@@ -506,6 +515,8 @@ end;;
 	)
 	t.Cleanup(maskingPolicyCleanup)
 
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
 	functionId := sdk.NewSchemaObjectIdentifier("SNOWFLAKE", "CORE", "AVG")
 
 	m := func() map[string]config.Variable {
@@ -535,6 +546,7 @@ end;;
 			"data_metric_schedule_using_cron": config.StringVariable("5 * * * * UTC"),
 		}
 	}
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -593,8 +605,8 @@ end;;
 				ConfigVariables: m(),
 				ResourceName:    "snowflake_view.test",
 				ImportState:     true,
-				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "name", id.Name())),
-					resourceassert.ImportedViewResource(t, resourceId).
+				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
+					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
 						HasNameString(id.Name()).
 						HasStatementString(statement).
 						HasDatabaseString(id.DatabaseName()).
@@ -607,17 +619,17 @@ end;;
 						HasDataMetricFunctionLength(1).
 						HasAggregationPolicyLength(1).
 						HasRowAccessPolicyLength(1),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.0.using_cron", "5 * * * * UTC")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_schedule.0.minutes", "0")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.on.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "data_metric_function.0.on.0", "ID")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "aggregation_policy.0.entity_key.0", "ID")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.#", "1")),
-					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(resourceId, "row_access_policy.0.on.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "data_metric_schedule.0.using_cron", "5 * * * * UTC")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "data_metric_schedule.0.minutes", "0")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "data_metric_function.0.function_name", functionId.FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "data_metric_function.0.on.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "data_metric_function.0.on.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "aggregation_policy.0.policy_name", aggregationPolicy.FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "aggregation_policy.0.entity_key.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "aggregation_policy.0.entity_key.0", "ID")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "row_access_policy.0.policy_name", rowAccessPolicy.ID().FullyQualifiedName())),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "row_access_policy.0.on.#", "1")),
+					assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "row_access_policy.0.on.0", "ID")),
 				),
 			},
 		},
@@ -625,18 +637,17 @@ end;;
 }
 
 func TestAcc_View_columns(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	table, tableCleanup := acc.TestClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
 		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
 		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
 		*sdk.NewTableColumnRequest("bar", sdk.DataTypeNumber),
 	})
 	t.Cleanup(tableCleanup)
-	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
 
 	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
 		[]sdk.TableColumnSignature{
@@ -659,7 +670,9 @@ end;;
 	projectionPolicy, projectionPolicyCleanup := acc.TestClient().ProjectionPolicy.CreateProjectionPolicy(t)
 	t.Cleanup(projectionPolicyCleanup)
 
-	// generators currently don't handle lists of objects, so use the old way
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
+
 	basicView := func(columns ...string) config.Variables {
 		return config.Variables{
 			"name":      config.StringVariable(id.Name()),
@@ -771,9 +784,10 @@ end;;
 }
 
 func TestAcc_View_columnsWithMaskingPolicyWithoutUsing(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	table, tableCleanup := acc.TestClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
@@ -782,7 +796,6 @@ func TestAcc_View_columnsWithMaskingPolicyWithoutUsing(t *testing.T) {
 		*sdk.NewTableColumnRequest("bar", sdk.DataTypeNumber),
 	})
 	t.Cleanup(tableCleanup)
-	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
 
 	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyWithOptions(t,
 		[]sdk.TableColumnSignature{
@@ -805,7 +818,8 @@ end;;
 	projectionPolicy, projectionPolicyCleanup := acc.TestClient().ProjectionPolicy.CreateProjectionPolicy(t)
 	t.Cleanup(projectionPolicyCleanup)
 
-	// generators currently don't handle lists of objects, so use the old way
+	statement := fmt.Sprintf("SELECT id, foo FROM %s", table.ID().FullyQualifiedName())
+
 	viewWithPolicies := func() config.Variables {
 		conf := config.Variables{
 			"name":      config.StringVariable(id.Name()),
@@ -871,10 +885,15 @@ end;;
 }
 
 func TestAcc_View_Rename(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	viewConfig := func(identifier sdk.SchemaObjectIdentifier) config.Variables {
 		return config.Variables{
 			"name":      config.StringVariable(identifier.Name()),
@@ -927,9 +946,14 @@ func TestAcc_View_Rename(t *testing.T) {
 }
 
 func TestAcc_View_Issue3073(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 	viewModelWithColumns := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement).WithColumnValue(config.SetVariable(
 		config.MapVariable(map[string]config.Variable{
@@ -989,15 +1013,20 @@ func TestAcc_View_Issue3073(t *testing.T) {
 
 // fixes https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3073#issuecomment-2392250469
 func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := `SELECT ROLE_NAME as "role_name", ROLE_OWNER as "role_owner" FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	statementUnquotedColumns := `SELECT ROLE_NAME as role_name, ROLE_OWNER as role_owner FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 	statementUnquotedColumns3 := `SELECT ROLE_NAME as role_name, ROLE_OWNER as role_owner, IS_GRANTABLE as is_grantable FROM INFORMATION_SCHEMA.APPLICABLE_ROLES`
 
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	viewModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statement)
 	viewLowercaseStatementModel := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statementUnquotedColumns)
 	viewLowercaseStatementModel3 := model.View("test", id.DatabaseName(), id.Name(), id.SchemaName(), statementUnquotedColumns3)
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -1046,10 +1075,14 @@ func TestAcc_View_IncorrectColumnsWithOrReplace(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrants(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	viewConfig := func(copyGrants bool) config.Variables {
 		return config.Variables{
 			"name":        config.StringVariable(id.Name()),
@@ -1114,10 +1147,14 @@ func TestAcc_ViewChangeCopyGrants(t *testing.T) {
 }
 
 func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
 	viewConfig := func(copyGrants bool) config.Variables {
 		return config.Variables{
 			"name":        config.StringVariable(id.Name()),
@@ -1179,16 +1216,18 @@ func TestAcc_ViewChangeCopyGrantsReversed(t *testing.T) {
 }
 
 func TestAcc_View_CheckGrantsAfterRecreation(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	table, cleanupTable := acc.TestClient().Table.Create(t)
 	t.Cleanup(cleanupTable)
 
 	role, cleanupRole := acc.TestClient().Role.CreateRole(t)
 	t.Cleanup(cleanupRole)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1230,143 +1269,6 @@ func TestAcc_View_CheckGrantsAfterRecreation(t *testing.T) {
 	})
 }
 
-func TestAcc_View_Issue2640(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	statement := fmt.Sprintf("%s\n\tunion\n%s\n", part1, part2)
-	roleId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.View),
-		Steps: []resource.TestStep{
-			{
-				Config: viewConfigWithMultilineUnionStatement(id, part1, part2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_view.test", "statement", statement),
-					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
-				),
-			},
-			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
-			{
-				PreConfig: func() {
-					role, roleCleanup := acc.TestClient().Role.CreateRoleWithIdentifier(t, roleId)
-					t.Cleanup(roleCleanup)
-					acc.TestClient().Grant.GrantOwnershipOnSchemaObjectToAccountRole(t, role.ID(), sdk.ObjectTypeView, id, sdk.Revoke)
-				},
-				ResourceName: "snowflake_view.test",
-				ImportState:  true,
-				ExpectError:  regexp.MustCompile("`text` is missing; if the view is secure then the role used by the provider must own the view"),
-			},
-			// import with the proper role
-			{
-				PreConfig: func() {
-					acc.TestClient().Grant.GrantOwnershipOnSchemaObjectToAccountRole(t, snowflakeroles.Accountadmin, sdk.ObjectTypeView, id, sdk.Revoke)
-				},
-				ResourceName: "snowflake_view.test",
-				ImportState:  true,
-				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
-					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
-						HasNameString(id.Name()).
-						HasStatementString(statement).
-						HasDatabaseString(id.DatabaseName()).
-						HasSchemaString(id.SchemaName()),
-				),
-			},
-		},
-	})
-}
-
-func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_view.test"
-	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
-	viewConfig := config.Variables{
-		"name":      config.StringVariable(id.Name()),
-		"database":  config.StringVariable(id.DatabaseName()),
-		"schema":    config.StringVariable(id.SchemaName()),
-		"statement": config.StringVariable(statement),
-		"column": config.SetVariable(
-			config.MapVariable(map[string]config.Variable{
-				"column_name": config.StringVariable("ROLE_NAME"),
-			}),
-			config.MapVariable(map[string]config.Variable{
-				"column_name": config.StringVariable("ROLE_OWNER"),
-			}),
-		),
-	}
-
-	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
-	t.Cleanup(tagCleanup)
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: viewv_0_94_1_WithTags(id, tag.SchemaName, tag.Name, "foo", statement),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.name", tag.Name),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "foo"),
-					resource.TestCheckResourceAttr(resourceName, "or_replace", "true"),
-				),
-			},
-			{
-				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
-				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_View/basic"),
-				ConfigVariables:          viewConfig,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
-					resource.TestCheckNoResourceAttr(resourceName, "or_replace"),
-				),
-			},
-		},
-	})
-}
-
-func viewv_0_94_1_WithTags(id sdk.SchemaObjectIdentifier, tagSchema, tagName, tagValue, statement string) string {
-	s := `
-resource "snowflake_view" "test" {
-	name					= "%[1]s"
-	database				= "%[2]s"
-	schema				    = "%[6]s"
-	statement				= "%[7]s"
-	or_replace				= true
-	tag {
-		name = "%[4]s"
-		value = "%[5]s"
-		schema = "%[3]s"
-		database = "%[2]s"
-	}
-}
-`
-	return fmt.Sprintf(s, id.Name(), id.DatabaseName(), tagSchema, tagName, tagValue, id.SchemaName(), statement)
-}
-
 func viewConfigWithGrants(viewId, tableId sdk.SchemaObjectIdentifier, selectStatement string, roleId sdk.AccountObjectIdentifier, copyGrants bool) string {
 	return fmt.Sprintf(`
 resource "snowflake_view" "test" {
@@ -1402,6 +1304,65 @@ data "snowflake_grants" "grants" {
 	`, viewId.DatabaseName(), viewId.SchemaName(), tableId.Name(), viewId.Name(), selectStatement, roleId.FullyQualifiedName(), copyGrants)
 }
 
+func TestAcc_View_Issue2640(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	role, roleCleanup := acc.TestClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	part1 := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	part2 := "SELECT ROLE_OWNER, ROLE_NAME FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+	statement := fmt.Sprintf("%s\n\tunion\n%s\n", part1, part2)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.View),
+		Steps: []resource.TestStep{
+			{
+				Config: viewConfigWithMultilineUnionStatement(id, part1, part2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_view.test", "name", id.Name()),
+					resource.TestCheckResourceAttr("snowflake_view.test", "statement", statement),
+					resource.TestCheckResourceAttr("snowflake_view.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_view.test", "schema", acc.TestSchemaName),
+				),
+			},
+			// try to import secure view without being its owner (proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2640)
+			{
+				PreConfig: func() {
+					acc.TestClient().Grant.GrantOwnershipOnSchemaObjectToAccountRole(t, role.ID(), sdk.ObjectTypeView, id, sdk.Revoke)
+				},
+				ResourceName: "snowflake_view.test",
+				ImportState:  true,
+				ExpectError:  regexp.MustCompile("`text` is missing; if the view is secure then the role used by the provider must own the view"),
+			},
+			// import with the proper role
+			{
+				PreConfig: func() {
+					acc.TestClient().Grant.GrantOwnershipOnSchemaObjectToAccountRole(t, snowflakeroles.Accountadmin, sdk.ObjectTypeView, id, sdk.Revoke)
+				},
+				ResourceName: "snowflake_view.test",
+				ImportState:  true,
+				ImportStateCheck: assertThatImport(t, assert.CheckImport(importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(id), "name", id.Name())),
+					resourceassert.ImportedViewResource(t, helpers.EncodeResourceIdentifier(id)).
+						HasNameString(id.Name()).
+						HasStatementString(statement).
+						HasDatabaseString(id.DatabaseName()).
+						HasSchemaString(id.SchemaName()),
+				),
+			},
+		},
+	})
+}
+
 func viewConfigWithMultilineUnionStatement(id sdk.SchemaObjectIdentifier, part1 string, part2 string) string {
 	return fmt.Sprintf(`
 resource "snowflake_view" "test" {
@@ -1422,4 +1383,83 @@ SQL
   }
 }
 	`, id.DatabaseName(), id.SchemaName(), id.Name(), part1, part2)
+}
+
+func TestAcc_view_migrateFromVersion_0_94_1(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tag, tagCleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tagCleanup)
+
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	statement := "SELECT ROLE_NAME, ROLE_OWNER FROM INFORMATION_SCHEMA.APPLICABLE_ROLES"
+
+	viewConfig := config.Variables{
+		"name":      config.StringVariable(id.Name()),
+		"database":  config.StringVariable(id.DatabaseName()),
+		"schema":    config.StringVariable(id.SchemaName()),
+		"statement": config.StringVariable(statement),
+		"column": config.SetVariable(
+			config.MapVariable(map[string]config.Variable{
+				"column_name": config.StringVariable("ROLE_NAME"),
+			}),
+			config.MapVariable(map[string]config.Variable{
+				"column_name": config.StringVariable("ROLE_OWNER"),
+			}),
+		),
+	}
+
+	resourceName := "snowflake_view.test"
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+
+		Steps: []resource.TestStep{
+			{
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            viewV0941WithTags(id, tag.ID(), "foo", statement),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckResourceAttr(resourceName, "tag.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.name", tag.Name),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "or_replace", "true"),
+				),
+			},
+			{
+				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				ConfigDirectory:          acc.ConfigurationDirectory("TestAcc_View/basic"),
+				ConfigVariables:          viewConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
+					resource.TestCheckNoResourceAttr(resourceName, "tag.#"),
+					resource.TestCheckNoResourceAttr(resourceName, "or_replace"),
+				),
+			},
+		},
+	})
+}
+
+func viewV0941WithTags(id sdk.SchemaObjectIdentifier, tagId sdk.SchemaObjectIdentifier, tagValue, statement string) string {
+	return fmt.Sprintf(`
+resource "snowflake_view" "test" {
+	database				= "%[1]s"
+	schema				    = "%[2]s"
+	name					= "%[3]s"
+	statement				= "%[6]s"
+	or_replace				= true
+	tag {
+		database = "%[1]s"
+		schema = "%[2]s"
+		name = "%[4]s"
+		value = "%[5]s"
+	}
+}
+`, id.DatabaseName(), id.SchemaName(), id.Name(), tagId.Name(), tagValue, statement)
 }

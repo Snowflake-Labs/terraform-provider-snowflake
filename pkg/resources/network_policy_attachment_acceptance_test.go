@@ -19,11 +19,14 @@ import (
 
 func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
 	user1, user1Cleanup := acc.TestClient().User.CreateUser(t)
 	t.Cleanup(user1Cleanup)
+
 	user2, user2Cleanup := acc.TestClient().User.CreateUser(t)
 	t.Cleanup(user2Cleanup)
+
 	policyId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
@@ -61,6 +64,12 @@ func TestAcc_NetworkPolicyAttachmentUser(t *testing.T) {
 }
 
 func TestAcc_NetworkPolicyAttachmentAccount(t *testing.T) {
+	// TODO [SNOW-2010844]: unskip
+	t.Skip("Skipping as it messes with the account level setting. Should be moved to manual tests and later invoked on a brand new account.")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	policyNameAccount := strings.ToUpper(acctest.RandStringFromCharSet(10, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
@@ -106,7 +115,7 @@ func networkPolicyAttachmentConfigSingle(user1Id sdk.AccountObjectIdentifier, po
 	return fmt.Sprintf(`
 resource "snowflake_network_policy" "test" {
 	name            = %[2]s
-	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
+	allowed_ip_list = ["1.1.1.1", "2.2.2.2"]
 }
 
 resource "snowflake_network_policy_attachment" "test" {
@@ -121,7 +130,7 @@ func networkPolicyAttachmentConfig(user1Id sdk.AccountObjectIdentifier, user2Id 
 	return fmt.Sprintf(`
 resource "snowflake_network_policy" "test" {
 	name            = %[3]s
-	allowed_ip_list = ["192.168.0.100/24", "29.254.123.20"]
+	allowed_ip_list = ["1.1.1.1", "2.2.2.2"]
 }
 
 resource "snowflake_network_policy_attachment" "test" {

@@ -14,12 +14,13 @@ import (
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +28,10 @@ import (
 )
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -38,9 +42,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -54,9 +58,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 				),
 			},
 			{
-				Config: tableAndDataRetentionParameterConfigWithoutLifecycle(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableAndDataRetentionParameterConfigWithoutLifecycle(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -76,7 +80,10 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithoutLifecycle(t *te
 }
 
 func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -87,9 +94,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfig(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -103,9 +110,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 				),
 			},
 			{
-				Config: tableAndDataRetentionParameterConfigWithLifecycle(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableAndDataRetentionParameterConfigWithLifecycle(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -120,9 +127,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 				),
 			},
 			{
-				Config: updatedTableAndDataRetentionParameterConfigWithLifecycle(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: updatedTableAndDataRetentionParameterConfigWithLifecycle(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -141,6 +148,9 @@ func TestAcc_TableWithSeparateDataRetentionObjectParameterWithLifecycle(t *testi
 }
 
 func TestAcc_Table(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	table1Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	table2Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	table3Id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
@@ -154,7 +164,7 @@ func TestAcc_Table(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfig(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig(table1Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
@@ -173,7 +183,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig2(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig2(table1Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
@@ -193,7 +203,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig3(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig3(table2Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
@@ -211,7 +221,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig4(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig4(table2Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
@@ -228,7 +238,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig5(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig5(table2Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
@@ -245,7 +255,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig6(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig6(table1Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
@@ -265,7 +275,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig7(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig7(table1Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
@@ -286,7 +296,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig8(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig8(table1Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
@@ -308,7 +318,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig9CreateTableWithColumnComment(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig9CreateTableWithColumnComment(table2Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
@@ -330,7 +340,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig10AlterTableColumnComment(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig10AlterTableColumnComment(table2Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
@@ -352,7 +362,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig11AlterTableAddColumnWithComment(table2Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig11AlterTableAddColumnWithComment(table2Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "name", table2Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "fully_qualified_name", table2Id.FullyQualifiedName()),
@@ -378,7 +388,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig12CreateTableWithDataRetention(table3Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig12CreateTableWithDataRetention(table3Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "fully_qualified_name", table3Id.FullyQualifiedName()),
@@ -396,7 +406,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig13AlterTableDataRetention(table3Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig13AlterTableDataRetention(table3Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "fully_qualified_name", table3Id.FullyQualifiedName()),
@@ -414,7 +424,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig14AlterTableEnableChangeTracking(table3Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig14AlterTableEnableChangeTracking(table3Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "name", table3Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table3", "fully_qualified_name", table3Id.FullyQualifiedName()),
@@ -432,7 +442,7 @@ func TestAcc_Table(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfig15CreateTableWithChangeTracking(table1Id.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableConfig15CreateTableWithChangeTracking(table1Id),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", table1Id.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", table1Id.FullyQualifiedName()),
@@ -453,12 +463,12 @@ func TestAcc_Table(t *testing.T) {
 	})
 }
 
-func tableAndDataRetentionParameterConfigWithoutLifecycle(name string, databaseName string, schemaName string) string {
-	s := `
+func tableAndDataRetentionParameterConfigWithoutLifecycle(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 
 	column {
@@ -476,22 +486,21 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 	value = "30"
     object_type = "TABLE"
     object_identifier {
-		name = "%s"
-		database = "%s"
-		schema = "%s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+		name     = "%[3]s"
 	}
 	depends_on = [snowflake_table.test_table]
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableAndDataRetentionParameterConfigWithLifecycle(name string, databaseName string, schemaName string) string {
-	s := `
+func tableAndDataRetentionParameterConfigWithLifecycle(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 
 	column {
@@ -514,22 +523,21 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 	value = "30"
     object_type = "TABLE"
     object_identifier {
-		name = "%s"
-		database = "%s"
-		schema = "%s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+		name     = "%[3]s"
 	}
 	depends_on = [snowflake_table.test_table]
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func updatedTableAndDataRetentionParameterConfigWithLifecycle(name string, databaseName string, schemaName string) string {
-	s := `
+func updatedTableAndDataRetentionParameterConfigWithLifecycle(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Table with a separate data retention parameter"
 	column {
 		name = "column1"
@@ -550,22 +558,21 @@ resource "snowflake_object_parameter" "data_retention_in_time" {
 	value = "30"
     object_type = "TABLE"
     object_identifier {
-		name = "%s"
-		database = "%s"
-		schema = "%s"
+		database = "%[1]s"
+		schema   = "%[2]s"
+		name     = "%[3]s"
 	}
 	depends_on = [snowflake_table.test_table]
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig(name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	data_retention_time_in_days = 1
 	comment  = "Terraform acceptance test"
 	column {
@@ -577,16 +584,15 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(16)"
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig2(name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig2(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -598,16 +604,15 @@ resource "snowflake_table" "test_table" {
 		type = "FLOAT"
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig3(table2Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig3(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table2" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	data_retention_time_in_days = 1
 	comment  = "Terraform acceptance test"
 	cluster_by = ["COL1"]
@@ -620,16 +625,15 @@ resource "snowflake_table" "test_table2" {
 		type = "FLOAT"
 	}
 }
-`
-	return fmt.Sprintf(s, table2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig4(table2Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig4(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table2" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	cluster_by = ["COL1","\"col2\""]
@@ -642,16 +646,15 @@ resource "snowflake_table" "test_table2" {
 		type = "FLOAT"
 	}
 }
-`
-	return fmt.Sprintf(s, table2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig5(table2Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig5(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table2" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	cluster_by = ["\"col2\"","COL1"]
@@ -664,16 +667,15 @@ resource "snowflake_table" "test_table2" {
 		type = "FLOAT"
 	}
 }
-`
-	return fmt.Sprintf(s, table2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig6(name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig6(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -686,16 +688,15 @@ resource "snowflake_table" "test_table" {
 		nullable = false
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig7(name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig7(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -711,16 +712,15 @@ resource "snowflake_table" "test_table" {
 		keys = ["column2"]
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig8(name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig8(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -737,16 +737,15 @@ resource "snowflake_table" "test_table" {
 		keys = ["column2","column3"]
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig9CreateTableWithColumnComment(table2Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig9CreateTableWithColumnComment(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table2" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment  = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -760,16 +759,15 @@ resource "snowflake_table" "test_table2" {
 		comment  = "some comment"
 	}
 }
-`
-	return fmt.Sprintf(s, table2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig10AlterTableColumnComment(table2Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig10AlterTableColumnComment(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table2" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -783,16 +781,15 @@ resource "snowflake_table" "test_table2" {
 		nullable = false
 	}
 }
-`
-	return fmt.Sprintf(s, table2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig11AlterTableAddColumnWithComment(table2Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig11AlterTableAddColumnWithComment(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table2" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	column {
@@ -812,16 +809,15 @@ resource "snowflake_table" "test_table2" {
 		comment  = "extra"
 	}
 }
-`
-	return fmt.Sprintf(s, table2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig12CreateTableWithDataRetention(table3Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig12CreateTableWithDataRetention(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table3" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 	data_retention_time_in_days = 10
 	column {
@@ -833,16 +829,15 @@ resource "snowflake_table" "test_table3" {
 		type = "VARCHAR(16)"
 	}
 }
-`
-	return fmt.Sprintf(s, table3Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig13AlterTableDataRetention(table3Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig13AlterTableDataRetention(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table3" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 	data_retention_time_in_days = 0
 	column {
@@ -854,16 +849,15 @@ resource "snowflake_table" "test_table3" {
 		type = "VARCHAR(16)"
 	}
 }
-`
-	return fmt.Sprintf(s, table3Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig14AlterTableEnableChangeTracking(table3Name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig14AlterTableEnableChangeTracking(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table3" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 	data_retention_time_in_days = 0
 	change_tracking     = true
@@ -876,16 +870,15 @@ resource "snowflake_table" "test_table3" {
 		type = "VARCHAR(16)"
 	}
 }
-`
-	return fmt.Sprintf(s, table3Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableConfig15CreateTableWithChangeTracking(name string, databaseName string, schemaName string) string {
-	s := `
+func tableConfig15CreateTableWithChangeTracking(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 	data_retention_time_in_days = 1
 	change_tracking     = true
@@ -898,12 +891,14 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(16)"
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 func TestAcc_TableDefaults(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -914,9 +909,9 @@ func TestAcc_TableDefaults(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableColumnWithDefaults(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableColumnWithDefaults(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -936,14 +931,14 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableId.Name())),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
 			{
-				Config: tableColumnWithoutDefaults(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableColumnWithoutDefaults(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -959,7 +954,7 @@ func TestAcc_TableDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.type", "NUMBER(38,0)"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.constant"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "column.2.type.default.0.expression"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, accName)),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.sequence", fmt.Sprintf(`"%v"."%v"."%v"`, acc.TestDatabaseName, acc.TestSchemaName, tableId.Name())),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table", "primary_key.0"),
 				),
 			},
@@ -967,18 +962,18 @@ func TestAcc_TableDefaults(t *testing.T) {
 	})
 }
 
-func tableColumnWithDefaults(name string, databaseName string, schemaName string) string {
-	s := `
+func tableColumnWithDefaults(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_seq" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 }
 
 resource "snowflake_table" "test_table" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 
 	column {
@@ -1003,22 +998,21 @@ resource "snowflake_table" "test_table" {
 		}
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableColumnWithoutDefaults(name string, databaseName string, schemaName string) string {
-	s := `
+func tableColumnWithoutDefaults(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_seq" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 }
 
 resource "snowflake_table" "test_table" {
-	name                = "%s"
-	database            = "%s"
-	schema              = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 
 	column {
@@ -1037,14 +1031,21 @@ resource "snowflake_table" "test_table" {
 		}
 	}
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 func TestAcc_TableTags(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-	tagName := acc.TestClient().Ids.Alpha()
-	tag2Name := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tag1, tag1Cleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tag1Cleanup)
+
+	tag2, tag2Cleanup := acc.TestClient().Tag.CreateTag(t)
+	t.Cleanup(tag2Cleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	tagValue := random.AlphaN(4)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1055,17 +1056,17 @@ func TestAcc_TableTags(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableWithTags(accName, tagName, tag2Name, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableWithTags(tableId, tag1.ID(), tag2.ID(), tagValue),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.name", tagName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.value", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.name", tag1.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.value", tagValue),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.0.schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.name", tag2Name),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.value", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.name", tag2.ID().Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.value", tagValue),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "tag.1.schema", acc.TestSchemaName),
 				),
@@ -1074,28 +1075,12 @@ func TestAcc_TableTags(t *testing.T) {
 	})
 }
 
-func tableWithTags(name string, tagName string, tag2Name string, databaseName string, schemaName string) string {
-	s := `
-resource "snowflake_tag" "test_tag" {
-	name     = "%[2]s"
-	database = "%[4]s"
-	schema   = "%[5]s"
-	allowed_values = ["%[1]s"]
-	comment  = "Terraform acceptance test"
-}
-
-resource "snowflake_tag" "test2_tag" {
-	name     = "%[3]s"
-	database = "%[4]s"
-	schema   = "%[5]s"
-	allowed_values = ["%[1]s"]
-	comment  = "Terraform acceptance test"
-}
-
+func tableWithTags(tableId sdk.SchemaObjectIdentifier, tagId sdk.SchemaObjectIdentifier, tag2Id sdk.SchemaObjectIdentifier, tagValue string) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	database = "%[4]s"
-	schema   = "%[5]s"
-	name                = "%[1]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	comment             = "Terraform acceptance test"
 
 	column {
@@ -1104,25 +1089,27 @@ resource "snowflake_table" "test_table" {
 	}
 
 	tag {
-		name = snowflake_tag.test_tag.name
-		schema = snowflake_tag.test_tag.schema
-		database = snowflake_tag.test_tag.database
-		value = "%[1]s"
+		database = "%[1]s"
+		schema = "%[2]s"
+		name = "%[4]s"
+		value = "%[6]s"
 	}
 
 	tag {
-		name = snowflake_tag.test2_tag.name
-		schema = snowflake_tag.test2_tag.schema
-		database = snowflake_tag.test2_tag.database
-		value = "%[1]s"
+		database = "%[1]s"
+		schema = "%[2]s"
+		name = "%[5]s"
+		value = "%[6]s"
 	}
 }
-`
-	return fmt.Sprintf(s, name, tagName, tag2Name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), tagId.Name(), tag2Id.Name(), tagValue)
 }
 
 func TestAcc_TableIdentity(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1133,9 +1120,9 @@ func TestAcc_TableIdentity(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableColumnWithIdentityDefault(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableColumnWithIdentityDefault(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -1159,9 +1146,9 @@ func TestAcc_TableIdentity(t *testing.T) {
 				),
 			},
 			{
-				Config: tableColumnWithIdentity(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableColumnWithIdentity(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "change_tracking", "false"),
@@ -1189,18 +1176,18 @@ func TestAcc_TableIdentity(t *testing.T) {
 	})
 }
 
-func tableColumnWithIdentityDefault(name string, databaseName string, schemaName string) string {
-	s := `
+func tableColumnWithIdentityDefault(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_seq" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 }
 
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 	comment             = "Terraform acceptance test"
 
 	column {
@@ -1217,23 +1204,23 @@ resource "snowflake_table" "test_table" {
 		identity {
 		}
 	}
+	depends_on = [snowflake_sequence.test_seq]
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func tableColumnWithIdentity(name string, databaseName string, schemaName string) string {
-	s := `
+func tableColumnWithIdentity(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_seq" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 }
 
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
 	comment             = "Terraform acceptance test"
 
 	column {
@@ -1253,13 +1240,16 @@ resource "snowflake_table" "test_table" {
 			step_num = 4
 		}
 	}
+	depends_on = [snowflake_sequence.test_seq]
 }
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 func TestAcc_TableCollate(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1270,9 +1260,9 @@ func TestAcc_TableCollate(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: tableColumnWithCollate(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "column1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.collate", "en"),
@@ -1283,7 +1273,7 @@ func TestAcc_TableCollate(t *testing.T) {
 				),
 			},
 			{
-				Config: addColumnWithCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config: addColumnWithCollate(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.3.name", "column4"),
@@ -1291,19 +1281,19 @@ func TestAcc_TableCollate(t *testing.T) {
 				),
 			},
 			{
-				Config:      alterTableColumnWithIncompatibleCollate(accName, acc.TestDatabaseName, acc.TestSchemaName),
+				Config:      alterTableColumnWithIncompatibleCollate(tableId),
 				ExpectError: regexp.MustCompile("\"VARCHAR\\(100\\) COLLATE 'fr'\" because they have incompatible collations\\."),
 			},
 		},
 	})
 }
 
-func tableColumnWithCollate(name string, databaseName string, schemaName string) string {
+func tableColumnWithCollate(tableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	database = "%[2]s"
-	schema   = "%[3]s"
-	name     = "%[1]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 
 	column {
 		name = "column1"
@@ -1320,15 +1310,15 @@ resource "snowflake_table" "test_table" {
 		type = "VARCHAR(100)"
 	}
 }
-`, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func addColumnWithCollate(name string, databaseName string, schemaName string) string {
+func addColumnWithCollate(tableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	database = "%[2]s"
-	schema   = "%[3]s"
-	name     = "%[1]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 
 	column {
 		name = "column1"
@@ -1350,15 +1340,15 @@ resource "snowflake_table" "test_table" {
 		collate = "utf8"
 	}
 }
-`, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
-func alterTableColumnWithIncompatibleCollate(name string, databaseName string, schemaName string) string {
+func alterTableColumnWithIncompatibleCollate(tableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	database = "%[2]s"
-	schema   = "%[3]s"
-	name     = "%[1]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 
 	column {
 		name = "column1"
@@ -1380,14 +1370,17 @@ resource "snowflake_table" "test_table" {
 		collate = "utf8"
 	}
 }
-`, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 func TestAcc_TableRename(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	oldComment := acc.TestClient().Ids.Alpha()
-	newComment := acc.TestClient().Ids.Alpha()
+	oldComment := random.Comment()
+	newComment := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1398,7 +1391,7 @@ func TestAcc_TableRename(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfigWithName(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName, oldComment),
+				Config: tableConfigWithName(oldId, oldComment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", oldId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "fully_qualified_name", oldId.FullyQualifiedName()),
@@ -1413,7 +1406,7 @@ func TestAcc_TableRename(t *testing.T) {
 				),
 			},
 			{
-				Config: tableConfigWithName(newId.Name(), acc.TestDatabaseName, acc.TestSchemaName, newComment),
+				Config: tableConfigWithName(newId, newComment),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionUpdate),
@@ -1436,24 +1429,32 @@ func TestAcc_TableRename(t *testing.T) {
 	})
 }
 
-func tableConfigWithName(tableName string, databaseName string, schemaName string, comment string) string {
-	s := `
+func tableConfigWithName(tableId sdk.SchemaObjectIdentifier, comment string) string {
+	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-	name     = "%s"
-	database = "%s"
-	schema   = "%s"
-    comment  = "%s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
+    comment  = "%[4]s"
 	column {
 		name = "column1"
 		type = "VARIANT"
 	}
 }
-`
-	return fmt.Sprintf(s, tableName, databaseName, schemaName, comment)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), comment)
 }
 
 func TestAcc_Table_MaskingPolicy(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	maskingPolicy1, maskingPolicy1Cleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
+	t.Cleanup(maskingPolicy1Cleanup)
+
+	maskingPolicy2, maskingPolicy2Cleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicyIdentity(t, sdk.DataTypeVARCHAR)
+	t.Cleanup(maskingPolicy2Cleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1464,50 +1465,53 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy1"),
+				Config: tableWithMaskingPolicy(tableId, maskingPolicy1.ID()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", acc.TestClient().Ids.NewSchemaObjectIdentifier(fmt.Sprintf("%s1", accName)).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", maskingPolicy1.ID().FullyQualifiedName()),
 				),
 			},
 			// this step proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2186
 			{
-				Config: tableWithMaskingPolicy(accName, acc.TestDatabaseName, acc.TestSchemaName, "policy2"),
+				Config: tableWithMaskingPolicy(tableId, maskingPolicy2.ID()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", acc.TestClient().Ids.NewSchemaObjectIdentifier(fmt.Sprintf("%s2", accName)).FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", maskingPolicy2.ID().FullyQualifiedName()),
 				),
 			},
 		},
 	})
 }
 
+func tableWithMaskingPolicy(tableId sdk.SchemaObjectIdentifier, maskingPolicyId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name = "column1"
+		type = "VARCHAR(16)"
+		masking_policy = "\"%s\".\"%s\".\"%s\""
+	}
+}
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), maskingPolicyId.DatabaseName(), maskingPolicyId.SchemaName(), maskingPolicyId.Name())
+}
+
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
-		return config.Variables{
-			"database":                     config.StringVariable(databaseId.Name()),
-			"schema":                       config.StringVariable(schemaId.Name()),
-			"table":                        config.StringVariable(tableId.Name()),
-			"database_data_retention_time": config.IntegerVariable(databaseDataRetentionTime),
-		}
-	}
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
 
-	configWithSchemaDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
-		vars := configWithDatabaseDataRetentionSet(databaseDataRetentionTime)
-		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
-		return vars
-	}
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
 
-	configWithTableDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int, tableDataRetentionTime int) config.Variables {
-		vars := configWithSchemaDataRetentionSet(databaseDataRetentionTime, schemaDataRetentionTime)
-		vars["table_data_retention_time"] = config.IntegerVariable(tableDataRetentionTime)
-		return vars
-	}
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1518,64 +1522,72 @@ func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
-				ConfigVariables: configWithDatabaseDataRetentionSet(5),
+				PreConfig: func() {
+					acc.TestClient().Database.UpdateDataRetentionTime(t, database.ID(), 5)
+				},
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 5, 5, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithSchemaDataRetentionSet"),
-				ConfigVariables: configWithSchemaDataRetentionSet(5, 10),
+				PreConfig: func() {
+					acc.TestClient().Schema.UpdateDataRetentionTime(t, schema.ID(), 10)
+				},
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 5, 10, 10),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 3, 5),
+				PreConfig: func() {
+					acc.TestClient().Database.UpdateDataRetentionTime(t, database.ID(), 10)
+					acc.TestClient().Schema.UpdateDataRetentionTime(t, schema.ID(), 3)
+				},
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "5"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 3, 15),
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 15),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "15"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 15),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithSchemaDataRetentionSet"),
-				ConfigVariables: configWithSchemaDataRetentionSet(10, 3),
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 3),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
-				ConfigVariables: configWithDatabaseDataRetentionSet(10),
+				PreConfig: func() {
+					acc.TestClient().Schema.UnsetDataRetentionTime(t, schema.ID())
+				},
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 10, 10),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 5, 0),
+				PreConfig: func() {
+					acc.TestClient().Schema.UpdateDataRetentionTime(t, schema.ID(), 5)
+				},
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 0),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "0"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 5, 0),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 5, 3),
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "3"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 5, 3),
@@ -1585,27 +1597,49 @@ func TestAcc_Table_DefaultDataRetentionTime(t *testing.T) {
 	})
 }
 
+func tableConfigWithoutDataRetentionTimeInDays(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test" {
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
+
+	column {
+    	name = "id"
+    	type = "NUMBER(38,0)"
+  	}
+}
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
+}
+
+func tableConfigWithDataRetentionTimeInDays(tableId sdk.SchemaObjectIdentifier, dataRetentionTimeInDays int) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test" {
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
+	data_retention_time_in_days = %[4]d
+
+	column {
+    	name = "id"
+    	type = "NUMBER(38,0)"
+  	}
+}
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), dataRetentionTimeInDays)
+}
+
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
-		return config.Variables{
-			"database":                     config.StringVariable(databaseId.Name()),
-			"schema":                       config.StringVariable(schemaId.Name()),
-			"table":                        config.StringVariable(tableId.Name()),
-			"database_data_retention_time": config.IntegerVariable(databaseDataRetentionTime),
-		}
-	}
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
 
-	configWithTableDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int, tableDataRetentionTime int) config.Variables {
-		vars := configWithDatabaseDataRetentionSet(databaseDataRetentionTime)
-		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
-		vars["table_data_retention_time"] = config.IntegerVariable(tableDataRetentionTime)
-		return vars
-	}
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1616,8 +1650,10 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
-				ConfigVariables: configWithDatabaseDataRetentionSet(5),
+				PreConfig: func() {
+					acc.TestClient().Database.UpdateDataRetentionTime(t, database.ID(), 5)
+				},
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 5, 5, 5),
@@ -1627,16 +1663,17 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 				PreConfig: func() {
 					acc.TestClient().Table.SetDataRetentionTime(t, tableId, 20)
 				},
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithDatabaseDataRetentionSet"),
-				ConfigVariables: configWithDatabaseDataRetentionSet(5),
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 5, 5, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(5, 10, 3),
+				PreConfig: func() {
+					acc.TestClient().Schema.UpdateDataRetentionTime(t, schema.ID(), 10)
+				},
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "3"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 5, 10, 3),
@@ -1653,30 +1690,16 @@ func TestAcc_Table_DefaultDataRetentionTime_SetOutsideOfTerraform(t *testing.T) 
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
 func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
-	databaseId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	schemaId := acc.TestClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
-	configWithDatabaseDataRetentionSet := func(databaseDataRetentionTime int) config.Variables {
-		return config.Variables{
-			"database":                     config.StringVariable(databaseId.Name()),
-			"schema":                       config.StringVariable(schemaId.Name()),
-			"table":                        config.StringVariable(tableId.Name()),
-			"database_data_retention_time": config.IntegerVariable(databaseDataRetentionTime),
-		}
-	}
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
 
-	configWithSchemaDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int) config.Variables {
-		vars := configWithDatabaseDataRetentionSet(databaseDataRetentionTime)
-		vars["schema_data_retention_time"] = config.IntegerVariable(schemaDataRetentionTime)
-		return vars
-	}
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
 
-	configWithTableDataRetentionSet := func(databaseDataRetentionTime int, schemaDataRetentionTime int, tableDataRetentionTime int) config.Variables {
-		vars := configWithSchemaDataRetentionSet(databaseDataRetentionTime, schemaDataRetentionTime)
-		vars["table_data_retention_time"] = config.IntegerVariable(tableDataRetentionTime)
-		return vars
-	}
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1687,40 +1710,39 @@ func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 3, 5),
+				PreConfig: func() {
+					acc.TestClient().Database.UpdateDataRetentionTime(t, database.ID(), 10)
+					acc.TestClient().Schema.UpdateDataRetentionTime(t, schema.ID(), 3)
+				},
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "5"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 5),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 3, -1),
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, -1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 3),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithSchemaDataRetentionSet"),
-				ConfigVariables: configWithSchemaDataRetentionSet(10, 3),
+				Config: tableConfigWithoutDataRetentionTimeInDays(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 3),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 3, -1),
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, -1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", r.IntDefaultString),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 3),
 				),
 			},
 			{
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_Table_DefaultDataRetentionTime/WithTableDataRetentionSet"),
-				ConfigVariables: configWithTableDataRetentionSet(10, 3, 5),
+				Config: tableConfigWithDataRetentionTimeInDays(tableId, 5),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test", "data_retention_time_in_days", "5"),
 					checkDatabaseSchemaAndTableDataRetentionTime(tableId, 10, 3, 5),
@@ -1728,148 +1750,6 @@ func TestAcc_Table_DefaultDataRetentionTimeSettingUnsetting(t *testing.T) {
 			},
 		},
 	})
-}
-
-func tableWithMaskingPolicy(name string, databaseName string, schemaName string, policy string) string {
-	s := `
-resource "snowflake_masking_policy" "policy1" {
-	name 	 		   = "%[1]s1"
-	database 	       = "%[2]s"
-	schema   		   = "%[3]s"
-	argument {
-		name = "val"
-		type = "VARCHAR"
-	}
-	body = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
-	return_data_type   = "VARCHAR(16777216)"
-}
-
-resource "snowflake_masking_policy" "policy2" {
-	name 	 		   = "%[1]s2"
-	database 	       = "%[2]s"
-	schema   		   = "%[3]s"
-	argument {
-		name = "val"
-		type = "VARCHAR"
-	}
-	body = "case when current_role() in ('ANALYST') then val else sha2(val, 512) end"
-	return_data_type   = "VARCHAR(16777216)"
-}
-
-resource "snowflake_table" "test_table" {
-	name     = "%[1]s"
-	database = "%[2]s"
-	schema   = "%[3]s"
-	comment  = "Terraform acceptance test"
-
-	column {
-		name = "column1"
-		type = "VARCHAR(16)"
-		masking_policy = snowflake_masking_policy.%[4]s.fully_qualified_name
-	}
-}
-`
-	return fmt.Sprintf(s, name, databaseName, schemaName, policy)
-}
-
-// proves issues https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2110 and https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2495
-func TestAcc_Table_ClusterBy(t *testing.T) {
-	accName := acc.TestClient().Ids.Alpha()
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Table),
-		Steps: []resource.TestStep{
-			{
-				Config: tableConfigWithComplexClusterBy(accName, acc.TestDatabaseName, acc.TestSchemaName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.#", "2"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.0", "date_trunc('month', LAST_LOAD_TIME)"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.1", "COL1"),
-				),
-			},
-		},
-	})
-}
-
-func tableConfigWithComplexClusterBy(name string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_table" "test_table" {
-	name                = "%[1]s"
-	database            = "%[2]s"
-	schema              = "%[3]s"
-	cluster_by = ["date_trunc('month', LAST_LOAD_TIME)", "COL1"]
-	column {
-		name = "COL1"
-		type = "VARCHAR(16777216)"
-	}
-    column {
-        name     = "LAST_LOAD_TIME"
-        type     = "TIMESTAMP_LTZ(6)"
-        nullable = true
-    }
-}
-`, name, databaseName, schemaName)
-}
-
-// TODO [SNOW-1348114]: do not trim the data type (e.g. NUMBER(38,0) -> NUMBER(36,0) diff is ignored); finish the test
-// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2588 is fixed
-func TestAcc_ColumnTypeChangeWithNonTextType(t *testing.T) {
-	t.Skipf("Will be fixed with tables redesign in SNOW-1348114")
-	accName := acc.TestClient().Ids.Alpha()
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-		PreCheck:                 func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Table),
-		Steps: []resource.TestStep{
-			{
-				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(38,0)"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
-				),
-			},
-			{
-				Config: tableConfigWithNumberColumnType(accName, acc.TestDatabaseName, acc.TestSchemaName, "NUMBER(36,0)"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", accName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(36,0)"),
-				),
-			},
-		},
-	})
-}
-
-func tableConfigWithNumberColumnType(name string, databaseName string, schemaName string, columnType string) string {
-	return fmt.Sprintf(`
-resource "snowflake_table" "test_table" {
-	name                = "%[1]s"
-	database            = "%[2]s"
-	schema              = "%[3]s"
-
-	column {
-		name = "id"
-		type = "%[4]s"
-	}
-}
-`, name, databaseName, schemaName, columnType)
 }
 
 func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier, expectedDatabaseRetentionDays int, expectedSchemaRetentionDays int, expectedTableRetentionsDays int) func(state *terraform.State) error {
@@ -1922,9 +1802,12 @@ func checkDatabaseSchemaAndTableDataRetentionTime(id sdk.SchemaObjectIdentifier,
 	}
 }
 
-// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2733 is fixed
-func TestAcc_Table_gh2733(t *testing.T) {
-	name := acc.TestClient().Ids.Alpha()
+// proves issues https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2110 and https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2495
+func TestAcc_Table_ClusterBy(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1935,9 +1818,116 @@ func TestAcc_Table_gh2733(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Table),
 		Steps: []resource.TestStep{
 			{
-				Config: tableConfigGh2733(acc.TestDatabaseName, acc.TestSchemaName, name),
+				Config: tableConfigWithComplexClusterBy(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", name),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.0", "date_trunc('month', LAST_LOAD_TIME)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "cluster_by.1", "COL1"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithComplexClusterBy(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	database            = "%[1]s"
+	schema              = "%[2]s"
+	name                = "%[3]s"
+	cluster_by = ["date_trunc('month', LAST_LOAD_TIME)", "COL1"]
+	column {
+		name = "COL1"
+		type = "VARCHAR(16777216)"
+	}
+    column {
+        name     = "LAST_LOAD_TIME"
+        type     = "TIMESTAMP_LTZ(6)"
+        nullable = true
+    }
+}
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
+}
+
+// TODO [SNOW-1348114]: do not trim the data type (e.g. NUMBER(38,0) -> NUMBER(36,0) diff is ignored); finish the test
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2588 is fixed
+func TestAcc_ColumnTypeChangeWithNonTextType(t *testing.T) {
+	t.Skipf("Will be fixed with tables redesign in SNOW-1348114")
+
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigWithNumberColumnType(tableId, "NUMBER(38,0)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
+				),
+			},
+			{
+				Config: tableConfigWithNumberColumnType(tableId, "NUMBER(36,0)"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "id"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(36,0)"),
+				),
+			},
+		},
+	})
+}
+
+func tableConfigWithNumberColumnType(tableId sdk.SchemaObjectIdentifier, columnType string) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	database            = "%[1]s"
+	schema              = "%[2]s"
+	name                = "%[3]s"
+
+	column {
+		name = "id"
+		type = "%[4]s"
+	}
+}
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), columnType)
+}
+
+// proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2733 is fixed
+func TestAcc_Table_gh2733(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck:                 func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				Config: tableConfigGh2733(tableId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.name", "MY_INT"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.type", "NUMBER(38,0)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "MY_STRING"),
@@ -1952,7 +1942,7 @@ func TestAcc_Table_gh2733(t *testing.T) {
 	})
 }
 
-func tableConfigGh2733(database string, schema string, name string) string {
+func tableConfigGh2733(tableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
   database            = "%[1]s"
@@ -1983,13 +1973,16 @@ resource "snowflake_table" "test_table" {
     # type = "TIMESTAMP_NTZ" # Equivalent to TIMESTAMP_NTZ
   }
 }
-`, database, schema, name)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 func TestAcc_Table_migrateFromVersion_0_94_1(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_table.test_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	resourceName := "snowflake_table.test_table"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1998,26 +1991,21 @@ func TestAcc_Table_migrateFromVersion_0_94_1(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: tableConfig(id.Name(), id.DatabaseName(), id.SchemaName()),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            tableConfig(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "name", tableId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "qualified_name", tableId.FullyQualifiedName()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfig(id.Name(), id.DatabaseName(), id.SchemaName()),
+				Config:                   tableConfig(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", id.Name()),
-					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "name", tableId.Name()),
+					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", tableId.FullyQualifiedName()),
 					resource.TestCheckNoResourceAttr(resourceName, "qualified_name"),
 				),
 			},
@@ -2026,11 +2014,18 @@ func TestAcc_Table_migrateFromVersion_0_94_1(t *testing.T) {
 }
 
 func TestAcc_Table_SuppressQuotingOnDefaultSequence_issue2644(t *testing.T) {
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	name := acc.TestClient().Ids.Alpha()
-	resourceName := "snowflake_table.test_table"
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
 
+	database, databaseCleanup := acc.TestClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchemaInDatabase(t, database.ID())
+	t.Cleanup(schemaCleanup)
+
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	resourceName := "snowflake_table.test_table"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2038,71 +2033,58 @@ func TestAcc_Table_SuppressQuotingOnDefaultSequence_issue2644(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
-				Config:             tableConfigWithSequence(name, databaseName, schemaName),
+				Config:             tableConfigWithSequence(tableId),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   tableConfigWithSequence(name, databaseName, schemaName),
+				Config:                   tableConfigWithSequence(tableId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "column.0.default.0.sequence", sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name).FullyQualifiedName()),
+					resource.TestCheckResourceAttr(resourceName, "column.0.default.0.sequence", tableId.FullyQualifiedName()),
 				),
 			},
 		},
 	})
 }
 
-func tableConfigWithSequence(name string, databaseName string, schemaName string) string {
+func tableConfigWithSequence(tableId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
-resource "snowflake_database" "test_database" {
-	name = "%[2]s"
-}
-
-resource "snowflake_schema" "test_schema" {
-	depends_on = [snowflake_database.test_database]
-	name = "%[3]s"
-	database = "%[2]s"
-}
-
 resource "snowflake_sequence" "test_sequence" {
-	depends_on = [snowflake_schema.test_schema]
-	name     = "%[1]s"
-	database = "%[2]s"
-	schema   = "%[3]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 }
 
 resource "snowflake_table" "test_table" {
-	depends_on = [snowflake_sequence.test_sequence]
-	name     = "%[1]s"
-	database = "%[2]s"
-	schema   = "%[3]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 	data_retention_time_in_days = 1
 	comment  = "Terraform acceptance test"
 	column {
 		name = "column1"
 		type = "NUMBER"
 		default {
-			sequence = "%[2]s.%[3]s.%[1]s"
+			sequence = "%[1]s.%[2]s.%[3]s"
 		}
 	}
+	depends_on = [snowflake_sequence.test_sequence]
 }
-`, name, databaseName, schemaName)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 func TestAcc_Table_issue3007_textColumn(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_table.test_table"
 
 	defaultVarchar := fmt.Sprintf("VARCHAR(%d)", datatypes.DefaultVarcharLength)
 
+	resourceName := "snowflake_table.test_table"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2171,11 +2153,14 @@ func TestAcc_Table_issue3007_textColumn(t *testing.T) {
 
 // TODO [SNOW-1348114]: visit with table rework (e.g. changing scale is not supported: err 040052 (22000): SQL compilation error: cannot change column SOME_COLUMN from type NUMBER(38,0) to NUMBER(11,2) because changing the scale of a number is not supported.)
 func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_table.test_table"
 
 	defaultNumber := fmt.Sprintf("NUMBER(%d,%d)", datatypes.DefaultNumberPrecision, datatypes.DefaultNumberScale)
 
+	resourceName := "snowflake_table.test_table"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2246,9 +2231,9 @@ func TestAcc_Table_issue3007_numberColumn(t *testing.T) {
 func tableConfigIssue3007(tableId sdk.SchemaObjectIdentifier, dataType string) string {
 	return fmt.Sprintf(`
 resource "snowflake_table" "test_table" {
-    name     = "%[1]s"
-    database = "%[2]s"
-    schema   = "%[3]s"
+    database = "%[1]s"
+    schema   = "%[2]s"
+    name     = "%[3]s"
     comment  = "Issue 3007 confirmation"
 
     column {
@@ -2261,7 +2246,7 @@ resource "snowflake_table" "test_table" {
         type = "%[4]s"
     }
 }
-`, tableId.Name(), tableId.DatabaseName(), tableId.SchemaName(), dataType)
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), dataType)
 }
 
 func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {

@@ -149,7 +149,7 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 						HasDefaultWarehouse("").
 						HasDefaultNamespace("").
 						HasDefaultRole("").
-						HasDefaultSecondaryRoles("").
+						HasDefaultSecondaryRoles(`["ALL"]`).
 						HasMinsToBypassMfa("").
 						HasHasRsaPublicKey(false).
 						HasComment(""),
@@ -174,7 +174,7 @@ func TestAcc_Users_PersonUser(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "")),
-					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
 					assert.Check(resource.TestCheckResourceAttrSet(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa")),
@@ -311,7 +311,7 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 						HasDefaultWarehouse("").
 						HasDefaultNamespace("").
 						HasDefaultRole("").
-						HasDefaultSecondaryRoles("").
+						HasDefaultSecondaryRoles(`["ALL"]`).
 						HasMinsToBypassMfa("").
 						HasHasRsaPublicKey(false).
 						HasComment(""),
@@ -336,7 +336,7 @@ func TestAcc_Users_ServiceUser(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "")),
-					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa", "0")),
@@ -476,7 +476,7 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 						HasDefaultWarehouse("").
 						HasDefaultNamespace("").
 						HasDefaultRole("").
-						HasDefaultSecondaryRoles("").
+						HasDefaultSecondaryRoles(`["ALL"]`).
 						HasMinsToBypassMfa("").
 						HasHasRsaPublicKey(false).
 						HasComment(""),
@@ -501,7 +501,7 @@ func TestAcc_Users_LegacyServiceUser(t *testing.T) {
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_warehouse", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_namespace", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_role", "")),
-					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", "")),
+					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.default_secondary_roles", `["ALL"]`)),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_duo", "false")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.ext_authn_uid", "")),
 					assert.Check(resource.TestCheckResourceAttr(usersModel.DatasourceReference(), "users.0.describe_output.0.mins_to_bypass_mfa", "0")),

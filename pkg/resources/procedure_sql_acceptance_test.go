@@ -23,6 +23,9 @@ import (
 )
 
 func TestAcc_ProcedureSql_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	argName := "x"
 	dataType := testdatatypes.DataTypeVarchar_100
 

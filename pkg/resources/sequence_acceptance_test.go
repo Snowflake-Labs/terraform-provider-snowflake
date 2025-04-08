@@ -6,14 +6,21 @@ import (
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
 func TestAcc_Sequence(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -25,9 +32,11 @@ func TestAcc_Sequence(t *testing.T) {
 		Steps: []resource.TestStep{
 			// CREATE
 			{
-				Config: sequenceConfig(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: sequenceConfig(oldId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", oldId.Name()),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", oldId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "ordering", "ORDER"),
@@ -35,19 +44,23 @@ func TestAcc_Sequence(t *testing.T) {
 			},
 			// Set comment and rename
 			{
-				Config: sequenceConfigWithComment(newId.Name(), "look at me I am a comment", acc.TestDatabaseName, acc.TestSchemaName),
+				Config: sequenceConfigWithComment(newId, comment),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", "look at me I am a comment"),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", comment),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "fully_qualified_name", newId.FullyQualifiedName()),
 				),
 			},
 			// Unset comment and set increment
 			{
-				Config: sequenceConfigWithIncrement(oldId.Name(), acc.TestDatabaseName, acc.TestSchemaName),
+				Config: sequenceConfigWithIncrement(oldId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "name", oldId.Name()),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "comment", ""),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "next_value", "1"),
 					resource.TestCheckResourceAttr("snowflake_sequence.test_sequence", "increment", "32"),
@@ -65,38 +78,35 @@ func TestAcc_Sequence(t *testing.T) {
 	})
 }
 
-func sequenceConfigWithIncrement(sequenceName string, databaseName string, schemaName string) string {
-	s := `
+func sequenceConfig(sequenceId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_sequence" {
-	name       = "%s"
-	database   = "%s"
-	schema     = "%s"
-    increment = 32
-	ordering = "NOORDER"
+	database   = "%[1]s"
+	schema     = "%[2]s"
+	name       = "%[3]s"
 }
-`
-	return fmt.Sprintf(s, sequenceName, databaseName, schemaName)
+`, sequenceId.DatabaseName(), sequenceId.SchemaName(), sequenceId.Name())
 }
 
-func sequenceConfig(sequenceName string, databaseName string, schemaName string) string {
-	s := `
+func sequenceConfigWithComment(sequenceId sdk.SchemaObjectIdentifier, comment string) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_sequence" {
-	name     = "%s"
-	database   = "%s"
-	schema     = "%s"
+	database   = "%[1]s"
+	schema     = "%[2]s"
+	name       = "%[3]s"
+    comment    = "%[4]s"
 }
-`
-	return fmt.Sprintf(s, sequenceName, databaseName, schemaName)
+`, sequenceId.DatabaseName(), sequenceId.SchemaName(), sequenceId.Name(), comment)
 }
 
-func sequenceConfigWithComment(sequenceName, comment string, databaseName string, schemaName string) string {
-	s := `
+func sequenceConfigWithIncrement(sequenceId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_sequence" "test_sequence" {
-	name     = "%s"
-	database   = "%s"
-	schema     = "%s"
-    comment  = "%s"
+	database   = "%[1]s"
+	schema     = "%[2]s"
+	name       = "%[3]s"
+    increment  = 32
+	ordering   = "NOORDER"
 }
-`
-	return fmt.Sprintf(s, sequenceName, databaseName, schemaName, comment)
+`, sequenceId.DatabaseName(), sequenceId.SchemaName(), sequenceId.Name())
 }

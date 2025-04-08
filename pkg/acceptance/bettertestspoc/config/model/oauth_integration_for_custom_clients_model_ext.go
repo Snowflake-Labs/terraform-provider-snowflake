@@ -3,6 +3,7 @@ package model
 import (
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
@@ -23,5 +24,20 @@ func (t *OauthIntegrationForCustomClientsModel) WithPreAuthorizedRoles(roles ...
 			return tfconfig.StringVariable(role.Name())
 		})...,
 	)
+	return t
+}
+
+func (t *OauthIntegrationForCustomClientsModel) WithPreAuthorizedRolesEmpty() *OauthIntegrationForCustomClientsModel {
+	t.PreAuthorizedRolesList = config.EmptyListVariable()
+	return t
+}
+
+func (t *OauthIntegrationForCustomClientsModel) WithOauthClientRsaPublicKeyEmpty() *OauthIntegrationForCustomClientsModel {
+	t.OauthClientRsaPublicKey = tfconfig.StringVariable("")
+	return t
+}
+
+func (t *OauthIntegrationForCustomClientsModel) WithOauthClientRsaPublicKey2Empty() *OauthIntegrationForCustomClientsModel {
+	t.OauthClientRsaPublicKey2 = tfconfig.StringVariable("")
 	return t
 }

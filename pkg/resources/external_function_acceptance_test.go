@@ -253,14 +253,9 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s|%s|%s|VARCHAR-VARCHAR", acc.TestDatabaseName, acc.TestSchemaName, name)),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -271,13 +266,8 @@ func TestAcc_ExternalFunction_migrateFromVersion085(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -310,27 +300,17 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValuePrese
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfigWithReturnNullAllowed(acc.TestDatabaseName, acc.TestSchemaName, name, sdk.Bool(true)),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            externalFunctionConfigWithReturnNullAllowed(acc.TestDatabaseName, acc.TestSchemaName, name, sdk.Bool(true)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
 				},
@@ -359,27 +339,17 @@ func TestAcc_ExternalFunction_migrateFromVersion085_issue2694_previousValueRemov
 
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfigWithReturnNullAllowed(acc.TestDatabaseName, acc.TestSchemaName, name, sdk.Bool(true)),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            externalFunctionConfigWithReturnNullAllowed(acc.TestDatabaseName, acc.TestSchemaName, name, sdk.Bool(true)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "return_null_allowed", "true"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.85.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.85.0"),
+				Config:            externalFunctionConfig(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr(resourceName, "return_null_allowed"),
 				),
@@ -504,14 +474,9 @@ func TestAcc_ExternalFunction_HeaderParsing(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.93.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfigIssueCurlyHeader(id),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.93.0"),
+				Config:            externalFunctionConfigIssueCurlyHeader(id),
 				// Previous implementation produces a plan with the following changes
 				//
 				// - header { # forces replacement
@@ -709,14 +674,9 @@ func TestAcc_ExternalFunction_EnsureSmoothResourceIdMigrationToV0950(t *testing.
 		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            externalFunctionConfigWithMoreArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"(VARCHAR, FLOAT, NUMBER)`, acc.TestDatabaseName, acc.TestSchemaName, name)),
 				),
@@ -787,14 +747,9 @@ func TestAcc_ExternalFunction_EnsureSmoothResourceIdMigrationToV0950_WithoutArgu
 		CheckDestroy: acc.CheckDestroy(t, resources.ExternalFunction),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: externalFunctionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            externalFunctionConfigWithoutArguments(acc.TestDatabaseName, acc.TestSchemaName, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf(`"%s"."%s"."%s"`, acc.TestDatabaseName, acc.TestSchemaName, name)),
 				),

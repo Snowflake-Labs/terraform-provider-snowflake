@@ -156,6 +156,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 			name: "key without a value",
 			config: `
 			[default]
+			password="sensitive"
 			accountname=
 			`,
 			err: "toml: incomplete number",
@@ -164,6 +165,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 			name: "value without a key",
 			config: `
 			[default]
+			password="sensitive"
 			="value"
 			`,
 			err: "toml: invalid character at start of key: =",
@@ -172,6 +174,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 			name: "multiple profiles with the same name",
 			config: `
 			[default]
+			password="sensitive"
 			accountname="value"
 			[default]
 			organizationname="value"
@@ -182,6 +185,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 			name: "multiple keys with the same name",
 			config: `
 			[default]
+			password="sensitive"
 			accountname="foo"
 			accountname="bar"
 			`,
@@ -191,6 +195,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 			name: "more than one key in a line",
 			config: `
 			[default]
+			password="sensitive"
 			accountname="account" organizationname="organizationname"
 			`,
 			err: "toml: expected newline but got U+006F 'o'",
@@ -202,8 +207,28 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 
 			_, err := LoadConfigFile(configPath, true)
 			require.ErrorContains(t, err, tt.err)
+			require.NotContains(t, err.Error(), "sensitive")
 		})
 	}
+}
+
+func TestParsingPrivateKeyDoesNotReturnSensitiveValues(t *testing.T) {
+	unencryptedKey, encryptedKey := random.GenerateRSAPrivateKeyEncrypted(t, "password")
+
+	// Make the key invalid.
+	sensitive := "sensitive"
+	unencryptedKey = unencryptedKey[:50] + sensitive + unencryptedKey[50:]
+	_, err := ParsePrivateKey([]byte(unencryptedKey), []byte{})
+	require.Error(t, err)
+	require.NotContains(t, err.Error(), "PRIVATE KEY")
+	require.NotContains(t, err.Error(), sensitive)
+
+	// Use an invalid password.
+	badPassword := "bad_password"
+	_, err = ParsePrivateKey([]byte(encryptedKey), []byte(badPassword))
+	require.Error(t, err)
+	require.NotContains(t, err.Error(), "PRIVATE KEY")
+	require.NotContains(t, err.Error(), badPassword)
 }
 
 func TestProfileConfig(t *testing.T) {

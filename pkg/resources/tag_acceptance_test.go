@@ -12,6 +12,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -24,7 +25,6 @@ import (
 func TestAcc_Tag_basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicy(t)
 	t.Cleanup(maskingPolicyCleanup)
@@ -32,20 +32,24 @@ func TestAcc_Tag_basic(t *testing.T) {
 	maskingPolicy2, maskingPolicy2Cleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicy(t)
 	t.Cleanup(maskingPolicy2Cleanup)
 
-	baseModel := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName())
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	comment := random.Comment()
+	newComment := random.Comment()
 
-	modelWithExtraFields := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
-		WithComment("foo").
+	baseModel := model.TagBase("test", id)
+
+	modelWithExtraFields := model.TagBase("test", id).
+		WithComment(comment).
 		WithAllowedValues("foo", "", "bar").
 		WithMaskingPolicies(maskingPolicy.ID())
 
-	modelWithDifferentListOrder := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
-		WithComment("foo").
+	modelWithDifferentListOrder := model.TagBase("test", id).
+		WithComment(comment).
 		WithAllowedValues("", "bar", "foo").
 		WithMaskingPolicies(maskingPolicy.ID())
 
-	modelWithDifferentValues := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
-		WithComment("bar").
+	modelWithDifferentValues := model.TagBase("test", id).
+		WithComment(newComment).
 		WithAllowedValues("abc", "def", "").
 		WithMaskingPolicies(maskingPolicy2.ID())
 
@@ -94,7 +98,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "masking_policies.#", "1")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "allowed_values.#", "3")),
@@ -106,7 +110,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasComment("foo").
+						HasComment(comment).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE"),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "show_output.0.allowed_values.#", "3")),
@@ -126,7 +130,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "masking_policies.#", "1")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithExtraFields.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "allowed_values.#", "3")),
@@ -138,7 +142,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasComment("foo").
+						HasComment(comment).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE"),
 					assert.Check(resource.TestCheckResourceAttr(modelWithExtraFields.ResourceReference(), "show_output.0.allowed_values.#", "3")),
@@ -160,7 +164,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("foo"),
+					HasCommentString(comment),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentListOrder.ResourceReference(), "masking_policies.#", "1")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentListOrder.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentListOrder.ResourceReference(), "allowed_values.#", "3")),
@@ -172,7 +176,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasComment("foo").
+						HasComment(comment).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE"),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentListOrder.ResourceReference(), "show_output.0.allowed_values.#", "3")),
@@ -189,7 +193,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
-					HasCommentString("bar"),
+					HasCommentString(newComment),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentValues.ResourceReference(), "masking_policies.#", "1")),
 					assert.Check(resource.TestCheckTypeSetElemAttr(modelWithDifferentValues.ResourceReference(), "masking_policies.*", maskingPolicy2.ID().FullyQualifiedName())),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentValues.ResourceReference(), "allowed_values.#", "3")),
@@ -201,7 +205,7 @@ func TestAcc_Tag_basic(t *testing.T) {
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
 						HasSchemaName(id.SchemaName()).
-						HasComment("bar").
+						HasComment(newComment).
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE"),
 					assert.Check(resource.TestCheckResourceAttr(modelWithDifferentValues.ResourceReference(), "show_output.0.allowed_values.#", "3")),
@@ -239,12 +243,13 @@ func TestAcc_Tag_basic(t *testing.T) {
 func TestAcc_Tag_complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	maskingPolicy, maskingPolicyCleanup := acc.TestClient().MaskingPolicy.CreateMaskingPolicy(t)
 	t.Cleanup(maskingPolicyCleanup)
 
-	model := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+
+	tagModel := model.TagBase("test", id).
 		WithComment("foo").
 		WithAllowedValuesValue(tfconfig.ListVariable(tfconfig.StringVariable("foo"), tfconfig.StringVariable(""), tfconfig.StringVariable("bar"))).
 		WithMaskingPoliciesValue(tfconfig.ListVariable(tfconfig.StringVariable(maskingPolicy.ID().FullyQualifiedName())))
@@ -257,20 +262,20 @@ func TestAcc_Tag_complete(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Tag),
 		Steps: []resource.TestStep{
 			{
-				Config: config.FromModels(t, model),
-				Check: assertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
+				Config: config.FromModels(t, tagModel),
+				Check: assertThat(t, resourceassert.TagResource(t, tagModel.ResourceReference()).
 					HasNameString(id.Name()).
 					HasDatabaseString(id.DatabaseName()).
 					HasSchemaString(id.SchemaName()).
 					HasFullyQualifiedNameString(id.FullyQualifiedName()).
 					HasCommentString("foo"),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "masking_policies.#", "1")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.#", "3")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "foo")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "bar")),
-					resourceshowoutputassert.TagShowOutput(t, model.ResourceReference()).
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "masking_policies.#", "1")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "masking_policies.*", maskingPolicy.ID().FullyQualifiedName())),
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "allowed_values.#", "3")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "allowed_values.*", "foo")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "allowed_values.*", "")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "allowed_values.*", "bar")),
+					resourceshowoutputassert.TagShowOutput(t, tagModel.ResourceReference()).
 						HasCreatedOnNotEmpty().
 						HasName(id.Name()).
 						HasDatabaseName(id.DatabaseName()).
@@ -278,15 +283,15 @@ func TestAcc_Tag_complete(t *testing.T) {
 						HasComment("foo").
 						HasOwner(snowflakeroles.Accountadmin.Name()).
 						HasOwnerRoleType("ROLE"),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "show_output.0.allowed_values.#", "3")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "show_output.0.allowed_values.*", "foo")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "show_output.0.allowed_values.*", "")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "show_output.0.allowed_values.*", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "show_output.0.allowed_values.#", "3")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "show_output.0.allowed_values.*", "foo")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "show_output.0.allowed_values.*", "")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "show_output.0.allowed_values.*", "bar")),
 				),
 			},
 			{
-				Config:            config.FromModels(t, model),
-				ResourceName:      model.ResourceReference(),
+				Config:            config.FromModels(t, tagModel),
+				ResourceName:      tagModel.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -295,11 +300,14 @@ func TestAcc_Tag_complete(t *testing.T) {
 }
 
 func TestAcc_Tag_Rename(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	oldId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	modelWithOldId := model.Tag("test", oldId.DatabaseName(), oldId.Name(), oldId.SchemaName())
-	modelWithNewId := model.Tag("test", newId.DatabaseName(), newId.Name(), newId.SchemaName())
+	modelWithOldId := model.TagBase("test", oldId)
+	modelWithNewId := model.TagBase("test", newId)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -335,12 +343,14 @@ func TestAcc_Tag_Rename(t *testing.T) {
 }
 
 func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
-	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
+
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
-	model := model.Tag("test", id.DatabaseName(), id.Name(), id.SchemaName()).
+	tagModel := model.TagBase("test", id).
 		WithAllowedValuesValue(tfconfig.ListVariable(tfconfig.StringVariable("foo"), tfconfig.StringVariable("bar")))
 
 	resource.Test(t, resource.TestCase{
@@ -350,41 +360,40 @@ func TestAcc_Tag_migrateFromVersion_0_98_0(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.98.0"),
-				Config:            tag_v_0_98_0(id),
-				Check: assertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
+				Config:            tagV098(id),
+				Check: assertThat(t, resourceassert.TagResource(t, tagModel.ResourceReference()).
 					HasNameString(id.Name()),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.#", "2")),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.0", "bar")),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.1", "foo")),
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "allowed_values.#", "2")),
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "allowed_values.0", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "allowed_values.1", "foo")),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   config.FromModels(t, model),
+				Config:                   config.FromModels(t, tagModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(model.ResourceReference(), plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(tagModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
-				Check: assertThat(t, resourceassert.TagResource(t, model.ResourceReference()).
+				Check: assertThat(t, resourceassert.TagResource(t, tagModel.ResourceReference()).
 					HasNameString(id.Name()),
-					assert.Check(resource.TestCheckResourceAttr(model.ResourceReference(), "allowed_values.#", "2")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "foo")),
-					assert.Check(resource.TestCheckTypeSetElemAttr(model.ResourceReference(), "allowed_values.*", "bar")),
+					assert.Check(resource.TestCheckResourceAttr(tagModel.ResourceReference(), "allowed_values.#", "2")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "allowed_values.*", "foo")),
+					assert.Check(resource.TestCheckTypeSetElemAttr(tagModel.ResourceReference(), "allowed_values.*", "bar")),
 				),
 			},
 		},
 	})
 }
 
-func tag_v_0_98_0(id sdk.SchemaObjectIdentifier) string {
-	s := `
+func tagV098(id sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
 resource "snowflake_tag" "test" {
-	name					= "%[1]s"
-	database				= "%[2]s"
-	schema				    = "%[3]s"
+	database				= "%[1]s"
+	schema				    = "%[2]s"
+	name					= "%[3]s"
 	allowed_values			= ["bar", "foo"]
 }
-`
-	return fmt.Sprintf(s, id.Name(), id.DatabaseName(), id.SchemaName())
+`, id.DatabaseName(), id.SchemaName(), id.Name())
 }
