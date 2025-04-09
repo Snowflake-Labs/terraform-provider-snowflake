@@ -13,6 +13,8 @@ description: |-
 
 ~> **Note** Use `query` parameter with caution. It will fetch **ALL** the results returned by the query provided. Try to limit the number of results by writing query with filters. Query failure does not stop resource creation; it simply results in `query_results` being empty.
 
+-> **Note**: Default timeout is set to 60 minutes for each Terraform operation.
+
 Resource allowing execution of ANY SQL statement.
 
 ## Example Usage
@@ -96,6 +98,20 @@ resource "snowflake_execute" "test" {
   execute = "CREATE DATABASE ABC"
   revert  = "DROP DATABASE ABC"
   query   = "SHOW DATABASES LIKE '%ABC%'"
+}
+
+# timeouts
+resource "snowflake_execute" "test" {
+  execute = "CREATE DATABASE ABC"
+  revert  = "DROP DATABASE ABC"
+  query   = "SHOW DATABASES LIKE '%ABC%'"
+
+  timeouts {
+    create = "10m"
+    read   = "10m"
+    update = "10m"
+    delete = "10m"
+  }
 }
 ```
 -> **Note** Instead of using fully_qualified_name, you can reference objects managed outside Terraform by constructing a correct ID, consult [identifiers guide](../guides/identifiers_rework_design_decisions#new-computed-fully-qualified-name-field-in-resources).

@@ -43,6 +43,7 @@ func FunctionJava() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.FunctionJava, ImportFunction),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

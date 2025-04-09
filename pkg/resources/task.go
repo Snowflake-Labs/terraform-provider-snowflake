@@ -196,6 +196,7 @@ func Task() *schema.Resource {
 				Upgrade: v098TaskStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

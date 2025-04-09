@@ -69,6 +69,7 @@ resource "snowflake_file_format" "example_file_format" {
 - `strip_outer_array` (Boolean) Boolean that instructs the JSON parser to remove outer brackets.
 - `strip_outer_element` (Boolean) Boolean that specifies whether the XML parser strips out the outer XML element, exposing 2nd level elements as separate documents.
 - `time_format` (String) Defines the format of time values in the data files (data loading) or table (data unloading).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `timestamp_format` (String) Defines the format of timestamp values in the data files (data loading) or table (data unloading).
 - `trim_space` (Boolean) Boolean that specifies whether to remove white space from fields.
 
@@ -76,6 +77,16 @@ resource "snowflake_file_format" "example_file_format" {
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

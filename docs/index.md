@@ -70,7 +70,7 @@ provider "snowflake" {
 
 **Warning: these values are passed directly to the gosnowflake library, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
 
---> **Note: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
+-> **Note: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
 
 -> **Note** If a field has a default value, it is shown next to the type in the schema. Most of the values in provider schema can be sourced from environment value (check field descriptions), but If a specified environment variable is not found, then the driver's default value is used instead.
 
@@ -277,9 +277,9 @@ password='password'
 role='ACCOUNTADMIN'
 ```
 
---> **Note: TOML file size is limited to 10MB.
+-> **Note: TOML file size is limited to 10MB.
 
---> **Note: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
+-> **Note: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
 
 Not all fields must be configured in one source; users can choose which fields are configured in which source.
 Provider uses an established hierarchy of sources. The current behavior is that for each field:
@@ -371,3 +371,31 @@ provider "snowflake" {
 <!-- Section of deprecated resources -->
 
 <!-- Section of deprecated data sources -->
+
+## Features
+
+### Operation Timeouts
+By default, Terraform sets resource operation timeouts to 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). Now, the provider enables configuration of these values by users in `timeouts` block in each resource.
+The default timeouts are in general aligned with the Terraform defaults. If a resource has different timeouts, it is specified in the resource documentation.
+
+Data sources will be supported in the future.
+Read more in following [official documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts)).
+
+You can specify the timeouts like the following:
+```terraform
+
+resource "snowflake_execute" "test" {
+  execute = "CREATE DATABASE ABC"
+  revert  = "DROP DATABASE ABC"
+  query   = "SHOW DATABASES LIKE '%ABC%'"
+
+  timeouts {
+    create = "10m"
+    read   = "10m"
+    update = "10m"
+    delete = "10m"
+  }
+}
+```
+
+-> Note: Timeouts can be also set at driver's level (see [driver documentation](https://pkg.go.dev/github.com/snowflakedb/gosnowflake)). These timeouts are independent. We recommend tweaking the timeouts on Terraform level first.

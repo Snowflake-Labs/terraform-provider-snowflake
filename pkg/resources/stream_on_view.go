@@ -70,6 +70,7 @@ func StreamOnView() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.StreamOnView, ImportStreamOnView),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

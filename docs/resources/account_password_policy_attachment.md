@@ -37,6 +37,20 @@ resource "snowflake_account_password_policy_attachment" "attachment" {
 
 - `password_policy` (String) Qualified name (`"db"."schema"."policy_name"`) of the password policy to apply to the current account.
 
+### Optional
+
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)

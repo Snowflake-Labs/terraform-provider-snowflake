@@ -53,6 +53,7 @@ func SecretWithClientCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.SecretWithClientCredentials, ImportSecretWithClientCredentials),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

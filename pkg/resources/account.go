@@ -170,6 +170,7 @@ func Account() *schema.Resource {
 				Upgrade: v0_99_0_AccountStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

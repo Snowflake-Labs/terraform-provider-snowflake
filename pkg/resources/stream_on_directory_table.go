@@ -52,6 +52,7 @@ func StreamOnDirectoryTable() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.StreamOnDirectoryTable, ImportName[sdk.SchemaObjectIdentifier]),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
