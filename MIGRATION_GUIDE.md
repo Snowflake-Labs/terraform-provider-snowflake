@@ -9,6 +9,9 @@ across different versions.
 >
 > If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
 
+> [!TIP]
+> If you're still using the `Snowflake-Labs/snowflake` source, see [Upgrading from Snowflake-Labs Provider](./SNOWFLAKEDB_MIGRATION.md) to upgrade to the snowflakedb namespace.
+
 ## v1.0.5 ➞ v1.1.0
 
 ### Timeouts in resources
