@@ -5,11 +5,11 @@ description: Manage SnowflakeDB with Terraform.
 
 # Snowflake Provider
 
-~> **Disclaimer** The project is in v1 version, but some features are in preview. Such resources and data sources are considered preview features in the provider, regardless of their state in Snowflake. We do not guarantee their stability. They will be reworked and marked as a stable feature in future releases. Breaking changes in these features are expected, even without bumping the major version. They are disabled by default. To use them, add the relevant feature name to `preview_features_enabled` field in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). The list of preview features is available below. Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
+~> **Disclaimer** The project is in v1 version, but some features are in preview. Such resources and data sources are considered preview features in the provider, regardless of their state in Snowflake. We do not guarantee their stability. They will be reworked and marked as a stable feature in future releases. Breaking changes in these features are expected, even without bumping the major version. They are disabled by default. To use them, add the relevant feature name to `preview_features_enabled` field in the [provider configuration](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#schema). The list of preview features is available below. Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
 
-~> **Note** Please check the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) when changing the version of the provider.
+~> **Note** Please check the [migration guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) when changing the version of the provider.
 
--> **Note** The current roadmap is available in our GitHub repository: [ROADMAP.md](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md).
+-> **Note** The current roadmap is available in our GitHub repository: [ROADMAP.md](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md).
 
 This is a terraform provider plugin for managing [Snowflake](https://www.snowflake.com/) accounts.
 Coverage is focused on part of Snowflake related to access control.
@@ -185,7 +185,7 @@ Provider uses an established hierarchy of sources. The current behavior is that 
 1. Check if it is present in the environment variables. If yes, use this value. If not, go to step 3.
 1. Check if it is present in the TOML config file (specifically, use the profile name configured in one of the steps above). If yes, use this value. If not, the value is considered empty.
 
--> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332). This will be fixed in the future.
+-> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https:///terraform-provider-snowflake/issues/3332). This will be fixed in the future.
 
 An example TOML file contents:
 

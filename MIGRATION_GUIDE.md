@@ -7,7 +7,7 @@ across different versions.
 > [!TIP]
 > We highly recommend upgrading the versions one by one instead of bulk upgrades.
 >
-> If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/resource_migration) guide for more details.
+> If you want to upgrade multiple versions at once, consider reimporting your infrastructure using the newer provider version. Follow our [Resource Migration](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/resource_migration) guide for more details.
 
 > [!TIP]
 > If you're still using the `Snowflake-Labs/snowflake` source, see [Upgrading from Snowflake-Labs Provider](./SNOWFLAKEDB_MIGRATION.md) to upgrade to the snowflakedb namespace.
@@ -91,7 +91,7 @@ ENFORCE_NETWORK_RULES_FOR_INTERNAL_STAGES account parameter did not work correct
 
 ### Changed documentation structure
 We added `Preview` and `Stable` categories to the resources and data sources documentation, which clearly separates the preview and stable features in the documentation feature list.
-We moved our technical guides to `guides` directory. This means that all such guides are available natively in the registry, similarly to [Unassigning policies](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies) guide.
+We moved our technical guides to `guides` directory. This means that all such guides are available natively in the registry, similarly to [Unassigning policies](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/unassigning_policies) guide.
 We also updated the links to point to the docs inside the registry. Note that our [Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md) and [Migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md) are available in Github only.
 This is a part of our effort to improve the provider documentation. We are open for your feedback and suggestions.
 
@@ -681,7 +681,7 @@ State will be migrated automatically.
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
-migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag#import)).
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/tag#import)).
 
 Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
 
@@ -1070,7 +1070,7 @@ The new configuration looks like this:
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
-migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/row_access_policy#import)).
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/row_access_policy#import)).
 
 Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
 
@@ -1169,7 +1169,7 @@ Now, similarly to handling statements in other resources, we replace blank chara
 
 #### *(breaking change)* Identifiers related changes
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
-migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/row_access_policy#import)).
+migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`). Importing resources also needs to be adjusted (see [example](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/row_access_policy#import)).
 
 Also, we added diff suppress function that prevents Terraform from showing differences, when only quoting is different.
 
@@ -1221,12 +1221,12 @@ New fields:
   - `data_metric_function`
   - `column`
 - added `show_output` field that holds the response from SHOW VIEWS.
-- added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
+- added `describe_output` field that holds the response from DESCRIBE VIEW. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership) on the tables used in this view. Otherwise, this field is not filled.
 
 #### *(breaking change)* Removed fields from snowflake_view resource
 Removed fields:
 - `or_replace` - `OR REPLACE` is added by the provider automatically when `copy_grants` is set to `"true"`
-- `tag` - Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+- `tag` - Please, use [tag_association](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/tag_association) instead.
 The value of these field will be removed from the state automatically.
 
 #### *(breaking change)* Required warehouse
@@ -1237,7 +1237,7 @@ For this resource, the provider now uses [policy references](https://docs.snowfl
 #### *(breaking change)* resource identifiers for schema and streamlit
 During [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) we decided to
 migrate resource ids from pipe-separated to regular Snowflake identifiers (e.g. `<database_name>|<schema_name>` -> `"<database_name>"."<schema_name>"`).
-Exception to that rule will be identifiers that consist of multiple parts (like in the case of [grant_privileges_to_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)'s resource id).
+Exception to that rule will be identifiers that consist of multiple parts (like in the case of [grant_privileges_to_account_role](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)'s resource id).
 The change was applied to already refactored resources (only in the case of `snowflake_schema` and `snowflake_streamlit` this will be a breaking change, because the rest of the objects are single part identifiers in the format of `<name>`):
 - `snowflake_api_authentication_integration_with_authorization_code_grant`
 - `snowflake_api_authentication_integration_with_client_credentials`
@@ -1275,7 +1275,7 @@ writing
 
 See more details in [identifiers guide](./docs/guides/identifiers.md#new-computed-fully-qualified-name-field-in-resources).
 
-See [example usage](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role).
+See [example usage](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role).
 
 Some of the resources are excluded from this change:
 - deprecated resources
@@ -1490,7 +1490,7 @@ To migrate, in case of having two resources:
 `snowflake_network_policy_attachment` changes are similar to the changes to `snowflake_user_public_keys` above. It is advised to use `snowflake_network_policy_attachment` only when user is not managed through terraform. Having both resources configured for the same user will result in improper behavior.
 
 To migrate, in case of having two resources:
-- copy network policy to [network_policy](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#network_policy) attribute in the `snowflake_user` resource
+- copy network policy to [network_policy](https://registry.terraform.io/providers/snowflakedb/snowflake/0.95.0/docs/resources/user#network_policy) attribute in the `snowflake_user` resource
 - remove `snowflake_network_policy_attachment` from state (following [Resource migration guide](./docs/guides/resource_migration.md#resource-migration))
 - remove `snowflake_network_policy_attachment` from config
 
@@ -1527,7 +1527,7 @@ Please rename these fields in your configuration files. State will be migrated a
 
 Removed fields:
 - `tag`
-The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/tag_association) instead.
+The value of this field will be removed from the state automatically. Please, use [tag_association](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/tag_association) instead.
 
 New fields:
 - the following set of [parameters](https://docs.snowflake.com/en/sql-reference/parameters) was added:
@@ -1548,7 +1548,7 @@ New fields:
     - `enable_console_output`
     - `pipe_execution_paused`
 - added `show_output` field that holds the response from SHOW SCHEMAS.
-- added `describe_output` field that holds the response from DESCRIBE SCHEMA. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema. Otherwise, this field is not filled.
+- added `describe_output` field that holds the response from DESCRIBE SCHEMA. Note that one needs to grant sufficient privileges e.g. with [grant_ownership](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership) on all objects in the schema. Otherwise, this field is not filled.
 - added `parameters` field that holds the response from SHOW PARAMETERS IN SCHEMA.
 
 We allow creating and managing `PUBLIC` schemas now. When the name of the schema is `PUBLIC`, it's created with `OR_REPLACE`. Please be careful with this operation, because you may experience data loss. `OR_REPLACE` does `DROP` before `CREATE`, so all objects in the schema will be dropped and this is not visible in Terraform plan. To restore data-related objects that might have been accidentally or intentionally deleted, pleas read about [Time Travel](https://docs.snowflake.com/en/user-guide/data-time-travel). The alternative is to import `PUBLIC` schema manually and then manage it with Terraform. We've decided this based on [#2826](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2826).
@@ -1636,7 +1636,7 @@ With this change we introduce the first resources redesigned for the V1. We have
 They are all described in short in the [changes before v1 doc](./v1-preparations/CHANGES_BEFORE_V1.md). Please familiarize yourself with these changes before the upgrade.
 
 ### old grant resources removal
-Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
+Following the [announcement](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2736) we have removed the old grant resources. The two resources [snowflake_role_ownership_grant](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/role_ownership_grant) and [snowflake_user_ownership_grant](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/user_ownership_grant) were not listed in the announcement, but they were also marked as deprecated ones. We are removing them too to conclude the grants redesign saga.
 
 ### *(new feature)* Api authentication resources
 Added new api authentication resources, i.e.:
@@ -2079,7 +2079,7 @@ It is noted as a behavior change but in some way it is not; with the previous im
 We will consider adding `NOT NULL` back because it can be set by `ALTER COLUMN columnX SET NOT NULL`, but first we want to revisit the whole resource design.
 
 #### *(behavior change)* table_id reference
-The docs were inconsistent. Example prior to 0.86.0 version showed using the `table.id` as the `table_id` reference. The description of the `table_id` parameter never allowed such a value (`table.id` is a `|`-delimited identifier representation and only the `.`-separated values were listed in the docs: https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.85.0/docs/resources/table_constraint#required. The misuse of `table.id` parameter will result in error after migrating to 0.86.0. To make the config work, please remove and reimport the constraint resource from the state as described in [resource migration doc](./docs/guides/resource_migration.md).
+The docs were inconsistent. Example prior to 0.86.0 version showed using the `table.id` as the `table_id` reference. The description of the `table_id` parameter never allowed such a value (`table.id` is a `|`-delimited identifier representation and only the `.`-separated values were listed in the docs: https://registry.terraform.io/providers/snowflakedb/snowflake/0.85.0/docs/resources/table_constraint#required. The misuse of `table.id` parameter will result in error after migrating to 0.86.0. To make the config work, please remove and reimport the constraint resource from the state as described in [resource migration doc](./docs/guides/resource_migration.md).
 
 After discussions in [#2535](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2535) we decided to provide a temporary workaround in 0.87.0 version, so that the manual migration is not necessary. It allows skipping the migration and jumping straight to 0.87.0 version. However, the temporary workaround will be gone in one of the future versions. Please adjust to the newly suggested reference with the new resources you create.
 

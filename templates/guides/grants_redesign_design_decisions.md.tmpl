@@ -18,16 +18,16 @@ Multiple factors led us to refactor grant resources, the most notable being:
 Here’s a list of resources and data sources we introduced during the grant redesign. Those resources are made to deprecate and eventually fully replace all of the previously existing grant resources.
 
 **Resources**
-- [snowflake_grant_privileges_to_database_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_database_role)
-- [snowflake_grant_privileges_to_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role)
-- [snowflake_grant_account_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_account_role)
-- [snowflake_grant_database_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_database_role)
-- [snowflake_grant_application_role](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_application_role)
-- [snowflake_grant_privileges_to_share](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_share)
-- [snowflake_grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership)
+- [snowflake_grant_privileges_to_database_role](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role)
+- [snowflake_grant_privileges_to_account_role](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role)
+- [snowflake_grant_account_role](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_account_role)
+- [snowflake_grant_database_role](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_database_role)
+- [snowflake_grant_application_role](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_application_role)
+- [snowflake_grant_privileges_to_share](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_share)
+- [snowflake_grant_ownership](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership)
 
 **Data sources**
-- [snowflake_grants](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/data-sources/grants)
+- [snowflake_grants](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/grants)
 
 ## Design decisions
 
@@ -67,7 +67,7 @@ indicating the better validation method and clearer error messages helped you wi
 ### snowflake_grant_privileges_to_role to snowflake_grant_privileges_to_account_role
 There are two main reasons why we wanted to create a successor of **snowflake_grant_privileges_to_role** called **snowflake_grant_privileges_to_account_role**:
 - We wanted to make a clear distinction between account and database role resources (in the name of resources and fields).
-  We are aware that there may be resources/fields which should be adjusted to follow this convention. We will be gradually changing those notifying you through [MIGRATION_GUIDE.md](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md).
+  We are aware that there may be resources/fields which should be adjusted to follow this convention. We will be gradually changing those notifying you through [MIGRATION_GUIDE.md](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md).
 - We wanted to change an internal identifier used in the **snowflake_grant_privileges_to_role** to a more import-friendly alternative.
   To follow some level of deprecation and give users time to migrate, It was easier to create another resource with a different name and internals for the same purpose, than change the existing resource and force everyone to migrate their state.
   We are aware that grants are special resources and in some cases, they may be created in the count of hundreds or thousands.
@@ -99,21 +99,21 @@ Granting an application role to another application role can only be performed w
 
 ### Instance roles won’t be added to the snowflake_grants data source (for now)
 We didn’t add the **instance_role** field to the **snowflake_grants** data source, because they would require implementing a new type of identifier, which wouldn’t be that easy.
-We decided to tackle **instance_role** identifier later because the topic of identifiers is something we would like to look into soon [after the grant redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#redesigning-grants).
+We decided to tackle **instance_role** identifier later because the topic of identifiers is something we would like to look into soon [after the grant redesign](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md#redesigning-grants).
 After the identifiers redesign, we will be in a much better position to add new identifier types or functionalities around them.
 
-[Identifier redesign](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework)
+[Identifier redesign](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework)
 
 [Documentation Reference](https://docs.snowflake.com/en/sql-reference/snowflake-db-classes)
 
 ## Grant ownership
 Granting ownership was something that we discussed a long time ago.
 Initially, we decided not to add it and create a document backed by an analysis that would contain reasons why it wouldn’t be possible to cover some cases.
-We wanted to be careful with such decisions, and that’s why we asked for your and internal feedback ([grant ownership discussion](https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2235)).
+We wanted to be careful with such decisions, and that’s why we asked for your and internal feedback ([grant ownership discussion](https://github.com/snowflakedb/terraform-provider-snowflake/discussions/2235)).
 
 After receiving feedback and doing a deeper analysis of certain cases, we concluded that we can and should have this resource available.
 Soon after, we created a design document representing a proposal of the grant ownership resource schema, behavior, and edge cases to cover.
-Currently, we are working on the implementation of the [grant ownership resource](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_ownership). After it is ready, we will announce it in our GitHub repository as well as threads mentioning grant ownership.
+Currently, we are working on the implementation of the [grant ownership resource](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership). After it is ready, we will announce it in our GitHub repository as well as threads mentioning grant ownership.
 
 ## Future topics
 Even though the grants redesign initiative is lasting longer than we initially expected, there are still things that need to be discussed or discovered.

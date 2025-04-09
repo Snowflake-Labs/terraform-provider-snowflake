@@ -6,7 +6,7 @@ description: |-
 ---
 # Grant ownership - common use cases
 
-This guide is a follow-up for the [grant_ownership resource overview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/docs/technical-documentation/resource_migration.md) document.
+This guide is a follow-up for the [grant_ownership resource overview](https://github.com/snowflakedb/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/docs/technical-documentation/resource_migration.md) document.
 These examples should guide you through Snowflake role management in Terraform with the use of grant_ownership resource.
 Here's a list of grant ownership common use cases:
 
@@ -15,8 +15,8 @@ Here's a list of grant ownership common use cases:
 - [Modifying objects you don't own after transferring the ownership](#modifying-objects-you-dont-own-after-transferring-the-ownership)
 - [Fixing the state after using a less privileged role in grant_ownership resource](#fixing-the-state-after-using-a-less-privileged-role-in-grant_ownership-resource)
 
-This list may be further extended with more cases; please approach us through [GitHub issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/new?template=03-documentation.yml)
-if you would like to see any others or contribute ([contribution guidelines](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/CONTRIBUTING.md)).
+This list may be further extended with more cases; please approach us through [GitHub issue](https://github.com/snowflakedb/terraform-provider-snowflake/issues/new?template=03-documentation.yml)
+if you would like to see any others or contribute ([contribution guidelines](https://github.com/snowflakedb/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/CONTRIBUTING.md)).
 
 ### Basic RBAC example
 Here's an easy example of using RBAC (Role-based Access Control). Of course, there are many ways to perform RBAC, and here, we are not proposing any

@@ -1,6 +1,6 @@
 # Creating GitHub issues
 
-> **Note:** Part of this guide was moved to the following documents: 
+> **Note:** Part of this guide was moved to the following documents:
 > - [FAQ](./FAQ.md)
 > - [Known issues](./KNOWN_ISSUES.md).
 >
@@ -16,7 +16,7 @@ This guide was made to aid with creating the GitHub issues, so you can maximize 
 To correctly report the issue, we suggest going through the following steps.
 
 ### 1. Check the documentation for a given resource
-Some resources have known limitations, they are usually described in the documentation for a given resource at the top ([example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account)).
+Some resources have known limitations, they are usually described in the documentation for a given resource at the top ([example](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account)).
 Those limitations are mostly coming out of limited support for certain commands or Snowflake side or limited output from SHOW/DESC commands.
 Please, make sure that the issue you are experiencing is not related to one of the limitations.
 Otherwise, follow the guidelines provided with the limitation.

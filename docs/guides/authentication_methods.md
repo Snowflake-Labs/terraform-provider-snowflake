@@ -125,8 +125,8 @@ private_key = "..."
 ```
 
 In case of any other issues, take a look at related topics:
-- https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3332#issuecomment-2618957814
-- https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3350#issuecomment-2604851052
+- https://github.com/snowflakedb/terraform-provider-snowflake/issues/3332#issuecomment-2618957814
+- https://github.com/snowflakedb/terraform-provider-snowflake/issues/3350#issuecomment-2604851052
 
 #### JWT authenticator flow using passphrase
 
@@ -196,7 +196,7 @@ Follow [this guide](https://docs.snowflake.com/en/user-guide/security-mfa#using-
 
 ### Okta authenticator flow
 
-To set up a new Okta account for this flow, follow [this guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/pkg/manual_tests/authentication_methods/README.md#okta-authenticator-test).
+To set up a new Okta account for this flow, follow [this guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/b863d2e79ae6ae021552c4348e3012b8053ede17/pkg/manual_tests/authentication_methods/README.md#okta-authenticator-test).
 If you already have an Okta account, skip the first point and follow the next steps.
 The guide includes writing the provider configuration in the TOML file, but here's what it should look like fully in HCL:
 

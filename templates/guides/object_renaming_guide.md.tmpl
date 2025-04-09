@@ -7,8 +7,8 @@ description: |-
 
 # Object Renaming Guide
 
-Recently, we conducted research on object renaming and published a document summarizing the results. 
-To leverage the knowledge we gained from this research, we wanted to provide a follow-up document that would help you understand the current best practices for tackling object renaming-related topics. 
+Recently, we conducted research on object renaming and published a document summarizing the results.
+To leverage the knowledge we gained from this research, we wanted to provide a follow-up document that would help you understand the current best practices for tackling object renaming-related topics.
 In this document, we propose recommendations and solutions for the issues identified through our research, as well as those previously reported in our GitHub repository.
 
 ## Renaming objects in the hierarchy
@@ -22,7 +22,7 @@ For now, the only recommendation that shows real improvements is to keep your ob
 - [Implicit dependency](https://developer.hashicorp.com/terraform/tutorials/configuration-language/dependencies#manage-implicit-dependencies)
 - [Explicit dependency (depends_on)](https://developer.hashicorp.com/terraform/tutorials/configuration-language/dependencies#manage-explicit-dependencies)
 - No dependency
- 
+
 Currently, we do not support object renaming within hierarchies.
 However, we are planning to make a follow-up research that would enable it.
 If the research confirms that we will be able to implement it, and we decide to do so, maintaining the correct resource structure will not only be advisable but essential.
@@ -53,7 +53,7 @@ Here are some of the issues pointing to the limitations we are talking about:
 - [terraform-plugin-sdk#1103](https://github.com/hashicorp/terraform-plugin-sdk/issues/1103)
 
 There is more, but the real issue is that those problems overlap, making it really difficult to provide any custom functionality that wasn’t considered when designing the Terraform SDKv2.
- 
+
 ### Recommendations
 
 It's important to align your needs with the capabilities of the provider's resources and choose the appropriate tool for the task.
@@ -66,10 +66,10 @@ After the research, we have some upcoming improvements in handling changes in li
 ### Future plans
 
 As mentioned in the [research summary](./object_renaming_research_summary#ignoring-list-order-after-creation--updating-list-items-mostly-related-to-table-columns), we plan to improve the table resource with all the findings, which will mostly affect the list of columns and how we detect/plan changes for them.
-Once implemented, all the details will be available in the documentation for the table resource and in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md).
+Once implemented, all the details will be available in the documentation for the table resource and in the [migration guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md).
 
 ## Summary
 
 We hope that the additional recommendations derived from our research will assist you in making informed decisions regarding the use of our provider.
-If you have any questions or need further clarification, we encourage you to create issues in our [GitHub repository](https://github.com/Snowflake-Labs/terraform-provider-snowflake).
+If you have any questions or need further clarification, we encourage you to create issues in our [GitHub repository](https://github.com/snowflakedb/terraform-provider-snowflake).
 Your feedback is invaluable and will contribute to further improving our documentation.

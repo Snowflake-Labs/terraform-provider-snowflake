@@ -41,7 +41,7 @@ The GA of the Snowflake Terraform Provider will mean:
 (we are still in [Snowflake-Labs](https://github.com/Snowflake-Labs), reserved for unofficial/experimental projects).
 
 The above will mean changes in the support process and the provider setup
-(most probably the change in the [registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs)).
+(most probably the change in the [registry](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs)).
 We will share the details in the upcoming weeks.
 
 Because of the recent V1 and upcoming GA, we will also clarify our versioning policies (e.g. how long the given version is supported).
@@ -72,7 +72,7 @@ There will be the following migrations involved:
 1. Getting to v1.0.0.
 
     It should already be an ongoing process. The V1 version offers stability and will be the basis for official support.
-    
+
     Remember to follow our [migration guide](./MIGRATION_GUIDE.md#migration-guide) closely, as there were many breaking changes between the 0.x.x versions.
     Reach out to us if you have any problems with it.
 
@@ -80,17 +80,17 @@ There will be the following migrations involved:
 
     As mentioned in the [What is GA](#what-is-ga) section, official support will start with one of the 1.x.x versions (we will announce the precise version later).
     This migration should be easy because we don’t plan to introduce breaking changes between the 1.0.0 and 1.x.x versions.
-    
-    Remember that enabling [preview features](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.0/docs#preview_features_enabled-3)
+
+    Remember that enabling [preview features](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.0/docs#preview_features_enabled-3)
     in the provider’s configuration may result in manual migration as these features do not offer stable schemas.
 
 3. Changes in the terraform config files.
 
     Because we have to migrate the project from [Snowflake-Labs](https://github.com/Snowflake-Labs) to [snowflakedb](https://github.com/snowflakedb),
-    we will also most probably create a new registry instead of the [existing one](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs).
+    we will also most probably create a new registry instead of the [existing one](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs).
     This migration should be painless (basically changing the required provider block and running the `terraform state replace-provider`,
     similar to the [#upgrading-from-czi-provider](./CZI_UPGRADE.md#upgrading-from-czi-provider)).
-    
+
     We will share official instructions closer to the GA release date.
 
 ### Grants migration
@@ -146,7 +146,7 @@ We have released a long-awaited [v1.0.0](https://github.com/Snowflake-Labs/terra
 - Together with v1.0.0 we have also released "the last" 0.x.x version - 0.100.0. v1.0.0 is built on top of that; it removed the [deprecated resources](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_REMOVED_RESOURCES_FOR_V1.md) and attributes mostly, so if you are using one of the latest 0.x versions, you should be really close to v1.
 - Check the migration guides for [v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v01000--v100) and [v0.100.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0990--v01000).
 - The provider entered a stable version from the engineering point of view. It will prohibit us from introducing breaking changes in stable resources without bumping the major version.
-- Resources and data sources in our provider now have two states, [stable](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_STABLE_RESOURCES_FOR_V1.md) and [preview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). To allow the given preview feature you have to explicitly set it in [the provider config](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#preview_features_enabled-1). Please familiarize yourselves with the limitations of the preview feature before enabling it (most notably, preview features may require migrations between minor versions).
+- Resources and data sources in our provider now have two states, [stable](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_STABLE_RESOURCES_FOR_V1.md) and [preview](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/ab015e8cf6f4db762b4043e8bfce2a010b623602/v1-preparations/LIST_OF_PREVIEW_FEATURES_FOR_V1.md). To allow the given preview feature you have to explicitly set it in [the provider config](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#preview_features_enabled-1). Please familiarize yourselves with the limitations of the preview feature before enabling it (most notably, preview features may require migrations between minor versions).
 - Our current main goal is to help with migration and address all the incoming v1 issues.
 - Keep in mind that V1 does not mean we have an official Snowflake support (check our new disclaimer in [README](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#snowflake-terraform-provider)).
 - Our next milestone is reaching GA, which requires mostly procedural steps. Before that, no big changes are planned for the provider.
@@ -204,7 +204,7 @@ We observed that our customers tend to have lots of objects in single terraform 
 
 #### Improve/update the documentation
 
-We greatly improved the docs and the transparency of the project. However, there are still topics that need our attention (e.g. adding a migration guide directly to the [registry](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs), adding missing design decisions like granting ownership, or adding more guides \- similar to [identifiers rework](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/identifiers) \- like importing existing infrastructure into Snowflake).
+We greatly improved the docs and the transparency of the project. However, there are still topics that need our attention (e.g. adding a migration guide directly to the [registry](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs), adding missing design decisions like granting ownership, or adding more guides \- similar to [identifiers rework](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/identifiers) \- like importing existing infrastructure into Snowflake).
 
 #### Run a closed early adopter program
 
@@ -222,7 +222,7 @@ Check [this list](v1-preparations/LIST_OF_STABLE_RESOURCES_FOR_V1.md) for detail
 
 #### Preview resources/datasources
 
-On our road to V1, we went through the resources, starting with the most used ones. We did not cover all of them (as described above). Because of that, in the newest [v0.97.0](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.97.0/docs) version of the provider, we have multiple resources that were not redesigned/fixed.
+On our road to V1, we went through the resources, starting with the most used ones. We did not cover all of them (as described above). Because of that, in the newest [v0.97.0](https://registry.terraform.io/providers/snowflakedb/snowflake/0.97.0/docs) version of the provider, we have multiple resources that were not redesigned/fixed.
 
 We discussed two main options: removing them from 1.0.0 or marking them as preview features. We were mostly worried that removing resources would prevent the majority of our users from migrating to the stable version. On the other hand, we know they are not ready so we don’t want to declare them as stable.
 
@@ -230,7 +230,7 @@ After consideration, we decided to leave them as preview features that need to b
 
 #### “Attachment” resources clarification
 
-During our road to V1 we tried to limit the number of resources needed to be configured in order to manage the given Snowflake object correctly. Because of that, we moved [Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) handling directly to the given object’s resource (check [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). We did that to other types of properties too (e.g. we changed the logic for public keys handling in the [snowflake_user](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.95.0/docs/resources/user#rsa_public_key) resource, so that [snowflake_user_public_keys](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/0.94.1/docs/resources/user_public_keys) is no longer compatible with it).
+During our road to V1 we tried to limit the number of resources needed to be configured in order to manage the given Snowflake object correctly. Because of that, we moved [Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) handling directly to the given object’s resource (check [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md#snowflake-parameters)). We did that to other types of properties too (e.g. we changed the logic for public keys handling in the [snowflake_user](https://registry.terraform.io/providers/snowflakedb/snowflake/0.95.0/docs/resources/user#rsa_public_key) resource, so that [snowflake_user_public_keys](https://registry.terraform.io/providers/snowflakedb/snowflake/0.94.1/docs/resources/user_public_keys) is no longer compatible with it).
 
 Still, these “attachment” objects serve a specific use case (i.e. the main object is not managed by Terraform but part of the object may be). It opened a question for the future not only because of the aforementioned use case but also because of a wider perspective on the default resource behavior. For example, a resource monitor can be attached to a warehouse only by a user with an ACCOUNTADMIN role (check [\#3019](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3019)). Some of our users would like to provision warehouses separately from assigning resource monitors but the caveat here is that leaving the resource monitor empty in the resource config will currently remove any assigned resources. Handling this would require adding a separate attachment resource and allowing a conditional change in behavior for empty assignments in the main object.
 

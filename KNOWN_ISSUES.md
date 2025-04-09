@@ -18,7 +18,7 @@
 
 This is a collection of the most common issues (with solutions) that users encounter when using the Snowflake Terraform Provider.
 
-### General considerations 
+### General considerations
 
 #### Debugging provider
 To enable lower levels of logs, follow the official HashiCorp guide on [debugging providers](https://developer.hashicorp.com/terraform/internals/debugging).
@@ -92,7 +92,7 @@ GitHub issue reference: [#2489](https://github.com/Snowflake-Labs/terraform-prov
 
 GitHub issue reference: [#2224](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2224)
 
-**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed.
+**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed.
 
 ### Incorrect identifier type (panic: interface conversion)
 **Problem** When getting stack traces similar to:
@@ -102,7 +102,7 @@ panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier
 
 GitHub issue reference: [#2779](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2779)
 
-**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed. Quick reference:
+**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed. Quick reference:
 - AccountObjectIdentifier - `<name>`
 - DatabaseObjectIdentifier - `<database>.<name>`
 - SchemaObjectIdentifier - `<database>.<schema>.<name>`
@@ -214,7 +214,7 @@ Terraform may fail with:
 
 ### Issues with grant_ownership
 
-Please read our [guide for grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
+Please read our [guide for grant_ownership](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
 It contains common use cases and issues that you may encounter when dealing with ownership transfers.
 
 ### Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider
@@ -238,7 +238,7 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 
 **Problem:** The provider is taking too long to perform plan/apply operations.
 
-**Solution:** Refer to our [performance analysis](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/performance_benchmarks) and the optimizations we are proposing.
+**Solution:** Refer to our [performance analysis](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/performance_benchmarks) and the optimizations we are proposing.
 
 ### Dropping related resources
 
@@ -250,4 +250,4 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 ```
 That is because some of the Snowflake objects are interdependent, and dropping one requires dropping the other first.
 
-**Solution:** This should be mostly resolved by keeping the dependencies between resources in the configuration code, but also make sure to check our [guide regarding this topic](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies).
+**Solution:** This should be mostly resolved by keeping the dependencies between resources in the configuration code, but also make sure to check our [guide regarding this topic](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/unassigning_policies).

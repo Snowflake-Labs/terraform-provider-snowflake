@@ -23,7 +23,7 @@ Currently, our main focus is on making the provider stable with the most stable 
 but please take a closer look at our recently updated [roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md)
 which describes our priorities for the next quarters.
 
-The provider uses SQL under the hood. When requesting a new feature, 
+The provider uses SQL under the hood. When requesting a new feature,
 make sure all the necessary SQL commands representing CRUD (CREATE/READ/UPDATE/DELETE) operations are available in Snowflake.
 If they are not, you can create a feature request (reach out to your account manager) for Snowflake to add the missing functionality.
 
@@ -53,7 +53,7 @@ If the SQLs seem correct, try to run them in the [Snowsight](https://docs.snowfl
 ### How can I turn on logs?
 The provider offers two main types of logging:
 - Terraform execution (check [Terraform Debugging Documentation](https://www.terraform.io/internals/debugging)) - you can set it through the `TF_LOG` environment variable, e.g.: `TF_LOG=DEBUG`; it will make output of the Terraform execution more verbose.
-- Snowflake communication (using the logs from the underlying [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake)) - you can set it directly in the provider config ([`driver_tracing`](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/1.0.3/docs#driver_tracing-3) attribute), by `SNOWFLAKE_DRIVER_TRACING` environmental variable (e.g. `SNOWFLAKE_DRIVER_TRACING=info`), or by `drivertracing` field in the TOML file. To see the communication with Snowflake (including the SQL commands run) we recommend setting it to `info`.
+- Snowflake communication (using the logs from the underlying [Go Snowflake driver](https://github.com/snowflakedb/gosnowflake)) - you can set it directly in the provider config ([`driver_tracing`](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.3/docs#driver_tracing-3) attribute), by `SNOWFLAKE_DRIVER_TRACING` environmental variable (e.g. `SNOWFLAKE_DRIVER_TRACING=info`), or by `drivertracing` field in the TOML file. To see the communication with Snowflake (including the SQL commands run) we recommend setting it to `info`.
 
 As driver logs may seem cluttered, to locate the SQL commands run, search for:
 - (preferred) `--terraform_provider_usage_tracking`
