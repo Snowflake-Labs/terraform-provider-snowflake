@@ -272,7 +272,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 ### Optional
 
-- `all_privileges` (Boolean) (Default: `false`) Grant all privileges on the account role.
+- `all_privileges` (Boolean) (Default: `false`) Grant all privileges on the account role. When all privileges cannot be granted, the provider returns a warning, which is aligned with the Snowsight behavior.
 - `always_apply` (Boolean) (Default: `false`) If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).
 - `always_apply_trigger` (String) (Default: ``) This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.
 - `on_account` (Boolean) (Default: `false`) If true, the privileges will be granted on the account.
