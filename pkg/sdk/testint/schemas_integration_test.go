@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
@@ -46,10 +47,10 @@ func TestInt_Schemas(t *testing.T) {
 
 		params, err := client.Schemas.ShowParameters(ctx, schemaId)
 		require.NoError(t, err)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
+		assertParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseDataRetentionTimeInDays()))
+		assertParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseMaxDataExtensionTimeInDays()))
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterCatalog)
+		assertParameterEquals(t, params, sdk.AccountParameterCatalog, testClientHelper().Database.TestDatabaseCatalog().Name())
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterReplaceInvalidCharacters)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDefaultDDLCollation)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterStorageSerializationPolicy)
@@ -378,10 +379,10 @@ func TestInt_Schemas(t *testing.T) {
 
 		params, err = client.Schemas.ShowParameters(ctx, schemaTest.ID())
 		require.NoError(t, err)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
+		assertParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseDataRetentionTimeInDays()))
+		assertParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseMaxDataExtensionTimeInDays()))
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterCatalog)
+		assertParameterEquals(t, params, sdk.AccountParameterCatalog, testClientHelper().Database.TestDatabaseCatalog().Name())
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterReplaceInvalidCharacters)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDefaultDDLCollation)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterStorageSerializationPolicy)

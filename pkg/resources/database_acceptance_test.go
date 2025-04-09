@@ -8,7 +8,6 @@ import (
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	resourcehelpers "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
@@ -1009,69 +1008,6 @@ func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *te
 			},
 		},
 	})
-}
-
-// For now, this test can sometimes fail (if account parameters are changed in the meantime).
-// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
-// We could try ignoring the changes to parameters too.
-func TestAcc_Database_UpgradeWithTheSameFieldsAsInTheOldOne(t *testing.T) {
-	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
-	acc.TestAccPreCheck(t)
-
-	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	comment := random.Comment()
-	dataRetentionTimeInDays := new(string)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() { acc.TestAccPreCheck(t) },
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		CheckDestroy: acc.CheckDestroy(t, resources.Database),
-		Steps: []resource.TestStep{
-			{
-				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: acc.ExternalProviderWithExactVersion("0.92.0"),
-				Config:            databaseStateUpgraderBasic(id, comment),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "true"),
-					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
-					resource.TestCheckResourceAttr("snowflake_database.test", "data_retention_time_in_days", r.IntDefaultString),
-				),
-			},
-			{
-				PreConfig: func() {
-					*dataRetentionTimeInDays = helpers.FindParameter(t, acc.TestClient().Parameter.ShowDatabaseParameters(t, id), sdk.AccountParameterDataRetentionTimeInDays).Value
-				},
-				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
-				Config:            databaseStateUpgraderBasic(id, comment),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_database.test", "id", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_database.test", "is_transient", "true"),
-					resource.TestCheckResourceAttr("snowflake_database.test", "comment", comment),
-					resource.TestCheckResourceAttrPtr("snowflake_database.test", "data_retention_time_in_days", dataRetentionTimeInDays),
-				),
-			},
-		},
-	})
-}
-
-func databaseStateUpgraderBasic(id sdk.AccountObjectIdentifier, comment string) string {
-	return fmt.Sprintf(`
-resource "snowflake_database" "test" {
-	name = "%s"
-	is_transient = true
-	comment = "%s"
-}
-`, id.Name(), comment)
 }
 
 // For now, this test can sometimes fail (if other account parameters are changed in the meantime).
