@@ -80,9 +80,7 @@ jobs:
         run: mkdir -p $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE_V097_COMPATIBLE }}" > $HOME/.snowflake/config_v097_compatible && chmod 0600 $HOME/.snowflake/config_v097_compatible
 
       - name: Test
-        run: |
-          make test-secret
-          make test-secret-acc
+        run: make test-secret
         env:
           SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
           TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}

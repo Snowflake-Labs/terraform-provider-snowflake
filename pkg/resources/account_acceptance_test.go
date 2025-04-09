@@ -2,10 +2,11 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
