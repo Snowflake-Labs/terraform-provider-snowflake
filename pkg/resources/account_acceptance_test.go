@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -24,6 +25,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
+
+func TestAcc_TestSecret(t *testing.T) {
+	t.Logf("t.Log: %s", acc.TestClient().Random.Secret())
+	fmt.Printf("fmt.Printf: %s", acc.TestClient().Random.Secret())
+	log.Printf("log.Printf: %s", acc.TestClient().Random.Secret())
+}
 
 func TestAcc_Account_Minimal(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)

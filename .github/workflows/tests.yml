@@ -59,6 +59,15 @@ jobs:
         env:
           SF_TF_GH_MASKING: ${{ secrets.SF_TF_GH_MASKING }}
 
+      - name: Generate random secret
+        run: |
+          random=$(openssl rand -hex 20)
+          final_random="${TEST_SF_TF_RANDOM}_${random}"
+          echo "::add-mask::${final_random}"
+          echo "TEST_SF_TF_GENERATED_RANDOM_VALUE=${final_random}" >> $GITHUB_ENV
+        env:
+          TEST_SF_TF_RANDOM: ${{ secrets.TEST_SF_TF_RANDOM }}
+
       - name: Install dependencies
         run: make dev-setup
 
@@ -70,9 +79,10 @@ jobs:
         id: create_config_v097_compatible
         run: mkdir -p $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE_V097_COMPATIBLE }}" > $HOME/.snowflake/config_v097_compatible && chmod 0600 $HOME/.snowflake/config_v097_compatible
 
-      - name: Run unit and integration tests
-        run: make test
-        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
+      - name: Test
+        run: |
+          make test-secret
+          make test-secret-acc
         env:
           SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
           TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
@@ -84,27 +94,41 @@ jobs:
           TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID }}
           TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
 
-      - name: Setup Terraform
-        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
-        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
-        id: setup_terraform
-        with:
-          terraform_version: 1.7.4
-          terraform_wrapper: false
-
-      - name: Run acceptance tests
-        run: make test-acceptance
-        if: ${{ !cancelled() && steps.setup_terraform.conclusion == 'success' }}
-        env:
-          SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
-          TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
-          TEST_SF_TF_AWS_EXTERNAL_KEY_ID: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_KEY_ID }}
-          TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN }}
-          TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY }}
-          TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL }}
-          TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN }}
-          TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID }}
-          TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
+#      - name: Run unit and integration tests
+#        run: make test
+#        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
+#        env:
+#          SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
+#          TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
+#          TEST_SF_TF_AWS_EXTERNAL_KEY_ID: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_KEY_ID }}
+#          TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN }}
+#          TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY }}
+#          TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL }}
+#          TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN }}
+#          TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID }}
+#          TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
+#
+#      - name: Setup Terraform
+#        if: ${{ !cancelled() && steps.create_config.conclusion == 'success' }}
+#        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+#        id: setup_terraform
+#        with:
+#          terraform_version: 1.7.4
+#          terraform_wrapper: false
+#
+#      - name: Run acceptance tests
+#        run: make test-acceptance
+#        if: ${{ !cancelled() && steps.setup_terraform.conclusion == 'success' }}
+#        env:
+#          SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT: ${{ secrets.SNOWFLAKE_BUSINESS_CRITICAL_ACCOUNT }}
+#          TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_BUCKET_URL }}
+#          TEST_SF_TF_AWS_EXTERNAL_KEY_ID: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_KEY_ID }}
+#          TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_ROLE_ARN }}
+#          TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY: ${{ secrets.TEST_SF_TF_AWS_EXTERNAL_SECRET_KEY }}
+#          TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_BUCKET_URL }}
+#          TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_SAS_TOKEN }}
+#          TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID: ${{ secrets.TEST_SF_TF_AZURE_EXTERNAL_TENANT_ID }}
+#          TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
 
       - name: Sweepers cleanup
         if: ${{ always() }}

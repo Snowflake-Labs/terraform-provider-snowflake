@@ -63,6 +63,13 @@ func init() {
 		os.Exit(1)
 	}
 
+	generatedRandomValue := os.Getenv(string(testenvs.GeneratedRandomValue))
+	requireGeneratedRandomValue := os.Getenv(string(testenvs.RequireGeneratedRandomValue))
+	if requireGeneratedRandomValue != "" && generatedRandomValue == "" {
+		log.Println("generated random value is required for tests to run")
+		os.Exit(1)
+	}
+
 	TestAccProvider = provider.Provider()
 	TestAccProvider.ResourcesMap["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
 	TestAccProvider.ConfigureContextFunc = ConfigureProviderWithConfigCache
@@ -105,8 +112,8 @@ func init() {
 	}
 	atc.secondaryClient = secondaryClient
 
-	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName, acceptancetests.ObjectsSuffix)
-	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, acceptancetests.ObjectsSuffix)
+	atc.testClient = helpers.NewTestClient(client, TestDatabaseName, TestSchemaName, TestWarehouseName, acceptancetests.ObjectsSuffix, generatedRandomValue)
+	atc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, acceptancetests.ObjectsSuffix, generatedRandomValue)
 }
 
 type acceptanceTestContext struct {

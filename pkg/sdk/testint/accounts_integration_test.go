@@ -1,6 +1,8 @@
 package testint
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -13,6 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestInt_TestSecret(t *testing.T) {
+	t.Logf("t.Log: %s", testClientHelper().Random.Secret())
+	fmt.Printf("fmt.Printf: %s", testClientHelper().Random.Secret())
+	log.Printf("log.Printf: %s", testClientHelper().Random.Secret())
+}
 
 // TODO(SNOW-1920887): Some of the account features cannot be currently tested as they require two Snowflake organizations
 // TODO(SNOW-1342761): Adjust the tests, so they can be run in their own pipeline
