@@ -18,10 +18,15 @@ import (
 
 func TestInt_TestSecret(t *testing.T) {
 	t.Logf("t.Log: %s", testClientHelper().Random.Secret())
-	fmt.Printf("fmt.Printf: %s", testClientHelper().Random.Secret())
+	fmt.Printf("fmt.Printf: %s\n", testClientHelper().Random.Secret())
 	log.Printf("log.Printf: %s", testClientHelper().Random.Secret())
 	assert.True(t, false, fmt.Sprintf("Test failed: %s", testClientHelper().Random.Secret()))
 	assert.Equal(t, testClientHelper().Random.Secret(), testClientHelper().Random.Secret())
+
+	fmt.Printf("::add-mask::%s\n", "ABC")
+	t.Logf("t.Log: aa-%s-aa", "ABC")
+	fmt.Printf("fmt.Printf: aa-%s-aa\n", "ABC")
+	log.Printf("log.Printf: aa-%s-aa", "ABC")
 }
 
 // TODO(SNOW-1920887): Some of the account features cannot be currently tested as they require two Snowflake organizations
