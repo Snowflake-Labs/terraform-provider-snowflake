@@ -20,6 +20,8 @@ func TestInt_TestSecret(t *testing.T) {
 	t.Logf("t.Log: %s", testClientHelper().Random.Secret())
 	fmt.Printf("fmt.Printf: %s", testClientHelper().Random.Secret())
 	log.Printf("log.Printf: %s", testClientHelper().Random.Secret())
+	assert.True(t, false, fmt.Sprintf("Test failed: %s", testClientHelper().Random.Secret()))
+	assert.Equal(t, testClientHelper().Random.Secret(), testClientHelper().Random.Secret())
 }
 
 // TODO(SNOW-1920887): Some of the account features cannot be currently tested as they require two Snowflake organizations

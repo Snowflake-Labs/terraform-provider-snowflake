@@ -2,6 +2,7 @@ package resources_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"regexp"
 	"testing"
@@ -30,6 +31,8 @@ func TestAcc_TestSecret(t *testing.T) {
 	t.Logf("t.Log: %s", acc.TestClient().Random.Secret())
 	fmt.Printf("fmt.Printf: %s", acc.TestClient().Random.Secret())
 	log.Printf("log.Printf: %s", acc.TestClient().Random.Secret())
+	assert.True(t, false, fmt.Sprintf("Test failed: %s", acc.TestClient().Random.Secret()))
+	assert.Equal(t, acc.TestClient().Random.Secret(), acc.TestClient().Random.Secret())
 }
 
 func TestAcc_Account_Minimal(t *testing.T) {
