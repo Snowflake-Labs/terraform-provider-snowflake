@@ -16,7 +16,6 @@ func Comment() string {
 	return gofakeit.Sentence(10)
 }
 
-// TODO: Will be removed and replaced with testClient.Random.Secret()
 func Password() string {
 	return StringN(30)
 }
