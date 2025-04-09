@@ -23,7 +23,7 @@ func TestInt_TestSecret(t *testing.T) {
 	assert.True(t, false, fmt.Sprintf("Test failed: %s", testClientHelper().Random.Secret()))
 	assert.Equal(t, testClientHelper().Random.Secret(), testClientHelper().Random.Secret())
 
-	fmt.Printf("::add-mask::%s\n", "ABC")
+	fmt.Printf("::add-mask::%s", "ABC")
 	t.Logf("t.Log: aa-%s-aa", "ABC")
 	fmt.Printf("fmt.Printf: aa-%s-aa\n", "ABC")
 	log.Printf("log.Printf: aa-%s-aa", "ABC")
