@@ -2,10 +2,11 @@ package sdk
 
 import (
 	"fmt"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_TestSecret(t *testing.T) {

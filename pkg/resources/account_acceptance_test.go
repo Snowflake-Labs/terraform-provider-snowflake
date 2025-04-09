@@ -2,8 +2,6 @@ package resources_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"log"
 	"regexp"
 	"testing"
 

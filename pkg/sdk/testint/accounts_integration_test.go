@@ -1,8 +1,6 @@
 package testint
 
 import (
-	"fmt"
-	"log"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
