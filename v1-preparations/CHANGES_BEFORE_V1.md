@@ -18,11 +18,11 @@ you want to ensure that the specified value has been set on the Snowflake side.
 Additionally, resources created before this change may experience force replacement plans on boolean fields
 after upgrading to the new version of the resource. That's because those fields now have different type and default value.
 The only way to prevent this behavior is to set this value in configuration to the value that was previously in state.
-Refer to [this issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3015) for more details.
+Refer to [this issue](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3015) for more details.
 
 ## Validations
 
-This point connects with the one on about the [default values](#default-values). First of all, we want to reduce the coupling between Snowflake and the provider. Secondly, some of the value limits are soft (consult issues [#2948](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2948) and [#1919](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/1919)) which makes it difficult to align provider validations with the custom setups. Lastly, some values depend on the Snowflake edition used.
+This point connects with the one on about the [default values](#default-values). First of all, we want to reduce the coupling between Snowflake and the provider. Secondly, some of the value limits are soft (consult issues [#2948](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2948) and [#1919](https://github.com/snowflakedb/terraform-provider-snowflake/issues/1919)) which makes it difficult to align provider validations with the custom setups. Lastly, some values depend on the Snowflake edition used.
 
 Because of all that, we plan to reduce the number of validations (mostly numeric) on the provider side. We won't get rid of them entirely, so that successful plans but apply failures can be limited, but please be aware that you may encounter them.
 
@@ -34,7 +34,7 @@ The [Terraform SDK v2](https://github.com/hashicorp/terraform-plugin-sdk) that i
 It won't be possible to use the above values directly (it will be for the string attributes) but users should be aware of them, because they may appear in the terraform plans.
 
 ## Snowflake parameters
-[Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) have different types and hierarchies. In the earlier versions of the provider they have been handled non-intuitively by setting the default values inside the provider (e.g. [#2356](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356)). We want to change that. Because of that we decided to:
+[Snowflake parameters](https://docs.snowflake.com/en/sql-reference/parameters) have different types and hierarchies. In the earlier versions of the provider they have been handled non-intuitively by setting the default values inside the provider (e.g. [#2356](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2356)). We want to change that. Because of that we decided to:
 - make all parameters available for the given object available in the resource (without the need to use the `snowflake_object_parameter` resource which future will be discussed in the next few weeks; for the V1 ready resources, you should not use `snowflake_<object>` and `snowflake_object_parameter` together: if you manage `<object>` through terraform, and you want to set the parameter on the object's level, it must be done in `snowflake_<object>` resource)
 - remove the default values from Snowflake parameters in every resource before the V1. This is an important **breaking change**. In the previous versions usually not setting the given parameter resulted in using the provider default. This was different from creating the same object without the parameter by hand (because Snowflake just takes the parameter from the hierarchy in such case).
 - provider will identify both the internal and the external changes to these parameters on both `value` and `level` levels, e.g.:
