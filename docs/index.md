@@ -113,7 +113,7 @@ provider "snowflake" {
 - `protocol` (String) A protocol used in the connection. Valid options are: `http` | `https`. Can also be sourced from the `SNOWFLAKE_PROTOCOL` environment variable.
 - `request_timeout` (Number) request retry timeout in seconds EXCLUDING network roundtrip and read out http response. Can also be sourced from the `SNOWFLAKE_REQUEST_TIMEOUT` environment variable.
 - `role` (String) Specifies the role to use by default for accessing Snowflake objects in the client session. Can also be sourced from the `SNOWFLAKE_ROLE` environment variable.
-- `skip_toml_file_permission_verification` (Boolean) True by default. Skips TOML configuration file permission verification. This flag has no effect on Windows systems, as the permissions are not checked on this platform. We recommend setting this to `false` and setting the proper privileges - see [the section below](#order-precedence). Can also be sourced from the `SNOWFLAKE_SKIP_TOML_FILE_PERMISSION_VERIFICATION` environment variable.
+- `skip_toml_file_permission_verification` (Boolean) False by default. Skips TOML configuration file permission verification. This flag has no effect on Windows systems, as the permissions are not checked on this platform. Instead of skipping the permissions verification, we recommend setting the proper privileges - see [the section below](#toml-file-limitations). Can also be sourced from the `SNOWFLAKE_SKIP_TOML_FILE_PERMISSION_VERIFICATION` environment variable.
 - `tmp_directory_path` (String) Sets temporary directory used by the driver for operations like encrypting, compressing etc. Can also be sourced from the `SNOWFLAKE_TMP_DIRECTORY_PATH` environment variable.
 - `token` (String, Sensitive) Token to use for OAuth and other forms of token based auth. Can also be sourced from the `SNOWFLAKE_TOKEN` environment variable.
 - `token_accessor` (Block List, Max: 1) (see [below for nested schema](#nestedblock--token_accessor))
@@ -226,6 +226,11 @@ export SNOWFLAKE_PASSWORD='...'
 
 Currently, the provider can be configured in three ways:
 1. In a Terraform file located in the Terraform module with other resources.
+2. In environmental variables (envs). This is mainly used to provide sensitive values.
+3. In a TOML file (default in ~/.snowflake/config).
+
+### Terraform file located in the Terraform module with other resources
+One of the methods of configuring the provider is in the Terraform module. Read more in the [Terraform docs](https://developer.hashicorp.com/terraform/language/providers/configuration).
 
 Example content of the Terraform file configuration:
 
@@ -238,15 +243,16 @@ provider "snowflake" {
 }
 ```
 
-2. In environmental variables (envs). This is mainly used to provide sensitive values.
-
+### Environmental variables
+The second method is to use environmental variables. This is mainly used to provide sensitive values.
 
 ```bash
 export SNOWFLAKE_USER="..."
 export SNOWFLAKE_PRIVATE_KEY=$(cat ~/.ssh/snowflake_key.p8)
 ```
 
-3. In a TOML file (default in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
+### TOML file
+The third method is to use a TOML configuration file (default location in ~/.snowflake/config). Notice the use of different profiles. The profile name needs to be specified in the Terraform configuration file in `profile` field. When this is not specified, `default` profile is loaded.
 When a `default` profile is not present in the TOML file, it is treated as "empty", without failing.
 
 Read [TOML](https://toml.io/en/) specification for more details on the syntax.
@@ -277,10 +283,14 @@ password='password'
 role='ACCOUNTADMIN'
 ```
 
+#### TOML file limitations
+To ensure a better security of the provider, the following limitations are introduced:
+
 -> **Note: TOML file size is limited to 10MB.
 
 -> **Note: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
 
+### Source Hierarchy
 Not all fields must be configured in one source; users can choose which fields are configured in which source.
 Provider uses an established hierarchy of sources. The current behavior is that for each field:
 1. Check if it is present in the provider configuration. If yes, use this value. If not, go to step 2.
@@ -289,6 +299,7 @@ Provider uses an established hierarchy of sources. The current behavior is that 
 
 -> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https://github.com/snowflakedb/terraform-provider-snowflake/issues/3332). This will be fixed in the future.
 
+### Examples
 An example TOML file contents:
 
 ```toml
