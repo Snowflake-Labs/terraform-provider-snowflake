@@ -118,6 +118,7 @@ func Database() *schema.Resource {
 				Upgrade: v092DatabaseStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

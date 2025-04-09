@@ -310,6 +310,7 @@ func View() *schema.Resource {
 				Upgrade: v0_94_1_ViewStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

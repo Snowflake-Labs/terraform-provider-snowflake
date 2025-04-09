@@ -49,6 +49,7 @@ and then import it as the `snowflake_secondary_connection`.
 
 - `comment` (String) Specifies a comment for the connection.
 - `enable_failover_to_accounts` (List of String) Enables failover for given connection to provided accounts. Specifies a list of accounts in your organization where a secondary connection for this primary connection can be promoted to serve as the primary connection. Include your organization name for each account in the list. For more information about this resource, see [docs](./account).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -56,6 +57,17 @@ and then import it as the `snowflake_secondary_connection`.
 - `id` (String) The ID of this resource.
 - `is_primary` (Boolean) Indicates if the connection is primary. When Terraform detects that the connection is not primary, the resource is recreated.
 - `show_output` (List of Object) Outputs the result of `SHOW CONNECTIONS` for the given connection. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`

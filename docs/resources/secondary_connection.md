@@ -48,6 +48,7 @@ and then import it as the `snowflake_primary_connection`.
 ### Optional
 
 - `comment` (String) Specifies a comment for the secondary connection.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -55,6 +56,17 @@ and then import it as the `snowflake_primary_connection`.
 - `id` (String) The ID of this resource.
 - `is_primary` (Boolean) Indicates if the connection primary status has been changed. If change is detected, resource will be recreated.
 - `show_output` (List of Object) Outputs the result of `SHOW CONNECTIONS` for the given connection. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`

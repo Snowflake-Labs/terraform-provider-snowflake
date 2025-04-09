@@ -126,6 +126,7 @@ func Schema() *schema.Resource {
 				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

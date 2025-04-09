@@ -70,6 +70,7 @@ variable "example_aws_secret_key" {
 - `snowflake_iam_user` (String) An AWS IAM user created for your Snowflake account. This user is the same for every external S3 stage created in your account.
 - `storage_integration` (String) Specifies the name of the storage integration used to delegate authentication responsibility for external cloud storage to a Snowflake identity and access management (IAM) entity.
 - `tag` (Block List, Deprecated) Definitions of a tag to associate with the resource. (see [below for nested schema](#nestedblock--tag))
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `url` (String) Specifies the URL for the stage.
 
 ### Read-Only
@@ -89,6 +90,17 @@ Optional:
 
 - `database` (String) Name of the database that the tag was created in.
 - `schema` (String) Name of the schema that the tag was created in.
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 
