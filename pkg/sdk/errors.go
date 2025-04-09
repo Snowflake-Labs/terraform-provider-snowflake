@@ -83,7 +83,7 @@ func decodeDriverError(err error) error {
 	if err == nil {
 		return nil
 	}
-	log.Printf("[DEBUG] err: %v\n", err)
+	log.Printf("[DEBUG] err: %v", err)
 	m := map[string]error{
 		"does not exist or not authorized": ErrObjectNotExistOrAuthorized,
 		"account is empty":                 ErrAccountIsEmpty,

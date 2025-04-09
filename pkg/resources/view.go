@@ -794,7 +794,7 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 					},
 				}
 			} else {
-				log.Printf("could not store projection policy name: policy db and schema can not be empty")
+				log.Printf("[DEBUG] could not store projection policy name: policy db and schema can not be empty")
 			}
 		}
 		maskingPolicy, err := collections.FindFirst(policyRefs, func(r sdk.PolicyReference) bool {
@@ -813,7 +813,7 @@ func handleColumns(d ResourceValueSetter, columns []sdk.ViewDetails, policyRefs 
 					},
 				}
 			} else {
-				log.Printf("could not store masking policy name: policy db and schema can not be empty")
+				log.Printf("[DEBUG] could not store masking policy name: policy db and schema can not be empty")
 			}
 		}
 	}
