@@ -12,6 +12,21 @@ across different versions.
 > [!TIP]
 > If you're still using the `Snowflake-Labs/snowflake` source, see [Upgrading from Snowflake-Labs Provider](./SNOWFLAKEDB_MIGRATION.md) to upgrade to the snowflakedb namespace.
 
+## v1.1.1 ➞ v2.0.0
+
+### *(breaking change)* Changes in TOML configuration file requirements
+As we have announced in [an earlier entry](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#changes-in-toml-configuration-file-requirements), now file permissions are verified by default (`skip_toml_file_permission_verification` is `false` by default). This means that on non-Windows systems, when you run the provider, you can get a following error:
+```
+could not load config file: config file /Users/user/.snowflake/config has unsafe permissions - 0755
+```
+Please adjust your file permissions, e.g. `chmod 0600 ~/.snowflake/config`.
+
+This is a breaking change because it requires adjustments on the user's side.
+
+Read more details in the mentioned [migration guide entry](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#changes-in-toml-configuration-file-requirements).
+
+Alternatively, specify `skip_toml_file_permission_verification=false` in your configuration, but this is less secure and not recommended.
+
 ## v1.1.0 ➞ v1.1.1
 
 ### Fixes in handling references to computed fields in context of `show_output`
