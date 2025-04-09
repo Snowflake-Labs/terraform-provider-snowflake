@@ -383,7 +383,7 @@ func Provider() *schema.Provider {
 			},
 			"skip_toml_file_permission_verification": {
 				Type:        schema.TypeBool,
-				Description: envNameFieldDescription("True by default. Skips TOML configuration file permission verification. This flag has no effect on Windows systems, as the permissions are not checked on this platform. We recommend setting this to `false` and setting the proper privileges - see [the section below](#order-precedence).", snowflakeenvs.SkipTomlFilePermissionVerification),
+				Description: envNameFieldDescription("False by default. Skips TOML configuration file permission verification. This flag has no effect on Windows systems, as the permissions are not checked on this platform. Instead of skipping the permissions verification, we recommend setting the proper privileges - see [the section below](#toml-file-limitations).", snowflakeenvs.SkipTomlFilePermissionVerification),
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.SkipTomlFilePermissionVerification, false),
 			},
