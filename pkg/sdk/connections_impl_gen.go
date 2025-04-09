@@ -138,7 +138,7 @@ func (r connectionRow) convert() *Connection {
 	}
 
 	if allowedToAccounts, err := ParseCommaSeparatedAccountIdentifierArray(r.FailoverAllowedToAccounts); err != nil {
-		log.Printf("[DEBUG] Unable to parse account identifier list for 'enable failover to accounts': %s, err = %v", r.FailoverAllowedToAccounts, err)
+		log.Printf("[DEBUG] Unable to parse account identifier list for enable failover to accounts, err = %v", err)
 	} else {
 		c.FailoverAllowedToAccounts = allowedToAccounts
 	}

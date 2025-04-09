@@ -146,7 +146,7 @@ func NewClient(cfg *gosnowflake.Config) (*Client, error) {
 		return nil, fmt.Errorf("get current session: %w", err)
 	}
 	client.sessionID = sessionID
-	log.Printf("[DEBUG] connection success! Account: %s, Session identifier: %s", currentAccount, sessionID)
+	log.Printf("[DEBUG] connection success! Account: %s", currentAccount)
 
 	return client, nil
 }
