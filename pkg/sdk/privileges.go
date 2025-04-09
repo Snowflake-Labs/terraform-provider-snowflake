@@ -46,6 +46,7 @@ const (
 	GlobalPrivilegeManageGrants                   GlobalPrivilege = "MANAGE GRANTS"
 	GlobalPrivilegeManageListingAutoFulfillment   GlobalPrivilege = "MANAGE LISTING AUTO FULFILLMENT"
 	GlobalPrivilegeManageOrganizationSupportCases GlobalPrivilege = "MANAGE ORGANIZATION SUPPORT CASES"
+	GlobalPrivilegeManagePolarisConnections       GlobalPrivilege = "MANAGE POLARIS CONNECTIONS"
 	GlobalPrivilegeManageUserSupportCases         GlobalPrivilege = "MANAGE USER SUPPORT CASES"
 	GlobalPrivilegeManageWarehouses               GlobalPrivilege = "MANAGE WAREHOUSES"
 	GlobalPrivilegeManageShareTarget              GlobalPrivilege = "MANAGE SHARE TARGET"

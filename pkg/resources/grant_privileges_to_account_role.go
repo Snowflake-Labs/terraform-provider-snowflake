@@ -47,7 +47,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Default:     false,
-		Description: "Grant all privileges on the account role.",
+		Description: "Grant all privileges on the account role. When all privileges cannot be granted, the provider returns a warning, which is aligned with the Snowsight behavior.",
 		ExactlyOneOf: []string{
 			"privileges",
 			"all_privileges",
@@ -408,6 +408,7 @@ func ImportGrantPrivilegesToAccountRole() func(ctx context.Context, d *schema.Re
 
 func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	diags := diag.Diagnostics{}
 
 	id, err := createGrantPrivilegesToAccountRoleIdFromSchema(d)
 	if err != nil {
@@ -428,7 +429,13 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 			WithGrantOption: sdk.Bool(d.Get("with_grant_option").(bool)),
 		},
 	)
-	if err != nil {
+	if errors.Is(err, sdk.ErrGrantPartiallyExecuted) && d.Get("all_privileges").(bool) {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "An error occurred when granting all privileges to account role",
+			Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
+		})
+	} else if err != nil {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Error,
@@ -440,11 +447,12 @@ func CreateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(id.String())
 
-	return ReadGrantPrivilegesToAccountRole(ctx, d, meta)
+	return append(diags, ReadGrantPrivilegesToAccountRole(ctx, d, meta)...)
 }
 
 func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	client := meta.(*provider.Context).Client
+	diags := diag.Diagnostics{}
 
 	id, err := ParseGrantPrivilegesToAccountRoleId(d.Id())
 	if err != nil {
@@ -608,7 +616,13 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				id.RoleName,
 				new(sdk.GrantPrivilegesToAccountRoleOptions),
 			)
-			if err != nil {
+			if errors.Is(err, sdk.ErrGrantPartiallyExecuted) {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "An error occurred when granting all privileges to account role",
+					Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
+				})
+			} else if err != nil {
 				return diag.Diagnostics{
 					diag.Diagnostic{
 						Severity: diag.Error,
@@ -640,7 +654,13 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 				WithGrantOption: &id.WithGrantOption,
 			},
 		)
-		if err != nil {
+		if errors.Is(err, sdk.ErrGrantPartiallyExecuted) && d.Get("all_privileges").(bool) {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "An error occurred when granting all privileges to account role",
+				Detail:   fmt.Sprintf("Id: %s\nAccount role name: %s\nError: %s", id.String(), id.RoleName, err),
+			})
+		} else if err != nil {
 			return diag.Diagnostics{
 				diag.Diagnostic{
 					Severity: diag.Error,
@@ -653,7 +673,7 @@ func UpdateGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(id.String())
 
-	return ReadGrantPrivilegesToAccountRole(ctx, d, meta)
+	return append(diags, ReadGrantPrivilegesToAccountRole(ctx, d, meta)...)
 }
 
 func DeleteGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -744,7 +764,7 @@ func ReadGrantPrivilegesToAccountRole(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if id.AllPrivileges {
-		log.Printf("[INFO] Show with all_privileges option is skipped. No changes in privileges in Snowflake will be detected. Consider specyfying all privileges in 'privileges' block.")
+		log.Printf("[INFO] Show with all_privileges option is skipped. No changes in privileges in Snowflake will be detected. Consider specifying all privileges in 'privileges' block.")
 		return nil
 	}
 

@@ -11,7 +11,7 @@ across different versions.
 
 ## v1.0.5 ➞ v1.1.0
 
-### Timeouts in resources and data sources
+### Timeouts in resources
 By default, resource operation timeout after 20 minutes ([reference](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/retries-and-customizable-timeouts#default-timeouts-and-deadline-exceeded-errors)). This caused some long running operations to timeout.
 
 We already added configurable timeouts to [execute](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.4/docs/resources/execute#nested-schema-for-timeouts), [tag_association](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.4/docs/resources/tag_association#nested-schema-for-timeouts) and [cortex_search_service](https://registry.terraform.io/providers/snowflakedb/snowflake/1.0.4/docs/resources/cortex_search_service#nested-schema-for-timeouts) before. Now, we also allow setting them on all other resources.
@@ -20,6 +20,17 @@ Data sources will be supported in the future.
 Read more about resource timeouts in the [Terraform documentation](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts).
 
 References: [#3355](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3355)
+
+### Fixes in `grant_privileges_to_account_role` resource
+Using `grant_privileges_to_account_role` with `all_privileges=true` and `on_account = true` option started to fail recently due to newly introduced privileges in Snowflake:
+```
+003011 (42501): Grant partially executed: privileges [MANAGE LISTING AUTO FULFILLMENT, MANAGE ORGANIZATION SUPPORT CASES,
+│ MANAGE POLARIS CONNECTIONS] not granted
+```
+
+Instead of failing the whole action, we return a warning instead and the operation execution continues, which aligns with the behavior in Snowsight. Note that for `all_privileges=true` the privileges list in the state is not populated, like before. If you want to detect differences in the privileges, use `privileges` list instead. If you want to make sure that the maximum privileges are granted, enable `always_apply`.
+
+References: [#3507](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3507)
 
 ## v1.0.4 ➞ v1.0.5
 
