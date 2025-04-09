@@ -113,12 +113,6 @@ func (itc *integrationTestContext) initialize() error {
 		return errors.New("test object suffix is required for this test run")
 	}
 
-	generatedRandomSecret := os.Getenv(string(testenvs.GeneratedRandomValue))
-	requireGeneratedRandomSecret := os.Getenv(string(testenvs.RequireGeneratedRandomValue))
-	if requireGeneratedRandomSecret != "" && generatedRandomSecret == "" {
-		return errors.New("generated random secret is required for tests to run")
-	}
-
 	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default, true)
 	if err != nil {
 		return err
@@ -145,7 +139,7 @@ func (itc *integrationTestContext) initialize() error {
 	}
 
 	// TODO [SNOW-1763603]: we can't use test client because of the testing.T parameter that is not present here; discuss
-	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix, generatedRandomSecret)
+	itc.testClient = helpers.NewTestClient(c, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
 
 	db, dbCleanup, err := createDb(itc.client, itc.ctx, false, itc.testClient)
 	itc.databaseCleanup = dbCleanup
@@ -186,7 +180,7 @@ func (itc *integrationTestContext) initialize() error {
 		itc.secondaryClient = secondaryClient
 		itc.secondaryCtx = context.Background()
 
-		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix, generatedRandomSecret)
+		itc.secondaryTestClient = helpers.NewTestClient(secondaryClient, TestDatabaseName, TestSchemaName, TestWarehouseName, integrationtests.ObjectsSuffix)
 
 		secondaryDb, secondaryDbCleanup, err := createDb(itc.secondaryClient, itc.secondaryCtx, true, itc.secondaryTestClient)
 		itc.secondaryDatabaseCleanup = secondaryDbCleanup

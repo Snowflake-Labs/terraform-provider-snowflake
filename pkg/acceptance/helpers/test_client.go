@@ -7,8 +7,7 @@ import (
 type TestClient struct {
 	context *TestClientContext
 
-	Ids    *IdsGenerator
-	Random *RandomValuesGenerator
+	Ids *IdsGenerator
 
 	Account                      *AccountClient
 	AggregationPolicy            *AggregationPolicyClient
@@ -71,22 +70,19 @@ type TestClient struct {
 	Warehouse                    *WarehouseClient
 }
 
-func NewTestClient(c *sdk.Client, database string, schema string, warehouse string, testObjectSuffix string, generatedRandomSecret string) *TestClient {
+func NewTestClient(c *sdk.Client, database string, schema string, warehouse string, testObjectSuffix string) *TestClient {
 	context := &TestClientContext{
-		client:                c,
-		database:              database,
-		schema:                schema,
-		warehouse:             warehouse,
-		testObjectSuffix:      testObjectSuffix,
-		generatedRandomSecret: generatedRandomSecret,
+		client:           c,
+		database:         database,
+		schema:           schema,
+		warehouse:        warehouse,
+		testObjectSuffix: testObjectSuffix,
 	}
 	idsGenerator := NewIdsGenerator(context)
-	randomValuesGenerator := NewRandomValuesGenerator(context)
 	return &TestClient{
 		context: context,
 
-		Ids:    idsGenerator,
-		Random: randomValuesGenerator,
+		Ids: idsGenerator,
 
 		Account:                      NewAccountClient(context, idsGenerator),
 		AggregationPolicy:            NewAggregationPolicyClient(context, idsGenerator),
@@ -151,12 +147,11 @@ func NewTestClient(c *sdk.Client, database string, schema string, warehouse stri
 }
 
 type TestClientContext struct {
-	client                *sdk.Client
-	database              string
-	schema                string
-	warehouse             string
-	testObjectSuffix      string
-	generatedRandomSecret string
+	client           *sdk.Client
+	database         string
+	schema           string
+	warehouse        string
+	testObjectSuffix string
 }
 
 func (c *TestClient) GetAccountLocator() string {

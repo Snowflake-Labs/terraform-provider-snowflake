@@ -27,14 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestAcc_TestSecret(t *testing.T) {
-	t.Logf("t.Log: %s", acc.TestClient().Random.Secret())
-	fmt.Printf("fmt.Printf: %s", acc.TestClient().Random.Secret())
-	log.Printf("log.Printf: %s", acc.TestClient().Random.Secret())
-	assert.True(t, false, fmt.Sprintf("Test failed: %s", acc.TestClient().Random.Secret()))
-	assert.Equal(t, acc.TestClient().Random.Secret(), acc.TestClient().Random.Secret())
-}
-
 func TestAcc_Account_Minimal(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
