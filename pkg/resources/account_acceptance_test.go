@@ -32,7 +32,7 @@ func TestAcc_Account_Minimal(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
-	id := random.AdminName()
+	id := random.SensitiveString()
 	accountId := sdk.NewAccountIdentifier(organizationName, id)
 	email := random.Email()
 	name := random.AdminName()
@@ -131,7 +131,7 @@ func TestAcc_Account_Complete(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
-	id := random.AdminName()
+	id := random.SensitiveString()
 	accountId := sdk.NewAccountIdentifier(organizationName, id)
 	firstName := acc.TestClient().Ids.Alpha()
 	lastName := acc.TestClient().Ids.Alpha()
@@ -241,10 +241,10 @@ func TestAcc_Account_Rename(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
-	id := random.AdminName()
+	id := random.SensitiveString()
 	accountId := sdk.NewAccountIdentifier(organizationName, id)
 
-	newId := random.AdminName()
+	newId := random.SensitiveString()
 	newAccountId := sdk.NewAccountIdentifier(organizationName, newId)
 
 	email := random.Email()
@@ -303,7 +303,7 @@ func TestAcc_Account_IsOrgAdmin(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
-	id := random.AdminName()
+	id := random.SensitiveString()
 	accountId := sdk.NewAccountIdentifier(organizationName, id)
 
 	email := random.Email()
@@ -423,17 +423,17 @@ func TestAcc_Account_IgnoreUpdateAfterCreationOnCertainFields(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
 	organizationName := acc.TestClient().Context.CurrentAccountId(t).OrganizationName()
-	id := random.AdminName()
+	id := random.SensitiveString()
 	accountId := sdk.NewAccountIdentifier(organizationName, id)
 
-	firstName := random.AdminName()
-	lastName := random.AdminName()
+	firstName := random.SensitiveAlphanumeric()
+	lastName := random.SensitiveAlphanumeric()
 	email := random.Email()
 	name := random.AdminName()
 	pass := random.Password()
 
-	newFirstName := random.AdminName()
-	newLastName := random.AdminName()
+	newFirstName := random.SensitiveAlphanumeric()
+	newLastName := random.SensitiveAlphanumeric()
 	newEmail := random.Email()
 	newName := random.AdminName()
 	newPass := random.Password()
@@ -501,7 +501,7 @@ func TestAcc_Account_TryToCreateWithoutOrgadmin(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
-	id := random.AdminName()
+	id := random.SensitiveString()
 	email := random.Email()
 	name := random.AdminName()
 	key, _ := random.GenerateRSAPublicKey(t)
@@ -532,7 +532,7 @@ func TestAcc_Account_InvalidValues(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
-	id := random.AdminName()
+	id := random.SensitiveString()
 	email := random.Email()
 	name := random.AdminName()
 	key, _ := random.GenerateRSAPublicKey(t)
@@ -580,8 +580,8 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 	name := random.AdminName()
 	adminName := random.AdminName()
 	adminPassword := random.Password()
-	firstName := random.AdminName()
-	lastName := random.AdminName()
+	firstName := random.SensitiveAlphanumeric()
+	lastName := random.SensitiveAlphanumeric()
 	region := acc.TestClient().Context.CurrentRegion(t)
 	comment := random.Comment()
 

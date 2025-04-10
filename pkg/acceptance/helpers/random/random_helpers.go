@@ -1,16 +1,16 @@
 package random
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"log"
 	"os"
-	"strings"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
 )
 
+// generatedRandomValue is used to mask random values in GitHub Action logs.
+// It always starts with a letter and contains only letters and numbers.
 var generatedRandomValue string
 
 func init() {
@@ -31,16 +31,31 @@ func Comment() string {
 	return gofakeit.Sentence(10)
 }
 
-// TODO: Will be removed and replaced with testClient.Random.Secret()
-func Password() string {
-	return generatedRandomValue + StringN(30)
-}
-
 // AdminName returns admin name acceptable by Snowflake:
 // 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
 // 090089 (22000): ADMIN_NAME must start with a letter.
 func AdminName() string {
-	return strings.ToUpper(AlphaN(1) + AlphanumericN(11))
+	return SensitiveAlphanumeric()
+}
+
+func Email() string {
+	return SensitiveAlphanumeric() + gofakeit.Email()
+}
+
+func Password() string {
+	return SensitiveString()
+}
+
+// SensitiveString returns a random string prefixed with a generated random value that is masked in GitHub Action logs.
+// The string returned by SensitiveString always starts with a letter and contains only letters, numbers, and symbols.
+func SensitiveString() string {
+	return generatedRandomValue + StringN(30)
+}
+
+// SensitiveAlphanumeric returns a random string prefixed with a generated random value that is masked in GitHub Action logs.
+// The string returned by SensitiveAlphanumeric always starts with a letter and contains only letters and numbers.
+func SensitiveAlphanumeric() string {
+	return generatedRandomValue + AlphanumericN(30)
 }
 
 func Bool() bool {
@@ -65,10 +80,6 @@ func AlphaN(num int) string {
 
 func AlphaLowerN(num int) string {
 	return gofakeit.Password(true, false, false, false, false, num)
-}
-
-func Email() string {
-	return gofakeit.Email()
 }
 
 func Bytes() []byte {
