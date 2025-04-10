@@ -71,10 +71,6 @@ test-acceptance: ## run acceptance tests
 test-integration: ## run SDK integration tests
 	TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 TEST_SF_TF_REQUIRE_GENERATED_RANDOM_VALUE=1 go test -run "^TestInt_" -v -cover -timeout=60m ./...
 
-# TODO: To remove
-test-secret:
-	TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX=1 TEST_SF_TF_REQUIRE_GENERATED_RANDOM_VALUE=1 go test -run "^Test_TestSecret" -v ./pkg/sdk/secret_test.go
-
 test-architecture: ## check architecture constraints between packages
 	go test ./pkg/architests/... -v
 
