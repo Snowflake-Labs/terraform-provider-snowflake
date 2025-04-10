@@ -96,6 +96,7 @@ func (opts *CreateAccountOptions) validate() error {
 	if opts.Email == "" {
 		errs = append(errs, errNotSet("CreateAccountOptions", "Email"))
 	}
+	// some comment
 	if opts.Edition == "" {
 		errs = append(errs, errNotSet("CreateAccountOptions", "Edition"))
 	}
