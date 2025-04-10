@@ -1,6 +1,11 @@
 # Run secret-dependent integration tests only after /ok-to-test approval
 name: Tests
 
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   repository_dispatch:
     types: [ ok-to-test-command ]
