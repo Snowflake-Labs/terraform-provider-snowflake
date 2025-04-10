@@ -1,5 +1,57 @@
 # Our roadmap
 
+## (10.04.2025) GA announcement
+
+### GA release
+
+If there are no significant obstacles or critical issues, we aim to release GA on **April 23rd**.
+
+#### Migration to the GA version
+
+With the v1.0.0 release, we are no longer making breaking changes in the stable resources without bumping the major version of the provider (with the exception of Snowflake BCRs and preview features).
+As we need to introduce some small breaking changes to stable parts of the provider, we will release the 2.0.0 version soon. We target it to be the GA version.
+
+The breaking changes will be added to the [migration guide](MIGRATION_GUIDE.md#migration-guide) as usual. There won’t be a need to migrate the resources. The expected changes are:
+
+* changing a default value in the provider configuration;
+* marking some more attributes as sensitive in resource schemas - we will share the full list with recommendations on what to do if the current value is used as input value in another resource.
+
+We do not expect any more breaking changes to be part of the GA release. Please contact us with any questions or problems regarding this migration.
+
+#### Scope
+
+Please check the ["What is GA?](#what-is-ga)" and ["What GA is not?](#what-ga-is-not)" sections of one of the previous announcements.
+
+The main misunderstanding we observe is the stable and preview features distinction. Let us reiterate it:
+
+* resources and data sources that were stabilized during our road to V1 are stable; they will receive the official Snowflake support after GA;
+* resources and data sources that were not reworked were marked as preview features. A few clarifications:
+    * They were NOT downgraded - they were part of 0.x.x experimental versions of the provider before this classification.
+    * We did not want to remove them from the provider entirely as it could block adoption to v1+ versions. That’s why we decided to leave them, even if they may be unstable.
+    * If you used any resource or data source in 0.x.x versions, you acknowledged the risks of using experimental features either way.
+    * In v1+ versions, you can continue using them, but you need to explicitly allow these features in the provider (as explained [here](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#preview_features_enabled-1)).
+    * Remember, Snowflake does not offer official support for these preview resources and data sources. Please consider these features as preview features in the provider, regardless of their state in Snowflake.
+    * Each preview feature will be reworked and marked as a stable feature in future releases. Please expect that preview features might introduce breaking changes, even when the provider’s major version number does not change.
+* Resources and data sources marked as preview features or not yet supported will be prioritized based on demand and worked on after GA. We will share the current priorities in **early May**.
+
+#### Versioning
+
+Versioning will be clarified in [Snowflake official docs](https://docs.snowflake.com/en/user-guide/terraform) as part of the GA release. Short summary:
+
+* Snowflake Terraform Provider follows semantic versioning.
+* Minor version releases may sometimes include unexpected changes, depending on the configuration or environment. We balance the occasional one-time inconvenience for some users against the overall benefits these updates bring to the community.
+* Starting with the GA release, Snowflake will offer official support only for the latest version of the provider. When a new version is released, it immediately becomes the officially supported version.
+* Although the provider's latest version is the only officially supported version, we make a best effort to resolve issues with earlier versions. After assessing the issue, Snowflake Support may, at its discretion, require an update to the latest version to support the troubleshooting process.
+* Generally, we introduce new features and fixes in the latest minor version. This is due to the resource-intensive development process and the need for extensive regression testing.
+* If we discover a security vulnerability, we consider backporting critical fixes to earlier versions on a case-by-case basis.
+* We assess BCRs introduced by underlying Snowflake features for impacts to the provider. The migration guide provides information about how to manage potential breaking changes We prioritize BCR fixes in each latest version release of the provider and recommend updating your version of the provider regularly.
+
+### snowflakedb migration
+
+The migration to the snowflakedb GitHub organization was successfully concluded. It includes creating the new namespace in the official Terraform registry: [https://registry.terraform.io/providers/snowflakedb/snowflake](https://registry.terraform.io/providers/snowflakedb/snowflake). The [old provider](https://registry.terraform.io/providers/Snowflake-Labs/snowflake) still exists, but as [announced](#24032025-snowflakedb-migration), it will be deprecated soon. The migration is straightforward. You can find details on how to migrate [here](SNOWFLAKEDB_MIGRATION.md).
+
+The old namespace will be deleted on **July 31st**. We will soon add the deprecation notice to the old namespace. Please contact us if you encounter any problems switching to the provider in the new namespace.
+
 ## (24.03.2025) snowflakedb migration
 
 As part of GA preparation, we must migrate out of the [Snowflake-Labs](https://github.com/Snowflake-Labs) GitHub organization to [snowflakedb](https://github.com/snowflakedb), as noted in the [previous Roadmap entry](#what-is-ga). It should happen within a few days. A few important notes on that:
