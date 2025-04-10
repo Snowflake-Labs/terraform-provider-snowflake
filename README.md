@@ -10,7 +10,7 @@
 
 ![.github/workflows/ci.yml](https://github.com/snowflakedb/terraform-provider-snowflake/workflows/.github/workflows/ci.yml/badge.svg)
 
-This is a terraform provider for managing [Snowflake](https://www.snowflake.com/) resources.
+This is a terraform provider for managing [Snowflake](https://www.snowflake.com/) resources!!!
 
 ## Table of contents
 <!-- TOC -->
