@@ -19,7 +19,7 @@ description: |-
 
 ~> **Note** During the import, when Terraform detects changes on a field with `ForceNew`, it will try to recreate the resource. Due to Terraform limitations, `grace_period_in_days` is not set at that moment. This means that Terraform will try to drop the account with the empty grace period which is required, and fail.
 Before importing, ensure if the resource configuration matches the actual state.
-See more in our [Resource Migration guide](../guides/resource_migration#312-terraform-import) and [issue #3390](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3390).
+See more in our [Resource Migration guide](../guides/resource_migration#312-terraform-import) and [issue #3390](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3390).
 
 {{ if .HasExample -}}
 ## Example Usage

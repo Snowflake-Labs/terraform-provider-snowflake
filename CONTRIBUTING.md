@@ -119,7 +119,7 @@ The documentation for the provider is generated automatically. We follow the few
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) for commit message formatting and PR titles. Please try to adhere to the standard.
 
-Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
+Refer to the [regular expression](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
 
 Implemented changes should be described thoroughly (we will prepare PR template for the known use cases soon):
 - reference the issue that is addressed with the given change

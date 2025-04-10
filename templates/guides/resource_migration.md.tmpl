@@ -80,7 +80,7 @@ resource "snowflake_grant_privileges_to_account_role" "new_resource" {
 #### 3.1.2. terraform import
 
 Write the `terraform import` command with the ID so that the resource will be able to parse and fill the state correctly.
-You can find import syntax in the documentation for a given resource, [here](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)
+You can find import syntax in the documentation for a given resource, [here](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)
 is the one for `snowflake_grant_privileges_to_account_role`. In our case, the command will look like this:
 ```shell
 terraform import 'snowflake_grant_privileges_to_account_role.new_resource["role_a_name"]' 'role_a_name|USAGE|false|false|OnAccountObject|DATABASE|database_name'

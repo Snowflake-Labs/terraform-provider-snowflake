@@ -15,7 +15,7 @@ The Terraform Provider team recently started a short research project on object 
 
 **Description:** This problem relates to renaming objects that are higher in the object hierarchy (e.g. database or schema) and how this affects the lower hierarchy objects created on them (e.g. schema or table) while they are present in the Terraform configuration. We decided to deeply test this problem, as from time to time we got issues related to it. We wanted to get a better understanding of it and how currently our provider is handling such situations to provide appropriate fixes if necessary.
 
-**Tests:** We prepared a [set of test cases](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/pkg/resources/object_renaming_acceptance_test.go) by combining permutations of different aspects like:
+**Tests:** We prepared a [set of test cases](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/pkg/resources/object_renaming_acceptance_test.go) by combining permutations of different aspects like:
 
 - Depth (shallow connections like database and schema or deep connections like database, schema, and table).
 - Higher hierarchy object placement (inside or outside of the Terraform configuration)
@@ -32,14 +32,14 @@ In addition to improved documentation, the tests showed us that we need to impro
 
 ### Ignoring list order after creation \+ updating list items (mostly related to table columns)
 
-**Description:** The issues with table columns ([\#420](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/420), [\#753](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/753), [\#2839](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2839)) are something we had in mind for a very long time and finally had a chance to work on a solution that would improve them, and possibly some of the other resources. In short, the use case for table columns consists of two use cases connected to each other:
+**Description:** The issues with table columns ([\#420](https://github.com/snowflakedb/terraform-provider-snowflake/issues/420), [\#753](https://github.com/snowflakedb/terraform-provider-snowflake/issues/753), [\#2839](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2839)) are something we had in mind for a very long time and finally had a chance to work on a solution that would improve them, and possibly some of the other resources. In short, the use case for table columns consists of two use cases connected to each other:
 
 - Ignoring the order of columns after creation. Users should be able to reorder, add, and remove columns from any place while still having somewhat control over column order on the Snowflake side.
 - Updating a given column instead of removing and adding it again. Ignoring the order was an additional challenge because if someone wants to order the columns and change their name in one apply, then we need a way to identify this column to perform the correct action.
 
-**Tests:** The tests were carried out on a resource created only for the purpose of the research ([resource reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/pkg/resources/object_renaming_lists_and_sets.go#L125)). Note that it won’t be normally visible and no other changes in other resources were made. We tested a few approaches regarding order ignoring and one on updating items.
+**Tests:** The tests were carried out on a resource created only for the purpose of the research ([resource reference](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/pkg/resources/object_renaming_lists_and_sets.go#L125)). Note that it won’t be normally visible and no other changes in other resources were made. We tested a few approaches regarding order ignoring and one on updating items.
 
-**Impact:** The outcomes of the tests showed promising results and potential improvement in how structures like table columns are managed. The adjustment of table columns will be done during the refactoring of the table we do as part of [preparing the GA object for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/3147).
+**Impact:** The outcomes of the tests showed promising results and potential improvement in how structures like table columns are managed. The adjustment of table columns will be done during the refactoring of the table we do as part of [preparing the GA object for V1](https://github.com/snowflakedb/terraform-provider-snowflake/pull/3147).
 
 Additionally, this gives us more knowledge of how the lists and their items are managed in Terraform SDKv2 and how we can interact with them to achieve certain behaviors. We confirmed their limitations, and found solutions on how to deal with most of them. We also have high hopes that once we can migrate to the newer Terraform Plugin Framework, there will be more tools to support even more demanding use cases.
 

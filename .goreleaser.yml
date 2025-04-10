@@ -43,7 +43,7 @@ signs:
 
 release:
   github:
-    owner: Snowflake-Labs
+    owner: snowflakedb
     name: terraform-provider-snowflake
   extra_files:
     - glob: 'terraform-registry-manifest.json'

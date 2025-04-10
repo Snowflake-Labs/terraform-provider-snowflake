@@ -7,11 +7,11 @@ description: |-
 
 # Performance Analysis
 
-This document provides a basic performance analysis of the Snowflake Terraform Provider. It is not a complete analysis, but a basic outline, allowing us to give a few recommendations for the current provider versions. The document’s purpose is to set performance expectations for using the provider and give suggestions to users on how to improve its performance. We decided to perform such benchmarks because of concerns reported by our users ([\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118), [\#3169](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3169)). They are related to the performance of large workloads (a few thousand resources). These issues have been reported only in recent versions because of the [changes in the reworked objects](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/v1-preparations/CHANGES_BEFORE_V1.md) (more queries and bigger state sizes in some resources).
+This document provides a basic performance analysis of the Snowflake Terraform Provider. It is not a complete analysis, but a basic outline, allowing us to give a few recommendations for the current provider versions. The document’s purpose is to set performance expectations for using the provider and give suggestions to users on how to improve its performance. We decided to perform such benchmarks because of concerns reported by our users ([\#3118](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3118), [\#3169](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3169)). They are related to the performance of large workloads (a few thousand resources). These issues have been reported only in recent versions because of the [changes in the reworked objects](https://github.com/snowflakedb/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/v1-preparations/CHANGES_BEFORE_V1.md) (more queries and bigger state sizes in some resources).
 
 ## Methodology
 
-We prepared Terraform configurations in [our repository](https://github.com/Snowflake-Labs/terraform-provider-snowflake/tree/main/pkg/manual_tests/benchmarks). We tested different deployment sizes for total execution time and state size. We chose multiple resources, such as tasks, warehouses, and schemas, to test account-level and database-level objects. These resources provide a variety of handling patterns: SHOW, DESCRIBE, and SHOW PARAMETERS outputs, as well as using ALTERS after CREATE because of limitations in Snowflake. All of the tests succeeded.
+We prepared Terraform configurations in [our repository](https://github.com/snowflakedb/terraform-provider-snowflake/tree/main/pkg/manual_tests/benchmarks). We tested different deployment sizes for total execution time and state size. We chose multiple resources, such as tasks, warehouses, and schemas, to test account-level and database-level objects. These resources provide a variety of handling patterns: SHOW, DESCRIBE, and SHOW PARAMETERS outputs, as well as using ALTERS after CREATE because of limitations in Snowflake. All of the tests succeeded.
 
 ## Environment
 
@@ -31,11 +31,11 @@ The logic inside is usually quite simple, but the network latency (we expect \~3
 
 ### New output fields
 
-During our road to v1, we decided to include the outputs of SHOW, DESCRIBE, and SHOW PARAMETERS of the reworked objects in the state (read more [here](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md)). This caused the state size to grow (see State size section). These fields are needed to handle changes to fields with default values in Snowflake. We plan to dive deeper into this with [plan modifiers](https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification) in Terraform Plugin Framework, but this requires migration to Terraform Plugin Framework, which we are planning after GA.
+During our road to v1, we decided to include the outputs of SHOW, DESCRIBE, and SHOW PARAMETERS of the reworked objects in the state (read more [here](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/v1-preparations/CHANGES_BEFORE_V1.md)). This caused the state size to grow (see State size section). These fields are needed to handle changes to fields with default values in Snowflake. We plan to dive deeper into this with [plan modifiers](https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification) in Terraform Plugin Framework, but this requires migration to Terraform Plugin Framework, which we are planning after GA.
 
 ### Additional requests
 
-Some resources make additional requests to handle all of the object fields in Snowflake, such as getting [policy references](https://docs.snowflake.com/en/sql-reference/account-usage/policy_references) in views or parameters [in users](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/MIGRATION_GUIDE.md#breaking-change-user-parameters-added-to-snowflake_user-resource). As mentioned above, these requests usually take \~300-400ms, but in large-scale deployments, they can substantially increase the execution time.
+Some resources make additional requests to handle all of the object fields in Snowflake, such as getting [policy references](https://docs.snowflake.com/en/sql-reference/account-usage/policy_references) in views or parameters [in users](https://github.com/snowflakedb/terraform-provider-snowflake/blob/c4b1bebce4bc5a81031248592b34af5e80ca2fc1/MIGRATION_GUIDE.md#breaking-change-user-parameters-added-to-snowflake_user-resource). As mentioned above, these requests usually take \~300-400ms, but in large-scale deployments, they can substantially increase the execution time.
 
 ## System stability
 
@@ -43,7 +43,7 @@ The tests utilize the network extensively and the results may vary depending on 
 
 ## Execution time
 
-The most requested issue is performance degradation in recent versions ([\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118)). We have already prepared basic ideas and suggestions in that thread.
+The most requested issue is performance degradation in recent versions ([\#3118](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3118)). We have already prepared basic ideas and suggestions in that thread.
 
 We performed these tests on the local backend (see more in the [Environment](#environment) section).
 
@@ -82,7 +82,7 @@ A standard solution HashiCorp recommends is splitting the deployments into small
 
 ## State size
 
-We measured the state sizes of the selected resources. We considered allowing a conditional removal of the `parameters` output field from the state. This was one of our ideas to reduce the state size (see [\#3118](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3118#issuecomment-2402618666)). We verified that removing this output is achievable because we do not use this field anymore in handling logic of resource parameters. The results are presented in the table below.
+We measured the state sizes of the selected resources. We considered allowing a conditional removal of the `parameters` output field from the state. This was one of our ideas to reduce the state size (see [\#3118](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3118#issuecomment-2402618666)). We verified that removing this output is achievable because we do not use this field anymore in handling logic of resource parameters. The results are presented in the table below.
 
 State size with different parallelism values:
 

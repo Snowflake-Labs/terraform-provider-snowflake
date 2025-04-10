@@ -11,7 +11,7 @@
 ```
 5. File `issues.csv` should be generated in the `file` directory. This is the CSV which summarizes all the issues we have.
 
-# Closing old issues (regarding https://github.com/Snowflake-Labs/terraform-provider-snowflake/discussions/2755)
+# Closing old issues (regarding https://github.com/snowflakedb/terraform-provider-snowflake/discussions/2755)
 1. To use the script, generate access token here: https://github.com/settings/tokens?type=beta.
 2. First get all open issues by invoking:
 ```shell
