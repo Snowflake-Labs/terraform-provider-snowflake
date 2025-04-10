@@ -48,9 +48,9 @@ Versioning will be clarified in [Snowflake official docs](https://docs.snowflake
 
 ### snowflakedb migration
 
-The migration to the snowflakedb GitHub organization was successfully concluded. It includes creating the new namespace in the official Terraform registry: [https://registry.terraform.io/providers/snowflakedb/snowflake](https://registry.terraform.io/providers/snowflakedb/snowflake). The [old namespace](https://registry.terraform.io/providers/Snowflake-Labs/snowflake) still exists, but as [announced](#24032025-snowflakedb-migration), it will be deprecated soon. The migration is straightforward. You can find details on how to migrate [here](SNOWFLAKEDB_MIGRATION.md).
+The migration to the snowflakedb GitHub organization was successfully concluded. It includes creating the new namespace in the official Terraform registry: [https://registry.terraform.io/providers/snowflakedb/snowflake](https://registry.terraform.io/providers/snowflakedb/snowflake). The [old provider](https://registry.terraform.io/providers/Snowflake-Labs/snowflake) still exists, but as [announced](#24032025-snowflakedb-migration), it will be deprecated soon. The migration is straightforward. You can find details on how to migrate [here](SNOWFLAKEDB_MIGRATION.md).
 
-The old namespace will be deleted on **July 31st**. We will soon add the deprecation notice to the old namespace. Please contact us if you encounter any problems switching the provider to the new namespace.
+The old namespace will be deleted on **July 31st**. We will soon add the deprecation notice to the old namespace. Please contact us if you encounter any problems switching to the provider in the new namespace.
 
 ## (24.03.2025) snowflakedb migration
 
