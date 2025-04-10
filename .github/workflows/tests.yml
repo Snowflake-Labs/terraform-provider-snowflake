@@ -10,9 +10,6 @@ on:
   repository_dispatch:
     types: [ ok-to-test-command ]
   pull_request:
-    paths-ignore:
-      - '*.md'
-      - 'pkg/internal/tracking/version.go'
 
 jobs:
   all-tests:
@@ -23,6 +20,21 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
+      - name: Filter changed files
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            run_tests:
+              - '.github/**'
+              - 'pkg/**'
+              - 'framework/**'
+              - 'tools/**'
+              - 'Makefile'
+              - 'CHANGELOG.md'
+              - 'main.go'
+              - 'go.mod'
+
       - id: verify_sha_input
         if: github.event_name == 'repository_dispatch'
         run: |
@@ -42,6 +54,7 @@ jobs:
           fi
 
       - name: Checkout Code (Repository Dispatch Event)
+        id: checkout_dispatch
         if: (github.event_name == 'repository_dispatch')
         uses: actions/checkout@v4
         with:
@@ -49,17 +62,21 @@ jobs:
           persist-credentials: false
 
       - name: Checkout Code (Pull Request Event)
-        if: (github.event_name == 'pull_request')
+        id: checkout_pr
+        if: ${{ !cancelled() && (steps.changes.outputs.run_tests == 'true') && (github.event_name == 'pull_request') }}
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - uses: actions/setup-go@v4
+        id: setup_go
+        if: ${{ !cancelled() && (steps.checkout_pr.conclusion == 'success' || steps.checkout_dispatch.conclusion == 'success') }}
         with:
           go-version-file: ./go.mod
           cache: false
 
       - name: Apply masking
+        if: ${{ !cancelled() && steps.setup_go.conclusion == 'success' }}
         run: |
           while IFS= read -r line || [[ -n $line ]]; do
             echo "::add-mask::$line"
@@ -68,6 +85,7 @@ jobs:
           SF_TF_GH_MASKING: ${{ secrets.SF_TF_GH_MASKING }}
 
       - name: Generate random secret
+        if: ${{ !cancelled() && steps.setup_go.conclusion == 'success' }}
         run: |
           random=$(openssl rand -hex 20)
           final_random="${TEST_SF_TF_RANDOM}${random}"
@@ -77,13 +95,16 @@ jobs:
           TEST_SF_TF_RANDOM: ${{ secrets.TEST_SF_TF_RANDOM }}
 
       - name: Install dependencies
+        if: ${{ !cancelled() && steps.setup_go.conclusion == 'success' }}
         run: make dev-setup
 
       - name: Create and populate .snowflake/config file
+        if: ${{ !cancelled() && steps.setup_go.conclusion == 'success' }}
         id: create_config
         run: mkdir -p $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE }}" > $HOME/.snowflake/config && chmod 0600 $HOME/.snowflake/config
 
       - name: Create and populate .snowflake/config_v097_compatible file
+        if: ${{ !cancelled() && steps.setup_go.conclusion == 'success' }}
         id: create_config_v097_compatible
         run: mkdir -p $HOME/.snowflake && echo "${{ secrets.SNOWFLAKE_CONFIG_FILE_V097_COMPATIBLE }}" > $HOME/.snowflake/config_v097_compatible && chmod 0600 $HOME/.snowflake/config_v097_compatible
 
@@ -124,7 +145,7 @@ jobs:
           TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL: ${{ secrets.TEST_SF_TF_GCS_EXTERNAL_BUCKET_URL }}
 
       - name: Sweepers cleanup
-        if: ${{ always() }}
+        if: ${{ always() && steps.setup_go.conclusion == 'success' }}
         run: echo y | make sweep
 
       - name: Find comment
