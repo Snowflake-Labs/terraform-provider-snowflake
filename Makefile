@@ -54,7 +54,7 @@ pre-push: mod fmt generate-docs-additional-files docs lint test-architecture ## 
 pre-push-check: pre-push mod-check generate-docs-additional-files-check docs-check ## Run checks before pushing a change (docs, fmt, mod, etc.)
 
 sweep: ## destroy the whole architecture; USE ONLY FOR DEVELOPMENT ACCOUNTS
-	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts!!!"
 	@echo "Are you sure? [y/n]" >&2
 	@read -r REPLY; \
 		if echo "$$REPLY" | grep -qG "^[yY]$$"; then \
