@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'repository_dispatch') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
-      - uses: dorny/paths-filter@v3
+      - name: Filter changed files
+        uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
@@ -68,7 +69,7 @@ jobs:
 
       - uses: actions/setup-go@v4
         id: setup_go
-        if: ${{ !cancelled() && (steps.checkout_dispatch.conclusion == 'success' || steps.checkout_dispatch.conclusion == 'success') }}
+        if: ${{ !cancelled() && (steps.checkout_pr.conclusion == 'success' || steps.checkout_dispatch.conclusion == 'success') }}
         with:
           go-version-file: ./go.mod
           cache: false
