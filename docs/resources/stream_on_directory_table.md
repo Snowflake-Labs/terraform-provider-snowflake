@@ -55,6 +55,7 @@ resource "snowflake_stream_on_directory_table" "stream" {
 
 - `comment` (String) Specifies a comment for the stream.
 - `copy_grants` (Boolean) (Default: `false`) Retains the access permissions from the original stream when a stream is recreated using the OR REPLACE clause. This is used when the provider detects changes for fields that can not be changed by ALTER. This value will not have any effect during creating a new object with Terraform.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -64,6 +65,17 @@ resource "snowflake_stream_on_directory_table" "stream" {
 - `show_output` (List of Object) Outputs the result of `SHOW STREAMS` for the given stream. (see [below for nested schema](#nestedatt--show_output))
 - `stale` (Boolean) Indicated if the stream is stale. When Terraform detects that the stream is stale, the stream is recreated with `CREATE OR REPLACE`. Read more on stream staleness in Snowflake [docs](https://docs.snowflake.com/en/user-guide/streams-intro#data-retention-period-and-staleness).
 - `stream_type` (String) Specifies a type for the stream. This field is used for checking external changes and recreating the resources if needed.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

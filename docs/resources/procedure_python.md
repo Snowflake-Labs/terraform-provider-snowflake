@@ -5,9 +5,9 @@ description: |-
   Resource used to manage python procedure objects. For more information, check procedure documentation https://docs.snowflake.com/en/sql-reference/sql/create-procedure.
 ---
 
-!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled field` in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
+!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled` field in the [provider configuration](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/snowflakedb/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
 
-!> **Caution: Import limitation** To import the python procedure, snowflake-snowpark-python version must be explicitly set in Snowflake (i.e. `snowflake-snowpark-python==1.14.0`). You can verify it by running `DESCRIBE PROCEDURE <your_procedure>` and checking the `packages`. Check [#3303](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3303) for reference.
+!> **Caution: Import limitation** To import the python procedure, snowflake-snowpark-python version must be explicitly set in Snowflake (i.e. `snowflake-snowpark-python==1.14.0`). You can verify it by running `DESCRIBE PROCEDURE <your_procedure>` and checking the `packages`. Check [#3303](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3303) for reference.
 
 -> **Note** External changes to `is_secure` and `null_input_behavior` are not currently supported. They will be handled in the following versions of the provider which may still affect this resource.
 
@@ -88,6 +88,7 @@ EOT
 - `packages` (Set of String) List of the names of packages deployed in Snowflake that should be included in the handler code’s execution environment. The Snowpark package is required for stored procedures, but is specified in the `snowpark_package` attribute. For more information about Snowpark, see [Snowpark API](https://docs.snowflake.com/en/developer-guide/snowpark/index).
 - `procedure_definition` (String) Defines the code executed by the stored procedure. The definition can consist of any valid code. Wrapping `$$` signs are added by the provider automatically; do not include them. The `procedure_definition` value must be Python source code. For more information, see [Python (using Snowpark)](https://docs.snowflake.com/en/developer-guide/stored-procedure/python/procedure-python-overview). To mitigate permadiff on this field, the provider replaces blank characters with a space. This can lead to false positives in cases where a change in case or run of whitespace is semantically significant.
 - `secrets` (Block Set) Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter. (see [below for nested schema](#nestedblock--secrets))
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `trace_level` (String) Trace level value to use when generating/filtering trace events For more information, check [TRACE_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#trace-level).
 
 ### Read-Only
@@ -127,6 +128,17 @@ Required:
 
 - `secret_id` (String) Fully qualified name of the allowed [secret](https://docs.snowflake.com/en/sql-reference/sql/create-secret). You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.
 - `secret_variable_name` (String) The variable that will be used in handler code when retrieving information from the secret.
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 
 <a id="nestedatt--parameters"></a>

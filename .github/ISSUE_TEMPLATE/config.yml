@@ -1,25 +1,25 @@
 blank_issues_enabled: false # turn off the possibility to create a new issue without using one of the existing templates
 contact_links:
   - name: Provider Roadmap
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md
+    url: https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md
     about: Roadmap for the upcoming work planned on the provider.
 
   - name: Migration Guide
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md
+    url: https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md
     about: Migration Guide that presents breaking changes between the versions with actions needed during upgrading.
 
   - name: Migrating from deprecated resources
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md
+    url: https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/docs/technical-documentation/resource_migration.md
     about: This guide may help you with migrating your deprecated resources to the newer counter-parts. It also presents different strategies on importing already existing Snowflake infrastructure into Terraform.
 
   - name: Guide on creating issues + FAQ + Commonly Known Issues
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md
+    url: https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md
     about: If you would like to create a GitHub issue, please read our guide first.
 
   - name: Commonly known issues
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md
+    url: https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md
     about: Contains the collection of common issues that are encountered by users when using the provider.
 
   - name: FAQ
-    url: https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md
+    url: https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/FAQ.md
     about: Contains a collection of frequently asked questions about the provider.

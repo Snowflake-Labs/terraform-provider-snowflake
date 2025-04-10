@@ -2,32 +2,35 @@ name: CodeQL
 
 on:
   pull_request:
+    branches: [ dev, main ]
+  push:
+    branches: [ dev, main ]
 
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: actions
+          build-mode: none
+        - language: go
+          build-mode: autobuild
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-go@v4
-        with:
-          go-version-file: ./go.mod
-          cache: false
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
         with:
-          languages: go
-          build-mode: manual
-
-      - name: Build the provider for analysis
-        run: make build-local
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
         with:
-          category: "/language:go"
+          category: "/language:${{ matrix.language }}"

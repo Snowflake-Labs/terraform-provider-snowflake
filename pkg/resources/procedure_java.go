@@ -44,6 +44,7 @@ func ProcedureJava() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ProcedureJava, ImportProcedure),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

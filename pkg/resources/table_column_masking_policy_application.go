@@ -4,22 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var tableColumnMaskingPolicyApplicationSchema = map[string]*schema.Schema{
 	"table": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "The fully qualified name (`database.schema.table`) of the table to apply the masking policy to.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "The fully qualified name (`database.schema.table`) of the table to apply the masking policy to.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 	"column": {
 		Type:        schema.TypeString,
@@ -28,10 +27,11 @@ var tableColumnMaskingPolicyApplicationSchema = map[string]*schema.Schema{
 		Description: "The column to apply the masking policy to.",
 	},
 	"masking_policy": {
-		Type:        schema.TypeString,
-		Required:    true,
-		ForceNew:    true,
-		Description: "Fully qualified name (`database.schema.policyname`) of the policy to apply.",
+		Type:             schema.TypeString,
+		Required:         true,
+		ForceNew:         true,
+		Description:      "Fully qualified name (`database.schema.policyname`) of the policy to apply.",
+		DiffSuppressFunc: suppressIdentifierQuoting,
 	},
 }
 
@@ -46,6 +46,7 @@ func TableColumnMaskingPolicyApplication() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -54,6 +54,7 @@ func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, ImportApiAuthenticationWithAuthorizationCodeGrant),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

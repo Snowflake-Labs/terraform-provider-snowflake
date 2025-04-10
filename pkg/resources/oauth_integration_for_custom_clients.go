@@ -202,6 +202,7 @@ func OauthIntegrationForCustomClients() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.OauthIntegrationForCustomClients, ImportOauthForCustomClientsIntegration),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -909,6 +909,7 @@ func TestInt_TablesShowByID(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
+
 	createTableHandle := func(t *testing.T, id sdk.SchemaObjectIdentifier) {
 		t.Helper()
 
@@ -974,5 +975,56 @@ func TestInt_TablesShowByID(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, descColumns, 2)
 		assert.NotEmpty(t, descColumns[1].SchemaEvolutionRecord)
+	})
+
+	t.Run("show by id: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+		_, err := client.Tables.ShowByID(ctx, tableId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+		_, err := client.Tables.ShowByID(ctx, tableId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id safely", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		createTableHandle(t, id)
+		table, err := client.Tables.ShowByIDSafely(ctx, id)
+		assert.NotNil(t, table)
+		assert.NoError(t, err)
+	})
+
+	t.Run("show by id safely: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+		_, err := client.Tables.ShowByIDSafely(ctx, tableId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id safely: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+		_, err := client.Tables.ShowByIDSafely(ctx, tableId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id safely: missing table", func(t *testing.T) {
+		tableId := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		_, err := client.Tables.ShowByIDSafely(ctx, tableId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 }

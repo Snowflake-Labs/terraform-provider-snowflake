@@ -15,7 +15,7 @@ The account resource allows you to create and manage Snowflake accounts. For mor
 
 ~> **Note** During the import, when Terraform detects changes on a field with `ForceNew`, it will try to recreate the resource. Due to Terraform limitations, `grace_period_in_days` is not set at that moment. This means that Terraform will try to drop the account with the empty grace period which is required, and fail.
 Before importing, ensure if the resource configuration matches the actual state.
-See more in our [Resource Migration guide](../guides/resource_migration#312-terraform-import) and [issue #3390](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3390).
+See more in our [Resource Migration guide](../guides/resource_migration#312-terraform-import) and [issue #3390](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3390).
 
 ## Example Usage
 
@@ -116,12 +116,24 @@ variable "last_name" {
 - `must_change_password` (String) (Default: fallback to Snowflake default - uses special value that cannot be set in the configuration manually (`default`)) Specifies whether the new user created to administer the account is forced to change their password upon first login into the account. This field cannot be used whenever admin_user_type is set to SERVICE. External changes for this field won't be detected. In case you want to apply external changes, you can re-create the resource manually using "terraform taint".
 - `region` (String) [Snowflake Region ID](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-snowflake-region-ids) of the region where the account is created. If no value is provided, Snowflake creates the account in the same Snowflake Region as the current account (i.e. the account in which the CREATE ACCOUNT statement is executed.)
 - `region_group` (String) ID of the region group where the account is created. To retrieve the region group ID for existing accounts in your organization, execute the [SHOW REGIONS](https://docs.snowflake.com/en/sql-reference/sql/show-regions) command. For information about when you might need to specify region group, see [Region groups](https://docs.snowflake.com/en/user-guide/admin-account-identifier.html#label-region-groups).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `show_output` (List of Object) Outputs the result of `SHOW ACCOUNTS` for the given account. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`

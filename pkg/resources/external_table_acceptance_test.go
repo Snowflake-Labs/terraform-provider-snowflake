@@ -346,12 +346,7 @@ func externalTableContainsData(id sdk.SchemaObjectIdentifier, contains func(rows
 		if err != nil {
 			return err
 		}
-
-		jsonRows, err := json.MarshalIndent(rows, "", "  ")
-		if err != nil {
-			return err
-		}
-		log.Printf("Retrieved rows for %s: %v", id.FullyQualifiedName(), string(jsonRows))
+		log.Printf("[DEBUG] Number of retrieved rows for %s: %d", id.FullyQualifiedName(), len(rows))
 
 		if !contains(rows) {
 			return fmt.Errorf("unexpected data returned by external table %s", id.FullyQualifiedName())

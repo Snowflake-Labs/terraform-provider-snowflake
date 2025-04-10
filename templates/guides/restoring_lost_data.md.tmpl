@@ -15,10 +15,10 @@ We made a strategic decision not to integrate it as a provider feature at this t
 Following the release of V1, we intend to reassess the topic of data recovery and UNDROP functionality to explore potential integration into the provider, evaluating its necessity and feasibility.
 
 You should be prepared beforehand by specifying how much of the historical data Snowflake should keep by setting the [DATA_RETENTION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters#data-retention-time-in-days) parameter.
-When using our provider, you can set this by using one of our parameter-setting resources (like [snowflake_account_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/account_parameter) or [snowflake_object_parameter](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/object_parameter))
-or set it on the resource level (e.g. `data_retention_time_in_days` in [snowflake_database](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/database)).
+When using our provider, you can set this by using one of our parameter-setting resources (like [snowflake_account_parameter](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account_parameter) or [snowflake_object_parameter](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/object_parameter))
+or set it on the resource level (e.g. `data_retention_time_in_days` in [snowflake_database](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/database)).
 
-> Note: If some of the resources support `data_retention_time_in_days` parameter in Snowflake, but it's not available in the provider, we'll add it during [the resource preparation for V1](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
+> Note: If some of the resources support `data_retention_time_in_days` parameter in Snowflake, but it's not available in the provider, we'll add it during [the resource preparation for V1](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1).
 
 Now, with [DATA_RETENTION_TIME_IN_DAYS](https://docs.snowflake.com/en/sql-reference/parameters#data-retention-time-in-days) set up,
 let's imagine we accidentally dropped a database that was managed by Terraform and contained a lot of important data we would like to recover.

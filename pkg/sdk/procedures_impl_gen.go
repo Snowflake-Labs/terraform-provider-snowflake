@@ -70,6 +70,10 @@ func (v *procedures) ShowByID(ctx context.Context, id SchemaObjectIdentifierWith
 	return collections.FindFirst(procedures, func(r Procedure) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
+func (v *procedures) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *procedures) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ProcedureDetail, error) {
 	opts := &DescribeProcedureOptions{
 		name: id,

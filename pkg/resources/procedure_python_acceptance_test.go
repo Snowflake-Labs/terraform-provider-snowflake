@@ -23,6 +23,9 @@ import (
 )
 
 func TestAcc_ProcedurePython_InlineBasic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	funcName := "echoVarchar"
 	argName := "x"
 	dataType := testdatatypes.DataTypeVarchar_100

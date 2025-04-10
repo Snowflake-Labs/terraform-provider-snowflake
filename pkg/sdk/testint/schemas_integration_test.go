@@ -1,6 +1,7 @@
 package testint
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
@@ -46,10 +47,10 @@ func TestInt_Schemas(t *testing.T) {
 
 		params, err := client.Schemas.ShowParameters(ctx, schemaId)
 		require.NoError(t, err)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
+		assertParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseDataRetentionTimeInDays()))
+		assertParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseMaxDataExtensionTimeInDays()))
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterCatalog)
+		assertParameterEquals(t, params, sdk.AccountParameterCatalog, testClientHelper().Database.TestDatabaseCatalog().Name())
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterReplaceInvalidCharacters)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDefaultDDLCollation)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterStorageSerializationPolicy)
@@ -378,10 +379,10 @@ func TestInt_Schemas(t *testing.T) {
 
 		params, err = client.Schemas.ShowParameters(ctx, schemaTest.ID())
 		require.NoError(t, err)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDataRetentionTimeInDays)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterMaxDataExtensionTimeInDays)
+		assertParameterEquals(t, params, sdk.AccountParameterDataRetentionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseDataRetentionTimeInDays()))
+		assertParameterEquals(t, params, sdk.AccountParameterMaxDataExtensionTimeInDays, strconv.Itoa(testClientHelper().Database.TestDatabaseMaxDataExtensionTimeInDays()))
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterExternalVolume)
-		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterCatalog)
+		assertParameterEquals(t, params, sdk.AccountParameterCatalog, testClientHelper().Database.TestDatabaseCatalog().Name())
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterReplaceInvalidCharacters)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterDefaultDDLCollation)
 		assertParameterEqualsToDefaultValue(t, params, sdk.ObjectParameterStorageSerializationPolicy)
@@ -547,6 +548,43 @@ func TestInt_Schemas(t *testing.T) {
 		}
 		assert.Contains(t, schemaNames, schema1.Name)
 		assert.Equal(t, "ROLE", schema1.OwnerRoleType)
+	})
+
+	t.Run("show by id: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		_, err := client.Schemas.ShowByID(ctx, schemaId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
+
+	t.Run("show by id: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		_, err := client.Schemas.ShowByID(ctx, schemaId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id safely", func(t *testing.T) {
+		schema, err := client.Schemas.ShowByIDSafely(ctx, testClientHelper().Ids.SchemaId())
+		assert.NotNil(t, schema)
+		assert.NoError(t, err)
+	})
+
+	t.Run("show by id safely: missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		_, err := client.Schemas.ShowByIDSafely(ctx, schemaId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+	})
+
+	t.Run("show by id safely: missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		_, err := client.Schemas.ShowByIDSafely(ctx, schemaId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
 	})
 
 	t.Run("drop", func(t *testing.T) {

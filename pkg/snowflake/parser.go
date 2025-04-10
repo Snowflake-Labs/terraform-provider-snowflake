@@ -2,7 +2,6 @@ package snowflake
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"unicode"
 )
@@ -27,6 +26,7 @@ func NewViewSelectStatementExtractor(input string) *ViewSelectStatementExtractor
 }
 
 func (e *ViewSelectStatementExtractor) Extract() (string, error) {
+	fmt.Println("[DEBUG] extracting view query")
 	e.consumeSpace()
 	e.consumeToken("create")
 	e.consumeSpace()
@@ -55,8 +55,6 @@ func (e *ViewSelectStatementExtractor) Extract() (string, error) {
 	e.consumeAggregationPolicy()
 	e.consumeToken("as")
 	e.consumeSpace()
-
-	log.Printf("[DEBUG] extracted statement %s from view query %s\n", string(e.input[e.pos:]), string(e.input))
 
 	return string(e.input[e.pos:]), nil
 }
@@ -169,7 +167,7 @@ func (e *ViewSelectStatementExtractor) consumeIdentifierList() {
 }
 
 func (e *ViewSelectStatementExtractor) ExtractMaterializedView() (string, error) {
-	fmt.Printf("[DEBUG] extracting materialized view query: %s\n", string(e.input))
+	fmt.Println("[DEBUG] extracting materialized view query")
 	e.consumeSpace()
 	e.consumeToken("use warehouse")
 	e.consumeSpace()
@@ -203,7 +201,7 @@ func (e *ViewSelectStatementExtractor) ExtractMaterializedView() (string, error)
 }
 
 func (e *ViewSelectStatementExtractor) ExtractDynamicTable() (string, error) {
-	fmt.Printf("[DEBUG] extracting dynamic table query %s\n", string(e.input))
+	fmt.Println("[DEBUG] extracting dynamic table query")
 	e.consumeSpace()
 	e.consumeToken("create")
 	e.consumeSpace()

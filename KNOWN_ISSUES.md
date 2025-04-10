@@ -18,11 +18,11 @@
 
 This is a collection of the most common issues (with solutions) that users encounter when using the Snowflake Terraform Provider.
 
-### General considerations 
+### General considerations
 
 #### Debugging provider
 To enable lower levels of logs, follow the official HashiCorp guide on [debugging providers](https://developer.hashicorp.com/terraform/internals/debugging).
-The topic of debugging is further described in the [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md#how-can-i-debug-the-issue-myself).
+The topic of debugging is further described in the [FAQ](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/FAQ.md#how-can-i-debug-the-issue-myself).
 
 #### Ignore_changes meta-attribute
 Sometimes if unexpected changes occur, you can use the `ignore_changes` meta-attribute to ignore specific fields.
@@ -41,13 +41,13 @@ HashiCorp still maintains it, but no new features are added.
 ```text
 │ Error: Provider produced invalid plan
 │
-│ Provider "registry.terraform.io/snowflake-labs/snowflake" planned an invalid value for snowflake_schema_grant.schema_grant.on_all: planned value cty.False for a
+│ Provider "registry.terraform.io/snowflakedb/snowflake" planned an invalid value for snowflake_schema_grant.schema_grant.on_all: planned value cty.False for a
 │ non-computed attribute.
 │
 │ This is a bug in the provider, which should be reported in the provider's own issue tracker.
 │
 ```
-GitHub issue reference: [#2347](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2347)
+GitHub issue reference: [#2347](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2347)
 
 **Solution:** You have to be using at least 1.1.5 version of the Terraform CLI.
 
@@ -63,20 +63,20 @@ GitHub issue reference: [#2347](https://github.com/Snowflake-Labs/terraform-prov
 
 **Solution**: Go to the [official Snowflake documentation](https://docs.snowflake.com/en/user-guide/key-pair-auth-troubleshooting#list-of-errors) and search by error code (390144 in this case).
 
-GitHub issue reference: [#2432](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
+GitHub issue reference: [#2432](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2432#issuecomment-1915074774)
 
 **Problem**: Getting `Error: 260000: account is empty` error with non-empty `account` configuration after upgrading to v1, with the same provider configuration which worked up to v0.100.0
 
-**Solution**: `account` configuration [has been removed in v1.0.0](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects). Please specify your organization name and account name separately as mentioned in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects):
+**Solution**: `account` configuration [has been removed in v1.0.0](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects). Please specify your organization name and account name separately as mentioned in the [migration guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#removed-deprecated-objects):
 * `account_name` (`accountname` if you're sourcing it from `config` TOML)
 * `organization_name` (`organizationname` if you're sourcing it from `config` TOML)
 
-GitHub issue reference: [#3198](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3198), [#3308](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3308)
+GitHub issue reference: [#3198](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3198), [#3308](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3308)
 
 ### How to set up the connection with the private key?
 **Problem:** From the version v0.78.0, we introduced a lot of provider configuration changes. One of them was deprecating `private_key_path` in favor of `private_key`.
 
-GitHub issue reference: [#2489](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2489), [Migration Guide reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0730--v0740)
+GitHub issue reference: [#2489](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2489), [Migration Guide reference](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#v0730--v0740)
 
 **Solution:** Use a non-deprecated `private_key` field with the use of the [file](https://developer.hashicorp.com/terraform/language/functions/file) function to pass the private key.
 
@@ -90,9 +90,9 @@ GitHub issue reference: [#2489](https://github.com/Snowflake-Labs/terraform-prov
 │ github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake/identifier.go:58 +0x174
 ```
 
-GitHub issue reference: [#2224](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2224)
+GitHub issue reference: [#2224](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2224)
 
-**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed.
+**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed.
 
 ### Incorrect identifier type (panic: interface conversion)
 **Problem** When getting stack traces similar to:
@@ -100,9 +100,9 @@ GitHub issue reference: [#2224](https://github.com/Snowflake-Labs/terraform-prov
 panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier, not sdk.DatabaseObjectIdentifier
 ```
 
-GitHub issue reference: [#2779](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2779)
+GitHub issue reference: [#2779](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2779)
 
-**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed. Quick reference:
+**Solution:** Some fields may expect different types of identifiers, when in doubt check [our documentation](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs) for the field or the [official Snowflake documentation](https://docs.snowflake.com/) what type of identifier is needed. Quick reference:
 - AccountObjectIdentifier - `<name>`
 - DatabaseObjectIdentifier - `<database>.<name>`
 - SchemaObjectIdentifier - `<database>.<schema>.<name>`
@@ -111,9 +111,9 @@ GitHub issue reference: [#2779](https://github.com/Snowflake-Labs/terraform-prov
 ### Incorrect account identifier (snowflake_database.from_share)
 **Problem:** From 0.87.0 version, we are quoting incoming external account identifier correctly, which may break configurations that specified account identifier as `<org_name>.<acc_name>` that worked previously by accident.
 
-GitHub issue reference: [#2590](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2590)
+GitHub issue reference: [#2590](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2590)
 
-**Solution:** As specified in the [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#behavior-change-external-object-identifier-changes), use account locator instead.
+**Solution:** As specified in the [migration guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#behavior-change-external-object-identifier-changes), use account locator instead.
 
 ### Granting on Functions or Procedures
 **Problem:** Right now, when granting any privilege on Function or Procedure with this or similar configuration:
@@ -135,7 +135,7 @@ You may encounter the following error:
 │ specified.
 ```
 
-**Related issues:** [#2375](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2375), [#2922](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2922)
+**Related issues:** [#2375](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2375), [#2922](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2922)
 
 **Solution:** Specify the arguments in the `object_name`:
 
@@ -172,7 +172,7 @@ Let's say you would like to grant `SELECT` on event table. In Snowflake, it's po
 `TABLE` object type instead of dedicated `EVENT TABLE` one. As `object_type` is one of the fields
 we filter on, it needs to exactly match with the output provided by `SHOW GRANTS` command.
 
-**Related issues:** [#2749](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2749), [#2803](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2803)
+**Related issues:** [#2749](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2749), [#2803](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2803)
 
 **Solution:** Here's a list of things that may help with your issue:
 - Firstly, check if the privilege has been granted in Snowflake. If it is, it means the configuration is correct (or at least compliant with Snowflake syntax).
@@ -201,20 +201,20 @@ Terraform may fail with:
 ╷
 │ Error: Provider produced inconsistent result after apply
 │
-│ When applying changes to snowflake_grant_account_role.this_is_a_bug, provider "provider["registry.terraform.io/snowflake-labs/snowflake"]" produced an
+│ When applying changes to snowflake_grant_account_role.this_is_a_bug, provider "provider["registry.terraform.io/snowflakedb/snowflake"]" produced an
 │ unexpected new value: Root object was present, but now absent.
 │
 │ This is a bug in the provider, which should be reported in the provider's own issue tracker.
 ╵
 ```
 
-**Related issues:** [#3001](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3001), [#2848](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2848)
+**Related issues:** [#3001](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3001), [#2848](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2848)
 
 **Solution:** This happens, because the PUBLIC role is a "pseudo-role" (see [docs](https://docs.snowflake.com/en/user-guide/security-access-control-overview#system-defined-roles)) that is already assigned to every role and user, so there is no need to grant it through Terraform. If you have an issue with removing the resources please use `terraform state rm <id>` to remove the resource from the state (and you can safely remove the configuration).
 
 ### Issues with grant_ownership
 
-Please read our [guide for grant_ownership](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
+Please read our [guide for grant_ownership](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/grant_ownership_common_use_cases) resource.
 It contains common use cases and issues that you may encounter when dealing with ownership transfers.
 
 ### Using QUOTED_IDENTIFIERS_IGNORE_CASE with the provider
@@ -222,7 +222,7 @@ It contains common use cases and issues that you may encounter when dealing with
 **Problem:** When `QUOTED_IDENTIFIERS_IGNORE_CASE` parameter is set to true, but resource identifier fields are filled with lowercase letters,
 during `terrform apply` they may fail with the `Error: Provider produced inconsistent result after apply` error (removing themselves from the state in the meantime).
 
-**Related issues:** [#2967](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2967)
+**Related issues:** [#2967](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2967)
 
 **Solution:** Either turn off the parameter or adjust your configurations to use only upper-cased names for identifiers and import back the resources.
 
@@ -230,7 +230,7 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 
 **Problem:** The communication from the provider is dropped, because of the firewalls that are incompatible with the `tlskyber` setting introduced in [Go v1.23](https://go.dev/doc/godebug#go-123).
 
-**Related issues:** [#3421](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3421)
+**Related issues:** [#3421](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3421)
 
 **Solution:** [Solution described in the migration guide for v1.0.3 to v1.0.4 upgrade](./MIGRATION_GUIDE.md#new-go-version-and-conflicts-with-suricata-based-firewalls-like-aws-network-firewall).
 
@@ -238,7 +238,7 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 
 **Problem:** The provider is taking too long to perform plan/apply operations.
 
-**Solution:** Refer to our [performance analysis](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/performance_benchmarks) and the optimizations we are proposing.
+**Solution:** Refer to our [performance analysis](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/performance_benchmarks) and the optimizations we are proposing.
 
 ### Dropping related resources
 
@@ -250,4 +250,4 @@ during `terrform apply` they may fail with the `Error: Provider produced inconsi
 ```
 That is because some of the Snowflake objects are interdependent, and dropping one requires dropping the other first.
 
-**Solution:** This should be mostly resolved by keeping the dependencies between resources in the configuration code, but also make sure to check our [guide regarding this topic](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/guides/unassigning_policies).
+**Solution:** This should be mostly resolved by keeping the dependencies between resources in the configuration code, but also make sure to check our [guide regarding this topic](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/unassigning_policies).

@@ -118,6 +118,7 @@ func Database() *schema.Resource {
 				Upgrade: v092DatabaseStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
@@ -368,7 +369,7 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 		return diag.FromErr(err)
 	}
 
-	database, err := client.Databases.ShowByID(ctx, id)
+	database, err := client.Databases.ShowByIDSafely(ctx, id)
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
 			d.SetId("")
@@ -376,7 +377,7 @@ func ReadDatabase(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 				diag.Diagnostic{
 					Severity: diag.Warning,
 					Summary:  "Failed to query database. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("DatabaseName: %s, Err: %s", id.FullyQualifiedName(), err),
+					Detail:   fmt.Sprintf("Database id: %s, Err: %s", id.FullyQualifiedName(), err),
 				},
 			}
 		}

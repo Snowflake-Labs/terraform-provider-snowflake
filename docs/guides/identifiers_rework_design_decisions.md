@@ -24,7 +24,7 @@ description: |-
   * [Conclusions](#conclusions)
 <!-- TOC -->
 
-This document summarises work done in the [identifiers rework](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) and future plans for further identifier improvements.
+This document summarises work done in the [identifiers rework](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md#identifiers-rework) and future plans for further identifier improvements.
 But before we dive into results and design decisions, here’s the list of reasons why we decided to rework the identifiers in the first place:
 - Common issues with identifiers with arguments (identifiers for functions, procedures, and external functions).
 - Meaningless error messages whenever an invalid identifier is specified.
@@ -39,28 +39,28 @@ Now, knowing the issues we wanted to solve, we would like to present the changes
 ### New identifier parser
 To resolve many of our underlying problems with parsing identifiers, we decided to go with the new one that will be able to correctly parse fully qualified names of objects.
 In addition to a better parsing function, we made sure it will return user-friendly error messages that will be able to find the root cause of a problem when specifying invalid identifiers.
-Previously, the error looked like [this](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2091).
+Previously, the error looked like [this](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2091).
 
 ### Using the recommended format for account identifiers
-Previously, the use of account identifiers was mixed across the resources, in many cases causing confusion ([commonly known issues reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md#incorrect-account-identifier-snowflake_databasefrom_share)).
+Previously, the use of account identifiers was mixed across the resources, in many cases causing confusion ([commonly known issues reference](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md#incorrect-account-identifier-snowflake_databasefrom_share)).
 Some of them required an account locator format (that was not fully supported), and some of the new recommended ones.
 We decided to unify them and use the new account identifier format everywhere. The account locator format is not supported in v1.
 
 ### Better handling for identifiers with arguments
-Previously, the handling of identifiers with arguments was not done fully correctly, causing many issues and confusion on how to use them ([commonly known issues reference](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md#granting-on-functions-or-procedures)).
+Previously, the handling of identifiers with arguments was not done fully correctly, causing many issues and confusion on how to use them ([commonly known issues reference](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md#granting-on-functions-or-procedures)).
 The main pain point was using them with privilege-granting resources. To address this we had to make two steps.
 The first one was adding a dedicated representation of an identifier containing arguments and using it in our SDK.
 The second one was additional parsing for the output of SHOW GRANTS in our SDK which was only necessary for functions,
 procedures, and external functions that returned non-valid identifier formats.
 
 ### Quoting differences
-There are many reported issues on identifier quoting and how it is inconsistent across resources and causes plan diffs to enforce certain format (e.g. [#2982](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2982), [#2236](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2236)).
+There are many reported issues on identifier quoting and how it is inconsistent across resources and causes plan diffs to enforce certain format (e.g. [#2982](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2982), [#2236](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2236)).
 To address that, we decided to add diff suppress on identifier fields that ignore changes related to differences in quotes.
 The main root cause of such differences was that Snowflake has specific rules when a given identifier (or part of an identifier) is quoted and when it’s not.
 The diff suppression should make those rules irrelevant whenever identifiers in your Terraform configuration contain quotes or not.
 
 ### New computed fully qualified name field in resources
-With the combination of quotes, old parsing methods, and other factors, it was a struggle to specify the fully qualified name of an object needed (e.g. [#2164](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2164), [#2754](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2754)).
+With the combination of quotes, old parsing methods, and other factors, it was a struggle to specify the fully qualified name of an object needed (e.g. [#2164](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2164), [#2754](https://github.com/snowflakedb/terraform-provider-snowflake/issues/2754)).
 Now, with v0.95.0, every resource that represents an object in Snowflake (e.g. user, role), and not an association (e.g. grants) will have a new computed field named `fully_qualified_name`.
 With the new computed field, it will be much easier to use resources requiring fully qualified names, for examples of usage head over to the [documentation for granting privileges to account role](../resources/grant_privileges_to_account_role).
 
@@ -80,12 +80,12 @@ object_name = snowflake_table.fully_qualified_name
 
 This is our recommended way of referencing other objects. However, if you don't manage the referenced object in Terraform, you can construct the proper id yourself like before: `"\"database_name\".\"schema_name\".\"object_name\""` for schema-level objects, or `"\"database_name\".\"schema_name\".\"procedure_name(NUMBER, VARCHAR)\""` for procedures. Note that quotes are necessary for correct parsing of an identifier.
 
-This change was announced in v0.95.0 [migration guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#new-fully_qualified_name-field-in-the-resources).
+This change was announced in v0.95.0 [migration guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#new-fully_qualified_name-field-in-the-resources).
 
 ### New resource identifier format
 This will be a small shift in the identifier representation for resources. The general rule will be now that:
 - If a resource can only be described with the Snowflake identifier, the fully qualified name will be put into the resource identifier. Previously, it was almost the same, except it was separated by pipes, and it was not a valid identifier.
-- If a resource cannot be described only by a single Snowflake identifier, then the resource identifier will be a pipe-separated text of all parts needed to identify a given resource ([example](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)). Mind that this approach is not compliant with identifiers containing pipes, but this approach is a middle ground between an easy-to-specify separator and a character that shouldn’t be that common in the identifier (it was previously used for all identifiers).
+- If a resource cannot be described only by a single Snowflake identifier, then the resource identifier will be a pipe-separated text of all parts needed to identify a given resource ([example](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role#import)). Mind that this approach is not compliant with identifiers containing pipes, but this approach is a middle ground between an easy-to-specify separator and a character that shouldn’t be that common in the identifier (it was previously used for all identifiers).
 
 ### Known limitations and identifier recommendations
 The main limitations around identifiers are strictly connected to what characters are used. Here’s a list of recommendations on which characters should be generally avoided when specifying identifiers:
@@ -107,8 +107,8 @@ show grants to role test; -- this won't work, because unquoted identifiers are c
 
 ### New identifier conventions
 Although, we are closing the identifiers rework, some resources won’t have the mentioned improvements.
-They were mostly applied to the objects that were already prepared for v1 ([essential objects](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/v1-preparations/ESSENTIAL_GA_OBJECTS.MD)).
-The remaining resources (and newly created ones) will receive these improvements [during v1 preparation](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) following our internal guidelines that contain those new rules regarding identifiers.
+They were mostly applied to the objects that were already prepared for v1 ([essential objects](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/v1-preparations/ESSENTIAL_GA_OBJECTS.MD)).
+The remaining resources (and newly created ones) will receive these improvements [during v1 preparation](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md#preparing-essential-ga-objects-for-the-provider-v1) following our internal guidelines that contain those new rules regarding identifiers.
 No matter if the resource has been refactored or not, the same recommendations mentioned above apply.
 
 ## Next steps

@@ -227,6 +227,7 @@ func Warehouse() *schema.Resource {
 				Upgrade: v092WarehouseSizeStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -151,6 +151,7 @@ func FailoverGroup() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
@@ -179,7 +180,7 @@ func CreateFailoverGroup(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	// these two are required attributes if from_replica is not set
 	if _, ok := d.GetOk("object_types"); !ok {
-		return diag.FromErr(errors.New("object_types is required when not creating from a replica"))
+		return diag.FromErr(errors.New("object_types field is required when from_replica is not set"))
 	}
 	objectTypesList := expandStringList(d.Get("object_types").(*schema.Set).List())
 	objectTypes := make([]sdk.PluralObjectType, len(objectTypesList))
@@ -188,7 +189,7 @@ func CreateFailoverGroup(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if _, ok := d.GetOk("allowed_accounts"); !ok {
-		return diag.FromErr(errors.New("allowed_accounts is required when not creating from a replica"))
+		return diag.FromErr(errors.New("allowed_accounts field is required when from_replica is not set"))
 	}
 	aaList := expandStringList(d.Get("allowed_accounts").(*schema.Set).List())
 	allowedAccounts := make([]sdk.AccountIdentifier, len(aaList))

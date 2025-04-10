@@ -174,6 +174,10 @@ type DatabaseObjectIdentifier struct {
 	name         string
 }
 
+func NewDatabaseObjectIdentifierInDatabase(databaseId AccountObjectIdentifier, name string) DatabaseObjectIdentifier {
+	return NewDatabaseObjectIdentifier(databaseId.Name(), name)
+}
+
 func NewDatabaseObjectIdentifier(databaseName, name string) DatabaseObjectIdentifier {
 	return DatabaseObjectIdentifier{
 		databaseName: strings.Trim(databaseName, `"`),

@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     snowflake = {
-      source = "Snowflake-Labs/snowflake"
+      source = "snowflakedb/snowflake"
     }
   }
 }

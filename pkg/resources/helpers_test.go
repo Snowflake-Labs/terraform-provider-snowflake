@@ -1,14 +1,10 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"slices"
 	"testing"
 
-	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
@@ -146,11 +142,9 @@ func Test_GetConfigPropertyAsPointerAllowingZeroValue(t *testing.T) {
 }
 
 // queriedAccountRolePrivilegesEqualTo will check if all the privileges specified in the argument are granted in Snowflake.
-func queriedPrivilegesEqualTo(query func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error), privileges ...string) func(s *terraform.State) error {
+func queriedPrivilegesEqualTo(query func() ([]sdk.Grant, error), privileges ...string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acc.TestAccProvider.Meta().(*provider.Context).Client
-		ctx := context.Background()
-		grants, err := query(client, ctx)
+		grants, err := query()
 		if err != nil {
 			return err
 		}
@@ -169,12 +163,9 @@ func queriedPrivilegesEqualTo(query func(client *sdk.Client, ctx context.Context
 
 // queriedAccountRolePrivilegesContainAtLeast will check if all the privileges specified in the argument are granted in Snowflake.
 // Any additional grants will be ignored.
-func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error), roleName sdk.ObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+func queriedPrivilegesContainAtLeast(query func() ([]sdk.Grant, error), roleName sdk.ObjectIdentifier, privileges ...string) func(s *terraform.State) error {
 	return func(s *terraform.State) error {
-		client := acc.TestAccProvider.Meta().(*provider.Context).Client
-		ctx := context.Background()
-
-		grants, err := query(client, ctx)
+		grants, err := query()
 		if err != nil {
 			return err
 		}
@@ -187,6 +178,26 @@ func queriedPrivilegesContainAtLeast(query func(client *sdk.Client, ctx context.
 		})
 		if notAllPrivilegesInGrantedPrivileges {
 			return fmt.Errorf("not every privilege from the list: %v was found in grant privileges: %v, for role name: %s", privileges, grantedPrivileges, roleName.FullyQualifiedName())
+		}
+
+		return nil
+	}
+}
+
+// queriedPrivilegesDoNotContain will check if all of the privileges specified in the argument are not granted in Snowflake.
+func queriedPrivilegesDoNotContain(query func() ([]sdk.Grant, error), privileges ...string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		grants, err := query()
+		if err != nil {
+			return err
+		}
+		for _, grant := range grants {
+			if (grant.GrantTo == sdk.ObjectTypeDatabaseRole || grant.GrantedTo == sdk.ObjectTypeDatabaseRole) && grant.Privilege == "USAGE" {
+				continue
+			}
+			if slices.Contains(privileges, grant.Privilege) {
+				return fmt.Errorf("grant not expected, grants: %v should not contain any privilege from %v", grants, privileges)
+			}
 		}
 
 		return nil

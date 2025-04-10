@@ -55,6 +55,10 @@ func (c *IdsGenerator) NewDatabaseObjectIdentifier(name string) sdk.DatabaseObje
 	return sdk.NewDatabaseObjectIdentifier(c.DatabaseId().Name(), name)
 }
 
+func (c *IdsGenerator) NewDatabaseObjectIdentifierInDatabase(name string, databaseId sdk.AccountObjectIdentifier) sdk.DatabaseObjectIdentifier {
+	return sdk.NewDatabaseObjectIdentifierInDatabase(databaseId, name)
+}
+
 func (c *IdsGenerator) RandomDatabaseObjectIdentifier() sdk.DatabaseObjectIdentifier {
 	return c.RandomDatabaseObjectIdentifierInDatabase(c.DatabaseId())
 }
@@ -114,6 +118,10 @@ func (c *IdsGenerator) NewSchemaObjectIdentifierWithArgumentsInSchema(name strin
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments...)
+}
+
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId sdk.DatabaseObjectIdentifier, arguments ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	return sdk.NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), c.Alpha(), arguments...)
 }
 
 func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(arguments ...datatypes.DataType) sdk.SchemaObjectIdentifierWithArguments {

@@ -1,7 +1,6 @@
 package resources_test
 
 import (
-	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -857,6 +856,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeModify.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
+					t,
 					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
 					sdk.AccountObjectPrivilegeModify.String(),
@@ -866,6 +866,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_GrantPrivilegesToDatabaseRole/UpdatePrivileges_SnowflakeChecked/all_privileges"),
 				ConfigVariables: configVariables(true, []string{}, ""),
 				Check: queriedPrivilegesToDatabaseRoleContainAtLeast(
+					t,
 					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeCreateDatabaseRole.String(),
 					sdk.AccountObjectPrivilegeCreateSchema.String(),
@@ -881,6 +882,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.AccountObjectPrivilegeMonitor.String(),
 				}, ""),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
+					t,
 					databaseRole.ID(),
 					sdk.AccountObjectPrivilegeModify.String(),
 					sdk.AccountObjectPrivilegeMonitor.String(),
@@ -893,6 +895,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_UpdatePrivileges_SnowflakeChecked(t *
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
 				}, schemaId.Name()),
 				Check: queriedPrivilegesToDatabaseRoleEqualTo(
+					t,
 					databaseRole.ID(),
 					sdk.SchemaPrivilegeCreateTask.String(),
 					sdk.SchemaPrivilegeCreateExternalTable.String(),
@@ -1320,27 +1323,21 @@ func TestAcc_GrantPrivilegesToDatabaseRole_CreateNotebooks(t *testing.T) {
 	})
 }
 
-func queriedPrivilegesToDatabaseRoleEqualTo(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesEqualTo(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				DatabaseRole: databaseRoleName,
-			},
-		})
+// TODO [SNOW-1431726]: Move to helpers
+func queriedPrivilegesToDatabaseRoleEqualTo(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
+	return queriedPrivilegesEqualTo(func() ([]sdk.Grant, error) {
+		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, privileges...)
 }
 
-func queriedPrivilegesToDatabaseRoleContainAtLeast(databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
-	return queriedPrivilegesContainAtLeast(func(client *sdk.Client, ctx context.Context) ([]sdk.Grant, error) {
-		return client.Grants.Show(ctx, &sdk.ShowGrantOptions{
-			To: &sdk.ShowGrantsTo{
-				DatabaseRole: databaseRoleName,
-			},
-		})
+func queriedPrivilegesToDatabaseRoleContainAtLeast(t *testing.T, databaseRoleName sdk.DatabaseObjectIdentifier, privileges ...string) func(s *terraform.State) error {
+	t.Helper()
+	return queriedPrivilegesContainAtLeast(func() ([]sdk.Grant, error) {
+		return acc.TestClient().Grant.ShowGrantsToDatabaseRole(t, databaseRoleName)
 	}, databaseRoleName, privileges...)
 }
 
-// TODO [SNOW-1431726]: Move to helpers
 func revokeAndGrantPrivilegesOnDatabaseToDatabaseRole(
 	t *testing.T,
 	databaseRoleId sdk.DatabaseObjectIdentifier,
@@ -1375,14 +1372,9 @@ func TestAcc_GrantPrivilegesToDatabaseRole_migrateFromV0941_ensureSmoothUpgradeW
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: grantPrivilegesToDatabaseRoleBasicConfig(quotedDatabaseRoleId, quotedSchemaId),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            grantPrivilegesToDatabaseRoleBasicConfig(quotedDatabaseRoleId, quotedSchemaId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "id", fmt.Sprintf("%s|false|false|USAGE|OnSchema|OnSchema|%s", databaseRoleId.FullyQualifiedName(), schemaId.FullyQualifiedName())),
 				),
@@ -1440,14 +1432,9 @@ func TestAcc_GrantPrivilegesToDatabaseRole_IdentifierQuotingDiffSuppression(t *t
 		},
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: grantPrivilegesToDatabaseRoleBasicConfig(unquotedDatabaseRoleId, unquotedSchemaId),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            grantPrivilegesToDatabaseRoleBasicConfig(unquotedDatabaseRoleId, unquotedSchemaId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "database_role_name", unquotedDatabaseRoleId),
 					resource.TestCheckResourceAttr("snowflake_grant_privileges_to_database_role.test", "on_schema.0.schema_name", unquotedSchemaId),
@@ -1491,13 +1478,8 @@ func TestAcc_GrantPrivilegesToDatabaseRole_OnFutureModels_issue3050(t *testing.T
 		CheckDestroy: acc.CheckAccountRolePrivilegesRevoked(t),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.95.0",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.95.0"),
 				Config:             grantPrivilegesToDatabaseRoleOnFutureInDatabaseConfig(databaseRoleId, []string{"USAGE"}, sdk.PluralObjectTypeModels, databaseRoleId.DatabaseName()),
 				ExpectNonEmptyPlan: true,
 			},

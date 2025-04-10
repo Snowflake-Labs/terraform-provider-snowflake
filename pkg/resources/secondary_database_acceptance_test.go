@@ -2,25 +2,29 @@ package resources_test
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
-
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/stretchr/testify/require"
 )
 
+// TODO [SNOW-1991414]: discuss and address all the nondeterministic tests in this file
 func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
 
@@ -54,13 +58,10 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 		accountEnableConsoleOutput                     = new(string)
 	)
 
-	configVariables := func(id sdk.AccountObjectIdentifier, primaryDatabaseName sdk.ExternalObjectIdentifier, comment string) config.Variables {
-		return config.Variables{
-			"name":          config.StringVariable(id.Name()),
-			"as_replica_of": config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
-			"comment":       config.StringVariable(comment),
-		}
-	}
+	secondaryDatabaseModel := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), id.Name()).
+		WithComment(comment)
+	renamedSecondaryDatabaseModel := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), newId.Name()).
+		WithComment(newComment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -90,65 +91,62 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
 					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
 				},
-				ConfigVariables: configVariables(id, externalPrimaryId, comment),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "fully_qualified_name", id.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			// Rename + comment update
 			{
-				ConfigVariables: configVariables(newId, externalPrimaryId, newComment),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
+				Config: accconfig.FromModels(t, renamedSecondaryDatabaseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "fully_qualified_name", newId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
+					resource.TestCheckResourceAttr(renamedSecondaryDatabaseModel.ResourceReference(), "name", newId.Name()),
+					resource.TestCheckResourceAttr(renamedSecondaryDatabaseModel.ResourceReference(), "fully_qualified_name", newId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(renamedSecondaryDatabaseModel.ResourceReference(), "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(renamedSecondaryDatabaseModel.ResourceReference(), "comment", newComment),
 
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr(renamedSecondaryDatabaseModel.ResourceReference(), "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			// Import all values
 			{
-				ConfigVariables:   configVariables(newId, externalPrimaryId, newComment),
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/basic"),
-				ResourceName:      "snowflake_secondary_database.test",
+				Config:            accconfig.FromModels(t, renamedSecondaryDatabaseModel),
+				ResourceName:      renamedSecondaryDatabaseModel.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -157,8 +155,25 @@ func TestAcc_CreateSecondaryDatabase_Basic(t *testing.T) {
 }
 
 func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
+	newExternalVolumeId, newExternalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(newExternalVolumeCleanup)
+
+	newCatalogId, newCatalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(newCatalogCleanup)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	comment := random.Comment()
+	newComment := random.Comment()
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
@@ -167,21 +182,6 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 		// TODO(SNOW-1562172): Create a better solution for this type of situations
 		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
-
-	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
-	t.Cleanup(externalVolumeCleanup)
-
-	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
-	t.Cleanup(catalogCleanup)
-
-	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	newComment := random.Comment()
-
-	newExternalVolumeId, newExternalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
-	t.Cleanup(newExternalVolumeCleanup)
-
-	newCatalogId, newCatalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
-	t.Cleanup(newCatalogCleanup)
 
 	var (
 		accountDataRetentionTimeInDays                 = new(string)
@@ -202,56 +202,43 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 		accountEnableConsoleOutput                     = new(string)
 	)
 
-	unsetConfigVariables := config.Variables{
-		"name":          config.StringVariable(id.Name()),
-		"as_replica_of": config.StringVariable(externalPrimaryId.FullyQualifiedName()),
-	}
-
-	setConfigVariables := config.Variables{
-		"name":          config.StringVariable(id.Name()),
-		"as_replica_of": config.StringVariable(externalPrimaryId.FullyQualifiedName()),
-		"comment":       config.StringVariable(comment),
-
-		"data_retention_time_in_days":                   config.IntegerVariable(20),
-		"max_data_extension_time_in_days":               config.IntegerVariable(25),
-		"external_volume":                               config.StringVariable(externalVolumeId.Name()),
-		"catalog":                                       config.StringVariable(catalogId.Name()),
-		"replace_invalid_characters":                    config.BoolVariable(true),
-		"default_ddl_collation":                         config.StringVariable("en_US"),
-		"storage_serialization_policy":                  config.StringVariable(string(sdk.StorageSerializationPolicyCompatible)),
-		"log_level":                                     config.StringVariable(string(sdk.LogLevelDebug)),
-		"trace_level":                                   config.StringVariable(string(sdk.TraceLevelAlways)),
-		"suspend_task_after_num_failures":               config.IntegerVariable(20),
-		"task_auto_retry_attempts":                      config.IntegerVariable(20),
-		"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeLarge)),
-		"user_task_timeout_ms":                          config.IntegerVariable(1200000),
-		"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(60),
-		"quoted_identifiers_ignore_case":                config.BoolVariable(true),
-		"enable_console_output":                         config.BoolVariable(true),
-	}
-
-	updatedConfigVariables := config.Variables{
-		"name":          config.StringVariable(newId.Name()),
-		"as_replica_of": config.StringVariable(externalPrimaryId.FullyQualifiedName()),
-		"comment":       config.StringVariable(newComment),
-
-		"data_retention_time_in_days":                   config.IntegerVariable(40),
-		"max_data_extension_time_in_days":               config.IntegerVariable(45),
-		"external_volume":                               config.StringVariable(newExternalVolumeId.Name()),
-		"catalog":                                       config.StringVariable(newCatalogId.Name()),
-		"replace_invalid_characters":                    config.BoolVariable(false),
-		"default_ddl_collation":                         config.StringVariable("en_GB"),
-		"storage_serialization_policy":                  config.StringVariable(string(sdk.StorageSerializationPolicyOptimized)),
-		"log_level":                                     config.StringVariable(string(sdk.LogLevelInfo)),
-		"trace_level":                                   config.StringVariable(string(sdk.TraceLevelOnEvent)),
-		"suspend_task_after_num_failures":               config.IntegerVariable(40),
-		"task_auto_retry_attempts":                      config.IntegerVariable(40),
-		"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeXLarge)),
-		"user_task_timeout_ms":                          config.IntegerVariable(2400000),
-		"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(120),
-		"quoted_identifiers_ignore_case":                config.BoolVariable(false),
-		"enable_console_output":                         config.BoolVariable(false),
-	}
+	secondaryDatabaseModel := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), id.Name())
+	secondaryDatabaseModelComplete := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), id.Name()).
+		WithComment(comment).
+		WithDataRetentionTimeInDays(20).
+		WithMaxDataExtensionTimeInDays(25).
+		WithExternalVolume(externalVolumeId.Name()).
+		WithCatalog(catalogId.Name()).
+		WithReplaceInvalidCharacters(true).
+		WithDefaultDdlCollation("en_US").
+		WithStorageSerializationPolicy(string(sdk.StorageSerializationPolicyCompatible)).
+		WithLogLevel(string(sdk.LogLevelDebug)).
+		WithTraceLevel(string(sdk.TraceLevelAlways)).
+		WithSuspendTaskAfterNumFailures(20).
+		WithTaskAutoRetryAttempts(20).
+		WithUserTaskManagedInitialWarehouseSize(string(sdk.WarehouseSizeLarge)).
+		WithUserTaskTimeoutMs(1200000).
+		WithUserTaskMinimumTriggerIntervalInSeconds(60).
+		WithQuotedIdentifiersIgnoreCase(true).
+		WithEnableConsoleOutput(true)
+	secondaryDatabaseModelCompleteUpdated := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), newId.Name()).
+		WithComment(newComment).
+		WithDataRetentionTimeInDays(40).
+		WithMaxDataExtensionTimeInDays(45).
+		WithExternalVolume(newExternalVolumeId.Name()).
+		WithCatalog(newCatalogId.Name()).
+		WithReplaceInvalidCharacters(false).
+		WithDefaultDdlCollation("en_GB").
+		WithStorageSerializationPolicy(string(sdk.StorageSerializationPolicyOptimized)).
+		WithLogLevel(string(sdk.LogLevelInfo)).
+		WithTraceLevel(string(sdk.TraceLevelOnEvent)).
+		WithSuspendTaskAfterNumFailures(40).
+		WithTaskAutoRetryAttempts(40).
+		WithUserTaskManagedInitialWarehouseSize(string(sdk.WarehouseSizeXLarge)).
+		WithUserTaskTimeoutMs(2400000).
+		WithUserTaskMinimumTriggerIntervalInSeconds(120).
+		WithQuotedIdentifiersIgnoreCase(false).
+		WithEnableConsoleOutput(false)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -281,118 +268,113 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 					*accountQuotedIdentifiersIgnoreCase = helpers.FindParameter(t, params, sdk.AccountParameterQuotedIdentifiersIgnoreCase).Value
 					*accountEnableConsoleOutput = helpers.FindParameter(t, params, sdk.AccountParameterEnableConsoleOutput).Value
 				},
-				ConfigVariables: setConfigVariables,
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModelComplete),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "is_transient", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "20"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "25"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelDebug)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelAlways)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "suspend_task_after_num_failures", "20"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "task_auto_retry_attempts", "20"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", "LARGE"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_timeout_ms", "1200000"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", "60"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", "true"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "enable_console_output", "true"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "data_retention_time_in_days", "20"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "max_data_extension_time_in_days", "25"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "replace_invalid_characters", "true"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "default_ddl_collation", "en_US"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "log_level", string(sdk.LogLevelDebug)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "trace_level", string(sdk.TraceLevelAlways)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "suspend_task_after_num_failures", "20"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "task_auto_retry_attempts", "20"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "user_task_managed_initial_warehouse_size", "LARGE"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "user_task_timeout_ms", "1200000"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "quoted_identifiers_ignore_case", "true"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "enable_console_output", "true"),
 				),
 			},
 			{
-				ConfigVariables: updatedConfigVariables,
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModelCompleteUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", newId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", newComment),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "name", newId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "is_transient", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "comment", newComment),
 
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "40"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "45"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", newExternalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", newCatalogId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_GB"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelInfo)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelOnEvent)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "suspend_task_after_num_failures", "40"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "task_auto_retry_attempts", "40"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", "XLARGE"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_timeout_ms", "2400000"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", "120"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "enable_console_output", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "data_retention_time_in_days", "40"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "max_data_extension_time_in_days", "45"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "external_volume", newExternalVolumeId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "catalog", newCatalogId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "replace_invalid_characters", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "default_ddl_collation", "en_GB"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "storage_serialization_policy", string(sdk.StorageSerializationPolicyOptimized)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "log_level", string(sdk.LogLevelInfo)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "trace_level", string(sdk.TraceLevelOnEvent)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "suspend_task_after_num_failures", "40"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "task_auto_retry_attempts", "40"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "user_task_managed_initial_warehouse_size", "XLARGE"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "user_task_timeout_ms", "2400000"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", "120"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "quoted_identifiers_ignore_case", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelCompleteUpdated.ResourceReference(), "enable_console_output", "false"),
 				),
 			},
 			{
-				ConfigVariables: unsetConfigVariables,
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", ""),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "is_transient", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "comment", ""),
 
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "external_volume", accountExternalVolume),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "catalog", accountCatalog),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "replace_invalid_characters", accountReplaceInvalidCharacters),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "default_ddl_collation", accountDefaultDdlCollation),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "storage_serialization_policy", accountStorageSerializationPolicy),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "log_level", accountLogLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "trace_level", accountTraceLevel),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_timeout_ms", accountUserTaskTimeoutMs),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
-					resource.TestCheckResourceAttrPtr("snowflake_secondary_database.test", "enable_console_output", accountEnableConsoleOutput),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "data_retention_time_in_days", accountDataRetentionTimeInDays),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "max_data_extension_time_in_days", accountMaxDataExtensionTimeInDays),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "external_volume", accountExternalVolume),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "catalog", accountCatalog),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "replace_invalid_characters", accountReplaceInvalidCharacters),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "default_ddl_collation", accountDefaultDdlCollation),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "storage_serialization_policy", accountStorageSerializationPolicy),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "log_level", accountLogLevel),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "trace_level", accountTraceLevel),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "suspend_task_after_num_failures", accountSuspendTaskAfterNumFailures),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "task_auto_retry_attempts", accountTaskAutoRetryAttempts),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "user_task_managed_initial_warehouse_size", accountUserTaskMangedInitialWarehouseSize),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "user_task_timeout_ms", accountUserTaskTimeoutMs),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", accountUserTaskMinimumTriggerIntervalInSeconds),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "quoted_identifiers_ignore_case", accountQuotedIdentifiersIgnoreCase),
+					resource.TestCheckResourceAttrPtr(secondaryDatabaseModel.ResourceReference(), "enable_console_output", accountEnableConsoleOutput),
 				),
 			},
 			{
-				ConfigVariables: setConfigVariables,
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModelComplete),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "is_transient", "false"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "as_replica_of", externalPrimaryId.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "comment", comment),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "is_transient", "false"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "as_replica_of", externalPrimaryId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "comment", comment),
 
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "20"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "max_data_extension_time_in_days", "25"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "external_volume", externalVolumeId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "catalog", catalogId.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "replace_invalid_characters", "true"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "default_ddl_collation", "en_US"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "log_level", string(sdk.LogLevelDebug)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "trace_level", string(sdk.TraceLevelAlways)),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "suspend_task_after_num_failures", "20"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "task_auto_retry_attempts", "20"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_managed_initial_warehouse_size", "LARGE"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_timeout_ms", "1200000"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "user_task_minimum_trigger_interval_in_seconds", "60"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "quoted_identifiers_ignore_case", "true"),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "enable_console_output", "true"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "data_retention_time_in_days", "20"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "max_data_extension_time_in_days", "25"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "external_volume", externalVolumeId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "catalog", catalogId.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "replace_invalid_characters", "true"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "default_ddl_collation", "en_US"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "storage_serialization_policy", string(sdk.StorageSerializationPolicyCompatible)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "log_level", string(sdk.LogLevelDebug)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "trace_level", string(sdk.TraceLevelAlways)),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "suspend_task_after_num_failures", "20"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "task_auto_retry_attempts", "20"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "user_task_managed_initial_warehouse_size", "LARGE"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "user_task_timeout_ms", "1200000"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "user_task_minimum_trigger_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "quoted_identifiers_ignore_case", "true"),
+					resource.TestCheckResourceAttr(secondaryDatabaseModelComplete.ResourceReference(), "enable_console_output", "true"),
 				),
 			},
 			// Import all values
 			{
-				ConfigVariables:   setConfigVariables,
-				ConfigDirectory:   acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
-				ResourceName:      "snowflake_secondary_database.test",
+				Config:            accconfig.FromModels(t, secondaryDatabaseModelComplete),
+				ResourceName:      secondaryDatabaseModelComplete.ResourceReference(),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -401,6 +383,15 @@ func TestAcc_CreateSecondaryDatabase_complete(t *testing.T) {
 }
 
 func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
+	t.Cleanup(externalVolumeCleanup)
+
+	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
+	t.Cleanup(catalogCleanup)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
@@ -413,43 +404,31 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 
 	accountDataRetentionTimeInDays := acc.TestClient().Parameter.ShowAccountParameter(t, sdk.AccountParameterDataRetentionTimeInDays)
 
-	externalVolumeId, externalVolumeCleanup := acc.TestClient().ExternalVolume.Create(t)
-	t.Cleanup(externalVolumeCleanup)
-
-	catalogId, catalogCleanup := acc.TestClient().CatalogIntegration.Create(t)
-	t.Cleanup(catalogCleanup)
-
-	configVariables := func(
-		id sdk.AccountObjectIdentifier,
-		primaryDatabaseName sdk.ExternalObjectIdentifier,
+	secondaryDatabaseModel := func(
 		dataRetentionTimeInDays *int,
-	) config.Variables {
-		variables := config.Variables{
-			"name":          config.StringVariable(id.Name()),
-			"as_replica_of": config.StringVariable(primaryDatabaseName.FullyQualifiedName()),
-			"transient":     config.BoolVariable(false),
-			"comment":       config.StringVariable(""),
+	) *model.SecondaryDatabaseModel {
+		secondaryDatabaseModel := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), id.Name()).
+			WithMaxDataExtensionTimeInDays(10).
+			WithExternalVolume(externalVolumeId.Name()).
+			WithCatalog(catalogId.Name()).
+			WithReplaceInvalidCharacters(true).
+			WithDefaultDdlCollation("en_US").
+			WithStorageSerializationPolicy(string(sdk.StorageSerializationPolicyOptimized)).
+			WithLogLevel(string(sdk.LogLevelOff)).
+			WithTraceLevel(string(sdk.LogLevelOff)).
+			WithSuspendTaskAfterNumFailures(10).
+			WithTaskAutoRetryAttempts(10).
+			WithUserTaskManagedInitialWarehouseSize(string(sdk.WarehouseSizeSmall)).
+			WithUserTaskTimeoutMs(1200000).
+			WithUserTaskMinimumTriggerIntervalInSeconds(120).
+			WithQuotedIdentifiersIgnoreCase(true).
+			WithEnableConsoleOutput(true)
 
-			"max_data_extension_time_in_days":               config.IntegerVariable(10),
-			"external_volume":                               config.StringVariable(externalVolumeId.Name()),
-			"catalog":                                       config.StringVariable(catalogId.Name()),
-			"replace_invalid_characters":                    config.BoolVariable(true),
-			"default_ddl_collation":                         config.StringVariable("en_US"),
-			"storage_serialization_policy":                  config.StringVariable("OPTIMIZED"),
-			"log_level":                                     config.StringVariable("OFF"),
-			"trace_level":                                   config.StringVariable("OFF"),
-			"suspend_task_after_num_failures":               config.IntegerVariable(10),
-			"task_auto_retry_attempts":                      config.IntegerVariable(10),
-			"user_task_managed_initial_warehouse_size":      config.StringVariable(string(sdk.WarehouseSizeSmall)),
-			"user_task_timeout_ms":                          config.IntegerVariable(120000),
-			"user_task_minimum_trigger_interval_in_seconds": config.IntegerVariable(120),
-			"quoted_identifiers_ignore_case":                config.BoolVariable(true),
-			"enable_console_output":                         config.BoolVariable(true),
-		}
 		if dataRetentionTimeInDays != nil {
-			variables["data_retention_time_in_days"] = config.IntegerVariable(*dataRetentionTimeInDays)
+			secondaryDatabaseModel.WithDataRetentionTimeInDays(*dataRetentionTimeInDays)
 		}
-		return variables
+
+		return secondaryDatabaseModel
 	}
 
 	var revertAccountParameterChange func()
@@ -463,22 +442,19 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				ConfigVariables: configVariables(id, externalPrimaryId, sdk.Int(2)),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(sdk.Int(2))),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "2"),
 				),
 			},
 			{
-				ConfigVariables: configVariables(id, externalPrimaryId, sdk.Int(1)),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(sdk.Int(1))),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "1"),
 				),
 			},
 			{
-				ConfigVariables: configVariables(id, externalPrimaryId, nil),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(nil)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
 				),
@@ -488,8 +464,7 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 					revertAccountParameterChange = acc.TestClient().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "3")
 					t.Cleanup(revertAccountParameterChange)
 				},
-				ConfigVariables: configVariables(id, externalPrimaryId, nil),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(nil)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "3"),
 				),
@@ -498,22 +473,19 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 				PreConfig: func() {
 					revertAccountParameterChange()
 				},
-				ConfigVariables: configVariables(id, externalPrimaryId, nil),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(nil)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
 				),
 			},
 			{
-				ConfigVariables: configVariables(id, externalPrimaryId, sdk.Int(3)),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-set"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(sdk.Int(3))),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", "3"),
 				),
 			},
 			{
-				ConfigVariables: configVariables(id, externalPrimaryId, nil),
-				ConfigDirectory: acc.ConfigurationDirectory("TestAcc_SecondaryDatabase/complete-optionals-unset"),
+				Config: accconfig.FromModels(t, secondaryDatabaseModel(nil)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "data_retention_time_in_days", accountDataRetentionTimeInDays.Value),
 				),
@@ -523,6 +495,9 @@ func TestAcc_CreateSecondaryDatabase_DataRetentionTimeInDays(t *testing.T) {
 }
 
 func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
@@ -533,6 +508,8 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
 
+	secondaryDatabaseModel := model.SecondaryDatabase("test", externalPrimaryId.FullyQualifiedName(), id.Name())
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -541,40 +518,31 @@ func TestAcc_SecondaryDatabase_migrateFromV0941_ensureSmoothUpgradeWithNewResour
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   secondaryDatabaseConfigBasic(id.Name(), externalPrimaryId.FullyQualifiedName()),
+				Config:                   accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},
 	})
 }
 
-func secondaryDatabaseConfigBasic(name, externalDatabaseId string) string {
-	return fmt.Sprintf(`resource "snowflake_secondary_database" "test" {
-		name = "%v"
-		as_replica_of = %v
-	}`, name, strconv.Quote(externalDatabaseId))
-}
-
 func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	quotedId := fmt.Sprintf(`\"%s\"`, id.Name())
+	quotedId := fmt.Sprintf(`"%s"`, id.Name())
 
 	primaryDatabase, externalPrimaryId, _ := acc.SecondaryTestClient().Database.CreatePrimaryDatabase(t, []sdk.AccountIdentifier{
 		sdk.NewAccountIdentifierFromAccountLocator(acc.TestClient().GetAccountLocator()),
@@ -585,6 +553,8 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 		require.Eventually(t, func() bool { return acc.SecondaryTestClient().Database.DropDatabase(t, primaryDatabase.ID()) == nil }, time.Second*5, time.Second)
 	})
 
+	secondaryDatabaseModel := model.SecondaryDatabase("test", unquotedExternalPrimaryId, quotedId)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { acc.TestAccPreCheck(t) },
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -593,35 +563,30 @@ func TestAcc_SecondaryDatabase_IdentifierQuotingDiffSuppression(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.SecondaryDatabase),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
-				Config:             secondaryDatabaseConfigBasic(quotedId, unquotedExternalPrimaryId),
+				Config:             accconfig.FromModels(t, secondaryDatabaseModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 			{
 				PreConfig:                func() { acc.UnsetConfigPathEnv(t) },
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
-				Config:                   secondaryDatabaseConfigBasic(quotedId, unquotedExternalPrimaryId),
+				Config:                   accconfig.FromModels(t, secondaryDatabaseModel),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_secondary_database.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(secondaryDatabaseModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("snowflake_secondary_database.test", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(secondaryDatabaseModel.ResourceReference(), plancheck.ResourceActionNoop),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_secondary_database.test", "id", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "name", id.Name()),
+					resource.TestCheckResourceAttr(secondaryDatabaseModel.ResourceReference(), "id", id.Name()),
 				),
 			},
 		},

@@ -355,7 +355,8 @@ it will result in:
 - Verify if all the config types are supported.
 - Consider a better implementation for the model conversion to config (TODO left in `config/config.go`).
 - Support additional methods for references in models (TODO left in `config/config.go`).
-- Generate depends_on for all compatible models. Consider exporting it in meta (discussion: https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/3207#discussion_r1850053618).
+- Generate depends_on for all compatible models. Consider exporting it in meta (discussion: https://github.com/snowflakedb/terraform-provider-snowflake/pull/3207#discussion_r1850053618).
+- Generate timeouts for all compatible models, similarly to depends_on.
 - Add a convenience function to concatenate multiple models (TODO left in `config/config.go`).
 - Add function to support using `ConfigFile:` in the acceptance tests (TODO left in `config/config.go`).
 - Replace `acceptance/snowflakechecks` with the new proposed Snowflake objects assertions.

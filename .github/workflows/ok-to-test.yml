@@ -9,6 +9,10 @@ jobs:
   ok-to-test:
     environment: ok-to-test
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    # Only run for PRs, not issue comments
+    if: ${{ github.event.issue.pull_request }}
     steps:
       - name: Create token
         id: create-token

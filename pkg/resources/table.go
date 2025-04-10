@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -223,6 +224,7 @@ func Table() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
@@ -272,7 +274,7 @@ type changedColumn struct {
 	newColumn             column // our new column
 	changedDataType       bool
 	changedNullConstraint bool
-	dropedDefault         bool
+	droppedDefault        bool
 	changedComment        bool
 	changedMaskingPolicy  bool
 	changedCollate        bool
@@ -290,7 +292,7 @@ func (c columns) getChangedColumnProperties(new columns) (changed changedColumns
 				changeColumn.changedNullConstraint = true
 			}
 			if cO.name == cN.name && cO._default != nil && cN._default == nil {
-				changeColumn.dropedDefault = true
+				changeColumn.droppedDefault = true
 			}
 
 			if cO.name == cN.name && cO.comment != cN.comment {
@@ -648,11 +650,19 @@ func ReadTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 
 	id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
 
-	table, err := client.Tables.ShowByID(ctx, id)
+	table, err := client.Tables.ShowByIDSafely(ctx, id)
 	if err != nil {
-		log.Printf("[DEBUG] table (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+		if errors.Is(err, sdk.ErrObjectNotFound) {
+			d.SetId("")
+			return diag.Diagnostics{
+				diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Failed to query table. Marking the resource as removed.",
+					Detail:   fmt.Sprintf("Table id: %s, Err: %s", id.FullyQualifiedName(), err),
+				},
+			}
+		}
+		return diag.FromErr(err)
 	}
 
 	s, err := client.Schemas.ShowByID(ctx, sdk.NewDatabaseObjectIdentifier(id.DatabaseName(), id.SchemaName()))
@@ -862,7 +872,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
-			if cA.dropedDefault {
+			if cA.droppedDefault {
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDropDefault(sdk.Bool(true))})))
 				if err != nil {
 					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))

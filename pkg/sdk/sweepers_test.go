@@ -119,7 +119,7 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 	}
 
 	return func() error {
-		log.Printf("[DEBUG] Nuking warehouses with prefix %s\n", prefix)
+		log.Printf("[DEBUG] Nuking warehouses with prefix %s", prefix)
 		ctx := context.Background()
 
 		var like *Like = nil
@@ -132,10 +132,10 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 			return fmt.Errorf("sweeping warehouses ended with error, err = %w", err)
 		}
 		var errs []error
-		log.Printf("[DEBUG] Found %d warehouses matching search criteria\n", len(whs))
+		log.Printf("[DEBUG] Found %d warehouses matching search criteria", len(whs))
 		for idx, wh := range whs {
-			log.Printf("[DEBUG] Processing warehouse [%d/%d]: %s...\n", idx+1, len(whs), wh.ID().FullyQualifiedName())
-			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+			log.Printf("[DEBUG] Processing warehouse [%d/%d]: %s...", idx+1, len(whs), wh.ID().FullyQualifiedName())
+			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-8*time.Hour)) {
 				if wh.Owner != "ACCOUNTADMIN" {
 					log.Printf("[DEBUG] Granting ownership on warehouse %s, to ACCOUNTADMIN", wh.ID().FullyQualifiedName())
 					err := client.Grants.GrantOwnership(
@@ -155,13 +155,13 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 					}
 				}
 
-				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
+				log.Printf("[DEBUG] Dropping warehouse %s, created at: %s", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
 				if err := client.Warehouses.Drop(ctx, wh.ID(), &DropWarehouseOptions{IfExists: Bool(true)}); err != nil {
-					log.Printf("[DEBUG] Dropping warehouse %s, resulted in error %v\n", wh.ID().FullyQualifiedName(), err)
+					log.Printf("[DEBUG] Dropping warehouse %s, resulted in error %v", wh.ID().FullyQualifiedName(), err)
 					errs = append(errs, fmt.Errorf("sweeping warehouse %s ended with error, err = %w", wh.ID().FullyQualifiedName(), err))
 				}
 			} else {
-				log.Printf("[DEBUG] Skipping warehouse %s, created at: %s\n", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
+				log.Printf("[DEBUG] Skipping warehouse %s, created at: %s", wh.ID().FullyQualifiedName(), wh.CreatedOn.String())
 			}
 		}
 		return errors.Join(errs...)
@@ -175,7 +175,7 @@ func nukeDatabases(client *Client, prefix string) func() error {
 	}
 
 	return func() error {
-		log.Printf("[DEBUG] Nuking databases with prefix %s\n", prefix)
+		log.Printf("[DEBUG] Nuking databases with prefix %s", prefix)
 		ctx := context.Background()
 
 		var like *Like = nil
@@ -187,7 +187,7 @@ func nukeDatabases(client *Client, prefix string) func() error {
 			return fmt.Errorf("sweeping databases ended with error, err = %w", err)
 		}
 		var errs []error
-		log.Printf("[DEBUG] Found %d databases matching search criteria\n", len(dbs))
+		log.Printf("[DEBUG] Found %d databases matching search criteria", len(dbs))
 		for idx, db := range dbs {
 			if db.Owner != "ACCOUNTADMIN" {
 				log.Printf("[DEBUG] Granting ownership on database %s, to ACCOUNTADMIN", db.ID().FullyQualifiedName())
@@ -208,15 +208,15 @@ func nukeDatabases(client *Client, prefix string) func() error {
 				}
 			}
 
-			log.Printf("[DEBUG] Processing database [%d/%d]: %s...\n", idx+1, len(dbs), db.ID().FullyQualifiedName())
-			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
-				log.Printf("[DEBUG] Dropping database %s, created at: %s\n", db.ID().FullyQualifiedName(), db.CreatedOn.String())
+			log.Printf("[DEBUG] Processing database [%d/%d]: %s...", idx+1, len(dbs), db.ID().FullyQualifiedName())
+			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-8*time.Hour)) {
+				log.Printf("[DEBUG] Dropping database %s, created at: %s", db.ID().FullyQualifiedName(), db.CreatedOn.String())
 				if err := client.Databases.Drop(ctx, db.ID(), &DropDatabaseOptions{IfExists: Bool(true)}); err != nil {
-					log.Printf("[DEBUG] Dropping database %s, resulted in error %v\n", db.ID().FullyQualifiedName(), err)
+					log.Printf("[DEBUG] Dropping database %s, resulted in error %v", db.ID().FullyQualifiedName(), err)
 					errs = append(errs, fmt.Errorf("sweeping database %s ended with error, err = %w", db.ID().FullyQualifiedName(), err))
 				}
 			} else {
-				log.Printf("[DEBUG] Skipping database %s, created at: %s\n", db.ID().FullyQualifiedName(), db.CreatedOn.String())
+				log.Printf("[DEBUG] Skipping database %s, created at: %s", db.ID().FullyQualifiedName(), db.CreatedOn.String())
 			}
 		}
 		return errors.Join(errs...)
@@ -247,17 +247,17 @@ func nukeUsers(client *Client) func() error {
 			return fmt.Errorf("sweeping users ended with error, err = %w", err)
 		}
 		var errs []error
-		log.Printf("[DEBUG] Found %d users\n", len(users))
+		log.Printf("[DEBUG] Found %d users", len(users))
 		for idx, user := range users {
-			log.Printf("[DEBUG] Processing user [%d/%d]: %s...\n", idx+1, len(users), user.ID().FullyQualifiedName())
+			log.Printf("[DEBUG] Processing user [%d/%d]: %s...", idx+1, len(users), user.ID().FullyQualifiedName())
 			if !slices.Contains(protectedUsers, user.Name) && user.CreatedOn.Before(time.Now().Add(-15*time.Minute)) {
-				log.Printf("[DEBUG] Dropping user %s\n", user.ID().FullyQualifiedName())
+				log.Printf("[DEBUG] Dropping user %s", user.ID().FullyQualifiedName())
 				if err := client.Users.Drop(ctx, user.ID(), &DropUserOptions{IfExists: Bool(true)}); err != nil {
-					log.Printf("[DEBUG] Dropping user %s, resulted in error %v\n", user.ID().FullyQualifiedName(), err)
+					log.Printf("[DEBUG] Dropping user %s, resulted in error %v", user.ID().FullyQualifiedName(), err)
 					errs = append(errs, fmt.Errorf("sweeping user %s ended with error, err = %w", user.ID().FullyQualifiedName(), err))
 				}
 			} else {
-				log.Printf("[DEBUG] Skipping user %s\n", user.ID().FullyQualifiedName())
+				log.Printf("[DEBUG] Skipping user %s", user.ID().FullyQualifiedName())
 			}
 		}
 		return errors.Join(errs...)

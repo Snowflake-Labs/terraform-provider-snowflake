@@ -104,7 +104,7 @@ func (row replicationDatabaseRow) convert() *ReplicationDatabase {
 	if row.PrimaryDatabase != "" {
 		primaryDatabaseId, err := ParseExternalObjectIdentifier(row.PrimaryDatabase)
 		if err != nil {
-			log.Printf("unable to parse primary database identifier: %v, err = %s", row.PrimaryDatabase, err)
+			log.Printf("[DEBUG] unable to parse primary database identifier: %v, err = %s", row.PrimaryDatabase, err)
 		} else {
 			db.PrimaryDatabase = &primaryDatabaseId
 		}

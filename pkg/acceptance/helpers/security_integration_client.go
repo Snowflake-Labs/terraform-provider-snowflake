@@ -27,10 +27,15 @@ func (c *SecurityIntegrationClient) client() sdk.SecurityIntegrations {
 
 func (c *SecurityIntegrationClient) CreateApiAuthenticationWithClientCredentialsFlow(t *testing.T) (*sdk.SecurityIntegration, func()) {
 	t.Helper()
+	return c.CreateApiAuthenticationWithClientCredentialsFlowWithEnabled(t, false)
+}
+
+func (c *SecurityIntegrationClient) CreateApiAuthenticationWithClientCredentialsFlowWithEnabled(t *testing.T, enabled bool) (*sdk.SecurityIntegration, func()) {
+	t.Helper()
 	ctx := context.Background()
 
 	id := c.ids.RandomAccountObjectIdentifier()
-	request := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id, false, "foo", "foo")
+	request := sdk.NewCreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest(id, enabled, "foo", "foo")
 	err := c.client().CreateApiAuthenticationWithClientCredentialsFlow(ctx, request)
 	require.NoError(t, err)
 

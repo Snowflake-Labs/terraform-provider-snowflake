@@ -16,23 +16,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func StringParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
-	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return value.(string) })
+func StringParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameterName T) schema.CustomizeDiffFunc {
+	return ParameterValueComputedIf(key, params, parameterLevel, parameterName, func(value any) string { return value.(string) })
 }
 
-func IntParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
-	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.Itoa(value.(int)) })
+func IntParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameterName T) schema.CustomizeDiffFunc {
+	return ParameterValueComputedIf(key, params, parameterLevel, parameterName, func(value any) string { return strconv.Itoa(value.(int)) })
 }
 
-func BoolParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameter T) schema.CustomizeDiffFunc {
-	return ParameterValueComputedIf(key, params, parameterLevel, parameter, func(value any) string { return strconv.FormatBool(value.(bool)) })
+func BoolParameterValueComputedIf[T ~string](key string, params []*sdk.Parameter, parameterLevel sdk.ParameterType, parameterName T) schema.CustomizeDiffFunc {
+	return ParameterValueComputedIf(key, params, parameterLevel, parameterName, func(value any) string { return strconv.FormatBool(value.(bool)) })
 }
 
-func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, param T, valueToString func(v any) string) schema.CustomizeDiffFunc {
+func ParameterValueComputedIf[T ~string](key string, parameters []*sdk.Parameter, objectParameterLevel sdk.ParameterType, parameterName T, valueToString func(v any) string) schema.CustomizeDiffFunc {
 	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-		foundParameter, err := collections.FindFirst(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(param) })
+		foundParameter, err := collections.FindFirst(parameters, func(parameter *sdk.Parameter) bool { return parameter.Key == string(parameterName) })
 		if err != nil {
-			log.Printf("[WARN] failed to find parameter: %s", param)
+			log.Printf("[WARN] failed to find parameter: %s", parameterName)
 			return nil
 		}
 		parameter := *foundParameter
@@ -95,13 +95,13 @@ func ComputedIfAnyAttributeChanged(resourceSchema map[string]*schema.Schema, key
 		for _, changedKey := range changedAttributeKeys {
 			if diff.HasChange(changedKey) {
 				oldValue, newValue := diff.GetChange(changedKey)
-				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s old: %s new: %s\n", changedKey, oldValue, newValue)
+				log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: changed key: %s", changedKey)
 
 				if v, ok := resourceSchema[changedKey]; ok {
 					if diffSuppressFunc := v.DiffSuppressFunc; diffSuppressFunc != nil {
 						resourceData, resourceDataOk := sdkv2enhancements.CreateResourceDataFromResourceDiff(resourceSchema, diff)
 						if !resourceDataOk {
-							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: did not create resource data correctly, skipping\n")
+							log.Printf("[DEBUG] ComputedIfAnyAttributeChanged: did not create resource data correctly, skipping")
 							continue
 						}
 						if !diffSuppressFunc(key, fmt.Sprintf("%v", oldValue), fmt.Sprintf("%v", newValue), resourceData) {
@@ -183,7 +183,7 @@ func ForceNewIfAllKeysAreNotSet(key string, keys ...string) schema.CustomizeDiff
 func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get("user_type"); n != nil {
-			log.Printf("[DEBUG] new external value for user type: %s\n", n.(string))
+			log.Printf("[DEBUG] new external value for user type: %s", n.(string))
 			if acceptableUserTypes, ok := sdk.AcceptableUserTypes[userType]; ok && !slices.Contains(acceptableUserTypes, strings.ToUpper(n.(string))) {
 				// we have to set here a value instead of just SetNewComputed
 				// because with empty value (default snowflake behavior for type) ForceNew fails
@@ -198,7 +198,7 @@ func RecreateWhenUserTypeChangedExternally(userType sdk.UserType) schema.Customi
 func RecreateWhenSecretTypeChangedExternally(secretType sdk.SecretType) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get("secret_type"); n != nil {
-			log.Printf("[DEBUG] new external value for secret type: %s\n", n.(string))
+			log.Printf("[DEBUG] new external value for secret type: %s", n.(string))
 
 			diffSecretType, _ := sdk.ToSecretType(n.(string))
 			if acceptableSecretTypes, ok := sdk.AcceptableSecretTypes[secretType]; ok && !slices.Contains(acceptableSecretTypes, diffSecretType) {
@@ -236,7 +236,7 @@ func RecreateWhenStreamTypeChangedExternally(streamType sdk.StreamSourceType) sc
 func RecreateWhenResourceTypeChangedExternally[T ~string](typeField string, wantType T, toType func(string) (T, error)) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get(typeField); n != nil {
-			log.Printf("[DEBUG] new external value for %s\n", typeField)
+			log.Printf("[DEBUG] new external value for %s", typeField)
 
 			gotTypeRaw := n.(string)
 			// if the type is empty, the state is empty - do not recreate
@@ -274,7 +274,7 @@ func RecreateWhenStreamIsStale() schema.CustomizeDiffFunc {
 func RecreateWhenResourceBoolFieldChangedExternally(boolField string, wantValue bool) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if n := diff.Get(boolField); n != nil {
-			log.Printf("[DEBUG] new external value for %v, recreating the resource...\n", boolField)
+			log.Printf("[DEBUG] new external value for %v, recreating the resource...", boolField)
 			if n.(bool) != wantValue {
 				return errors.Join(diff.SetNew(boolField, wantValue), diff.ForceNew(boolField))
 			}
@@ -285,11 +285,11 @@ func RecreateWhenResourceBoolFieldChangedExternally(boolField string, wantValue 
 
 // RecreateWhenResourceStringFieldChangedExternally recreates a resource when wantValue is different from value in field.
 // TODO [SNOW-1850370]: merge with above? test.
-func RecreateWhenResourceStringFieldChangedExternally(field string, wantValue string) schema.CustomizeDiffFunc {
+func RecreateWhenResourceStringFieldChangedExternally(field string, expectedValue string) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-		if o, n := diff.GetChange(field); n != nil && o != nil && o != "" && n.(string) != wantValue {
-			log.Printf("[DEBUG] new external value for %s: %s (want: %s), recreating the resource...\n", field, n.(string), wantValue)
-			return errors.Join(diff.SetNew(field, wantValue), diff.ForceNew(field))
+		if o, n := diff.GetChange(field); n != nil && o != nil && o != "" && n.(string) != expectedValue {
+			log.Printf("[DEBUG] new unexpected external value for: %s, was expecting: %s, recreating the resource...", field, expectedValue)
+			return errors.Join(diff.SetNew(field, expectedValue), diff.ForceNew(field))
 		}
 		return nil
 	}

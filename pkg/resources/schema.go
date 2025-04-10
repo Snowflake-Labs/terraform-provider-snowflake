@@ -126,6 +126,7 @@ func Schema() *schema.Resource {
 				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
@@ -226,20 +227,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 			return diag.FromErr(err)
 		}
 
-		_, err = client.Databases.ShowByID(ctx, id.DatabaseId())
-		if err != nil {
-			log.Printf("[DEBUG] database %s for schema %s not found", id.DatabaseId().Name(), id.Name())
-			d.SetId("")
-			return diag.Diagnostics{
-				diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Failed to query database. Marking the resource as removed.",
-					Detail:   fmt.Sprintf("database name: %s, Err: %s", id.DatabaseId(), err),
-				},
-			}
-		}
-
-		schema, err := client.Schemas.ShowByID(ctx, id)
+		schema, err := client.Schemas.ShowByIDSafely(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
@@ -247,7 +235,7 @@ func ReadContextSchema(withExternalChangesMarking bool) schema.ReadContextFunc {
 					diag.Diagnostic{
 						Severity: diag.Warning,
 						Summary:  "Failed to query schema. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("schema name: %s, Err: %s", id.FullyQualifiedName(), err),
+						Detail:   fmt.Sprintf("Schema id: %s, Err: %s", id.FullyQualifiedName(), err),
 					},
 				}
 			}

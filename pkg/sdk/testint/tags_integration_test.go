@@ -1061,7 +1061,8 @@ func TestInt_TagsAssociations(t *testing.T) {
 			objectType: sdk.ObjectTypeProcedure,
 			setupObject: func() sdk.SchemaObjectIdentifierWithArguments {
 				// cleanup is set up in the Create procedure
-				procedure := testClientHelper().Procedure.Create(t, sdk.DataTypeInt)
+				procedure, cleanupProcedure := testClientHelper().Procedure.Create(t, sdk.DataTypeInt)
+				t.Cleanup(cleanupProcedure)
 				return procedure.ID()
 			},
 			setTags: func(id sdk.SchemaObjectIdentifierWithArguments, tags []sdk.TagAssociation) error {

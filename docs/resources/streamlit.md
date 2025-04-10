@@ -63,6 +63,7 @@ resource "snowflake_streamlit" "streamlit" {
 - `directory_location` (String) Specifies the full path to the named stage containing the Streamlit Python files, media files, and the environment.yml file.
 - `external_access_integrations` (Set of String) External access integrations connected to the Streamlit.
 - `query_warehouse` (String) Specifies the warehouse where SQL queries issued by the Streamlit application are run. Due to Snowflake limitations warehouse identifier can consist of only upper-cased letters. For more information about this resource, see [docs](./warehouse).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `title` (String) Specifies a title for the Streamlit app to display in Snowsight.
 
 ### Read-Only
@@ -71,6 +72,17 @@ resource "snowflake_streamlit" "streamlit" {
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `show_output` (List of Object) Outputs the result of `SHOW STREAMLIT` for the given streamlit. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

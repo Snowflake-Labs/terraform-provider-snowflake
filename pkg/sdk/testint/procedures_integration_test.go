@@ -2131,6 +2131,12 @@ def filter_by_role(session, table_name, role):
 		require.NoError(t, err)
 	})
 
+	t.Run("show by id", func(t *testing.T) {
+		procedure, err := client.Procedures.ShowByID(ctx, tmpJavaProcedure.FunctionId)
+		assert.NotNil(t, procedure)
+		assert.NoError(t, err)
+	})
+
 	t.Run("show by id - same name in different schemas", func(t *testing.T) {
 		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
 		t.Cleanup(schemaCleanup)
@@ -2157,15 +2163,67 @@ def filter_by_role(session, table_name, role):
 		dataType := testdatatypes.DataTypeFloat
 		name := testClientHelper().Ids.Alpha()
 
-		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.LegacyDataTypeFrom(dataType))
-		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArgumentsInSchema(name, testClientHelper().Ids.SchemaId(), sdk.DataTypeInt, sdk.DataTypeVARCHAR)
+		id1 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.LegacyDataTypeFrom(dataType))
+		id2 := testClientHelper().Ids.NewSchemaObjectIdentifierWithArguments(name, sdk.DataTypeInt, sdk.DataTypeVARCHAR)
 
-		e := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
-		testClientHelper().Procedure.CreateWithIdentifier(t, id2)
+		e, cleanupProcedure := testClientHelper().Procedure.CreateWithIdentifier(t, id1)
+		t.Cleanup(cleanupProcedure)
+		_, cleanupSecondProcedure := testClientHelper().Procedure.CreateWithIdentifier(t, id2)
+		t.Cleanup(cleanupSecondProcedure)
 
 		es, err := client.Procedures.ShowByID(ctx, id1)
 		require.NoError(t, err)
 		require.Equal(t, *e, *es)
+	})
+
+	t.Run("show by id - missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
+		_, err := client.Procedures.ShowByID(ctx, procedureId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("show by id - missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
+		_, err := client.Procedures.ShowByID(ctx, procedureId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("show by id safely", func(t *testing.T) {
+		procedure, err := client.Procedures.ShowByIDSafely(ctx, tmpJavaProcedure.FunctionId)
+		assert.NotNil(t, procedure)
+		assert.NoError(t, err)
+	})
+
+	t.Run("show by id safely - missing database", func(t *testing.T) {
+		databaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
+		_, err := client.Procedures.ShowByIDSafely(ctx, procedureId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	})
+
+	t.Run("show by id safely - missing schema", func(t *testing.T) {
+		schemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId)
+		_, err := client.Procedures.ShowByIDSafely(ctx, procedureId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("show by id safely - missing procedure", func(t *testing.T) {
+		procedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArguments(sdk.DataTypeInt)
+		_, err := client.Procedures.ShowByIDSafely(ctx, procedureId)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
 	})
 
 	// This test shows behavior of detailed types (e.g. VARCHAR(20) and NUMBER(10, 0)) on Snowflake side for procedures.

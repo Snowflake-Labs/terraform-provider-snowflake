@@ -5,7 +5,7 @@
 terraform {
   required_providers {
     snowflake = {
-      source  = "Snowflake-Labs/snowflake"
+      source  = "snowflakedb/snowflake"
       version = ">= 0.92.0" # latest
     }
   }
@@ -15,12 +15,12 @@ provider "snowflake" {}
 
 provider "snowflake" {
   profile = "secondary_test_account"
-  alias = second_account
+  alias   = second_account
 }
 
 resource "snowflake_database" "primary" {
-  provider = snowflake.second_account
-  name = "test"
+  provider                    = snowflake.second_account
+  name                        = "test"
   data_retention_time_in_days = 0 # to avoid in-place update to -1
   replication {
     enable_to_account {
@@ -32,7 +32,7 @@ resource "snowflake_database" "primary" {
 }
 
 resource "snowflake_secondary_database" "secondary" {
-  name = "test"
-  data_retention_time_in_days = 0 # to avoid in-place update to -1
-  from_replica = "\"<second_account_organization_name>\".\"<second_account_account_name>\".\"${snowflake_database.primary.name}\"" # TODO: Replace
+  name                        = "test"
+  data_retention_time_in_days = 0                                                                                                                 # to avoid in-place update to -1
+  from_replica                = "\"<second_account_organization_name>\".\"<second_account_account_name>\".\"${snowflake_database.primary.name}\"" # TODO: Replace
 }

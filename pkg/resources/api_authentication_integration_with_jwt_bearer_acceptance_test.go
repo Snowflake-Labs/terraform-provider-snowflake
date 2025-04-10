@@ -243,14 +243,9 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_migrateFromV0941_ensureSm
 		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithJwtBearer),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
-				Config: apiAuthenticationIntegrationWithJwtBearerBasicConfig(id.Name()),
+				PreConfig:         func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders: acc.ExternalProviderWithExactVersion("0.94.1"),
+				Config:            apiAuthenticationIntegrationWithJwtBearerBasicConfig(id.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_api_authentication_integration_with_jwt_bearer.test", "id", id.Name()),
 				),
@@ -285,13 +280,8 @@ func TestAcc_ApiAuthenticationIntegrationWithJwtBearer_IdentifierQuotingDiffSupp
 		CheckDestroy: acc.CheckDestroy(t, resources.ApiAuthenticationIntegrationWithJwtBearer),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() { acc.SetV097CompatibleConfigPathEnv(t) },
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"snowflake": {
-						VersionConstraint: "=0.94.1",
-						Source:            "Snowflake-Labs/snowflake",
-					},
-				},
+				PreConfig:          func() { acc.SetV097CompatibleConfigPathEnv(t) },
+				ExternalProviders:  acc.ExternalProviderWithExactVersion("0.94.1"),
 				ExpectNonEmptyPlan: true,
 				Config:             apiAuthenticationIntegrationWithJwtBearerBasicConfig(quotedId),
 				Check: resource.ComposeAggregateTestCheckFunc(

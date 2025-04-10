@@ -13,11 +13,11 @@ body:
 
         If you are not running the latest version of either CLI or the Provider, please consider upgrading as the feature could be already implemented.
 
-        If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
+        If you would like to contribute to the project, please let us know and refer to the [contribution guide](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/CONTRIBUTING.md) for tips on getting started.
 
         Here's a list of useful links that may answer your question:
-        - Guide on [creating issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
-        - [Provider Roadmap](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/ROADMAP.md)
+        - Guide on [creating issues](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/CREATING_ISSUES.md) + [FAQ](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/FAQ.md) + [Commonly Known Issues](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/KNOWN_ISSUES.md) - If you would like to create a GitHub issue, please read those in the first order.
+        - [Provider Roadmap](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/ROADMAP.md)
 
   - id: company-name
     type: input

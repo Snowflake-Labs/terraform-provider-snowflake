@@ -140,9 +140,11 @@ func TestAcc_Streamlits_Filtering(t *testing.T) {
 	streamlitModel3 := model.StreamlitWithIds("test3", idThree, mainFile, stage.ID())
 	streamlitsModelLikeFirst := datasourcemodel.Streamlits("test").
 		WithLike(idOne.Name()).
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(streamlitModel1.ResourceReference(), streamlitModel2.ResourceReference(), streamlitModel3.ResourceReference())
 	streamlitsModelLikePrefix := datasourcemodel.Streamlits("test").
 		WithLike(prefix+"%").
+		WithInDatabase(idOne.DatabaseId()).
 		WithDependsOn(streamlitModel1.ResourceReference(), streamlitModel2.ResourceReference(), streamlitModel3.ResourceReference())
 
 	resource.Test(t, resource.TestCase{

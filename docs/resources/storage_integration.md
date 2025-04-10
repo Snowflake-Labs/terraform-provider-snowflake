@@ -5,7 +5,7 @@ description: |-
   
 ---
 
-!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled field` in the [provider configuration](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/Snowflake-Labs/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
+!> **Caution: Preview Feature** This feature is considered a preview feature in the provider, regardless of the state of the resource in Snowflake. We do not guarantee its stability. It will be reworked and marked as a stable feature in future releases. Breaking changes are expected, even without bumping the major version. To use this feature, add the relevant feature name to `preview_features_enabled` field in the [provider configuration](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#schema). Please always refer to the [Getting Help](https://github.com/snowflakedb/terraform-provider-snowflake?tab=readme-ov-file#getting-help) section in our Github repo to best determine how to get help for your questions.
 
 # snowflake_storage_integration (Resource)
 
@@ -56,6 +56,7 @@ resource "snowflake_storage_integration" "integration" {
 - `storage_aws_object_acl` (String) "bucket-owner-full-control" Enables support for AWS access control lists (ACLs) to grant the bucket owner full control.
 - `storage_aws_role_arn` (String) (Default: ``)
 - `storage_blocked_locations` (List of String) Explicitly prohibits external stages that use the integration from referencing one or more storage locations.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `type` (String) (Default: `EXTERNAL_STAGE`)
 
 ### Read-Only
@@ -68,6 +69,16 @@ resource "snowflake_storage_integration" "integration" {
 - `storage_aws_external_id` (String) The external ID that Snowflake will use when assuming the AWS role.
 - `storage_aws_iam_user_arn` (String) The Snowflake user that will attempt to assume the AWS role.
 - `storage_gcp_service_account` (String) This is the name of the Snowflake Google Service Account created for your account.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

@@ -5,7 +5,7 @@ description: |-
   Resource used to manage oauth security integration for custom clients objects. For more information, check security integrations documentation https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake.
 ---
 
-!> **Note** Setting a network policy with lowercase letters does not work correctly in Snowflake (see [issue](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/3229)). As a workaround, set the network policy with uppercase letters only, or use [execute](./execute) with network policy ID wrapped in `'`.
+!> **Note** Setting a network policy with lowercase letters does not work correctly in Snowflake (see [issue](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3229)). As a workaround, set the network policy with uppercase letters only, or use [execute](./execute) with network policy ID wrapped in `'`.
 
 !> **Note** The provider does not detect external changes on security integration type. In this case, remove the integration of wrong type manually with `terraform destroy` and recreate the resource. It will be addressed in the future.
 
@@ -70,6 +70,7 @@ resource "snowflake_oauth_integration_for_custom_clients" "complete" {
 - `oauth_refresh_token_validity` (Number) (Default: fallback to Snowflake default - uses special value that cannot be set in the configuration manually (`-1`)) Specifies how long refresh tokens should be valid (in seconds). OAUTH_ISSUE_REFRESH_TOKENS must be set to TRUE.
 - `oauth_use_secondary_roles` (String) Specifies whether default secondary roles set in the user properties are activated by default in the session being opened. Valid options are: `IMPLICIT` | `NONE`.
 - `pre_authorized_roles_list` (Set of String) A set of Snowflake roles that a user does not need to explicitly consent to using after authenticating. For more information about this resource, see [docs](./account_role).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -78,6 +79,17 @@ resource "snowflake_oauth_integration_for_custom_clients" "complete" {
 - `id` (String) The ID of this resource.
 - `related_parameters` (List of Object) Parameters related to this security integration. (see [below for nested schema](#nestedatt--related_parameters))
 - `show_output` (List of Object) Outputs the result of `SHOW SECURITY INTEGRATION` for the given integration. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--describe_output"></a>
 ### Nested Schema for `describe_output`

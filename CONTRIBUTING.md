@@ -119,7 +119,7 @@ The documentation for the provider is generated automatically. We follow the few
 
 We use [Conventional Commits](https://www.conventionalcommits.org/) for commit message formatting and PR titles. Please try to adhere to the standard.
 
-Refer to the [regular expression](https://github.com/Snowflake-Labs/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
+Refer to the [regular expression](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/.github/workflows/title-lint.yml#L17) for PR title validation.
 
 Implemented changes should be described thoroughly (we will prepare PR template for the known use cases soon):
 - reference the issue that is addressed with the given change
@@ -145,7 +145,7 @@ Next, edit your `~/.terraformrc` file to include the following:
 provider_installation {
 
   dev_overrides {
-      "registry.terraform.io/Snowflake-Labs/snowflake" = "<path_to_binary>"
+      "registry.terraform.io/snowflakedb/snowflake" = "<path_to_binary>"
   }
 
   direct {}
@@ -159,8 +159,8 @@ To debug the provider with a debugger:
    ```sh
    Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
 
-   Command Prompt:	set "TF_REATTACH_PROVIDERS={"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr": {"Network":"tcp","String":"127.0.0.1:54706"}}}"
-   PowerShell:	$env:TF_REATTACH_PROVIDERS='{"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr":{"Network":"tcp","String":"127.0.0.1:54706"}}}'
+   Command Prompt:	set "TF_REATTACH_PROVIDERS={"registry.terraform.io/snowflakedb/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr": {"Network":"tcp","String":"127.0.0.1:54706"}}}"
+   PowerShell:	$env:TF_REATTACH_PROVIDERS='{"registry.terraform.io/snowflakedb/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr":{"Network":"tcp","String":"127.0.0.1:54706"}}}'
    ```
 
 2. Open a terminal where you will execute Terraform and set the `TF_REATTACH_PROVIDERS` environment variable using the command from the first step.

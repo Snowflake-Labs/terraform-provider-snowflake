@@ -43,6 +43,7 @@ func FunctionScala() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.FunctionScala, ImportFunction),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
