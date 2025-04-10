@@ -29,7 +29,7 @@ The main misunderstanding we observe is the stable and preview features distinct
     * They were NOT downgraded - they were part of 0.x.x experimental versions of the provider before this classification.
     * We did not want to remove them from the provider entirely as it could block adoption to v1+ versions. That’s why we decided to leave them, even if they may be unstable.
     * If you used any resource or data source in 0.x.x versions, you acknowledged the risks of using experimental features either way.
-    * In v1+ versions, you can continue using them, but you need to explicitly allow these features in the provider (as explained [here](https://registry.terraform.io/providers/Snowflake-Labs/snowflake/latest/docs#preview_features_enabled-1)).
+    * In v1+ versions, you can continue using them, but you need to explicitly allow these features in the provider (as explained [here](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#preview_features_enabled-1)).
     * Remember, Snowflake does not offer official support for these preview resources and data sources. Please consider these features as preview features in the provider, regardless of their state in Snowflake.
     * Each preview feature will be reworked and marked as a stable feature in future releases. Please expect that preview features might introduce breaking changes, even when the provider’s major version number does not change.
 * Resources and data sources marked as preview features or not yet supported will be prioritized based on demand and worked on after GA. We will share the current priorities in **early May**.
