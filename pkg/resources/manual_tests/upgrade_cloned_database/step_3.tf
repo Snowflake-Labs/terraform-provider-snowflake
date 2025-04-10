@@ -5,7 +5,7 @@
 terraform {
   required_providers {
     snowflake = {
-      source  = "Snowflake-Labs/snowflake"
+      source  = "snowflakedb/snowflake"
       version = ">= 0.92.0" # latest
     }
   }
@@ -14,11 +14,11 @@ terraform {
 provider "snowflake" {}
 
 resource "snowflake_database" "test" {
-  name = "test"
+  name                        = "test"
   data_retention_time_in_days = 0 # to avoid in-place update to -1
 }
 
 resource "snowflake_database" "cloned" {
-  name = "cloned"
+  name                        = "cloned"
   data_retention_time_in_days = 0 # to avoid in-place update to -1
 }

@@ -52,7 +52,7 @@ func main() {
 	}
 
 	err = tf6server.Serve(
-		"registry.terraform.io/Snowflake-Labs/snowflake",
+		"registry.terraform.io/snowflakedb/snowflake",
 		muxServer.ProviderServer,
 		serveOpts...,
 	)

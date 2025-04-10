@@ -249,7 +249,7 @@ func ExternalProviderWithExactVersion(version string) map[string]resource.Extern
 	return map[string]resource.ExternalProvider{
 		"snowflake": {
 			VersionConstraint: fmt.Sprintf("=%s", version),
-			Source:            "Snowflake-Labs/snowflake",
+			Source:            "snowflakedb/snowflake",
 		},
 	}
 }

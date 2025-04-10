@@ -145,7 +145,7 @@ Next, edit your `~/.terraformrc` file to include the following:
 provider_installation {
 
   dev_overrides {
-      "registry.terraform.io/Snowflake-Labs/snowflake" = "<path_to_binary>"
+      "registry.terraform.io/snowflakedb/snowflake" = "<path_to_binary>"
   }
 
   direct {}
@@ -159,8 +159,8 @@ To debug the provider with a debugger:
    ```sh
    Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
 
-   Command Prompt:	set "TF_REATTACH_PROVIDERS={"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr": {"Network":"tcp","String":"127.0.0.1:54706"}}}"
-   PowerShell:	$env:TF_REATTACH_PROVIDERS='{"registry.terraform.io/Snowflake-Labs/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr":{"Network":"tcp","String":"127.0.0.1:54706"}}}'
+   Command Prompt:	set "TF_REATTACH_PROVIDERS={"registry.terraform.io/snowflakedb/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr": {"Network":"tcp","String":"127.0.0.1:54706"}}}"
+   PowerShell:	$env:TF_REATTACH_PROVIDERS='{"registry.terraform.io/snowflakedb/snowflake":{"Protocol":"grpc","ProtocolVersion":5,"Pid":35140,"Test":true,"Addr":{"Network":"tcp","String":"127.0.0.1:54706"}}}'
    ```
 
 2. Open a terminal where you will execute Terraform and set the `TF_REATTACH_PROVIDERS` environment variable using the command from the first step.
