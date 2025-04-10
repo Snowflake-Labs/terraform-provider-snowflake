@@ -135,7 +135,7 @@ func nukeWarehouses(client *Client, prefix string) func() error {
 		log.Printf("[DEBUG] Found %d warehouses matching search criteria", len(whs))
 		for idx, wh := range whs {
 			log.Printf("[DEBUG] Processing warehouse [%d/%d]: %s...", idx+1, len(whs), wh.ID().FullyQualifiedName())
-			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+			if !slices.Contains(protectedWarehouses, wh.Name) && wh.CreatedOn.Before(time.Now().Add(-8*time.Hour)) {
 				if wh.Owner != "ACCOUNTADMIN" {
 					log.Printf("[DEBUG] Granting ownership on warehouse %s, to ACCOUNTADMIN", wh.ID().FullyQualifiedName())
 					err := client.Grants.GrantOwnership(
@@ -209,7 +209,7 @@ func nukeDatabases(client *Client, prefix string) func() error {
 			}
 
 			log.Printf("[DEBUG] Processing database [%d/%d]: %s...", idx+1, len(dbs), db.ID().FullyQualifiedName())
-			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-2*time.Hour)) {
+			if !slices.Contains(protectedDatabases, db.Name) && db.CreatedOn.Before(time.Now().Add(-8*time.Hour)) {
 				log.Printf("[DEBUG] Dropping database %s, created at: %s", db.ID().FullyQualifiedName(), db.CreatedOn.String())
 				if err := client.Databases.Drop(ctx, db.ID(), &DropDatabaseOptions{IfExists: Bool(true)}); err != nil {
 					log.Printf("[DEBUG] Dropping database %s, resulted in error %v", db.ID().FullyQualifiedName(), err)
