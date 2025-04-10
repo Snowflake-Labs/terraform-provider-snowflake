@@ -11,7 +11,7 @@ on:
     types: [ ok-to-test-command ]
   pull_request:
     paths-ignore:
-      - '*.MD'
+      - '*.md'
       - 'pkg/internal/tracking/version.go'
 
 jobs:
