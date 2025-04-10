@@ -1,6 +1,6 @@
 # Creating GitHub issues
 
-> **Note:** Part of this guide was moved to the following documents:
+> **Note:** Part of this guide was moved to the following documentsdas:
 > - [FAQ](./FAQ.md)
 > - [Known issues](./KNOWN_ISSUES.md).
 >
