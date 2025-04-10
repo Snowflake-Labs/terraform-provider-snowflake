@@ -99,7 +99,7 @@ func (s *Operation) withFiltering(filtering ...ShowByIDFilteringKind) *Operation
 		case ShowByIDApplicationNameFiltering:
 			s.ShowByIDFiltering = append(s.ShowByIDFiltering, newShowByIDApplicationFiltering())
 		default:
-			log.Println("No showByID filtering found for kind:", filteringKind)
+			log.Println("[DEBUG] No showByID filtering found for kind:", filteringKind)
 		}
 	}
 	return s

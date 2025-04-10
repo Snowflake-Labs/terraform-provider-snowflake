@@ -74,7 +74,7 @@ EOT
 
 - `arguments` (Block List) List of the arguments for the function. Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#all-languages) for more details. (see [below for nested schema](#nestedblock--arguments))
 - `comment` (String) (Default: `user-defined function`) Specifies a comment for the function.
-- `enable_console_output` (Boolean) Enable stdout/stderr fast path logging for anonyous stored procs. This is a public parameter (similar to LOG_LEVEL). For more information, check [ENABLE_CONSOLE_OUTPUT docs](https://docs.snowflake.com/en/sql-reference/parameters#enable-console-output).
+- `enable_console_output` (Boolean) Enable stdout/stderr fast path logging for anonymous stored procs. This is a public parameter (similar to LOG_LEVEL). For more information, check [ENABLE_CONSOLE_OUTPUT docs](https://docs.snowflake.com/en/sql-reference/parameters#enable-console-output).
 - `external_access_integrations` (Set of String) The names of [external access integrations](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) needed in order for this function’s handler code to access external networks. An external access integration specifies [network rules](https://docs.snowflake.com/en/sql-reference/sql/create-network-rule) and [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) that specify external locations and credentials (if any) allowed for use by handler code when making requests of an external network, such as an external REST API.
 - `function_definition` (String) Defines the handler code executed when the UDF is called. Wrapping `$$` signs are added by the provider automatically; do not include them. The `function_definition` value must be Python source code. For more information, see [Introduction to Python UDFs](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-introduction). To mitigate permadiff on this field, the provider replaces blank characters with a space. This can lead to false positives in cases where a change in case or run of whitespace is semantically significant.
 - `imports` (Block Set) The location (stage), path, and name of the file(s) to import. A file can be a `.py` file or another type of file. Python UDFs can also read non-Python files, such as text files. For an example, see [Reading a file](https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-examples.html#label-udf-python-read-files). Consult the [docs](https://docs.snowflake.com/en/sql-reference/sql/create-function#python). (see [below for nested schema](#nestedblock--imports))
@@ -86,6 +86,7 @@ EOT
 - `packages` (Set of String) The name and version number of packages required as dependencies. The value should be of the form `package_name==version_number`.
 - `return_results_behavior` (String) Specifies the behavior of the function when returning results. Valid values are (case-insensitive): `VOLATILE` | `IMMUTABLE`.
 - `secrets` (Block Set) Assigns the names of [secrets](https://docs.snowflake.com/en/sql-reference/sql/create-secret) to variables so that you can use the variables to reference the secrets when retrieving information from secrets in handler code. Secrets you specify here must be allowed by the [external access integration](https://docs.snowflake.com/en/sql-reference/sql/create-external-access-integration) specified as a value of this CREATE FUNCTION command’s EXTERNAL_ACCESS_INTEGRATIONS parameter. (see [below for nested schema](#nestedblock--secrets))
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `trace_level` (String) Trace level value to use when generating/filtering trace events For more information, check [TRACE_LEVEL docs](https://docs.snowflake.com/en/sql-reference/parameters#trace-level).
 
 ### Read-Only
@@ -125,6 +126,17 @@ Required:
 
 - `secret_id` (String) Fully qualified name of the allowed [secret](https://docs.snowflake.com/en/sql-reference/sql/create-secret). You will receive an error if you specify a SECRETS value whose secret isn’t also included in an integration specified by the EXTERNAL_ACCESS_INTEGRATIONS parameter.
 - `secret_variable_name` (String) The variable that will be used in handler code when retrieving information from the secret.
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 
 <a id="nestedatt--parameters"></a>

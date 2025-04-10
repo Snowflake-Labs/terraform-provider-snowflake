@@ -20,7 +20,18 @@ import (
 )
 
 func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
-	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	roleArn := "arn:aws:iam::000000000001:/role/test"
+	baseUrl := "s3://foo"
+	firstUrl := baseUrl + "/allowed-location"
+	secondUrl := baseUrl + "/allowed-location2"
+
+	storageIntegration, storageIntegrationCleanup := acc.TestClient().StorageIntegration.CreateS3(t, baseUrl, roleArn)
+	t.Cleanup(storageIntegrationCleanup)
+
+	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -31,34 +42,51 @@ func TestAcc_StageAlterWhenBothURLAndStorageIntegrationChange(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
 		Steps: []resource.TestStep{
 			{
-				Config: stageIntegrationConfig(id.Name(), "si1", "s3://foo/", acc.TestDatabaseName, acc.TestSchemaName),
+				Config: stageIntegrationConfig(stageId, storageIntegration.ID(), firstUrl),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stage.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://foo/"),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "name", stageId.Name()),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", stageId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "url", firstUrl),
 				),
 			},
 			{
-				Config: stageIntegrationConfig(id.Name(), "changed", "s3://changed/", acc.TestDatabaseName, acc.TestSchemaName),
+				Config: stageIntegrationConfig(stageId, storageIntegration.ID(), secondUrl),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("snowflake_stage.test", "name", id.Name()),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", id.FullyQualifiedName()),
-					resource.TestCheckResourceAttr("snowflake_stage.test", "url", "s3://changed/"),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "name", stageId.Name()),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "schema", acc.TestSchemaName),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "fully_qualified_name", stageId.FullyQualifiedName()),
+					resource.TestCheckResourceAttr("snowflake_stage.test", "url", secondUrl),
 				),
 			},
 		},
 	})
 }
 
+func stageIntegrationConfig(stageId sdk.SchemaObjectIdentifier, storageIntegrationId sdk.AccountObjectIdentifier, url string) string {
+	return fmt.Sprintf(`
+resource "snowflake_stage" "test" {
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	storage_integration = "%[4]s"
+	url = "%[5]s"
+}
+`, stageId.DatabaseName(), stageId.SchemaName(), stageId.Name(), storageIntegrationId.Name(), url)
+}
+
 func TestAcc_Stage_CreateAndAlter(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	awsBucketUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
 	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
 
-	databaseName := acc.TestClient().Ids.Alpha()
-	schemaName := acc.TestClient().Ids.Alpha()
-	name := acc.TestClient().Ids.Alpha()
-	id := sdk.NewSchemaObjectIdentifier(databaseName, schemaName, name)
+	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
+	name := id.Name()
 	url := "s3://foo/"
 	comment := random.Comment()
 	initialStorageIntegration := ""
@@ -77,8 +105,8 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 
 	configVariables := func(url string, storageIntegration string, credentials string, encryption string, fileFormat string, comment string, copyOptions string) config.Variables {
 		return config.Variables{
-			"database":            config.StringVariable(databaseName),
-			"schema":              config.StringVariable(schemaName),
+			"database":            config.StringVariable(id.DatabaseName()),
+			"schema":              config.StringVariable(id.SchemaName()),
 			"name":                config.StringVariable(name),
 			"url":                 config.StringVariable(url),
 			"storage_integration": config.StringVariable(storageIntegration),
@@ -91,6 +119,7 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	}
 
 	resourceName := "snowflake_stage.test"
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -103,8 +132,8 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: configVariables(url, initialStorageIntegration, credentials, encryption, "", comment, copyOptionsWithQuotes),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", initialStorageIntegration),
 					resource.TestCheckResourceAttr(resourceName, "credentials", credentials),
@@ -122,8 +151,8 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: configVariables(changedUrl, changedStorageIntegration.Name(), credentials, changedEncryption, changedFileFormat, changedComment, copyOptionsWithoutQuotes),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration.Name()),
@@ -142,8 +171,8 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: configVariables(changedUrl, changedStorageIntegration.Name(), credentials, changedEncryption, changedFileFormatWithQuotes, changedComment, copyOptionsWithoutQuotes),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", changedStorageIntegration.Name()),
@@ -167,8 +196,8 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 				ConfigDirectory: config.TestNameDirectory(),
 				ConfigVariables: configVariables(url, initialStorageIntegration, credentials, encryption, "", comment, copyOptionsWithoutQuotes),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "database", databaseName),
-					resource.TestCheckResourceAttr(resourceName, "schema", schemaName),
+					resource.TestCheckResourceAttr(resourceName, "database", acc.TestDatabaseName),
+					resource.TestCheckResourceAttr(resourceName, "schema", acc.TestSchemaName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "fully_qualified_name", id.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "storage_integration", initialStorageIntegration),
@@ -187,31 +216,14 @@ func TestAcc_Stage_CreateAndAlter(t *testing.T) {
 	})
 }
 
-func stageIntegrationConfig(name string, siNameSuffix string, url string, databaseName string, schemaName string) string {
-	return fmt.Sprintf(`
-resource "snowflake_storage_integration" "test" {
-	name = "%[1]s%[2]s"
-	storage_allowed_locations = ["%[3]s"]
-	storage_provider = "S3"
-
-  	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
-}
-
-resource "snowflake_stage" "test" {
-	name = "%[1]s"
-	url = "%[3]s"
-	storage_integration = snowflake_storage_integration.test.name
-	database = "%[4]s"
-	schema = "%[5]s"
-}
-`, name, siNameSuffix, url, databaseName, schemaName)
-}
-
 func TestAcc_Stage_Issue2972(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
 	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(stageId.SchemaId())
-	resourceName := "snowflake_stage.test"
 
+	resourceName := "snowflake_stage.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -251,22 +263,32 @@ func TestAcc_Stage_Issue2972(t *testing.T) {
 func stageIssue2972Config(stageId sdk.SchemaObjectIdentifier) string {
 	return fmt.Sprintf(`
 resource "snowflake_stage" "test" {
-	name = "%[1]s"
-	database = "%[2]s"
-	schema = "%[3]s"
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
 }
-`, stageId.Name(), stageId.DatabaseName(), stageId.SchemaName())
+`, stageId.DatabaseName(), stageId.SchemaName(), stageId.Name())
 }
 
 // TODO [SNOW-1348110]: fix behavior with stage rework
 func TestAcc_Stage_Issue2679(t *testing.T) {
-	integrationId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	roleArn := "arn:aws:iam::000000000001:/role/test"
+	baseUrl := "s3://foo"
+	allowedUrl := baseUrl + "/allowed-location"
+
+	storageIntegration, storageIntegrationCleanup := acc.TestClient().StorageIntegration.CreateS3(t, baseUrl, roleArn)
+	t.Cleanup(storageIntegrationCleanup)
+
+	storageIntegrationId := storageIntegration.ID()
 	stageId := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	resourceName := "snowflake_stage.test"
 
 	fileFormatWithDefaultTypeCsv := "TYPE = CSV NULL_IF = []"
 	fileFormatWithoutType := "NULL_IF = []"
 
+	resourceName := "snowflake_stage.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 		PreCheck:                 func() { acc.TestAccPreCheck(t) },
@@ -276,7 +298,7 @@ func TestAcc_Stage_Issue2679(t *testing.T) {
 		CheckDestroy: acc.CheckDestroy(t, resources.Stage),
 		Steps: []resource.TestStep{
 			{
-				Config: stageIssue2679Config(integrationId, stageId, fileFormatWithDefaultTypeCsv),
+				Config: stageIssue2679Config(stageId, storageIntegrationId, fileFormatWithDefaultTypeCsv, allowedUrl),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
 				),
@@ -288,7 +310,7 @@ func TestAcc_Stage_Issue2679(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
-				Config: stageIssue2679Config(integrationId, stageId, fileFormatWithoutType),
+				Config: stageIssue2679Config(stageId, storageIntegrationId, fileFormatWithoutType, allowedUrl),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", stageId.Name()),
 					// TODO [SNOW-1348110]: use generated assertions after stage rework
@@ -314,23 +336,15 @@ func TestAcc_Stage_Issue2679(t *testing.T) {
 	})
 }
 
-func stageIssue2679Config(integrationId sdk.AccountObjectIdentifier, stageId sdk.SchemaObjectIdentifier, fileFormat string) string {
+func stageIssue2679Config(stageId sdk.SchemaObjectIdentifier, storageIntegrationId sdk.AccountObjectIdentifier, fileFormat string, url string) string {
 	return fmt.Sprintf(`
-resource "snowflake_storage_integration" "test" {
-	name = "%[1]s"
-	storage_allowed_locations = ["s3://aaaaa"]
-	storage_provider = "S3"
-	
-	storage_aws_role_arn = "arn:aws:iam::000000000001:/role/test"
-}
-
 resource "snowflake_stage" "test" {
-	name = "%[2]s"
-	database = "%[3]s"
-	schema = "%[4]s"
+	database = "%[1]s"
+	schema = "%[2]s"
+	name = "%[3]s"
+	storage_integration = "%[4]s"
 	file_format = "%[5]s"
-	storage_integration = snowflake_storage_integration.test.name
-	url = "s3://aaaaa"
+	url = "%[6]s"
 }
-`, integrationId.Name(), stageId.Name(), stageId.DatabaseName(), stageId.SchemaName(), fileFormat)
+`, stageId.DatabaseName(), stageId.SchemaName(), stageId.Name(), storageIntegrationId.Name(), fileFormat, url)
 }

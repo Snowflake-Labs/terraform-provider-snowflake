@@ -79,7 +79,7 @@ func (row dataMetricFunctionReferencesRow) convert() *DataMetricFunctionReferenc
 	}
 	err := json.Unmarshal([]byte(row.RefArguments), &x.RefArguments)
 	if err != nil {
-		log.Println(err)
+		log.Printf("[DEBUG] Failed to unmarshal data metric function reference arguments, err = %v", err)
 	}
 	return x
 }

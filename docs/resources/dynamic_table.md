@@ -51,6 +51,7 @@ resource "snowflake_dynamic_table" "dt" {
 - `initialize` (String) (Default: `ON_CREATE`) Initialize trigger for the dynamic table. Can only be set on creation. Available options are ON_CREATE and ON_SCHEDULE.
 - `or_replace` (Boolean) (Default: `false`) Specifies whether to replace the dynamic table if it already exists.
 - `refresh_mode` (String) (Default: `AUTO`) INCREMENTAL to use incremental refreshes, FULL to recompute the whole table on every refresh, or AUTO to let Snowflake decide.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -76,6 +77,17 @@ Optional:
 
 - `downstream` (Boolean) Specifies whether the target lag time is downstream.
 - `maximum_duration` (String) Specifies the maximum target lag time for the dynamic table.
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

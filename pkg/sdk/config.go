@@ -24,14 +24,14 @@ import (
 func DefaultConfig(verifyPermissions bool) *gosnowflake.Config {
 	config, err := ProfileConfig("default", verifyPermissions)
 	if err != nil || config == nil {
-		log.Printf("[DEBUG] No Snowflake config file found, returning empty config: %v\n", err)
+		log.Printf("[DEBUG] No Snowflake config file found, proceeding with empty config, err = %v", err)
 		config = &gosnowflake.Config{}
 	}
 	return config
 }
 
 func ProfileConfig(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
-	log.Printf("[DEBUG] Retrieving %s profile from a TOML file\n", profile)
+	log.Printf("[DEBUG] Retrieving %s profile from a TOML file", profile)
 	path, err := GetConfigFileName()
 	if err != nil {
 		return nil, err

@@ -52,6 +52,7 @@ func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, ImportApiAuthenticationWithJwtBearer),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

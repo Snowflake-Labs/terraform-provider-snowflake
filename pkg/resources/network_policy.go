@@ -122,6 +122,7 @@ func NetworkPolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: TrackingImportWrapper(resources.NetworkPolicy, ImportName[sdk.AccountObjectIdentifier]),
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

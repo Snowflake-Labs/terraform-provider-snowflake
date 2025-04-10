@@ -197,6 +197,7 @@ resource "snowflake_grant_privileges_to_database_role" "example" {
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
 - `on_schema_object` (Block List, Max: 1) Specifies the schema object on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema_object))
 - `privileges` (Set of String) The privileges to grant on the database role.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `with_grant_option` (Boolean) (Default: `false`) If specified, allows the recipient role to grant the privileges to other roles.
 
 ### Read-Only
@@ -247,6 +248,18 @@ Optional:
 
 - `in_database` (String) The fully qualified name of the database.
 - `in_schema` (String) The fully qualified name of the schema.
+
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

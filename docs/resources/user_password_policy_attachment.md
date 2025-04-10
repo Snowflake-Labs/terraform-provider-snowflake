@@ -44,9 +44,23 @@ resource "snowflake_user_password_policy_attachment" "ppa" {
 - `password_policy_name` (String) Fully qualified name of the password policy
 - `user_name` (String) User name of the user you want to attach the password policy to
 
+### Optional
+
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Import
 

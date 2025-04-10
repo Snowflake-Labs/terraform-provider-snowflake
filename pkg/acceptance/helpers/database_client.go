@@ -9,6 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testDatabaseDataRetentionTimeInDays    = 1
+	testDatabaseMaxDataExtensionTimeInDays = 1
+)
+
+var testDatabaseCatalog = sdk.NewAccountObjectIdentifier("SNOWFLAKE")
+
 type DatabaseClient struct {
 	context *TestClientContext
 	ids     *IdsGenerator
@@ -39,15 +46,26 @@ func (c *DatabaseClient) CreateDatabaseWithParametersSet(t *testing.T) (*sdk.Dat
 // CreateDatabaseWithParametersSetWithId should be used to create database which sets the parameters that can be altered on the account level in other tests; this way, the test is not affected by the changes.
 func (c *DatabaseClient) CreateDatabaseWithParametersSetWithId(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
-	return c.CreateDatabaseWithOptions(t, id, c.testParametersSet())
+	return c.CreateDatabaseWithOptions(t, id, c.TestParametersSet())
 }
 
-func (c *DatabaseClient) testParametersSet() *sdk.CreateDatabaseOptions {
+// CreateTestDatabaseIfNotExists should be used to create the main database used throughout the acceptance tests.
+// It's created only if it does not exist already.
+func (c *DatabaseClient) CreateTestDatabaseIfNotExists(t *testing.T) (*sdk.Database, func()) {
+	t.Helper()
+
+	opts := c.TestParametersSet()
+	opts.IfNotExists = sdk.Bool(true)
+
+	return c.CreateDatabaseWithOptions(t, c.ids.DatabaseId(), opts)
+}
+
+func (c *DatabaseClient) TestParametersSet() *sdk.CreateDatabaseOptions {
 	return &sdk.CreateDatabaseOptions{
-		DataRetentionTimeInDays:    sdk.Int(1),
-		MaxDataExtensionTimeInDays: sdk.Int(1),
+		DataRetentionTimeInDays:    sdk.Int(testDatabaseDataRetentionTimeInDays),
+		MaxDataExtensionTimeInDays: sdk.Int(testDatabaseMaxDataExtensionTimeInDays),
 		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
-		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
+		Catalog: sdk.Pointer(testDatabaseCatalog),
 	}
 }
 
@@ -181,25 +199,12 @@ func (c *DatabaseClient) Describe(t *testing.T, id sdk.AccountObjectIdentifier) 
 func (c *DatabaseClient) CreateDatabaseFromShareTemporarily(t *testing.T, externalShareId sdk.ExternalObjectIdentifier) {
 	t.Helper()
 
-	databaseId := c.ids.RandomAccountObjectIdentifier()
-	err := c.client().CreateShared(context.Background(), databaseId, externalShareId, new(sdk.CreateSharedDatabaseOptions))
-	require.NoError(t, err)
+	db, _ := c.CreateDatabaseFromShare(t, externalShareId)
 
-	require.Eventually(t, func() bool {
-		database, err := c.Show(t, databaseId)
-		if err != nil {
-			return false
-		}
-		// Origin is returned as "<revoked>" in those cases, because it's not valid sdk.ExternalObjectIdentifier parser sets it as nil.
-		// Once it turns into valid sdk.ExternalObjectIdentifier, we're ready to proceed with the actual test.
-		return database.Origin != nil
-	}, time.Minute, time.Second*6)
-
-	err = c.DropDatabase(t, databaseId)
+	err := c.DropDatabase(t, db.ID())
 	require.NoError(t, err)
 }
 
-// CreateDatabaseFromShare logic is duplicated from CreateDatabaseFromShareTemporarily.
 func (c *DatabaseClient) CreateDatabaseFromShare(t *testing.T, externalShareId sdk.ExternalObjectIdentifier) (*sdk.Database, func()) {
 	t.Helper()
 
@@ -224,7 +229,7 @@ func (c *DatabaseClient) CreateDatabaseFromShare(t *testing.T, externalShareId s
 func (c *DatabaseClient) testParametersSetSharedDatabase() *sdk.CreateSharedDatabaseOptions {
 	return &sdk.CreateSharedDatabaseOptions{
 		// according to the docs SNOWFLAKE is a valid value (https://docs.snowflake.com/en/sql-reference/parameters#catalog)
-		Catalog: sdk.Pointer(sdk.NewAccountObjectIdentifier("SNOWFLAKE")),
+		Catalog: sdk.Pointer(testDatabaseCatalog),
 	}
 }
 
@@ -241,4 +246,16 @@ func (c *DatabaseClient) Alter(t *testing.T, id sdk.AccountObjectIdentifier, opt
 
 	err := c.client().Alter(ctx, id, opts)
 	require.NoError(t, err)
+}
+
+func (c *DatabaseClient) TestDatabaseDataRetentionTimeInDays() int {
+	return testDatabaseDataRetentionTimeInDays
+}
+
+func (c *DatabaseClient) TestDatabaseMaxDataExtensionTimeInDays() int {
+	return testDatabaseMaxDataExtensionTimeInDays
+}
+
+func (c *DatabaseClient) TestDatabaseCatalog() sdk.AccountObjectIdentifier {
+	return testDatabaseCatalog
 }

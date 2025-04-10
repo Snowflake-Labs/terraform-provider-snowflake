@@ -114,7 +114,7 @@ func Tag() *schema.Resource {
 		ReadContext:   TrackingReadWrapper(resources.Tag, ReadContextTag),
 		UpdateContext: TrackingUpdateWrapper(resources.Tag, UpdateContextTag),
 		DeleteContext: TrackingDeleteWrapper(resources.Tag, DeleteContextTag),
-		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For asssigning tags to Snowflake objects, see [tag_association resource](./tag_association).",
+		Description:   "Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For assigning tags to Snowflake objects, see [tag_association resource](./tag_association).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Tag, customdiff.All(
 			ComputedIfAnyAttributeChanged(tagSchema, ShowOutputAttributeName, "name", "comment", "allowed_values"),
@@ -134,6 +134,7 @@ func Tag() *schema.Resource {
 				Upgrade: migratePipeSeparatedObjectIdentifierResourceIdToFullyQualifiedName,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 
@@ -323,7 +324,7 @@ func DeleteContextTag(ctx context.Context, d *schema.ResourceData, meta any) dia
 		}
 	}
 	if len(removedPolicies) > 0 {
-		log.Printf("[DEBUG] unsetting masking policies before dropping tag: %s\n", id.FullyQualifiedName())
+		log.Printf("[DEBUG] unsetting masking policies before dropping tag: %s", id.FullyQualifiedName())
 		if err := client.Tags.Alter(ctx, sdk.NewAlterTagRequest(id).WithUnset(sdk.NewTagUnsetRequest().WithMaskingPolicies(removedPolicies))); err != nil {
 			return diag.FromErr(err)
 		}

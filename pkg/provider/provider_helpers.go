@@ -72,7 +72,7 @@ func GetAccessTokenWithRefreshToken(
 
 	request, err := http.NewRequest("POST", tokenEndPoint, body)
 	if err != nil {
-		return "", fmt.Errorf("request to the endpoint could not be completed %w", err)
+		return "", fmt.Errorf("preparing a HTTP request: %w", err)
 	}
 	request.SetBasicAuth(clientID, clientSecret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8")
@@ -82,7 +82,7 @@ func GetAccessTokenWithRefreshToken(
 		return "", fmt.Errorf("response status returned an err = %w", err)
 	}
 	if response.StatusCode != 200 {
-		return "", fmt.Errorf("response status code: %s: %s err = %w", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode), err)
+		return "", fmt.Errorf("response status code: %s: %s", strconv.Itoa(response.StatusCode), http.StatusText(response.StatusCode))
 	}
 	defer response.Body.Close()
 	dat, err := io.ReadAll(response.Body)

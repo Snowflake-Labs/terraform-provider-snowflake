@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
@@ -34,8 +35,11 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 	acc.SecondaryTestClient().Connection.Alter(t, sdk.NewAlterConnectionRequest(connection.ID()).WithEnableConnectionFailover(*sdk.NewEnableConnectionFailoverRequest([]sdk.AccountIdentifier{accountId})))
 
 	primaryConnectionAsExternalId := sdk.NewExternalObjectIdentifier(accountId, connection.ID())
+	comment := random.Comment()
+
 	secondaryConnectionModel := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), connection.ID().Name())
-	secondaryConnectionModelWithComment := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), connection.ID().Name()).WithComment("secondary connection test comment")
+	secondaryConnectionModelWithComment := model.SecondaryConnection("t", primaryConnectionAsExternalId.FullyQualifiedName(), connection.ID().Name()).
+		WithComment(comment)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -80,10 +84,10 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 						resourceassert.SecondaryConnectionResource(t, secondaryConnectionModelWithComment.ResourceReference()).
 							HasNameString(connection.ID().Name()).
 							HasFullyQualifiedNameString(connection.ID().FullyQualifiedName()).
-							HasCommentString("secondary connection test comment"),
+							HasCommentString(comment),
 
 						resourceshowoutputassert.ConnectionShowOutput(t, secondaryConnectionModelWithComment.ResourceReference()).
-							HasComment("secondary connection test comment"),
+							HasComment(comment),
 					),
 				),
 			},
@@ -94,7 +98,7 @@ func TestAcc_SecondaryConnection_Basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateCheck: importchecks.ComposeImportStateCheck(
 					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(connection.ID()), "name", connection.ID().Name()),
-					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(connection.ID()), "comment", "secondary connection test comment"),
+					importchecks.TestCheckResourceAttrInstanceState(helpers.EncodeResourceIdentifier(connection.ID()), "comment", comment),
 				),
 			},
 			// unset comment

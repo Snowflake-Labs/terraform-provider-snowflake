@@ -272,7 +272,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 
 ### Optional
 
-- `all_privileges` (Boolean) (Default: `false`) Grant all privileges on the account role.
+- `all_privileges` (Boolean) (Default: `false`) Grant all privileges on the account role. When all privileges cannot be granted, the provider returns a warning, which is aligned with the Snowsight behavior.
 - `always_apply` (Boolean) (Default: `false`) If true, the resource will always produce a “plan” and on “apply” it will re-grant defined privileges. It is supposed to be used only in “grant privileges on all X’s in database / schema Y” or “grant all privileges to X” scenarios to make sure that every new object in a given database / schema is granted by the account role and every new privilege is granted to the database role. Important note: this flag is not compliant with the Terraform assumptions of the config being eventually convergent (producing an empty plan).
 - `always_apply_trigger` (String) (Default: ``) This is a helper field and should not be set. Its main purpose is to help to achieve the functionality described by the always_apply field.
 - `on_account` (Boolean) (Default: `false`) If true, the privileges will be granted on the account.
@@ -280,6 +280,7 @@ resource "snowflake_grant_privileges_to_account_role" "example" {
 - `on_schema` (Block List, Max: 1) Specifies the schema on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema))
 - `on_schema_object` (Block List, Max: 1) Specifies the schema object on which privileges will be granted. (see [below for nested schema](#nestedblock--on_schema_object))
 - `privileges` (Set of String) The privileges to grant on the account role. This field is case-sensitive; use only upper-case privileges.
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - `with_grant_option` (Boolean) (Default: `false`) Specifies whether the grantee can grant the privileges to other users.
 
 ### Read-Only
@@ -339,6 +340,18 @@ Optional:
 
 - `in_database` (String)
 - `in_schema` (String)
+
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
 
 ## Known limitations
 - Setting the `CREATE SNOWFLAKE.ML.ANOMALY_DETECTION` or `CREATE SNOWFLAKE.ML.FORECAST` privileges on schema results in a permadiff because of the probably incorrect Snowflake's behavior of `SHOW GRANTS ON <object_type> <object_name>`. More in the [comment](https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2651#issuecomment-2022634952).

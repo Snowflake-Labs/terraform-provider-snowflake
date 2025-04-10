@@ -176,6 +176,7 @@ func SAML2Integration() *schema.Resource {
 				"saml2_post_logout_redirect_url", "saml2_force_authn", "saml2_snowflake_issuer_url", "saml2_snowflake_acs_url", "allowed_user_domains",
 				"allowed_email_patterns"),
 		)),
+		Timeouts: defaultTimeouts,
 	}
 }
 

@@ -43,6 +43,20 @@ resource "snowflake_user_authentication_policy_attachment" "apa" {
 - `authentication_policy_name` (String) Fully qualified name of the authentication policy
 - `user_name` (String) User name of the user you want to attach the authentication policy to
 
+### Optional
+
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)

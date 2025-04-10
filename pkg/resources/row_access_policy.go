@@ -124,6 +124,7 @@ func RowAccessPolicy() *schema.Resource {
 				Upgrade: v0_95_0_RowAccessPolicyStateUpgrader,
 			},
 		},
+		Timeouts: defaultTimeouts,
 	}
 }
 

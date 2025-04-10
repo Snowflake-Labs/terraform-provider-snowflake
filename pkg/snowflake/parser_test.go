@@ -1,7 +1,6 @@
 package snowflake
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -277,7 +276,6 @@ func TestViewSelectStatementExtractor_consumeSpace(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Println(tt.name)
 			e := &ViewSelectStatementExtractor{
 				input: tt.fields.input,
 				pos:   tt.fields.pos,

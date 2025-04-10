@@ -185,12 +185,10 @@ func TestAcc_StreamOnExternalTable(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
-	stageID := acc.TestClient().Ids.RandomSchemaObjectIdentifier()
-	_, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t, stageID)
+	stage, stageCleanup := acc.TestClient().Stage.CreateStageWithURL(t)
 	t.Cleanup(stageCleanup)
 
-	stageLocation := fmt.Sprintf("@%s", stageID.FullyQualifiedName())
-	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stageLocation)
+	externalTable, externalTableCleanup := acc.TestClient().ExternalTable.CreateWithLocation(t, stage.Location())
 	t.Cleanup(externalTableCleanup)
 
 	id := acc.TestClient().Ids.RandomSchemaObjectIdentifier()

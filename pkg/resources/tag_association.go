@@ -77,6 +77,9 @@ func TagAssociation() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(70 * time.Minute),
+			Update: schema.DefaultTimeout(defaultUpdateTimeout),
+			Delete: schema.DefaultTimeout(defaultDeleteTimeout),
+			Read:   schema.DefaultTimeout(defaultReadTimeout),
 		},
 
 		StateUpgraders: []schema.StateUpgrader{
@@ -305,7 +308,7 @@ func skipColumnIfDoesNotExist(ctx context.Context, client *sdk.Client, id sdk.Ob
 	_, err := client.Tables.ShowByID(ctx, columnId.SchemaObjectId())
 	if err != nil {
 		if errors.Is(err, sdk.ErrObjectNotFound) {
-			log.Printf("[DEBUG] table %s not found, skipping\n", columnId.SchemaObjectId())
+			log.Printf("[DEBUG] table %s not found, skipping", columnId.SchemaObjectId())
 			return true, nil
 		}
 		return false, err
@@ -317,7 +320,7 @@ func skipColumnIfDoesNotExist(ctx context.Context, client *sdk.Client, id sdk.Ob
 	if _, err := collections.FindFirst(columns, func(c sdk.TableColumnDetails) bool {
 		return c.Name == columnId.Name()
 	}); err != nil {
-		log.Printf("[DEBUG] column %s not found in table %s, skipping\n", columnId.Name(), columnId.SchemaObjectId())
+		log.Printf("[DEBUG] column %s not found in table %s, skipping", columnId.Name(), columnId.SchemaObjectId())
 		return true, nil
 	}
 	return false, nil

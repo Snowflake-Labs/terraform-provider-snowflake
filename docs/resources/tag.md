@@ -2,14 +2,14 @@
 page_title: "snowflake_tag Resource - terraform-provider-snowflake"
 subcategory: "Stable"
 description: |-
-  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag. For asssigning tags to Snowflake objects, see tag_association resource ./tag_association.
+  Resource used to manage tags. For more information, check tag documentation https://docs.snowflake.com/en/sql-reference/sql/create-tag. For assigning tags to Snowflake objects, see tag_association resource ./tag_association.
 ---
 
 ~> **Required warehouse** For this resource, the provider now uses [tag references](https://docs.snowflake.com/en/sql-reference/functions/tag_references) to get information about masking policies attached to tags. This function requires a warehouse in the connection. Please, make sure you have either set a `DEFAULT_WAREHOUSE` for the user, or specified a warehouse in the provider configuration.
 
 # snowflake_tag (Resource)
 
-Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For asssigning tags to Snowflake objects, see [tag_association resource](./tag_association).
+Resource used to manage tags. For more information, check [tag documentation](https://docs.snowflake.com/en/sql-reference/sql/create-tag). For assigning tags to Snowflake objects, see [tag_association resource](./tag_association).
 
 ## Example Usage
 
@@ -50,12 +50,24 @@ resource "snowflake_tag" "tag" {
 - `allowed_values` (Set of String) Set of allowed values for the tag.
 - `comment` (String) Specifies a comment for the tag.
 - `masking_policies` (Set of String) Set of masking policies for the tag. A tag can support one masking policy for each data type. If masking policies are assigned to the tag, before dropping the tag, the provider automatically unassigns them. For more information about this resource, see [docs](./masking_policy).
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
 - `fully_qualified_name` (String) Fully qualified name of the resource. For more information, see [object name resolution](https://docs.snowflake.com/en/sql-reference/name-resolution).
 - `id` (String) The ID of this resource.
 - `show_output` (List of Object) Outputs the result of `SHOW TAGS` for the given tag. (see [below for nested schema](#nestedatt--show_output))
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
+- `delete` (String)
+- `read` (String)
+- `update` (String)
+
 
 <a id="nestedatt--show_output"></a>
 ### Nested Schema for `show_output`
