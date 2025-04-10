@@ -29,13 +29,15 @@ const (
 	SkipManagedAccountTest   env = "TEST_SF_TF_SKIP_MANAGED_ACCOUNT_TEST"
 	SkipSamlIntegrationTest  env = "TEST_SF_TF_SKIP_SAML_INTEGRATION_TEST"
 
-	EnableAcceptance         env = resource.EnvTfAcc
-	EnableSweep              env = "TEST_SF_TF_ENABLE_SWEEP"
-	EnableManual             env = "TEST_SF_TF_ENABLE_MANUAL_TESTS"
-	ConfigureClientOnce      env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
-	EnableAllPreviewFeatures env = "SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES"
-	TestObjectsSuffix        env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
-	RequireTestObjectsSuffix env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"
+	EnableAcceptance            env = resource.EnvTfAcc
+	EnableSweep                 env = "TEST_SF_TF_ENABLE_SWEEP"
+	EnableManual                env = "TEST_SF_TF_ENABLE_MANUAL_TESTS"
+	ConfigureClientOnce         env = "SF_TF_ACC_TEST_CONFIGURE_CLIENT_ONCE"
+	EnableAllPreviewFeatures    env = "SF_TF_ACC_TEST_ENABLE_ALL_PREVIEW_FEATURES"
+	TestObjectsSuffix           env = "TEST_SF_TF_TEST_OBJECT_SUFFIX"
+	RequireTestObjectsSuffix    env = "TEST_SF_TF_REQUIRE_TEST_OBJECT_SUFFIX"
+	RequireGeneratedRandomValue env = "TEST_SF_TF_REQUIRE_GENERATED_RANDOM_VALUE"
+	GeneratedRandomValue        env = "TEST_SF_TF_GENERATED_RANDOM_VALUE"
 
 	SimplifiedIntegrationTestsSetup env = "TEST_SF_TF_SIMPLIFIED_INTEGRATION_TESTS_SETUP"
 )

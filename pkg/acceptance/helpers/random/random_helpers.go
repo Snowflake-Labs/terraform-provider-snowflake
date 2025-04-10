@@ -1,11 +1,26 @@
 package random
 
 import (
+	"log"
+	"os"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/hashicorp/go-uuid"
 )
+
+var generatedRandomValue string
+
+func init() {
+	generatedRandomValue = os.Getenv(string(testenvs.GeneratedRandomValue))
+	requireGeneratedRandomValue := os.Getenv(string(testenvs.RequireGeneratedRandomValue))
+	if requireGeneratedRandomValue != "" && generatedRandomValue == "" {
+		log.Println("generated random value is required for tests to run")
+		os.Exit(1)
+	}
+}
 
 func UUID() string {
 	v, _ := uuid.GenerateUUID()
@@ -17,7 +32,7 @@ func Comment() string {
 }
 
 func Password() string {
-	return StringN(30)
+	return generatedRandomValue + StringN(30)
 }
 
 // AdminName returns admin name acceptable by Snowflake:
