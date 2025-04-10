@@ -7,13 +7,16 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	tfjson "github.com/hashicorp/terraform-json"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -2244,4 +2247,51 @@ resource "snowflake_table" "test_table" {
     }
 }
 `, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), dataType)
+}
+
+func TestAcc_Table_SchemaRemovedExternally(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	schema, schemaCleanup := acc.TestClient().Schema.CreateSchema(t)
+	t.Cleanup(schemaCleanup)
+	tableId := acc.TestClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { acc.TestAccPreCheck(t) },
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: acc.CheckDestroy(t, resources.Table),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("snowflake_table.test_table", plancheck.ResourceActionNoop),
+					},
+				},
+				Config: tableConfig(tableId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "id", helpers.EncodeSnowflakeID(tableId)),
+				),
+			},
+			{
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
+				PreConfig:         func() { schemaCleanup() },
+				Config:            tableConfig(tableId),
+				ExpectError:       regexp.MustCompile("object does not exist or not authorized"),
+			},
+			// The New version removes table from the state which ends up with create operation
+			// and the "error creating table" error (because of the missing underlying schema).
+			{
+				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+				Config:                   tableConfig(tableId),
+				ExpectError:              regexp.MustCompile("error creating table"),
+			},
+		},
+	})
 }

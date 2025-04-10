@@ -18,6 +18,7 @@ type Procedures interface {
 	Drop(ctx context.Context, request *DropProcedureRequest) error
 	Show(ctx context.Context, request *ShowProcedureRequest) ([]Procedure, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ProcedureDetail, error)
 	Call(ctx context.Context, request *CallProcedureRequest) error
 	CreateAndCallForJava(ctx context.Context, request *CreateAndCallForJavaProcedureRequest) error

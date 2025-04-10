@@ -53,6 +53,10 @@ func (v *databaseRoles) ShowByID(ctx context.Context, id DatabaseObjectIdentifie
 	return collections.FindFirst(databaseRoles, func(r DatabaseRole) bool { return r.Name == id.Name() })
 }
 
+func (v *databaseRoles) ShowByIDSafely(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *databaseRoles) Grant(ctx context.Context, request *GrantDatabaseRoleRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)

@@ -120,6 +120,10 @@ func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArguments(arguments ...sd
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), arguments...)
 }
 
+func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsInSchema(schemaId sdk.DatabaseObjectIdentifier, arguments ...sdk.DataType) sdk.SchemaObjectIdentifierWithArguments {
+	return sdk.NewSchemaObjectIdentifierWithArguments(schemaId.DatabaseName(), schemaId.Name(), c.Alpha(), arguments...)
+}
+
 func (c *IdsGenerator) RandomSchemaObjectIdentifierWithArgumentsNewDataTypes(arguments ...datatypes.DataType) sdk.SchemaObjectIdentifierWithArguments {
 	legacyDataTypes := collections.Map(arguments, sdk.LegacyDataTypeFrom)
 	return sdk.NewSchemaObjectIdentifierWithArguments(c.SchemaId().DatabaseName(), c.SchemaId().Name(), c.Alpha(), legacyDataTypes...)
