@@ -62,7 +62,7 @@ jobs:
       - name: Generate random secret
         run: |
           random=$(openssl rand -hex 20)
-          final_random="${random}${TEST_SF_TF_RANDOM}"
+          final_random="${TEST_SF_TF_RANDOM}${random}"
           echo "::add-mask::${final_random}"
           echo "TEST_SF_TF_GENERATED_RANDOM_VALUE=${final_random}" >> $GITHUB_ENV
         env:
