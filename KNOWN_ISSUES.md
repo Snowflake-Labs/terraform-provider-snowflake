@@ -41,7 +41,7 @@ HashiCorp still maintains it, but no new features are added.
 ```text
 │ Error: Provider produced invalid plan
 │
-│ Provider "registry.terraform.io/snowflake-labs/snowflake" planned an invalid value for snowflake_schema_grant.schema_grant.on_all: planned value cty.False for a
+│ Provider "registry.terraform.io/snowflakedb/snowflake" planned an invalid value for snowflake_schema_grant.schema_grant.on_all: planned value cty.False for a
 │ non-computed attribute.
 │
 │ This is a bug in the provider, which should be reported in the provider's own issue tracker.

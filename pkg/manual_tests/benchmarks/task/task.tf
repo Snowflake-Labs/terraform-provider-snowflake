@@ -10,7 +10,7 @@ variable "resource_count" {
 terraform {
   required_providers {
     snowflake = {
-      source  = "Snowflake-Labs/snowflake"
+      source  = "snowflakedb/snowflake"
       version = "= 1.0.1"
     }
   }

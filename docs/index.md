@@ -22,7 +22,7 @@ This is an example configuration of the provider in `main.tf` in a configuration
 terraform {
   required_providers {
     snowflake = {
-      source = "Snowflake-Labs/snowflake"
+      source = "snowflakedb/snowflake"
     }
   }
 }
