@@ -12,7 +12,7 @@ on:
   pull_request:
     paths-ignore:
       - '*.MD'
-      - './pkg/internal/tracking/version.go'
+      - 'pkg/internal/tracking/version.go'
 
 jobs:
   all-tests:
