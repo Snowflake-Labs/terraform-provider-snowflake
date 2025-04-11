@@ -12,6 +12,30 @@ across different versions.
 > [!TIP]
 > If you're still using the `Snowflake-Labs/snowflake` source, see [Upgrading from Snowflake-Labs Provider](./SNOWFLAKEDB_MIGRATION.md) to upgrade to the snowflakedb namespace.
 
+## v1.1.0 ➞ v1.1.1
+
+### Fixes in handling references to computed fields in context of `show_output`
+The issue could arise in almost any object using show_output when the following steps happen:
+1. Object is created.
+2. Object's attribute is updated to computed value of other object added in this run.
+
+In such situation the final plan could result in error like this one:
+```
+| Error: Provider produced inconsistent final plan
+|
+| When expanding the plan for snowflake_legacy_service_user.one to include new
+| values learned so far during apply, provider
+| "registry.terraform.io/hashicorp/snowflake" produced an invalid new value for
+| .show_output: was known, but now unknown.
+|
+| This is a bug in the provider, which should be reported in the provider's own
+| issue tracker.
+```
+
+This version fixes this behavior. No action should be required on user side.
+
+References: [#3522](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3522)
+
 ## v1.0.5 ➞ v1.1.0
 
 ### Timeouts in resources
