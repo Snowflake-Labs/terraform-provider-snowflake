@@ -3,6 +3,7 @@ package testint
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -12,60 +13,75 @@ import (
 )
 
 func TestInt_IdentifiersForOnePartIdentifierAsNameAndReference(t *testing.T) {
+	identifier := func(prefix string) string {
+		return testClientHelper().Ids.WithTestObjectSuffix(prefix)
+	}
+
+	identifierLowercase := func(prefix string) string {
+		return strings.ToLower(identifier(prefix))
+	}
+
+	wrapInDoubleQuotes := func(text string) string {
+		return `"` + text + `"`
+	}
+
 	testCases := []struct {
-		Name     sdk.AccountObjectIdentifier
+		Name     string
 		ShowName string
 		Error    string
 	}{
 		// special cases
-		{Name: sdk.NewAccountObjectIdentifier(``), Error: "invalid object identifier"},
-		{Name: sdk.NewAccountObjectIdentifier(`"`), Error: "invalid object identifier"},
+		{Name: ``, Error: "invalid object identifier"},
+		{Name: `"`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
-		{Name: sdk.NewAccountObjectIdentifier(`""`), Error: "invalid object identifier"},
+		{Name: `""`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
-		{Name: sdk.NewAccountObjectIdentifier(`""""`), Error: "invalid object identifier"},
-		{Name: sdk.NewAccountObjectIdentifier(`"."`), ShowName: `.`},
+		{Name: `""""`, Error: "invalid object identifier"},
+		// TODO [this PR]: this test can fail if there is no cleanup
+		{Name: `"."`, ShowName: `.`},
 
 		// lower case
-		{Name: sdk.NewAccountObjectIdentifier(`abc`), ShowName: `abc`},
-		{Name: sdk.NewAccountObjectIdentifier(`ab.c`), ShowName: `ab.c`},
-		{Name: sdk.NewAccountObjectIdentifier(`a"bc`), Error: `unexpected '"`},
-		{Name: sdk.NewAccountObjectIdentifier(`"a""bc"`), ShowName: `a"bc`},
+		{Name: identifierLowercase(`abc`), ShowName: identifierLowercase(`abc`)},
+		{Name: identifierLowercase(`ab.c`), ShowName: identifierLowercase(`ab.c`)},
+		{Name: identifierLowercase(`a"bc`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifierLowercase(`a""bc`)), ShowName: identifierLowercase(`a"bc`)},
 
 		// upper case
-		{Name: sdk.NewAccountObjectIdentifier(`ABC`), ShowName: `ABC`},
-		{Name: sdk.NewAccountObjectIdentifier(`AB.C`), ShowName: `AB.C`},
-		{Name: sdk.NewAccountObjectIdentifier(`A"BC`), Error: `unexpected '"`},
-		{Name: sdk.NewAccountObjectIdentifier(`"A""BC"`), ShowName: `A"BC`},
+		{Name: identifier(`ABC`), ShowName: identifier(`ABC`)},
+		{Name: identifier(`AB.C`), ShowName: identifier(`AB.C`)},
+		{Name: identifier(`A"BC`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifier(`A""BC`)), ShowName: identifier(`A"BC`)},
 
 		// mixed case
-		{Name: sdk.NewAccountObjectIdentifier(`AbC`), ShowName: `AbC`},
-		{Name: sdk.NewAccountObjectIdentifier(`Ab.C`), ShowName: `Ab.C`},
-		{Name: sdk.NewAccountObjectIdentifier(`A"bC`), Error: `unexpected '"`},
-		{Name: sdk.NewAccountObjectIdentifier(`"A""bC"`), ShowName: `A"bC`},
+		{Name: identifier(`AbC`), ShowName: identifier(`AbC`)},
+		{Name: identifier(`Ab.C`), ShowName: identifier(`Ab.C`)},
+		{Name: identifier(`A"bC`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifier(`A""bC`)), ShowName: identifier(`A"bC`)},
 	}
 
 	for _, testCase := range testCases {
 		testCase := testCase
 
-		t.Run(fmt.Sprintf("one part identifier name and reference for input: %s", testCase.Name.FullyQualifiedName()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("one part identifier name and reference for input: %s", testCase.Name), func(t *testing.T) {
 			ctx := context.Background()
 
-			err := testClient(t).ResourceMonitors.Create(ctx, testCase.Name, new(sdk.CreateResourceMonitorOptions))
+			id := sdk.NewAccountObjectIdentifier(testCase.Name)
+			err := testClient(t).ResourceMonitors.Create(ctx, id, new(sdk.CreateResourceMonitorOptions))
 			if testCase.Error != "" {
 				require.ErrorContains(t, err, testCase.Error)
 			} else {
-				t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, testCase.Name))
+				t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 			}
 
-			err = testClient(t).Warehouses.Create(ctx, testCase.Name, &sdk.CreateWarehouseOptions{
-				ResourceMonitor: &testCase.Name,
+			err = testClient(t).Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
+				ResourceMonitor: &id,
 			})
 			if testCase.Error != "" {
 				require.ErrorContains(t, err, testCase.Error)
 			} else {
 				require.NoError(t, err)
-				t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, testCase.Name))
+				// TODO: run the cleanup every time? (in resource monitor too)
+				t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 				var result struct {
 					Name            string `db:"name"`
 					ResourceMonitor string `db:"resource_monitor"`
@@ -99,6 +115,7 @@ func TestInt_IdentifiersForTwoPartIdentifierAsReference(t *testing.T) {
 		{Name: sdk.NewDatabaseObjectIdentifier(`""`, `""`), Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
 		{Name: sdk.NewDatabaseObjectIdentifier(`""""`, `""""`), Error: "invalid object identifier"},
+		// TODO [this PR]: this test can fail if there is no cleanup
 		{Name: sdk.NewDatabaseObjectIdentifier(`"."`, `"."`)},
 
 		// lower case
