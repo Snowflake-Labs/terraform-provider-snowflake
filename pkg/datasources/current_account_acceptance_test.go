@@ -1,3 +1,5 @@
+//go:build !account_level_tests
+
 package datasources_test
 
 import (
