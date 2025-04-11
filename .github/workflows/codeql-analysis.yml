@@ -38,7 +38,7 @@ jobs:
 
       - name: Build the provider for analysis
         if: matrix.language == 'go'
-        run: make build-local
+        run: go build ./...
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
