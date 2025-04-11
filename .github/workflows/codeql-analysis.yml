@@ -17,7 +17,7 @@ jobs:
           - language: actions
             build-mode: none
           - language: go
-            build-mode: autobuild
+            build-mode: custom
     steps:
       - uses: actions/checkout@v4
         with:
