@@ -54,6 +54,7 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 	"saml2_x509_cert": {
 		Type:        schema.TypeString,
 		Required:    true,
+		Sensitive:   true,
 		Description: "The Base64 encoded IdP signing certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.",
 	},
 	"saml2_sp_initiated_login_page_label": {

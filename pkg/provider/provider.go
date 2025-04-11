@@ -157,6 +157,7 @@ func Provider() *schema.Provider {
 				Type:          schema.TypeString,
 				Description:   envNameFieldDescription("Specifies the passcode provided by Duo when using multi-factor authentication (MFA) for login.", snowflakeenvs.Passcode),
 				Optional:      true,
+				Sensitive:     true,
 				ConflictsWith: []string{"passcode_in_password"},
 				DefaultFunc:   schema.EnvDefaultFunc(snowflakeenvs.Passcode, nil),
 			},

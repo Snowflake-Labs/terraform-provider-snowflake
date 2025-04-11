@@ -14,6 +14,22 @@ across different versions.
 
 ## v1.1.1 ➞ v2.0.0
 
+### *(breaking change)* Changes in sensitive values
+To ensure better security of users' data, we adjusted the relevant fields to be sensitive in the provider. This means these values will not be printed by Terraform during planning, etc. Note that the users are still responsible for storing the state securely. Read more about sensitive values in the [Terraform documentation](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables).
+
+The fields that were not marked as sensitive, but now are marked as sensitive are:
+- `snowflake_system_generate_scim_access_token` data source: `access_token` field
+- `snowflake_api_authentication_integration_with_authorization_code_grant` resource: `oauth_client_id` field
+- `snowflake_api_authentication_integration_with_client_credentials` resource: `oauth_client_id` field
+- `snowflake_api_authentication_integration_with_jwt_bearer` resource: `oauth_client_id` field
+- `snowflake_api_authentication_integration_with_authorization_code_grant` resource: `oauth_client_secret` field
+- `snowflake_api_authentication_integration_with_client_credentials` resource: `oauth_client_secret` field
+- `snowflake_api_authentication_integration_with_jwt_bearer` resource: `oauth_client_secret` field
+- `snowflake_saml2_integration` resource: `saml2_x509_cert` field
+- provider configuration: `passcode` field
+
+If you reference one of these fields in an output or a variable blocks, then it needs to be marked as `sensitive = true` in the Terraform configuration. Read [Output documentation](https://developer.hashicorp.com/terraform/language/values/outputs#sensitive-suppressing-values-in-cli-output) and [Variable documentation](https://developer.hashicorp.com/terraform/language/values/variables#suppressing-values-in-cli-output) for more details.
+
 ### *(breaking change)* Changes in TOML configuration file requirements
 As we have announced in [an earlier entry](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#changes-in-toml-configuration-file-requirements), now file permissions are verified by default (`skip_toml_file_permission_verification` is `false` by default). This means that on non-Windows systems, when you run the provider, you can get a following error:
 ```
