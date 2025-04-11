@@ -37,7 +37,7 @@ func TestInt_IdentifiersForOnePartIdentifierAsNameAndReference(t *testing.T) {
 		{Name: `""`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
 		{Name: `""""`, Error: "invalid object identifier"},
-		// TODO [this PR]: this test can fail if there is no cleanup
+		// This name is hardcoded on purpose, without test object suffix as we want to check such special case.
 		{Name: `"."`, ShowName: `.`},
 
 		// lower case
@@ -67,21 +67,25 @@ func TestInt_IdentifiersForOnePartIdentifierAsNameAndReference(t *testing.T) {
 
 			id := sdk.NewAccountObjectIdentifier(testCase.Name)
 			err := testClient(t).ResourceMonitors.Create(ctx, id, new(sdk.CreateResourceMonitorOptions))
+			if err == nil {
+				t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
+			}
 			if testCase.Error != "" {
 				require.ErrorContains(t, err, testCase.Error)
 			} else {
-				t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
+				require.NoError(t, err)
 			}
 
 			err = testClient(t).Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
 				ResourceMonitor: &id,
 			})
+			if err == nil {
+				t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+			}
 			if testCase.Error != "" {
 				require.ErrorContains(t, err, testCase.Error)
 			} else {
 				require.NoError(t, err)
-				// TODO: run the cleanup every time? (in resource monitor too)
-				t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
 				var result struct {
 					Name            string `db:"name"`
 					ResourceMonitor string `db:"resource_monitor"`
