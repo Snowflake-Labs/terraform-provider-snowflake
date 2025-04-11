@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -120,27 +119,6 @@ func (c *ParameterClient) ShowProcedureParameters(t *testing.T, id sdk.SchemaObj
 	})
 	require.NoError(t, err)
 	return params
-}
-
-func (c *ParameterClient) UpdateAccountParameterTemporarily(t *testing.T, parameter sdk.AccountParameter, newValue string) func() {
-	t.Helper()
-	ctx := context.Background()
-
-	param := c.ShowAccountParameter(t, parameter)
-	oldValue := param.Value
-	oldLevel := param.Level
-
-	err := c.client().SetAccountParameter(ctx, parameter, newValue)
-	require.NoError(t, err)
-
-	return func() {
-		if oldLevel == "" {
-			c.UnsetAccountParameter(t, parameter)
-		} else {
-			err := c.client().SetAccountParameter(ctx, parameter, oldValue)
-			require.NoError(t, err)
-		}
-	}
 }
 
 func (c *ParameterClient) ShowAccountParameter(t *testing.T, parameter sdk.AccountParameter) *sdk.Parameter {

@@ -1,3 +1,5 @@
+//go:build account_level_tests
+
 package resources_test
 
 import (
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-// TODO [SNOW-1991414]: discuss and address all the nondeterministic tests in this file
 func TestAcc_CreateSharedDatabase_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)

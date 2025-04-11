@@ -36,3 +36,5 @@ func (method *Method) AssertNameDoesNotMatch(t *testing.T, regex *regexp.Regexp)
 	t.Helper()
 	assert.Falsef(t, regex.MatchString(method.Name()), "file %s contains exported method %s which matches %s", method.FileName(), method.Name(), regex.String())
 }
+
+// TODO [SNOW-2036808]: add build directive assertion on file (to check the presence of //go:build !account_level_tests and //go:build account_level_tests directives)

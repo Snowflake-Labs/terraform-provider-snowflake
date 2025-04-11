@@ -1,3 +1,5 @@
+//go:build account_level_tests
+
 package resources_test
 
 import (
@@ -28,10 +30,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO [SNOW-1991414]: discuss and address all the nondeterministic tests in this file
-// For now, this test can sometimes fail (if account parameters are changed in the meantime).
-// We could set the known parameters here, however, we need to test behavior for the database when they are not set.
-// We could try ignoring the changes to parameters too.
 func TestAcc_Database_Basic(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -688,10 +686,7 @@ func TestAcc_Database_Replication(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1991414]: unskip
 func TestAcc_Database_IntParameter(t *testing.T) {
-	t.Skip("Skipping this test temporarily as it messes with the account settings and also depends on other tests.")
-
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 
@@ -953,10 +948,7 @@ func TestAcc_Database_IntParameter(t *testing.T) {
 	})
 }
 
-// TODO [SNOW-1991414]: unskip
 func TestAcc_Database_StringValueSetOnDifferentParameterLevelWithSameValue(t *testing.T) {
-	t.Skip("Skipping this test temporarily as it messes with the account settings and also depends on other tests.")
-
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 

@@ -1,3 +1,5 @@
+//go:build !account_level_tests
+
 package resources_test
 
 // TODO Add test that includes Iceberg table creation, as this impacts the describe output (updates ACTIVE)
