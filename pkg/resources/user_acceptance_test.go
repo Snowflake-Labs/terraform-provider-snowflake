@@ -1795,15 +1795,15 @@ func TestAcc_User_gh3522_proof(t *testing.T) {
 				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
 				Config:            gh3522ConfigSecondStep(userId, userId2, comment),
 				// Resulting in:
-				//| Error: Provider produced inconsistent final plan
-				//|
-				//| When expanding the plan for snowflake_legacy_service_user.one to include new
-				//| values learned so far during apply, provider
-				//| "registry.terraform.io/hashicorp/snowflake" produced an invalid new value for
-				//| .show_output: was known, but now unknown.
-				//|
-				//| This is a bug in the provider, which should be reported in the provider's own
-				//| issue tracker.
+				// | Error: Provider produced inconsistent final plan
+				// |
+				// | When expanding the plan for snowflake_legacy_service_user.one to include new
+				// | values learned so far during apply, provider
+				// | "registry.terraform.io/hashicorp/snowflake" produced an invalid new value for
+				// | .show_output: was known, but now unknown.
+				// |
+				// | This is a bug in the provider, which should be reported in the provider's own
+				// | issue tracker.
 				ExpectError: regexp.MustCompile("Provider produced inconsistent final plan"),
 			},
 		},
