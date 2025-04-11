@@ -14,10 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - language: actions
-          build-mode: none
-        - language: go
-          build-mode: autobuild
+          - language: actions
+            build-mode: none
+          - language: go
+            build-mode: autobuild
     steps:
       - uses: actions/checkout@v4
         with:
