@@ -25,13 +25,13 @@ jobs:
           persist-credentials: false
 
       - uses: actions/setup-go@v4
-        if: '${{ matrix.language }}' == 'go'
+        if: matrix.language == 'go'
         with:
           go-version-file: ./go.mod
           cache: false
 
       - name: Build the provider for analysis
-        if: '${{ matrix.language }}' == 'go'
+        if: matrix.language == 'go'
         run: make build-local
 
       - name: Initialize CodeQL
