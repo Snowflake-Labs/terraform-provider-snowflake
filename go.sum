@@ -266,8 +266,8 @@ github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/skeema/knownhosts v1.3.0 h1:AM+y0rI04VksttfwjkSTNQorvGqmwATnvnAHpSgc0LY=
 github.com/skeema/knownhosts v1.3.0/go.mod h1:sPINvnADmT/qYH1kfv+ePMmOBTH6Tbl7b5LvTDjFK7M=
-github.com/snowflakedb/gosnowflake v1.13.2 h1:78ovPH3fcxeHkVbOI1o98NuVWJmu0Lax10nlIRYnbjM=
-github.com/snowflakedb/gosnowflake v1.13.2/go.mod h1:tNf6gX01sgKaQUBo3De+KctsK6EwUtwmwp9wf6eYKPU=
+github.com/snowflakedb/gosnowflake v1.13.1 h1:Bye6NpnoPywIFPtAxCxtlUsdDN2idj3mBtK7tVjoCmY=
+github.com/snowflakedb/gosnowflake v1.13.1/go.mod h1:7gIv39zh5XY3NSRi2N64CM+D5XFIjRRf+KuFewDRJbo=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.5.2 h1:xuMeJ0Sdp5ZMRXx/aWO6RZxdr3beISkG5/G/aIRr3pY=
 github.com/stretchr/objx v0.5.2/go.mod h1:FRsXN1f5AsAjCGJKqEizvkpNtU+EGNCLh3NxZ/8L+MA=
