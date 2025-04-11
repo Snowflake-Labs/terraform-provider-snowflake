@@ -3,6 +3,7 @@ package testint
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
@@ -12,60 +13,79 @@ import (
 )
 
 func TestInt_IdentifiersForOnePartIdentifierAsNameAndReference(t *testing.T) {
+	identifier := func(prefix string) string {
+		return testClientHelper().Ids.WithTestObjectSuffix(prefix)
+	}
+
+	identifierLowercase := func(prefix string) string {
+		return strings.ToLower(identifier(prefix))
+	}
+
+	wrapInDoubleQuotes := func(text string) string {
+		return `"` + text + `"`
+	}
+
 	testCases := []struct {
-		Name     sdk.AccountObjectIdentifier
+		Name     string
 		ShowName string
 		Error    string
 	}{
 		// special cases
-		{Name: sdk.NewAccountObjectIdentifier(``), Error: "invalid object identifier"},
-		{Name: sdk.NewAccountObjectIdentifier(`"`), Error: "invalid object identifier"},
+		{Name: ``, Error: "invalid object identifier"},
+		{Name: `"`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
-		{Name: sdk.NewAccountObjectIdentifier(`""`), Error: "invalid object identifier"},
+		{Name: `""`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
-		{Name: sdk.NewAccountObjectIdentifier(`""""`), Error: "invalid object identifier"},
-		{Name: sdk.NewAccountObjectIdentifier(`"."`), ShowName: `.`},
+		{Name: `""""`, Error: "invalid object identifier"},
+		// This name is hardcoded on purpose, without test object suffix as we want to check such special case.
+		{Name: `"."`, ShowName: `.`},
 
 		// lower case
-		{Name: sdk.NewAccountObjectIdentifier(`abc`), ShowName: `abc`},
-		{Name: sdk.NewAccountObjectIdentifier(`ab.c`), ShowName: `ab.c`},
-		{Name: sdk.NewAccountObjectIdentifier(`a"bc`), Error: `unexpected '"`},
-		{Name: sdk.NewAccountObjectIdentifier(`"a""bc"`), ShowName: `a"bc`},
+		{Name: identifierLowercase(`abc`), ShowName: identifierLowercase(`abc`)},
+		{Name: identifierLowercase(`ab.c`), ShowName: identifierLowercase(`ab.c`)},
+		{Name: identifierLowercase(`a"bc`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifierLowercase(`a""bc`)), ShowName: identifierLowercase(`a"bc`)},
 
 		// upper case
-		{Name: sdk.NewAccountObjectIdentifier(`ABC`), ShowName: `ABC`},
-		{Name: sdk.NewAccountObjectIdentifier(`AB.C`), ShowName: `AB.C`},
-		{Name: sdk.NewAccountObjectIdentifier(`A"BC`), Error: `unexpected '"`},
-		{Name: sdk.NewAccountObjectIdentifier(`"A""BC"`), ShowName: `A"BC`},
+		{Name: identifier(`ABC`), ShowName: identifier(`ABC`)},
+		{Name: identifier(`AB.C`), ShowName: identifier(`AB.C`)},
+		{Name: identifier(`A"BC`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifier(`A""BC`)), ShowName: identifier(`A"BC`)},
 
 		// mixed case
-		{Name: sdk.NewAccountObjectIdentifier(`AbC`), ShowName: `AbC`},
-		{Name: sdk.NewAccountObjectIdentifier(`Ab.C`), ShowName: `Ab.C`},
-		{Name: sdk.NewAccountObjectIdentifier(`A"bC`), Error: `unexpected '"`},
-		{Name: sdk.NewAccountObjectIdentifier(`"A""bC"`), ShowName: `A"bC`},
+		{Name: identifier(`AbC`), ShowName: identifier(`AbC`)},
+		{Name: identifier(`Ab.C`), ShowName: identifier(`Ab.C`)},
+		{Name: identifier(`A"bC`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifier(`A""bC`)), ShowName: identifier(`A"bC`)},
 	}
 
 	for _, testCase := range testCases {
 		testCase := testCase
 
-		t.Run(fmt.Sprintf("one part identifier name and reference for input: %s", testCase.Name.FullyQualifiedName()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("one part identifier name and reference for input: %s", testCase.Name), func(t *testing.T) {
 			ctx := context.Background()
 
-			err := testClient(t).ResourceMonitors.Create(ctx, testCase.Name, new(sdk.CreateResourceMonitorOptions))
-			if testCase.Error != "" {
-				require.ErrorContains(t, err, testCase.Error)
-			} else {
-				t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, testCase.Name))
+			id := sdk.NewAccountObjectIdentifier(testCase.Name)
+			err := testClient(t).ResourceMonitors.Create(ctx, id, new(sdk.CreateResourceMonitorOptions))
+			if err == nil {
+				t.Cleanup(testClientHelper().ResourceMonitor.DropResourceMonitorFunc(t, id))
 			}
-
-			err = testClient(t).Warehouses.Create(ctx, testCase.Name, &sdk.CreateWarehouseOptions{
-				ResourceMonitor: &testCase.Name,
-			})
 			if testCase.Error != "" {
 				require.ErrorContains(t, err, testCase.Error)
 			} else {
 				require.NoError(t, err)
-				t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, testCase.Name))
+			}
+
+			err = testClient(t).Warehouses.Create(ctx, id, &sdk.CreateWarehouseOptions{
+				ResourceMonitor: &id,
+			})
+			if err == nil {
+				t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+			}
+			if testCase.Error != "" {
+				require.ErrorContains(t, err, testCase.Error)
+			} else {
+				require.NoError(t, err)
 				var result struct {
 					Name            string `db:"name"`
 					ResourceMonitor string `db:"resource_monitor"`
@@ -82,69 +102,88 @@ func TestInt_IdentifiersForOnePartIdentifierAsNameAndReference(t *testing.T) {
 }
 
 func TestInt_IdentifiersForTwoPartIdentifierAsReference(t *testing.T) {
+	identifier := func(prefix string) string {
+		return testClientHelper().Ids.WithTestObjectSuffix(prefix)
+	}
+
+	identifierLowercase := func(prefix string) string {
+		return strings.ToLower(identifier(prefix))
+	}
+
+	wrapInDoubleQuotes := func(text string) string {
+		return `"` + text + `"`
+	}
+
 	type RawGrantOutput struct {
 		Name      string `db:"name"`
 		Privilege string `db:"privilege"`
 	}
 
 	testCases := []struct {
-		Name                            sdk.DatabaseObjectIdentifier
+		Name                            string
 		OverrideExpectedSnowflakeOutput string
 		Error                           string
 	}{
 		// special cases
-		{Name: sdk.NewDatabaseObjectIdentifier(``, ``), Error: "invalid object identifier"},
-		{Name: sdk.NewDatabaseObjectIdentifier(`"`, `"`), Error: "invalid object identifier"},
+		{Name: ``, Error: "invalid object identifier"},
+		{Name: `"`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
-		{Name: sdk.NewDatabaseObjectIdentifier(`""`, `""`), Error: "invalid object identifier"},
+		{Name: `""`, Error: "invalid object identifier"},
 		// This is a valid identifier, but because in NewXIdentifier functions we're trimming double quotes it won't work
-		{Name: sdk.NewDatabaseObjectIdentifier(`""""`, `""""`), Error: "invalid object identifier"},
-		{Name: sdk.NewDatabaseObjectIdentifier(`"."`, `"."`)},
+		{Name: `""""`, Error: "invalid object identifier"},
+		// This name is hardcoded on purpose, without test object suffix as we want to check such special case.
+		{Name: `"."`},
 
 		// lower case
-		{Name: sdk.NewDatabaseObjectIdentifier(`abc`, `abc`)},
-		{Name: sdk.NewDatabaseObjectIdentifier(`ab.c`, `ab.c`)},
-		{Name: sdk.NewDatabaseObjectIdentifier(`a"bc`, `a"bc`), Error: `unexpected '"`},
-		{Name: sdk.NewDatabaseObjectIdentifier(`"a""bc"`, `"a""bc"`)},
+		{Name: identifierLowercase(`abc`)},
+		{Name: identifierLowercase(`ab.c`)},
+		{Name: identifierLowercase(`a"bc`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifierLowercase(`a""bc`))},
 
 		// upper case
-		{Name: sdk.NewDatabaseObjectIdentifier(`ABC`, `ABC`), OverrideExpectedSnowflakeOutput: `ABC.ABC`},
-		{Name: sdk.NewDatabaseObjectIdentifier(`AB.C`, `AB.C`)},
-		{Name: sdk.NewDatabaseObjectIdentifier(`A"BC`, `A"BC`), Error: `unexpected '"`},
-		{Name: sdk.NewDatabaseObjectIdentifier(`"A""BC"`, `"A""BC"`)},
+		{Name: identifier(`ABC`), OverrideExpectedSnowflakeOutput: identifier(`ABC`) + "." + identifier(`ABC`)},
+		{Name: identifier(`AB.C`)},
+		{Name: identifier(`A"BC`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifier(`A""BC`))},
 
 		// mixed case
-		{Name: sdk.NewDatabaseObjectIdentifier(`AbC`, `AbC`)},
-		{Name: sdk.NewDatabaseObjectIdentifier(`Ab.C`, `Ab.C`)},
-		{Name: sdk.NewDatabaseObjectIdentifier(`A"bC`, `A"bC`), Error: `unexpected '"`},
-		{Name: sdk.NewDatabaseObjectIdentifier(`"A""bC"`, `"A""bC"`)},
+		{Name: identifier(`AbC`)},
+		{Name: identifier(`Ab.C`)},
+		{Name: identifier(`A"bC`), Error: `unexpected '"`},
+		{Name: wrapInDoubleQuotes(identifier(`A""bC`))},
 	}
 
 	role, roleCleanup := testClientHelper().Role.CreateRole(t)
 	t.Cleanup(roleCleanup)
 
 	for _, testCase := range testCases {
-		t.Run(fmt.Sprintf("two part identifier reference for input: %s", testCase.Name.FullyQualifiedName()), func(t *testing.T) {
+		t.Run(fmt.Sprintf("two part identifier reference for input: %s", testCase.Name), func(t *testing.T) {
 			ctx := context.Background()
 
-			err := testClient(t).Databases.Create(ctx, testCase.Name.DatabaseId(), new(sdk.CreateDatabaseOptions))
-			if testCase.Error != "" {
-				require.ErrorContains(t, err, testCase.Error)
-			} else {
-				t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, testCase.Name.DatabaseId()))
+			id := sdk.NewDatabaseObjectIdentifier(testCase.Name, testCase.Name)
+			err := testClient(t).Databases.Create(ctx, id.DatabaseId(), new(sdk.CreateDatabaseOptions))
+			if err == nil {
+				t.Cleanup(testClientHelper().Database.DropDatabaseFunc(t, id.DatabaseId()))
 			}
-
-			err = testClient(t).Schemas.Create(ctx, testCase.Name, new(sdk.CreateSchemaOptions))
 			if testCase.Error != "" {
 				require.ErrorContains(t, err, testCase.Error)
 			} else {
 				require.NoError(t, err)
-				t.Cleanup(testClientHelper().Schema.DropSchemaFunc(t, testCase.Name))
+			}
 
-				testClientHelper().Grant.GrantOnSchemaToAccountRole(t, testCase.Name, role.ID(), sdk.SchemaPrivilegeCreateTable)
+			err = testClient(t).Schemas.Create(ctx, id, new(sdk.CreateSchemaOptions))
+			if err == nil {
+				t.Cleanup(testClientHelper().Schema.DropSchemaFunc(t, id))
+			}
+			if testCase.Error != "" {
+				require.ErrorContains(t, err, testCase.Error)
+			} else {
+				require.NoError(t, err)
+
+				testClientHelper().Grant.GrantOnSchemaToAccountRole(t, id, role.ID(), sdk.SchemaPrivilegeCreateTable)
 
 				var grants []RawGrantOutput
-				err = testClient(t).QueryForTests(ctx, &grants, fmt.Sprintf("SHOW GRANTS ON SCHEMA %s", testCase.Name.FullyQualifiedName()))
+				err = testClient(t).QueryForTests(ctx, &grants, fmt.Sprintf("SHOW GRANTS ON SCHEMA %s", id.FullyQualifiedName()))
 				require.NoError(t, err)
 
 				createTableGrant, err := collections.FindFirst(grants, func(output RawGrantOutput) bool { return output.Privilege == sdk.SchemaPrivilegeCreateTable.String() })
@@ -155,7 +194,7 @@ func TestInt_IdentifiersForTwoPartIdentifierAsReference(t *testing.T) {
 				if testCase.OverrideExpectedSnowflakeOutput != "" {
 					assert.Equal(t, testCase.OverrideExpectedSnowflakeOutput, createTableGrant.Name)
 				} else {
-					assert.Equal(t, testCase.Name.FullyQualifiedName(), createTableGrant.Name)
+					assert.Equal(t, id.FullyQualifiedName(), createTableGrant.Name)
 				}
 			}
 		})
