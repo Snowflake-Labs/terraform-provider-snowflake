@@ -1761,3 +1761,106 @@ func TestAcc_User_importPassword(t *testing.T) {
 		},
 	})
 }
+
+// https://github.com/snowflakedb/terraform-provider-snowflake/issues/3522
+// The issue arises when the following steps happen:
+// 1. Object is created.
+// 2. Object's attribute is updated to computed value of other object added in this run.
+// diff.HasChange(changedKey) used in ComputedIfAnyAttributeChanged does not trigger, so the whole show_output is not marked as new attribute.
+// The original set up would require additional external provider, so to simplify, we use computed value from other object.
+// TestAcc_User_gh3522_proof test shows the previous behavior, TestAcc_User_gh3522_fix confirms the fix.
+func TestAcc_User_gh3522_proof(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	userId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
+				Config:            gh3522ConfigFirstStep(userId),
+				Check: assertThat(t, resourceassert.UserResource(t, "snowflake_legacy_service_user.one").
+					HasNoComment(),
+				),
+			},
+			{
+				ExternalProviders: acc.ExternalProviderWithExactVersion("1.0.5"),
+				Config:            gh3522ConfigSecondStep(userId, userId2, comment),
+				// Resulting in:
+				//| Error: Provider produced inconsistent final plan
+				//|
+				//| When expanding the plan for snowflake_legacy_service_user.one to include new
+				//| values learned so far during apply, provider
+				//| "registry.terraform.io/hashicorp/snowflake" produced an invalid new value for
+				//| .show_output: was known, but now unknown.
+				//|
+				//| This is a bug in the provider, which should be reported in the provider's own
+				//| issue tracker.
+				ExpectError: regexp.MustCompile("Provider produced inconsistent final plan"),
+			},
+		},
+	})
+}
+
+// Check TestAcc_User_gh3522_proof for details.
+func TestAcc_User_gh3522_fix(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+
+	userId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	userId2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
+	comment := random.Comment()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		CheckDestroy: acc.CheckDestroy(t, resources.User),
+		Steps: []resource.TestStep{
+			{
+				Config: gh3522ConfigFirstStep(userId),
+				Check: assertThat(t, resourceassert.UserResource(t, "snowflake_legacy_service_user.one").
+					HasNoComment(),
+				),
+			},
+			{
+				Config: gh3522ConfigSecondStep(userId, userId2, comment),
+				Check: assertThat(t, resourceassert.UserResource(t, "snowflake_legacy_service_user.one").
+					HasCommentString(comment),
+				),
+			},
+		},
+	})
+}
+
+func gh3522ConfigFirstStep(userId sdk.AccountObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_legacy_service_user" "one" {
+  name           = "%[1]s"
+}
+`, userId.Name())
+}
+
+func gh3522ConfigSecondStep(userId sdk.AccountObjectIdentifier, userId2 sdk.AccountObjectIdentifier, comment string) string {
+	return fmt.Sprintf(`
+resource "snowflake_legacy_service_user" "one" {
+  name    = "%[1]s"
+  comment = snowflake_legacy_service_user.two.show_output.0.comment
+}
+
+resource "snowflake_legacy_service_user" "two" {
+  name    = "%[2]s"
+  comment = "%[3]s"
+}
+`, userId.Name(), userId2.Name(), comment)
+}
