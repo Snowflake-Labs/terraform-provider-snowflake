@@ -15,9 +15,7 @@ jobs:
       matrix:
         include:
           - language: actions
-            build-mode: none
           - language: go
-            build-mode: manual
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,7 +26,6 @@ jobs:
         uses: github/codeql-action/init@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
 
       - uses: actions/setup-go@v4
         if: ${{ matrix.language == 'go' }}
