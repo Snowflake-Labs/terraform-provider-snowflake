@@ -54,7 +54,7 @@ func (c *AccountClient) GetAccountIdentifier(t *testing.T) sdk.AccountIdentifier
 func (c *AccountClient) Create(t *testing.T) (*sdk.Account, func()) {
 	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()
-	name := c.ids.Alpha()
+	name := random.AdminName()
 	email := random.Email()
 	privateKey := random.GenerateRSAPrivateKey(t)
 	publicKey, _ := random.GenerateRSAPublicKeyFromPrivateKey(t, privateKey)
@@ -123,7 +123,7 @@ func (c *AccountClient) Show(t *testing.T, id sdk.AccountObjectIdentifier) (*sdk
 func (c *AccountClient) CreateAndLogIn(t *testing.T) (*sdk.Account, *sdk.Client, func()) {
 	t.Helper()
 	id := c.ids.RandomAccountObjectIdentifier()
-	name := c.ids.Alpha()
+	name := random.AdminName()
 	privateKey := random.GenerateRSAPrivateKey(t)
 	publicKey, _ := random.GenerateRSAPublicKeyFromPrivateKey(t, privateKey)
 	email := random.Email()

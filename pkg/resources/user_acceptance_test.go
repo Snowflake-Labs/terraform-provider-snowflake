@@ -44,6 +44,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 	key1, _ := random.GenerateRSAPublicKey(t)
 	key2, _ := random.GenerateRSAPublicKey(t)
 
+	loginName := random.SensitiveAlphanumeric()
 	pass := random.Password()
 	newPass := random.Password()
 
@@ -53,7 +54,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 
 	userModelAllAttributes := model.User("w", id.Name()).
 		WithPassword(pass).
-		WithLoginName(id.Name() + "_login").
+		WithLoginName(loginName + "_login").
 		WithDisplayName("Display Name").
 		WithFirstName("Jan").
 		WithMiddleName("Jakub").
@@ -177,7 +178,7 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 					resourceassert.UserResource(t, userModelAllAttributes.ResourceReference()).
 						HasNameString(id.Name()).
 						HasPasswordString(pass).
-						HasLoginNameString(fmt.Sprintf("%s_login", id.Name())).
+						HasLoginNameString(fmt.Sprintf("%s_login", loginName)).
 						HasDisplayNameString("Display Name").
 						HasFirstNameString("Jan").
 						HasMiddleNameString("Jakub").
@@ -201,12 +202,12 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(loginName+"_other_login")),
 				Check: assertThat(t,
-					resourceassert.UserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
+					resourceassert.UserResource(t, userModelAllAttributesChanged(loginName+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
 						HasPasswordString(newPass).
-						HasLoginNameString(fmt.Sprintf("%s_other_login", id.Name())).
+						HasLoginNameString(fmt.Sprintf("%s_other_login", loginName)).
 						HasDisplayNameString("New Display Name").
 						HasFirstNameString("Janek").
 						HasMiddleNameString("Kuba").
@@ -230,22 +231,22 @@ func TestAcc_User_BasicFlows(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:            userModelAllAttributesChanged(id.Name() + "_other_login").ResourceReference(),
+				ResourceName:            userModelAllAttributesChanged(loginName + "_other_login").ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password", "disable_mfa", "days_to_expiry", "mins_to_unlock", "mins_to_bypass_mfa", "default_namespace", "login_name", "show_output.0.days_to_expiry"},
 				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedUserResource(t, id.Name()).
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
-						HasLoginNameString(fmt.Sprintf("%s_OTHER_LOGIN", id.Name())),
+						HasLoginNameString(strings.ToUpper(fmt.Sprintf("%s_other_login", loginName))),
 				),
 			},
 			// CHANGE PROP TO THE CURRENT SNOWFLAKE VALUE
 			{
 				PreConfig: func() {
-					acc.TestClient().User.SetLoginName(t, id, id.Name()+"_different_login")
+					acc.TestClient().User.SetLoginName(t, id, loginName+"_different_login")
 				},
-				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(loginName+"_different_login")),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -1475,9 +1476,10 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	newId := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
+	loginName := random.SensitiveAlphanumeric()
 	userModelWithoutBoth := model.User("w", id.Name())
 	userModelWithNewId := model.User("w", newId.Name())
-	userModelWithBoth := model.User("w", newId.Name()).WithLoginName("login_name").WithDisplayName("display_name")
+	userModelWithBoth := model.User("w", newId.Name()).WithLoginName(loginName).WithDisplayName("display_name")
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -1517,10 +1519,10 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelWithBoth.ResourceReference()).
 						HasDisplayNameString("display_name").
-						HasLoginNameString("login_name"),
+						HasLoginNameString(loginName),
 					objectassert.User(t, newId).
 						HasDisplayName("display_name").
-						HasLoginName("LOGIN_NAME"),
+						HasLoginName(strings.ToUpper(loginName)),
 				),
 			},
 			// Unset externally
@@ -1539,10 +1541,10 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 				Check: assertThat(t,
 					resourceassert.UserResource(t, userModelWithBoth.ResourceReference()).
 						HasDisplayNameString("display_name").
-						HasLoginNameString("login_name"),
+						HasLoginNameString(loginName),
 					objectassert.User(t, newId).
 						HasDisplayName("display_name").
-						HasLoginName("LOGIN_NAME"),
+						HasLoginName(strings.ToUpper(loginName)),
 				),
 			},
 			// Unset both params
@@ -1564,7 +1566,7 @@ func TestAcc_User_LoginNameAndDisplayName(t *testing.T) {
 						Set: &sdk.UserSet{
 							ObjectProperties: &sdk.UserAlterObjectProperties{
 								UserObjectProperties: sdk.UserObjectProperties{
-									LoginName:   sdk.String("external_login_name"),
+									LoginName:   sdk.String("external_" + loginName),
 									DisplayName: sdk.String("external_display_name"),
 								},
 							},

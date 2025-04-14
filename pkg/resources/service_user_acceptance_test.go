@@ -34,6 +34,8 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	id2 := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 
+	loginName := random.SensitiveAlphanumeric()
+
 	comment := random.Comment()
 	newComment := random.Comment()
 
@@ -45,7 +47,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 		WithComment(newComment)
 
 	userModelAllAttributes := model.ServiceUser("w", id.Name()).
-		WithLoginName(id.Name() + "_login").
+		WithLoginName(loginName + "_login").
 		WithDisplayName("Display Name").
 		WithEmail("fake@email.com").
 		WithDisabled("false").
@@ -147,7 +149,7 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 				Check: assertThat(t,
 					resourceassert.ServiceUserResource(t, userModelAllAttributes.ResourceReference()).
 						HasNameString(id.Name()).
-						HasLoginNameString(fmt.Sprintf("%s_login", id.Name())).
+						HasLoginNameString(fmt.Sprintf("%s_login", loginName)).
 						HasDisplayNameString("Display Name").
 						HasEmailString("fake@email.com").
 						HasDisabled(false).
@@ -165,11 +167,11 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			},
 			// CHANGE PROPERTIES
 			{
-				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_other_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(loginName+"_other_login")),
 				Check: assertThat(t,
-					resourceassert.ServiceUserResource(t, userModelAllAttributesChanged(id.Name()+"_other_login").ResourceReference()).
+					resourceassert.ServiceUserResource(t, userModelAllAttributesChanged(loginName+"_other_login").ResourceReference()).
 						HasNameString(id.Name()).
-						HasLoginNameString(fmt.Sprintf("%s_other_login", id.Name())).
+						HasLoginNameString(fmt.Sprintf("%s_other_login", loginName)).
 						HasDisplayNameString("New Display Name").
 						HasEmailString("fake@email.net").
 						HasDisabled(true).
@@ -187,22 +189,22 @@ func TestAcc_ServiceUser_BasicFlows(t *testing.T) {
 			},
 			// IMPORT
 			{
-				ResourceName:            userModelAllAttributesChanged(id.Name() + "_other_login").ResourceReference(),
+				ResourceName:            userModelAllAttributesChanged(loginName + "_other_login").ResourceReference(),
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"days_to_expiry", "mins_to_unlock", "default_namespace", "login_name", "show_output.0.days_to_expiry"},
 				ImportStateCheck: assertThatImport(t,
 					resourceassert.ImportedServiceUserResource(t, id.Name()).
 						HasDefaultNamespaceString("ONE_PART_NAMESPACE").
-						HasLoginNameString(fmt.Sprintf("%s_OTHER_LOGIN", id.Name())),
+						HasLoginNameString(strings.ToUpper(fmt.Sprintf("%s_other_login", loginName))),
 				),
 			},
 			// CHANGE PROP TO THE CURRENT SNOWFLAKE VALUE
 			{
 				PreConfig: func() {
-					acc.TestClient().User.SetLoginName(t, id, id.Name()+"_different_login")
+					acc.TestClient().User.SetLoginName(t, id, loginName+"_different_login")
 				},
-				Config: config.FromModels(t, userModelAllAttributesChanged(id.Name()+"_different_login")),
+				Config: config.FromModels(t, userModelAllAttributesChanged(loginName+"_different_login")),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),

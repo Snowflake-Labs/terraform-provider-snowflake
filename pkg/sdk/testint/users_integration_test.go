@@ -26,7 +26,7 @@ func TestInt_Users(t *testing.T) {
 
 	password := random.Password()
 	email := random.Email()
-	newValue := random.AlphaN(5)
+	newValue := random.SensitiveAlphanumeric()
 	warehouseId := testClientHelper().Ids.WarehouseId()
 	schemaId := testClientHelper().Ids.SchemaId()
 	var schemaIdObjectIdentifier sdk.ObjectIdentifier = schemaId
@@ -122,7 +122,7 @@ func TestInt_Users(t *testing.T) {
 			},
 		}
 		password := random.Password()
-		loginName := random.String()
+		loginName := random.SensitiveAlphanumeric()
 
 		opts := &sdk.CreateUserOptions{
 			OrReplace: sdk.Bool(true),
@@ -171,7 +171,7 @@ func TestInt_Users(t *testing.T) {
 			},
 		}
 		password := random.Password()
-		loginName := random.String()
+		loginName := random.SensitiveAlphanumeric()
 
 		opts := &sdk.CreateUserOptions{
 			IfNotExists: sdk.Bool(true),
@@ -698,7 +698,7 @@ func TestInt_Users(t *testing.T) {
 
 	t.Run("create: other params with hyphen and mixed cases", func(t *testing.T) {
 		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
-		randomWithHyphenAndMixedCase := strings.ToUpper(random.AlphaN(4)) + "-" + strings.ToLower(random.AlphaN(4))
+		randomWithHyphenAndMixedCase := strings.ToUpper(random.AlphaN(4)) + "-" + strings.ToLower(random.SensitiveAlphanumeric())
 		var namespaceId sdk.ObjectIdentifier = sdk.NewDatabaseObjectIdentifier(randomWithHyphenAndMixedCase, randomWithHyphenAndMixedCase)
 
 		opts := &sdk.CreateUserOptions{
