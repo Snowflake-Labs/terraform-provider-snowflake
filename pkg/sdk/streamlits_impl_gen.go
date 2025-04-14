@@ -27,6 +27,10 @@ func (v *streamlits) Drop(ctx context.Context, request *DropStreamlitRequest) er
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *streamlits) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropStreamlitRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *streamlits) Show(ctx context.Context, request *ShowStreamlitRequest) ([]Streamlit, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[streamlitsRow](v.client, ctx, opts)

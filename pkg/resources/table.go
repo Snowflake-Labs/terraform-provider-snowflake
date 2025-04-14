@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -209,13 +210,16 @@ var tableSchema = map[string]*schema.Schema{
 }
 
 func Table() *schema.Resource {
-	deleteTable := CommonDelete(func(client *sdk.Client) DropFunc { return client.Tables.DropSafely })
+	deleteFunc := ResourceDeleteContextFunc(
+		helpers.DecodeSnowflakeIDErr[sdk.SchemaObjectIdentifier],
+		func(client *sdk.Client) DropSafelyFunc[sdk.SchemaObjectIdentifier] { return client.Tables.DropSafely },
+	)
 
 	return &schema.Resource{
 		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.TableResource), TrackingCreateWrapper(resources.Table, CreateTable)),
 		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.TableResource), TrackingReadWrapper(resources.Table, ReadTable)),
 		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.TableResource), TrackingUpdateWrapper(resources.Table, UpdateTable)),
-		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableResource), TrackingDeleteWrapper(resources.Table, deleteTable)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.TableResource), TrackingDeleteWrapper(resources.Table, deleteFunc)),
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.Table, customdiff.All(
 			ComputedIfAnyAttributeChanged(tableSchema, FullyQualifiedNameAttributeName, "name"),

@@ -3,7 +3,7 @@ package resources
 import (
 	"context"
 	"errors"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
@@ -16,14 +16,20 @@ type ResourceValueSetter interface {
 	Set(string, any) error
 }
 
-type DropFunc = func(context.Context, sdk.SchemaObjectIdentifier) error
+type DropSafelyFunc[T sdk.ObjectIdentifierConstraint] func(context.Context, T) error
 
-func CommonDelete(dropFunc func(*sdk.Client) DropFunc) schema.DeleteContextFunc {
+func ResourceDeleteContextFunc[ID sdk.ObjectIdentifierConstraint](
+	parseFunc func(string) (ID, error),
+	dropFunc func(*sdk.Client) DropSafelyFunc[ID],
+) schema.DeleteContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 		client := meta.(*provider.Context).Client
-		id := helpers.DecodeSnowflakeID(d.Id()).(sdk.SchemaObjectIdentifier)
+		id, err := parseFunc(d.Id())
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-		err := dropFunc(client)(ctx, id)
+		err = dropFunc(client)(ctx, id)
 		if !errors.Is(err, sdk.ErrSkippable) {
 			return diag.FromErr(err)
 		}

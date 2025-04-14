@@ -81,10 +81,6 @@ type Client struct {
 	Warehouses                   Warehouses
 }
 
-func (c *Client) Tables2() *Tables {
-	return c.Tables
-}
-
 func (c *Client) GetAccountLocator() string {
 	return c.accountLocator
 }

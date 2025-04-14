@@ -83,7 +83,8 @@ func TestInt_SafeDropOnSchemaObjectIdentifier(t *testing.T) {
 }
 
 func TestInt_SafeDropOnSchemaObjectIdentifierWithArguments(t *testing.T) {
-	procedure := testClientHelper().Procedure.Create(t, sdk.DataTypeInt)
+	procedure, procedureCleanup := testClientHelper().Procedure.Create(t, sdk.DataTypeInt)
+	t.Cleanup(procedureCleanup)
 
 	ctx := context.Background()
 	procedureDrop := func(id sdk.SchemaObjectIdentifierWithArguments) func() error {

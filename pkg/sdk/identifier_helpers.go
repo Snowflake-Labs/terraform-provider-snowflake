@@ -18,6 +18,10 @@ type ObjectIdentifier interface {
 	FullyQualifiedName() string
 }
 
+type ObjectIdentifierConstraint interface {
+	AccountObjectIdentifier | DatabaseObjectIdentifier | SchemaObjectIdentifier | SchemaObjectIdentifierWithArguments | ExternalObjectIdentifier | AccountIdentifier
+}
+
 func NewObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) ObjectIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
 	switch len(parts) {
