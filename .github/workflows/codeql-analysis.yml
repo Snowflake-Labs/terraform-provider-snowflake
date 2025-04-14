@@ -15,9 +15,9 @@ jobs:
       matrix:
         include:
           - language: actions
-            build-mode: manual
-          - language: go
             build-mode: none
+          - language: go
+            build-mode: manual
     steps:
       - uses: actions/checkout@v4
         with:
