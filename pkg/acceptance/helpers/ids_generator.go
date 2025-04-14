@@ -43,6 +43,10 @@ func (c *IdsGenerator) RandomAccountObjectIdentifier() sdk.AccountObjectIdentifi
 	return sdk.NewAccountObjectIdentifier(c.Alpha())
 }
 
+func (c *IdsGenerator) SensitiveRandomAccountObjectIdentifier() sdk.AccountObjectIdentifier {
+	return sdk.NewAccountObjectIdentifier(random.SensitiveAlphanumeric())
+}
+
 func (c *IdsGenerator) RandomAccountObjectIdentifierWithPrefix(prefix string) sdk.AccountObjectIdentifier {
 	return sdk.NewAccountObjectIdentifier(c.AlphaWithPrefix(prefix))
 }

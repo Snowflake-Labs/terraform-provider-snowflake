@@ -109,7 +109,7 @@ func TestInt_Account(t *testing.T) {
 	}
 
 	t.Run("create: minimal", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		name := random.AdminName()
 		password := random.Password()
 		email := random.Email()
@@ -130,7 +130,7 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("create: user type service", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		name := random.AdminName()
 		key, _ := random.GenerateRSAPublicKey(t)
 		email := random.Email()
@@ -152,7 +152,7 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("create: user type legacy service", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		name := random.AdminName()
 		password := random.Password()
 		email := random.Email()
@@ -174,7 +174,7 @@ func TestInt_Account(t *testing.T) {
 	})
 
 	t.Run("create: complete", func(t *testing.T) {
-		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		id := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		name := random.AdminName()
 		password := random.Password()
 		email := random.Email()
@@ -244,7 +244,7 @@ func TestInt_Account(t *testing.T) {
 		oldAccount, oldAccountCleanup := testClientHelper().Account.Create(t)
 		t.Cleanup(oldAccountCleanup)
 
-		newName := sdk.NewAccountObjectIdentifier(random.AdminName())
+		newName := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
@@ -269,7 +269,7 @@ func TestInt_Account(t *testing.T) {
 		account, accountCleanup := testClientHelper().Account.Create(t)
 		t.Cleanup(accountCleanup)
 
-		newName := sdk.NewAccountObjectIdentifier(random.AdminName())
+		newName := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
@@ -307,7 +307,7 @@ func TestInt_Account(t *testing.T) {
 		account, accountCleanup := testClientHelper().Account.Create(t)
 		t.Cleanup(accountCleanup)
 
-		newName := sdk.NewAccountObjectIdentifier(random.AdminName())
+		newName := testClientHelper().Ids.SensitiveRandomAccountObjectIdentifier()
 		t.Cleanup(testClientHelper().Account.DropFunc(t, newName))
 
 		err := client.Accounts.Alter(ctx, &sdk.AlterAccountOptions{
