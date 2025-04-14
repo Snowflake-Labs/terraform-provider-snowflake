@@ -1,4 +1,4 @@
-//go:build account_level_tests
+//go:build !account_level_tests
 
 package testint
 
@@ -274,15 +274,17 @@ func TestInt_Table(t *testing.T) {
 		sourceTable, sourceTableCleanup := testClientHelper().Table.CreateWithColumns(t, columns)
 		t.Cleanup(sourceTableCleanup)
 
-		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
+		schema, schemaCleanup := testClientHelper().Schema.CreateSchema(t)
+		t.Cleanup(schemaCleanup)
+
+		// ensure that time travel is allowed (and revert if needed after the test)
+		testClientHelper().Schema.UpdateDataRetentionTime(t, schema.ID(), 1)
+
+		id := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
 		request := sdk.NewCreateTableCloneRequest(id, sourceTable.ID()).
 			WithCopyGrants(sdk.Bool(true)).WithClonePoint(sdk.NewClonePointRequest().
 			WithAt(*sdk.NewTimeTravelRequest().WithOffset(sdk.Pointer(0))).
 			WithMoment(sdk.CloneMomentAt))
-
-		// ensure that time travel is allowed (and revert if needed after the test)
-		revertParameter := testClientHelper().Parameter.UpdateAccountParameterTemporarily(t, sdk.AccountParameterDataRetentionTimeInDays, "1")
-		t.Cleanup(revertParameter)
 
 		err := client.Tables.CreateClone(ctx, request)
 		require.NoError(t, err)

@@ -47,7 +47,8 @@ The preferred way of running particular tests locally is to create a config file
 
 ```sh
 [default]
-account = "<your account in form of organisation-account_name>"
+account_name = "<your account name>"
+organization_name = "<organization in which your account is located>"
 user = "<your user>"
 password = "<your password>"
 role = "<your role>"
@@ -58,12 +59,15 @@ To be able to run all the tests you additionally the second profile `[secondary_
 
 ```sh
 [secondary_test_account]
-account = "<your secondary account in form of organisation-account_name2>"
+account_name = "<your account name>"
+organization_name = "<organization in which your account is located>"
 user = "<your user on the secondary account>"
 password = "<your password on the secondary account>"
 role = "<your role on the secondary account>"
 host="<host of your account, e.g. organisation-account_name2.snowflakecomputing.com>"
 ```
+
+**TIP**: check [how-can-i-get-my-organization-name](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/authentication_methods#how-can-i-get-my-organization-name) and [how-can-i-get-my-account-name](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/authentication_methods#how-can-i-get-my-account-name) sections in our guides if you have troubles setting the proper `organization_name` and `account_name`.
 
 We are aware that not everyone has access two multiple accounts, so the majority of tests can be run using just one account. The tests setup however, requires both profiles (`default` and `secondary_test_account`) to be present. You can use the same details for `secondary_test_account` as in the `default` one, if you don't plan to run tests requiring multiple accounts. The warning will be logged when setting up tests with just a single account.
 
