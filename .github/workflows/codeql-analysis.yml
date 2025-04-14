@@ -31,14 +31,14 @@ jobs:
           build-mode: ${{ matrix.build-mode }}
 
       - uses: actions/setup-go@v4
-        if: matrix.language == 'go'
+        if: ${{ matrix.language == 'go' }}
         with:
           go-version-file: ./go.mod
           cache: false
 
       - name: Build the provider for analysis
-        if: matrix.language == 'go'
-        run: make build-local
+        if: ${{ matrix.language == 'go' }}
+        run: go build ./...
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
