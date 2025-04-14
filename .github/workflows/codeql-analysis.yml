@@ -15,23 +15,26 @@ jobs:
       matrix:
         include:
           - language: actions
+            build-mode: manual
           - language: go
+            build-mode: none
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
-        with:
-          languages: ${{ matrix.language }}
-
       - uses: actions/setup-go@v4
         if: ${{ matrix.language == 'go' }}
         with:
           go-version-file: ./go.mod
           cache: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Build the provider for analysis
         if: ${{ matrix.language == 'go' }}
