@@ -576,8 +576,8 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	_ = testenvs.GetOrSkipTest(t, testenvs.TestAccountCreate)
 
+	id := random.SensitiveString()
 	email := random.Email()
-	name := random.AdminName()
 	adminName := random.AdminName()
 	adminPassword := random.Password()
 	firstName := random.SensitiveAlphanumeric()
@@ -585,7 +585,7 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 	region := acc.TestClient().Context.CurrentRegion(t)
 	comment := random.Comment()
 
-	configModel := model.Account("test", adminName, string(sdk.EditionStandard), email, 3, name).
+	configModel := model.Account("test", adminName, string(sdk.EditionStandard), email, 3, id).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminPassword(adminPassword).
 		WithFirstName(firstName).
@@ -603,14 +603,14 @@ func TestAcc_Account_UpgradeFrom_v0_99_0(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: acc.ExternalProviderWithExactVersion("0.99.0"),
-				Config:            accountConfig_v0_99_0(name, adminName, adminPassword, email, sdk.EditionStandard, firstName, lastName, true, region, 3, comment),
+				Config:            accountConfig_v0_99_0(id, adminName, adminPassword, email, sdk.EditionStandard, firstName, lastName, true, region, 3, comment),
 			},
 			{
 				ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
 				Config:                   config.FromModels(t, configModel),
 				Check: assertThat(t,
 					resourceassert.AccountResource(t, configModel.ResourceReference()).
-						HasNameString(name).
+						HasNameString(id).
 						HasAdminNameString(adminName).
 						HasAdminPasswordString(adminPassword).
 						HasEmailString(email).
