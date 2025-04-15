@@ -61,7 +61,7 @@ resource "snowflake_saml2_integration" "test" {
 - `saml2_issuer` (String) The string containing the IdP EntityID / Issuer.
 - `saml2_provider` (String) The string describing the IdP. Valid options are: `OKTA` | `ADFS` | `CUSTOM`.
 - `saml2_sso_url` (String) The string containing the IdP SSO URL, where the user should be redirected by Snowflake (the Service Provider) with a SAML AuthnRequest message.
-- `saml2_x509_cert` (String) The Base64 encoded IdP signing certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.
+- `saml2_x509_cert` (String, Sensitive) The Base64 encoded IdP signing certificate on a single line without the leading -----BEGIN CERTIFICATE----- and ending -----END CERTIFICATE----- markers.
 
 ### Optional
 

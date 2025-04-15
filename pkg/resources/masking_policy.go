@@ -68,6 +68,7 @@ var maskingPolicySchema = map[string]*schema.Schema{
 	"body": {
 		Type:             schema.TypeString,
 		Required:         true,
+		Sensitive:        true,
 		Description:      diffSuppressStatementFieldDescription("Specifies the SQL expression that transforms the data."),
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
