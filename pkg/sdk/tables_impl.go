@@ -66,8 +66,6 @@ func (v *tables) Drop(ctx context.Context, request *DropTableRequest) error {
 }
 
 func (v *tables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
-	// TODO: Either this way or refactor the method to accept only ID and implicitly set the IfExists flag
-	// TODO: Check other Drops if they contain other useful options than "If exists"
 	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropTableRequest(id).WithIfExists(Bool(true))) }, ctx, id)
 }
 
