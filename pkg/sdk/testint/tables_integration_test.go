@@ -853,6 +853,54 @@ func TestInt_Table(t *testing.T) {
 		require.ErrorIs(t, err, collections.ErrObjectNotFound)
 	})
 
+	t.Run("drop table in non-existing schema", func(t *testing.T) {
+		nonExistingSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		nonExistingTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(nonExistingSchemaId)
+		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(nonExistingTableId).WithIfExists(sdk.Bool(true)))
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("drop table in non-existing database", func(t *testing.T) {
+		nonExistingDatabaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		nonExistingSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(nonExistingDatabaseId)
+		nonExistingTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(nonExistingSchemaId)
+		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(nonExistingTableId).WithIfExists(sdk.Bool(true)))
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("drop safely table", func(t *testing.T) {
+		table, tableCleanup := testClientHelper().Table.Create(t)
+		err := client.Tables.DropSafely(ctx, table.ID())
+		if err != nil {
+			t.Cleanup(tableCleanup)
+		}
+		require.NoError(t, err)
+
+		_, err = client.Tables.ShowByID(ctx, table.ID())
+		require.ErrorIs(t, err, collections.ErrObjectNotFound)
+	})
+
+	t.Run("drop safely table in non-existing schema", func(t *testing.T) {
+		nonExistingSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
+		nonExistingTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(nonExistingSchemaId)
+		err := client.Tables.DropSafely(ctx, nonExistingTableId)
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdk.ErrSkippable)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
+	t.Run("drop safely table in non-existing database", func(t *testing.T) {
+		nonExistingDatabaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		nonExistingSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(nonExistingDatabaseId)
+		nonExistingTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(nonExistingSchemaId)
+		err := client.Tables.DropSafely(ctx, nonExistingTableId)
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdk.ErrSkippable)
+		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	})
+
 	t.Run("show tables", func(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.Create(t)
 		t.Cleanup(tableCleanup)
