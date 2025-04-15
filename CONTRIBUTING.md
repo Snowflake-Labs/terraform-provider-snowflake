@@ -47,41 +47,46 @@ The preferred way of running particular tests locally is to create a config file
 
 ```sh
 [default]
-account = "<your account in form of organisation-account_name>"
+account_name = "<your account name>"
+organization_name = "<organization in which your account is located>"
 user = "<your user>"
 password = "<your password>"
 role = "<your role>"
 host="<host of your account, e.g. organisation-account_name.snowflakecomputing.com>"
 ```
 
-To be able to run all the tests you additionally need two more profiles `[secondary_test_account]` and `[incorrect_test_profile]`:
+To be able to run all the tests you additionally the second profile `[secondary_test_account]`:
 
 ```sh
 [secondary_test_account]
-account = "<your secondary account in form of organisation-account_name2>"
+account_name = "<your account name>"
+organization_name = "<organization in which your account is located>"
 user = "<your user on the secondary account>"
 password = "<your password on the secondary account>"
 role = "<your role on the secondary account>"
 host="<host of your account, e.g. organisation-account_name2.snowflakecomputing.com>"
-
-[incorrect_test_profile]
-account = "<your account in form of organisation-account_name>"
-user = "<non-existing user>"
-password = "<bad password>"
-role = "<any role, e.g. ACCOUNTADMIN>"
-host="<host of your account, e.g. organisation-account_name.snowflakecomputing.com>"
 ```
+
+**TIP**: check [how-can-i-get-my-organization-name](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/authentication_methods#how-can-i-get-my-organization-name) and [how-can-i-get-my-account-name](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/guides/authentication_methods#how-can-i-get-my-account-name) sections in our guides if you have troubles setting the proper `organization_name` and `account_name`.
 
 We are aware that not everyone has access two multiple accounts, so the majority of tests can be run using just one account. The tests setup however, requires both profiles (`default` and `secondary_test_account`) to be present. You can use the same details for `secondary_test_account` as in the `default` one, if you don't plan to run tests requiring multiple accounts. The warning will be logged when setting up tests with just a single account.
 
+There is also environment flag `TEST_SF_TF_SIMPLIFIED_INTEGRATION_TESTS_SETUP` available to set up only the default account for the integration tests. Careful, as tests requiring multiple accounts will fail when using this flag. Such flag is not yet available for the acceptance tests.
+
 **⚠️ Important ⚠️** Some of the tests require the privileged role (like `ACCOUNTADMIN`). Otherwise, the managed objects may not be created. If you want to use lower role, you have to make sure it has all the necessary privileges added.
 
-To run the tests we have three different commands:
-- `make test` run unit and integration tests
-- `make test-acceptance` run acceptance tests
-- `make test-integration` run integration tests
+To run the tests we have the following commands:
+- `make test` run unit and integration tests (without account-level ones)
+- `make test-acceptance` run acceptance tests (without account-level ones)
+- `make test-integration` run integration tests (without account-level ones)
+- `make test-account-level-features` run both integration and acceptance tests verifying account-level features
 
-You can run the particular tests from inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you). It is also worth setting up more verbose logging (check [this section](FAQ.md#how-can-i-turn-on-logs) for more details).
+The tests distinction between account-level and non-account-level tests is currently achieved by go build directive:
+- `//go:build account_level_tests` for account-level tests;
+- `//go:build !account_level_tests` for non-account-level tests.
+Make sure you specify the correct directive when adding new integration or acceptance test file.
+
+You can run the particular tests from inside your chosen IDE but remember that you have to set `TF_ACC=1` environment variable to run any acceptance tests (the above commands set it for you). There are more environment variables set in the above Makefile rules, so familiarize with them before using them. It is also worth setting up more verbose logging (check [this section](FAQ.md#how-can-i-turn-on-logs) for more details).
 
 ## Making a contribution
 
