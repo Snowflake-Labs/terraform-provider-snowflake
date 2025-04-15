@@ -119,7 +119,6 @@ var invalidGrantToFutureObjectTypes = []ObjectType{
 	ObjectTypeRowAccessPolicy,
 	ObjectTypeSessionPolicy,
 	ObjectTypeTag,
-	ObjectTypeStreamlit, // added because of https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2656
 }
 
 var invalidGrantPluralObjectTypes = []ObjectType{
