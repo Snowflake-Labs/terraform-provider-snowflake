@@ -7,8 +7,7 @@ import (
 
 // SafeDrop is a helper function that wraps a drop function and handles common error cases that
 // relate to missing high hierarchy objects when dropping lower ones like schemas, tables, views, etc.
-// Whenever an object is missing or the higher hierarchy object is not accessible, it will return nil error,
-// which means the caller can safely ignore the error and proceed.
+// Whenever an object is missing, or the higher hierarchy object is not accessible, it will not return an error.
 func SafeDrop[ID AccountObjectIdentifier | DatabaseObjectIdentifier | SchemaObjectIdentifier | SchemaObjectIdentifierWithArguments](
 	client *Client,
 	drop func() error,

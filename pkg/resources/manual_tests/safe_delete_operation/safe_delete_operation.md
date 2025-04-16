@@ -11,7 +11,7 @@ Before running Terraform tests, you have to create a simple database:
 
 ```snowflake
 CREATE DATABASE TEST_SAFE_DELETE_OPERATION_DATABASE;
-CREATE DATABASE TEST_SCHEMA;
+CREATE SCHEMA TEST_SCHEMA;
 ```
 
 ## Terraform configuration
