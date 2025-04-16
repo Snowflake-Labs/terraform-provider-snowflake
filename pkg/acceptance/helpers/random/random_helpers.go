@@ -50,13 +50,13 @@ func Password() string {
 // SensitiveString returns a random string prefixed with a generated random value that is masked in GitHub Action logs.
 // The string returned by SensitiveString always starts with a letter and contains only letters, numbers, and symbols.
 func SensitiveString() string {
-	return generatedRandomValue + StringN(30)
+	return generatedRandomValue + StringN(10)
 }
 
 // SensitiveAlphanumeric returns a random string prefixed with a generated random value that is masked in GitHub Action logs.
 // The string returned by SensitiveAlphanumeric always starts with a letter and contains only letters and numbers.
 func SensitiveAlphanumeric() string {
-	return generatedRandomValue + AlphanumericN(30)
+	return generatedRandomValue + AlphanumericN(10)
 }
 
 func Bool() bool {
