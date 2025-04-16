@@ -17,7 +17,7 @@ import (
 )
 
 // TODO [SNOW-1827309]: use toml config builder instead of hardcoding
-func TestLoadConfigFile(t *testing.T) {
+func TestLoadConfigFileLegacy(t *testing.T) {
 	c := `
 	[default]
 	accountname='TEST_ACCOUNT'
@@ -49,7 +49,7 @@ func TestLoadConfigFile(t *testing.T) {
 	assert.Equal(t, "SECURITYADMIN", *m["securityadmin"].Role)
 }
 
-func TestLoadConfigFileWithUnknownFields(t *testing.T) {
+func TestLoadConfigFileWithUnknownFieldsLegacy(t *testing.T) {
 	c := `
 	[default]
 	unknown='TEST_ACCOUNT'
@@ -66,7 +66,7 @@ func TestLoadConfigFileWithUnknownFields(t *testing.T) {
 	}, m)
 }
 
-func TestLoadConfigFileWithInvalidFieldTypeFails(t *testing.T) {
+func TestLoadConfigFileWithInvalidFieldTypeFailsLegacy(t *testing.T) {
 	tests := []struct {
 		name      string
 		fieldName string
@@ -117,7 +117,7 @@ func TestLoadConfigFileWithInvalidFieldTypeFails(t *testing.T) {
 	}
 }
 
-func TestLoadConfigFileWithInvalidFieldTypeIntFails(t *testing.T) {
+func TestLoadConfigFileWithInvalidFieldTypeIntFailsLegacy(t *testing.T) {
 	tests := []struct {
 		name      string
 		fieldName string
@@ -145,7 +145,7 @@ func TestLoadConfigFileWithInvalidFieldTypeIntFails(t *testing.T) {
 	}
 }
 
-func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
+func TestLoadConfigFileWithInvalidTOMLFailsLegacy(t *testing.T) {
 	tests := []struct {
 		name   string
 		config string
@@ -211,7 +211,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 	}
 }
 
-func TestProfileConfig(t *testing.T) {
+func TestProfileConfigLegacy(t *testing.T) {
 	unencryptedKey, encryptedKey := random.GenerateRSAPrivateKeyEncrypted(t, "password")
 
 	c := fmt.Sprintf(`

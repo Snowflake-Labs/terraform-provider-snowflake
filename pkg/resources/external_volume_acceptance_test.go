@@ -130,7 +130,7 @@ func TestAcc_External_Volume_S3(t *testing.T) {
 	s3StorageLocationName := "s3Test"
 	s3StorageLocationName2 := "s3Test2"
 	s3StorageProvider := "S3"
-	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageBaseUrl := "s3://my-example-bucket"
 	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
 	s3EncryptionTypeNone := "NONE"
 	s3EncryptionTypeSseS3 := "AWS_SSE_S3"
@@ -612,7 +612,7 @@ func TestAcc_External_Volume_GCS(t *testing.T) {
 	gcsStorageLocationName := "gcsTest"
 	gcsStorageLocationName2 := "gcsTest2"
 	gcsStorageProvider := "GCS"
-	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsStorageBaseUrl := "gcs://my-example-bucket"
 	gcsEncryptionTypeNone := "NONE"
 	gcsEncryptionTypeSseKms := "GCS_SSE_KMS"
 	gcsEncryptionKmsKeyId := "123456789"
@@ -1267,7 +1267,7 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 
 	s3StorageLocationName := "s3Test"
 	s3StorageProvider := "S3"
-	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageBaseUrl := "s3://my-example-bucket"
 	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
 	s3EncryptionTypeSseKms := "AWS_SSE_KMS"
 	s3EncryptionKmsKeyId := "123456789"
@@ -1275,7 +1275,7 @@ func TestAcc_External_Volume_All_Options(t *testing.T) {
 
 	gcsStorageLocationName := "gcsTest"
 	gcsStorageProvider := "GCS"
-	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsStorageBaseUrl := "gcs://my-example-bucket"
 	gcsEncryptionTypeSseKms := "GCS_SSE_KMS"
 	gcsEncryptionKmsKeyId := "123456789"
 	gcsStorageLocationKmsEncryption := getGcsStorageLocation(gcsStorageLocationName, gcsStorageBaseUrl, gcsEncryptionTypeSseKms, gcsEncryptionKmsKeyId)
@@ -1365,8 +1365,8 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 	s3StorageLocationName := "s3Test"
 	s3StorageLocationName2 := "s3Test2"
 	s3StorageProvider := "S3"
-	s3StorageBaseUrl := "s3://my_example_bucket"
-	s3StorageBaseUrl2 := "s3://my_example_bucket2"
+	s3StorageBaseUrl := "s3://my-example-bucket"
+	s3StorageBaseUrl2 := "s3://my-example-bucket2"
 	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
 	s3EncryptionTypeNone := "NONE"
 	s3StorageLocation := getS3StorageLocation(s3StorageLocationName, s3StorageProvider, s3StorageBaseUrl, s3StorageAwsRoleArn, s3EncryptionTypeNone, "")
@@ -1376,8 +1376,8 @@ func TestAcc_External_Volume_Multiple(t *testing.T) {
 	gcsStorageLocationName := "gcsTest"
 	gcsStorageLocationName2 := "gcsTest2"
 	gcsStorageProvider := "GCS"
-	gcsStorageBaseUrl := "gcs://my_example_bucket"
-	gcsStorageBaseUrl2 := "gcs://my_example_bucket2"
+	gcsStorageBaseUrl := "gcs://my-example-bucket"
+	gcsStorageBaseUrl2 := "gcs://my-example-bucket2"
 	gcsEncryptionTypeNone := "NONE"
 	gcsStorageLocation := getGcsStorageLocation(gcsStorageLocationName, gcsStorageBaseUrl, gcsEncryptionTypeNone, "")
 	gcsStorageLocationUpdatedName := getGcsStorageLocation(gcsStorageLocationName2, gcsStorageBaseUrl, gcsEncryptionTypeNone, "")
@@ -2172,7 +2172,7 @@ func TestAcc_External_Volume_External_Changes(t *testing.T) {
 	s3StorageLocationName := "s3Test"
 	s3StorageLocationName2 := "s3Test2"
 	s3StorageProvider := "S3"
-	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageBaseUrl := "s3://my-example-bucket"
 	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
 	s3EncryptionTypeNone := "NONE"
 	s3StorageLocation := getS3StorageLocation(s3StorageLocationName, s3StorageProvider, s3StorageBaseUrl, s3StorageAwsRoleArn, s3EncryptionTypeNone, "")
@@ -2447,14 +2447,14 @@ func TestAcc_External_Volume_Invalid_Cases(t *testing.T) {
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
 	s3StorageLocationName := "s3Test"
 	s3StorageProvider := "S3"
-	s3StorageBaseUrl := "s3://my_example_bucket"
+	s3StorageBaseUrl := "s3://my-example-bucket"
 	s3StorageAwsRoleArn := "arn:aws:iam::123456789012:role/myrole"
 	s3EncryptionTypeNone := "NONE"
 	s3EncryptionKmsKeyId := "123456789"
 
 	gcsStorageLocationName := "gcsTest"
 	gcsStorageProvider := "GCS"
-	gcsStorageBaseUrl := "gcs://my_example_bucket"
+	gcsStorageBaseUrl := "gcs://my-example-bucket"
 
 	azureStorageLocationName := "azureTest"
 	azureStorageProvider := "AZURE"
