@@ -37,7 +37,7 @@ func (c *ExternalVolumeClient) Create(t *testing.T) (sdk.AccountObjectIdentifier
 				Name:              "my-s3-us-west-2",
 				StorageProvider:   "S3",
 				StorageAwsRoleArn: "arn:aws:iam::123456789012:role/myrole",
-				StorageBaseUrl:    "s3://my_example_bucket/",
+				StorageBaseUrl:    "s3://my-example-bucket/",
 				Encryption: &sdk.ExternalVolumeS3Encryption{
 					Type:     "AWS_SSE_KMS",
 					KmsKeyId: &kmsKeyId,
