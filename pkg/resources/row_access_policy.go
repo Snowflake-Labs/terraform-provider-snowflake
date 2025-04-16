@@ -67,7 +67,6 @@ var rowAccessPolicySchema = map[string]*schema.Schema{
 	"body": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Sensitive:        true,
 		Description:      diffSuppressStatementFieldDescription("Specifies the SQL expression. The expression can be any boolean-valued SQL expression."),
 		DiffSuppressFunc: DiffSuppressStatement,
 	},
