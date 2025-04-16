@@ -38,13 +38,9 @@ func TestInt_SafeDropOnDatabaseObjectIdentifier(t *testing.T) {
 	err := sdk.SafeDrop(testClient(t), databaseRoleDrop(databaseRole.ID()), testContext(t), databaseRole.ID())
 	assert.NoError(t, err)
 
-	invalidDatabaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-	invalidDatabaseRoleId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(invalidDatabaseId)
-
+	invalidDatabaseRoleId := NonExistingDatabaseObjectIdentifierWithNonExistingDatabase
 	err = sdk.SafeDrop(testClient(t), databaseRoleDrop(invalidDatabaseRoleId), testContext(t), invalidDatabaseRoleId)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
-	assert.ErrorIs(t, err, sdk.ErrSkippable)
+	assert.NoError(t, err)
 }
 
 func TestInt_SafeDropOnSchemaObjectIdentifier(t *testing.T) {
@@ -61,25 +57,13 @@ func TestInt_SafeDropOnSchemaObjectIdentifier(t *testing.T) {
 	err := sdk.SafeDrop(testClient(t), tableDrop(table.ID()), ctx, table.ID())
 	assert.NoError(t, err)
 
-	invalidSchemaIdOnValidDatabase := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
-	invalidTableIdOnValidDatabase := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(invalidSchemaIdOnValidDatabase)
-
+	invalidTableIdOnValidDatabase := NonExistingSchemaObjectIdentifierWithNonExistingSchema
 	err = sdk.SafeDrop(testClient(t), tableDrop(invalidTableIdOnValidDatabase), ctx, invalidTableIdOnValidDatabase)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, sdk.ErrSkippable)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	assert.NoError(t, err)
 
-	invalidDatabaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-	invalidSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(invalidDatabaseId)
-	invalidTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(invalidSchemaId)
-
+	invalidTableId := NonExistingSchemaObjectIdentifierWithNonExistingDatabaseAndSchema
 	err = sdk.SafeDrop(testClient(t), tableDrop(invalidTableId), ctx, invalidTableId)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, sdk.ErrSkippable)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
-	assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	assert.NoError(t, err)
 }
 
 func TestInt_SafeDropOnSchemaObjectIdentifierWithArguments(t *testing.T) {
@@ -96,23 +80,11 @@ func TestInt_SafeDropOnSchemaObjectIdentifierWithArguments(t *testing.T) {
 	err := sdk.SafeDrop(testClient(t), procedureDrop(procedure.ID()), ctx, procedure.ID())
 	assert.NoError(t, err)
 
-	invalidSchemaIdOnValidDatabase := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
-	invalidProcedureIdOnValidDatabase := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(invalidSchemaIdOnValidDatabase, sdk.DataTypeInt)
-
+	invalidProcedureIdOnValidDatabase := NonExistingSchemaObjectIdentifierWithArgumentsWithNonExistingSchema
 	err = sdk.SafeDrop(testClient(t), procedureDrop(invalidProcedureIdOnValidDatabase), ctx, invalidProcedureIdOnValidDatabase)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, sdk.ErrSkippable)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+	assert.NoError(t, err)
 
-	invalidDatabaseId := testClientHelper().Ids.RandomAccountObjectIdentifier()
-	invalidSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(invalidDatabaseId)
-	invalidProcedureId := testClientHelper().Ids.RandomSchemaObjectIdentifierWithArgumentsInSchema(invalidSchemaId, sdk.DataTypeInt)
-
+	invalidProcedureId := NonExistingSchemaObjectIdentifierWithArgumentsWithNonExistingDatabaseAndSchema
 	err = sdk.SafeDrop(testClient(t), procedureDrop(invalidProcedureId), ctx, invalidProcedureId)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, sdk.ErrSkippable)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotFound)
-	assert.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
-	assert.ErrorIs(t, err, sdk.ErrDoesNotExistOrOperationCannotBePerformed)
+	assert.NoError(t, err)
 }

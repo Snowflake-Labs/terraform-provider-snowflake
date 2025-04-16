@@ -1,3 +1,4 @@
+[//]: # (TODO[SNOW-2043814]: Create the acceptance test for this using the terraform plugin testing framework with custom resource fulfilling the requirements to run such test)
 # Safe delete operation
 
 Because of the limitations of terraform plugin testing framework, we cannot test the safe delete operation
@@ -9,10 +10,9 @@ This test provides a guide how to test the safe delete operation manually.
 Before running Terraform tests, you have to create a simple database:
 
 ```snowflake
-CREATE DATABASE TEST_DATABASE;
+CREATE DATABASE TEST_SAFE_DELETE_OPERATION_DATABASE;
+CREATE DATABASE TEST_SCHEMA;
 ```
-
-> Note: we also need a schema, but we can use the default one (`PUBLIC`).
 
 ## Terraform configuration
 
@@ -35,8 +35,8 @@ provider "snowflake" {
 }
 
 resource "snowflake_table" "test" {
-  database = "TEST_DATABASE"
-  schema   = "PUBLIC"
+  database = "TEST_SAFE_DELETE_OPERATION_DATABASE"
+  schema   = "TEST_SCHEMA"
   name     = "TEMP_TABLE"
   column {
     name = "id"
@@ -60,10 +60,10 @@ we will test the delete operation without the safe delete operation enabled and 
 
 1. Run `terraform apply -auto-approve` to create a new table.
 2. Run `terraform apply -destroy` to delete the table (do not confirm the deletion by inputting `yes` into the console).
-3. Run the following SQL statement to remove the public schema:
+3. Run the following SQL statement to remove the schema:
 
 ```snowflake
-DROP SCHEMA TEST_DATABASE.PUBLIC;
+DROP SCHEMA TEST_SAFE_DELETE_OPERATION_DATABASE.TEST_SCHEMA;
 ```
 
 4. Confirm the deletion by inputting `yes` into the console.
@@ -73,7 +73,7 @@ the Terraform state by running `terraform state list`, you should see that the t
 To bring back the initial state to run the second part run the following SQL statement:
 
 ```snowflake
-CREATE SCHEMA TEST_DATABASE.PUBLIC;
+CREATE SCHEMA TEST_SAFE_DELETE_OPERATION_DATABASE.TEST_SCHEMA;
 ```
 
 and remove the table from the state by running `terraform state rm snowflake_table.test`.
@@ -99,3 +99,11 @@ provider_installation {
 3. Run the same steps as in the first part.
 4. After following the same steps you should end up with successfully deleted table resource. You can verify that by
    running `terraform state list`.
+
+## Cleanup
+
+To clean up after the tests run the following SQL statement:
+
+```snowflake
+DROP DATABASE TEST_SAFE_DELETE_OPERATION_DATABASE;
+```

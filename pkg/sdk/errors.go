@@ -28,7 +28,6 @@ var (
 	ErrInvalidObjectIdentifier = NewError("invalid object identifier")
 	ErrDifferentDatabase       = NewError("database must be the same")
 	ErrDifferentSchema         = NewError("schema must be the same")
-	ErrSkippable               = NewError("Terraform Provider error indicating that the operation failed, but is skippable")
 )
 
 type IntErrType string

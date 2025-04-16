@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -131,26 +129,6 @@ func TestWriteTree(t *testing.T) {
 					require.Regexpf(t, regex, builder.String(), "regex %s not in: %s", regex, builder.String())
 				}
 			}
-		})
-	}
-}
-
-func TestSkippableErrorMatching(t *testing.T) {
-	testCases := []struct {
-		err         error
-		shouldMatch bool
-	}{
-		{err: nil},
-		{err: ErrObjectNotFound},
-		{err: errors.New(ErrSkippable.Error())},
-		{err: NewError(ErrSkippable.Error())},
-		{err: ErrSkippable, shouldMatch: true},
-		{err: errors.Join(ErrObjectNotFound, ErrSkippable), shouldMatch: true},
-	}
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("errors.Is(%s, sdk.ErrSkippable)", tc.err), func(t *testing.T) {
-			assert.Equal(t, tc.shouldMatch, errors.Is(tc.err, ErrSkippable))
 		})
 	}
 }

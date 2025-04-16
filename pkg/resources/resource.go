@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,7 +29,7 @@ func ResourceDeleteContextFunc[ID sdk.ObjectIdentifierConstraint](
 		}
 
 		err = dropFunc(client)(ctx, id)
-		if !errors.Is(err, sdk.ErrSkippable) {
+		if err != nil {
 			return diag.FromErr(err)
 		}
 

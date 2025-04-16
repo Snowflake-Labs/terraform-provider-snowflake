@@ -843,10 +843,8 @@ func TestInt_Table(t *testing.T) {
 
 	t.Run("drop table", func(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.Create(t)
+		t.Cleanup(tableCleanup)
 		err := client.Tables.Drop(ctx, sdk.NewDropTableRequest(table.ID()).WithIfExists(sdk.Bool(true)))
-		if err != nil {
-			t.Cleanup(tableCleanup)
-		}
 		require.NoError(t, err)
 
 		_, err = client.Tables.ShowByID(ctx, table.ID())
@@ -872,10 +870,8 @@ func TestInt_Table(t *testing.T) {
 
 	t.Run("drop safely table", func(t *testing.T) {
 		table, tableCleanup := testClientHelper().Table.Create(t)
+		t.Cleanup(tableCleanup)
 		err := client.Tables.DropSafely(ctx, table.ID())
-		if err != nil {
-			t.Cleanup(tableCleanup)
-		}
 		require.NoError(t, err)
 
 		_, err = client.Tables.ShowByID(ctx, table.ID())
@@ -886,9 +882,7 @@ func TestInt_Table(t *testing.T) {
 		nonExistingSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifier()
 		nonExistingTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(nonExistingSchemaId)
 		err := client.Tables.DropSafely(ctx, nonExistingTableId)
-		require.Error(t, err)
-		require.ErrorIs(t, err, sdk.ErrSkippable)
-		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		require.NoError(t, err)
 	})
 
 	t.Run("drop safely table in non-existing database", func(t *testing.T) {
@@ -896,9 +890,7 @@ func TestInt_Table(t *testing.T) {
 		nonExistingSchemaId := testClientHelper().Ids.RandomDatabaseObjectIdentifierInDatabase(nonExistingDatabaseId)
 		nonExistingTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(nonExistingSchemaId)
 		err := client.Tables.DropSafely(ctx, nonExistingTableId)
-		require.Error(t, err)
-		require.ErrorIs(t, err, sdk.ErrSkippable)
-		require.ErrorIs(t, err, sdk.ErrObjectNotExistOrAuthorized)
+		require.NoError(t, err)
 	})
 
 	t.Run("show tables", func(t *testing.T) {
