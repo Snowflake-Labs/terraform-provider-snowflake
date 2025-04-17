@@ -66,12 +66,16 @@ func fileIsSafeToRead(path string, verifyPermissions bool) error {
 	if fileInfo.Size() > maxFileSizeInMb*1024*1024 {
 		return fmt.Errorf("config file %s is too big - maximum allowed size is %dMB", path, maxFileSizeInMb)
 	}
-	if !IsRunningOnWindows() && verifyPermissions {
-		if !unixFilePermissionsAreStrict(fileInfo.Mode().Perm()) {
-			return fmt.Errorf("config file %s has unsafe permissions - %#o", path, fileInfo.Mode().Perm())
-		}
-	} else {
-		log.Println("[DEBUG] Skipped checking file permissions on a Windows system")
+	if IsRunningOnWindows() {
+		log.Println("[DEBUG] Skipped checking file permissions on a Windows system, because it is not supported.")
+		return nil
+	}
+	if !verifyPermissions {
+		log.Println("[DEBUG] Skipped checking file permissions on a Unix system.")
+		return nil
+	}
+	if !unixFilePermissionsAreStrict(fileInfo.Mode().Perm()) {
+		return fmt.Errorf("config file %s has unsafe permissions - %#o", path, fileInfo.Mode().Perm())
 	}
 	return nil
 }

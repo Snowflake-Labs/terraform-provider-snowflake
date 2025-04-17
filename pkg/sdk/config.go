@@ -22,12 +22,19 @@ import (
 )
 
 type FileReaderConfig struct {
-	verifyPermissions bool
+	verifyPermissions   bool
+	useLegacyTomlFormat bool
 }
 
 func WithVerifyPermissions(verifyPermissions bool) func(*FileReaderConfig) {
 	return func(c *FileReaderConfig) {
 		c.verifyPermissions = verifyPermissions
+	}
+}
+
+func WithUseLegacyTomlFormat(useLegacyTomlFormat bool) func(*FileReaderConfig) {
+	return func(c *FileReaderConfig) {
+		c.useLegacyTomlFormat = useLegacyTomlFormat
 	}
 }
 
@@ -41,9 +48,13 @@ func DefaultConfig(opts ...func(*FileReaderConfig)) *gosnowflake.Config {
 }
 
 func ProfileConfig(profile string, opts ...func(*FileReaderConfig)) (*gosnowflake.Config, error) {
+	if profile == "" {
+		profile = "default"
+	}
 	log.Printf("[DEBUG] Retrieving %s profile from a TOML file", profile)
 	cfg := FileReaderConfig{
-		verifyPermissions: false,
+		verifyPermissions:   false,
+		useLegacyTomlFormat: true,
 	}
 	for _, opt := range opts {
 		opt(&cfg)
@@ -53,23 +64,16 @@ func ProfileConfig(profile string, opts ...func(*FileReaderConfig)) (*gosnowflak
 		return nil, err
 	}
 
-	configs, err := LoadConfigFile[LegacyConfigDTO](path, cfg.verifyPermissions)
+	var config *gosnowflake.Config
+	if cfg.useLegacyTomlFormat {
+		config, err = LoadProfileFromLegacyFile(profile, path, cfg.verifyPermissions)
+	} else {
+		config, err = LoadProfileFromFile(profile, path, cfg.verifyPermissions)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("could not load config file: %w", err)
+		return nil, err
 	}
 
-	if profile == "" {
-		profile = "default"
-	}
-	var config *gosnowflake.Config
-	if cfg, ok := configs[profile]; ok {
-		log.Printf("[DEBUG] Loading config for profile: \"%s\"", profile)
-		driverCfg, err := cfg.DriverConfig()
-		if err != nil {
-			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
-		}
-		config = Pointer(driverCfg)
-	}
 	if config == nil {
 		log.Printf("[DEBUG] No config found for profile: \"%s\"", profile)
 		return nil, nil
@@ -82,6 +86,118 @@ func ProfileConfig(profile string, opts ...func(*FileReaderConfig)) (*gosnowflak
 	}
 
 	return config, nil
+}
+
+// TODO(SNOW-1787920): improve TOML parsing
+type ConfigDTO struct {
+	AccountName            *string             `toml:"account_name"`
+	OrganizationName       *string             `toml:"organization_name"`
+	User                   *string             `toml:"user"`
+	Username               *string             `toml:"username"`
+	Password               *string             `toml:"password"`
+	Host                   *string             `toml:"host"`
+	Warehouse              *string             `toml:"warehouse"`
+	Role                   *string             `toml:"role"`
+	Params                 *map[string]*string `toml:"params"`
+	ClientIp               *string             `toml:"client_ip"`
+	Protocol               *string             `toml:"protocol"`
+	Passcode               *string             `toml:"passcode"`
+	Port                   *int                `toml:"port"`
+	PasscodeInPassword     *bool               `toml:"passcode_in_password"`
+	OktaUrl                *string             `toml:"okta_url"`
+	ClientTimeout          *int                `toml:"client_timeout"`
+	JwtClientTimeout       *int                `toml:"jwt_client_timeout"`
+	LoginTimeout           *int                `toml:"login_timeout"`
+	RequestTimeout         *int                `toml:"request_timeout"`
+	JwtExpireTimeout       *int                `toml:"jwt_expire_timeout"`
+	ExternalBrowserTimeout *int                `toml:"external_browser_timeout"`
+	MaxRetryCount          *int                `toml:"max_retry_count"`
+	Authenticator          *string             `toml:"authenticator"`
+	InsecureMode           *bool               `toml:"insecure_mode"`
+	OcspFailOpen           *bool               `toml:"ocsp_fail_open"`
+	Token                  *string             `toml:"token"`
+	KeepSessionAlive       *bool               `toml:"keep_session_alive"`
+	PrivateKey             *string             `toml:"private_key,multiline"`
+	PrivateKeyPassphrase   *string             `toml:"private_key_passphrase"`
+	DisableTelemetry       *bool               `toml:"disable_telemetry"`
+	// TODO [SNOW-1827312]: handle and test 3-value booleans properly from TOML
+	ValidateDefaultParameters      *bool   `toml:"validate_default_parameters"`
+	ClientRequestMfaToken          *bool   `toml:"client_request_mfa_token"`
+	ClientStoreTemporaryCredential *bool   `toml:"client_store_temporary_credential"`
+	DriverTracing                  *string `toml:"driver_tracing"`
+	TmpDirPath                     *string `toml:"tmp_dir_path"`
+	DisableQueryContextCache       *bool   `toml:"disable_query_context_cache"`
+	IncludeRetryReason             *bool   `toml:"include_retry_reason"`
+	DisableConsoleLogin            *bool   `toml:"disable_console_login"`
+}
+
+func (c *ConfigDTO) DriverConfig() (gosnowflake.Config, error) {
+	driverCfg := gosnowflake.Config{}
+	if c.AccountName != nil && c.OrganizationName != nil {
+		driverCfg.Account = fmt.Sprintf("%s-%s", *c.OrganizationName, *c.AccountName)
+	}
+	pointerAttributeSet(c.User, &driverCfg.User)
+	pointerAttributeSet(c.Username, &driverCfg.User)
+	pointerAttributeSet(c.Password, &driverCfg.Password)
+	pointerAttributeSet(c.Host, &driverCfg.Host)
+	pointerAttributeSet(c.Warehouse, &driverCfg.Warehouse)
+	pointerAttributeSet(c.Role, &driverCfg.Role)
+	pointerAttributeSet(c.Params, &driverCfg.Params)
+	pointerIpAttributeSet(c.ClientIp, &driverCfg.ClientIP)
+	pointerAttributeSet(c.Protocol, &driverCfg.Protocol)
+	pointerAttributeSet(c.Passcode, &driverCfg.Passcode)
+	pointerAttributeSet(c.Port, &driverCfg.Port)
+	pointerAttributeSet(c.PasscodeInPassword, &driverCfg.PasscodeInPassword)
+	err := pointerUrlAttributeSet(c.OktaUrl, &driverCfg.OktaURL)
+	if err != nil {
+		return gosnowflake.Config{}, err
+	}
+	pointerTimeInSecondsAttributeSet(c.ClientTimeout, &driverCfg.ClientTimeout)
+	pointerTimeInSecondsAttributeSet(c.JwtClientTimeout, &driverCfg.JWTClientTimeout)
+	pointerTimeInSecondsAttributeSet(c.LoginTimeout, &driverCfg.LoginTimeout)
+	pointerTimeInSecondsAttributeSet(c.RequestTimeout, &driverCfg.RequestTimeout)
+	pointerTimeInSecondsAttributeSet(c.JwtExpireTimeout, &driverCfg.JWTExpireTimeout)
+	pointerTimeInSecondsAttributeSet(c.ExternalBrowserTimeout, &driverCfg.ExternalBrowserTimeout)
+	pointerAttributeSet(c.MaxRetryCount, &driverCfg.MaxRetryCount)
+	if c.Authenticator != nil {
+		authenticator, err := ToAuthenticatorType(*c.Authenticator)
+		if err != nil {
+			return gosnowflake.Config{}, err
+		}
+		driverCfg.Authenticator = authenticator
+	}
+	pointerAttributeSet(c.InsecureMode, &driverCfg.InsecureMode) //nolint:staticcheck
+	if c.OcspFailOpen != nil {
+		if *c.OcspFailOpen {
+			driverCfg.OCSPFailOpen = gosnowflake.OCSPFailOpenTrue
+		} else {
+			driverCfg.OCSPFailOpen = gosnowflake.OCSPFailOpenFalse
+		}
+	}
+	pointerAttributeSet(c.Token, &driverCfg.Token)
+	pointerAttributeSet(c.KeepSessionAlive, &driverCfg.KeepSessionAlive)
+	if c.PrivateKey != nil {
+		passphrase := make([]byte, 0)
+		if c.PrivateKeyPassphrase != nil {
+			passphrase = []byte(*c.PrivateKeyPassphrase)
+		}
+		privKey, err := ParsePrivateKey([]byte(*c.PrivateKey), passphrase)
+		if err != nil {
+			return gosnowflake.Config{}, err
+		}
+		driverCfg.PrivateKey = privKey
+	}
+	pointerAttributeSet(c.DisableTelemetry, &driverCfg.DisableTelemetry)
+	pointerConfigBoolAttributeSet(c.ValidateDefaultParameters, &driverCfg.ValidateDefaultParameters)
+	pointerConfigBoolAttributeSet(c.ClientRequestMfaToken, &driverCfg.ClientRequestMfaToken)
+	pointerConfigBoolAttributeSet(c.ClientStoreTemporaryCredential, &driverCfg.ClientStoreTemporaryCredential)
+	pointerAttributeSet(c.DriverTracing, &driverCfg.Tracing)
+	pointerAttributeSet(c.TmpDirPath, &driverCfg.TmpDirPath)
+	pointerAttributeSet(c.DisableQueryContextCache, &driverCfg.DisableQueryContextCache)
+	pointerConfigBoolAttributeSet(c.IncludeRetryReason, &driverCfg.IncludeRetryReason)
+	pointerConfigBoolAttributeSet(c.DisableConsoleLogin, &driverCfg.DisableConsoleLogin)
+
+	return driverCfg, nil
 }
 
 func MergeConfig(baseConfig *gosnowflake.Config, mergeConfig *gosnowflake.Config) *gosnowflake.Config {
@@ -265,7 +381,39 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 	return nil
 }
 
-func LoadConfigFile[T LegacyConfigDTO](path string, verifyPermissions bool) (map[string]T, error) {
+func LoadProfileFromFile(profile string, path string, verifyPermissions bool) (*gosnowflake.Config, error) {
+	configs, err := LoadConfigFile[ConfigDTO](path, verifyPermissions)
+	if err != nil {
+		return nil, fmt.Errorf("could not load config file: %w", err)
+	}
+	if cfg, ok := configs[profile]; ok {
+		log.Printf("[DEBUG] Loading config for profile: \"%s\"", profile)
+		driverCfg, err := cfg.DriverConfig()
+		if err != nil {
+			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
+		}
+		return &driverCfg, nil
+	}
+	return nil, nil
+}
+
+func LoadProfileFromLegacyFile(profile string, path string, verifyPermissions bool) (*gosnowflake.Config, error) {
+	configs, err := LoadConfigFile[LegacyConfigDTO](path, verifyPermissions)
+	if err != nil {
+		return nil, fmt.Errorf("could not load config file: %w", err)
+	}
+	if cfg, ok := configs[profile]; ok {
+		log.Printf("[DEBUG] Loading config for profile: \"%s\"", profile)
+		driverCfg, err := cfg.DriverConfig()
+		if err != nil {
+			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
+		}
+		return &driverCfg, nil
+	}
+	return nil, nil
+}
+
+func LoadConfigFile[T ConfigDTO | LegacyConfigDTO](path string, verifyPermissions bool) (map[string]T, error) {
 	data, err := oswrapper.ReadFileSafe(path, verifyPermissions)
 	if err != nil {
 		return nil, err
