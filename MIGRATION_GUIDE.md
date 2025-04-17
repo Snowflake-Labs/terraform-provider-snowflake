@@ -15,9 +15,9 @@ across different versions.
 ## v1.1.1 ➞ v2.0.0
 
 ### *(breaking change)* Changes in sensitive values
-To ensure better security of users' data, we adjusted the relevant fields to be sensitive in the provider. This means these values will not be printed by Terraform during planning, etc. Note that the users are still responsible for storing the state securely. Read more about sensitive values in the [Terraform documentation](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables).
+To ensure better security of users' data, we adjusted the fields containing sensitive information to be sensitive in the provider. This means these values will not be printed by Terraform during planning, etc. Note that the users are still responsible for storing the state securely. Read more about sensitive values in the [Terraform documentation](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables).
 
-The fields that were not marked as sensitive, but now are marked as sensitive, are the following:
+The fields that were not marked as sensitive but are now marked as sensitive are the following:
 - provider configuration: `passcode` field
 - `snowflake_system_generate_scim_access_token` data source: `access_token` field
 - `snowflake_api_authentication_integration_with_authorization_code_grant` resource: `oauth_client_id` and `oauth_client_secret` fields,
@@ -26,27 +26,42 @@ The fields that were not marked as sensitive, but now are marked as sensitive, a
 - `snowflake_saml2_integration` resource: `saml2_x509_cert` field
 - `snowflake_storage_integration` resource: `azure_consent_url` field
 
-If you reference one of these fields in an output or a variable blocks, then it needs to be marked as `sensitive = true` in the Terraform configuration. Read [Output documentation](https://developer.hashicorp.com/terraform/language/values/outputs#sensitive-suppressing-values-in-cli-output) and [Variable documentation](https://developer.hashicorp.com/terraform/language/values/variables#suppressing-values-in-cli-output) for more details.
+If you reference one of these fields in an output or a variable block, then it needs to be marked as `sensitive = true` in the Terraform configuration. Read [Output documentation](https://developer.hashicorp.com/terraform/language/values/outputs#sensitive-suppressing-values-in-cli-output) and [Variable documentation](https://developer.hashicorp.com/terraform/language/values/variables#suppressing-values-in-cli-output) for more details.
 
-Some fields, like secure function definitions, can also contain sensitive values. However, because of SDK limitations, resource fields cannot be marked as sensitive conditionally, depending on the value of `secure` parameter. Instead, we added notes in documentation for the related resources. The full list includes:
+Some fields, like secure function definitions, can also contain sensitive values. However, because of SDK limitations:
+- fields cannot be marked as sensitive conditionally, depending on the value of `secure` parameter,
+- nested fields, like in `show_output` and `describe_output`, cannot be marked as sensitive.
+
+Instead, we added notes in the documentation of the related resources. The full list includes:
 - `snowflake_execute` resource: `execute`, `revert`, `query` and `query_results` fields,
 - `snowflake_external_function` resource: `context_headers` and `header` fields,
-- `snowflake_function_java` resource: `function_definition` field,
-- `snowflake_function_javascript` resource: `function_definition` field,
-- `snowflake_function_python` resource: `function_definition` field,
-- `snowflake_function_scala` resource: `function_definition` field,
-- `snowflake_function_sql` resource: `function_definition` field,
-- `snowflake_masking_policy` resource: `body` field,
+- `snowflake_function_java` resource: `function_definition` and `show_output.arguments_raw` fields,
+- `snowflake_function_javascript` resource: `function_definition` and `show_output.arguments_raw` fields,
+- `snowflake_function_python` resource: `function_definition` and `show_output.arguments_raw` fields,
+- `snowflake_function_scala` resource: `function_definition` and `show_output.arguments_raw` fields,
+- `snowflake_function_sql` resource: `function_definition` and `show_output.arguments_raw` fields,
+- `snowflake_legacy_service_user` resource: `display_name`, `show_output.display_name`, `show_output.email`, `show_output.login_name`, `show_output.first_name` and `show_output.last_name` fields,
+- `snowflake_masking_policy` resource: `body` and `describe_output.body` fields,
+- `snowflake_masking_policies` data source: `describe_output.body` field,
 - `snowflake_materialized_view` resource: `statement` field,
-- `snowflake_procedure_java` resource: `procedure_definition` field,
-- `snowflake_procedure_javascript` resource: `procedure_definition` field,
-- `snowflake_procedure_python` resource: `procedure_definition` field,
-- `snowflake_procedure_scala` resource: `procedure_definition` field,
-- `snowflake_procedure_sql` resource: `procedure_definition` field,
-- `snowflake_row_access_policy` resource: `body` field,
-- `snowflake_row_access_policies` data source: `body` field,
-- `snowflake_task` resource: `config` field,
-- `snowflake_view` resource: `statement` field,
+- `snowflake_oauth_integration_for_custom_clients` resource: `oauth_redirect_uri` and `describe_output.oauth_redirect_uri` fields,
+- `snowflake_oauth_integration_for_partner_applications` resource: `oauth_redirect_uri` and `describe_output.oauth_redirect_uri` fields,
+- `snowflake_materialized_view` resource: `statement` field,
+- `snowflake_procedure_java` resource: `procedure_definition` and `show_output.arguments_raw` fields,
+- `snowflake_procedure_javascript` resource: `procedure_definition` and `show_output.arguments_raw` fields,
+- `snowflake_procedure_python` resource: `procedure_definition` and `show_output.arguments_raw` fields,
+- `snowflake_procedure_scala` resource: `procedure_definition` and `show_output.arguments_raw` fields,
+- `snowflake_procedure_sql` resource: `procedure_definition` and `show_output.arguments_raw` fields,
+- `snowflake_row_access_policy` resource: `body` and `describe_output.body` fields,
+- `snowflake_row_access_policies` data source: `describe_output.body` field,
+- `snowflake_security_integrations` data source: `describe_output.redirect_uri` field,
+- `snowflake_service_user` resource: `display_name`, `show_output.display_name`, `show_output.email`, `show_output.login_name`, `show_output.first_name`, `show_output.middle_name` and `show_output.last_name` fields,
+- `snowflake_task` resource: `config`, `show_output.config` and `show_output.definition` fields,
+- `snowflake_tasks` data source: `show_output.config` and `show_output.definition` fields,
+- `snowflake_user` resource: `display_name`, `show_output.display_name`, `show_output.email`, `show_output.login_name`, `show_output.first_name`, `show_output.middle_name` and `show_output.last_name` fields,
+- `snowflake_users` data source: `display_name`, `email`, `login_name`, `first_name`, `middle_name` and `last_name` fields nested in `show_output` and `describe_output`,
+- `snowflake_view` resource: `statement` and `show_output.text` fields,
+- `snowflake_views` data source: `show_output.text` field,
 
 ### *(breaking change)* Changes in TOML configuration file requirements
 As we have announced in [an earlier entry](https://github.com/snowflakedb/terraform-provider-snowflake/blob/main/MIGRATION_GUIDE.md#changes-in-toml-configuration-file-requirements), now file permissions are verified by default (`skip_toml_file_permission_verification` is `false` by default). This means that on non-Windows systems, when you run the provider, you can get a following error:
