@@ -5,6 +5,8 @@ package testint
 import (
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/stretchr/testify/require"
 )
@@ -35,9 +37,14 @@ func TestInt_PolicyReferences(t *testing.T) {
 
 		policyReferences, err := client.PolicyReferences.GetForEntity(ctx, sdk.NewGetForEntityPolicyReferenceRequest(user.ID(), sdk.PolicyEntityDomainUser))
 		require.NoError(t, err)
-		require.Equal(t, 1, len(policyReferences))
-		require.Equal(t, passwordPolicyId.Name(), policyReferences[0].PolicyName)
-		require.Equal(t, sdk.PolicyKindPasswordPolicy, policyReferences[0].PolicyKind)
+		require.GreaterOrEqual(t, len(policyReferences), 1)
+
+		passwordPolicy, err := collections.FindFirst(policyReferences, func(reference sdk.PolicyReference) bool {
+			return reference.PolicyKind == sdk.PolicyKindPasswordPolicy && reference.PolicyName == passwordPolicyId.Name()
+		})
+		require.NoError(t, err)
+		require.Equal(t, passwordPolicyId.Name(), passwordPolicy.PolicyName)
+		require.Equal(t, sdk.PolicyKindPasswordPolicy, passwordPolicy.PolicyKind)
 	})
 
 	t.Run("tag domain", func(t *testing.T) {

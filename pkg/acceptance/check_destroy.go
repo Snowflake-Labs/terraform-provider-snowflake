@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -482,7 +484,12 @@ func CheckUserPasswordPolicyAttachmentDestroy(t *testing.T) func(*terraform.Stat
 				}
 				return err
 			}
-			if len(policyReferences) > 0 {
+
+			_, err = collections.FindFirst(policyReferences, func(reference sdk.PolicyReference) bool {
+				return reference.PolicyKind == sdk.PolicyKindPasswordPolicy &&
+					sdk.NewSchemaObjectIdentifier(*reference.PolicyDb, *reference.PolicySchema, reference.PolicyName).FullyQualifiedName() == rs.Primary.Attributes["password_policy_name"]
+			})
+			if err == nil {
 				return fmt.Errorf("user password policy attachment %v still exists", policyReferences[0].PolicyName)
 			}
 		}

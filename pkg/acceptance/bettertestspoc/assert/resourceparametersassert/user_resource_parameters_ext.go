@@ -9,7 +9,7 @@ import (
 func (u *UserResourceParametersAssert) HasAllDefaults() *UserResourceParametersAssert {
 	return u.
 		HasEnableUnredactedQuerySyntaxError(false).
-		HasNetworkPolicy("").
+		HasNetworkPolicy("RESTRICTED_ACCESS").
 		HasPreventUnloadToInternalStages(false).
 		HasAbortDetachedQuery(false).
 		HasAutocommit(true).
