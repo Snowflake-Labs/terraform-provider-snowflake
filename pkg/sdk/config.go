@@ -21,8 +21,18 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func DefaultConfig(verifyPermissions bool) *gosnowflake.Config {
-	config, err := ProfileConfig("default", verifyPermissions)
+type FileReaderConfig struct {
+	verifyPermissions bool
+}
+
+func WithVerifyPermissions(verifyPermissions bool) func(*FileReaderConfig) {
+	return func(c *FileReaderConfig) {
+		c.verifyPermissions = verifyPermissions
+	}
+}
+
+func DefaultConfig(opts ...func(*FileReaderConfig)) *gosnowflake.Config {
+	config, err := ProfileConfig("default", opts...)
 	if err != nil || config == nil {
 		log.Printf("[DEBUG] No Snowflake config file found, proceeding with empty config, err = %v", err)
 		config = &gosnowflake.Config{}
@@ -30,14 +40,20 @@ func DefaultConfig(verifyPermissions bool) *gosnowflake.Config {
 	return config
 }
 
-func ProfileConfig(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
+func ProfileConfig(profile string, opts ...func(*FileReaderConfig)) (*gosnowflake.Config, error) {
 	log.Printf("[DEBUG] Retrieving %s profile from a TOML file", profile)
+	cfg := FileReaderConfig{
+		verifyPermissions: false,
+	}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	path, err := GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	configs, err := LoadConfigFile[LegacyConfigDTO](path, verifyPermissions)
+	configs, err := LoadConfigFile[LegacyConfigDTO](path, cfg.verifyPermissions)
 	if err != nil {
 		return nil, fmt.Errorf("could not load config file: %w", err)
 	}
