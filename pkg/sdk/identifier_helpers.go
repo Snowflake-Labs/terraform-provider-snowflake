@@ -18,6 +18,11 @@ type ObjectIdentifier interface {
 	FullyQualifiedName() string
 }
 
+// TODO(SNOW-2043829): Use this in all places where we need to pass an object identifier as generic type.
+type ObjectIdentifierConstraint interface {
+	AccountObjectIdentifier | DatabaseObjectIdentifier | SchemaObjectIdentifier | SchemaObjectIdentifierWithArguments | ExternalObjectIdentifier | AccountIdentifier
+}
+
 func NewObjectIdentifierFromFullyQualifiedName(fullyQualifiedName string) ObjectIdentifier {
 	parts := strings.Split(fullyQualifiedName, ".")
 	switch len(parts) {

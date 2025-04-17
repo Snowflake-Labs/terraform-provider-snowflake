@@ -9,6 +9,7 @@ type Streamlits interface {
 	Create(ctx context.Context, request *CreateStreamlitRequest) error
 	Alter(ctx context.Context, request *AlterStreamlitRequest) error
 	Drop(ctx context.Context, request *DropStreamlitRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowStreamlitRequest) ([]Streamlit, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*StreamlitDetail, error)

@@ -19,8 +19,8 @@ var (
 	ErrObjectNotFound = collections.ErrObjectNotFound
 
 	// go-snowflake errors.
-	ErrObjectNotExistOrAuthorized               = NewError("object does not exist or not authorized")
 	ErrDoesNotExistOrOperationCannotBePerformed = NewError("object does not exist, or operation cannot be performed")
+	ErrObjectNotExistOrAuthorized               = NewError("object does not exist or not authorized")
 	ErrAccountIsEmpty                           = NewError("account is empty")
 	ErrGrantPartiallyExecuted                   = NewError("grant partially executed")
 

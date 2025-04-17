@@ -31,3 +31,13 @@ func (c *StreamlitClient) Update(t *testing.T, request *sdk.AlterStreamlitReques
 	err := c.client().Alter(ctx, request)
 	require.NoError(t, err)
 }
+
+func (c *StreamlitClient) DropFunc(t *testing.T, id sdk.SchemaObjectIdentifier) func() {
+	t.Helper()
+	ctx := context.Background()
+
+	return func() {
+		err := c.client().Drop(ctx, sdk.NewDropStreamlitRequest(id).WithIfExists(true))
+		require.NoError(t, err)
+	}
+}
