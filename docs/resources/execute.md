@@ -9,7 +9,7 @@ description: |-
 
 !> **Warning** This is a dangerous resource that allows executing **ANY** SQL statement. It may destroy resources if used incorrectly. It may behave incorrectly combined with other resources. Use at your own risk.
 
-~> **Sensitive values** This resource's `execute`, `query`, `revert` and `query_results` fields are not marked as sensitive in the provider. Ensure that no personal data, sensitive data, export-controlled data, or other regulated data is entered as metadata when using the provider. For more information, see [Metadata fields in Snowflake](https://docs.snowflake.com/en/sql-reference/metadata).
+~> **Sensitive values** This resource's `execute`, `query`, `revert` and `query_results` fields are not marked as sensitive in the provider. Ensure that no personal data, sensitive data, export-controlled data, or other regulated data is entered as metadata when using the provider. If you use one of these fields, they may be present in logs, so ensure that the provider logs are properly restricted. For more information, see [Metadata fields in Snowflake](https://docs.snowflake.com/en/sql-reference/metadata).
 
 ~> **Note** It can be theoretically used to manage resource that are not supported by the provider. This is risky and may brake other resources if used incorrectly.
 

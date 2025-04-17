@@ -24,6 +24,7 @@ The fields that were not marked as sensitive, but now are marked as sensitive, a
 - `snowflake_api_authentication_integration_with_client_credentials` resource: `oauth_client_id` and `oauth_client_secret` fields,
 - `snowflake_api_authentication_integration_with_jwt_bearer` resource: `oauth_client_id` and `oauth_client_secret` fields,
 - `snowflake_saml2_integration` resource: `saml2_x509_cert` field
+- `snowflake_storage_integration` resource: `azure_consent_url` field
 
 If you reference one of these fields in an output or a variable blocks, then it needs to be marked as `sensitive = true` in the Terraform configuration. Read [Output documentation](https://developer.hashicorp.com/terraform/language/values/outputs#sensitive-suppressing-values-in-cli-output) and [Variable documentation](https://developer.hashicorp.com/terraform/language/values/variables#suppressing-values-in-cli-output) for more details.
 
