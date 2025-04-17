@@ -245,7 +245,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 	accountId := sdk.NewAccountIdentifier(organizationName, id.Name())
 
 	newId := acc.TestClient().Ids.RandomSensitiveAccountObjectIdentifier()
-	newAccountId := sdk.NewAccountIdentifier(organizationName, newId)
+	newAccountId := sdk.NewAccountIdentifier(organizationName, newId.Name())
 
 	email := random.Email()
 	name := random.AdminName()
@@ -254,7 +254,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 	configModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, id.Name()).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
-	newConfigModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, newId).
+	newConfigModel := model.Account("test", name, string(sdk.EditionStandard), email, 3, newId.Name()).
 		WithAdminUserTypeEnum(sdk.UserTypeService).
 		WithAdminRsaPublicKey(key)
 
@@ -286,12 +286,12 @@ func TestAcc_Account_Rename(t *testing.T) {
 				Config: config.FromModels(t, newConfigModel),
 				Check: assertThat(t,
 					resourceassert.AccountResource(t, newConfigModel.ResourceReference()).
-						HasNameString(newId).
+						HasNameString(newId.Name()).
 						HasFullyQualifiedNameString(newAccountId.FullyQualifiedName()).
 						HasAdminUserType(sdk.UserTypeService),
 					resourceshowoutputassert.AccountShowOutput(t, newConfigModel.ResourceReference()).
 						HasOrganizationName(organizationName).
-						HasAccountName(newId),
+						HasAccountName(newId.Name()),
 				),
 			},
 		},
