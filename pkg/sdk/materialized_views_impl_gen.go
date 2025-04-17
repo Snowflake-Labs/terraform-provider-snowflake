@@ -49,6 +49,10 @@ func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentif
 	return collections.FindFirst(materializedViews, func(r MaterializedView) bool { return r.Name == id.Name() })
 }
 
+func (v *materializedViews) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *materializedViews) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]MaterializedViewDetails, error) {
 	opts := &DescribeMaterializedViewOptions{
 		name: id,

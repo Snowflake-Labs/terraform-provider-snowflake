@@ -12,6 +12,7 @@ type Views interface {
 	Drop(ctx context.Context, request *DropViewRequest) error
 	Show(ctx context.Context, request *ShowViewRequest) ([]View, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*View, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) ([]ViewDetails, error)
 }
 

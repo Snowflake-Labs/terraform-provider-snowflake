@@ -16,6 +16,7 @@ type Streams interface {
 	Drop(ctx context.Context, request *DropStreamRequest) error
 	Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
 }
 

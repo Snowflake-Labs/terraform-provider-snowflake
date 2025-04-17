@@ -42,6 +42,10 @@ func (v *managedAccounts) ShowByID(ctx context.Context, id AccountObjectIdentifi
 	return collections.FindFirst(managedAccounts, func(r ManagedAccount) bool { return r.Name == id.Name() })
 }
 
+func (v *managedAccounts) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (r *CreateManagedAccountRequest) toOpts() *CreateManagedAccountOptions {
 	opts := &CreateManagedAccountOptions{
 		name: r.name,

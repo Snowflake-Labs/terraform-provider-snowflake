@@ -11,6 +11,7 @@ type Applications interface {
 	Alter(ctx context.Context, request *AlterApplicationRequest) error
 	Show(ctx context.Context, request *ShowApplicationRequest) ([]Application, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Application, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Application, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApplicationProperty, error)
 }
 

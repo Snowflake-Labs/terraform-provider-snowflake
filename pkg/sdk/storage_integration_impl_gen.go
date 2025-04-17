@@ -47,6 +47,10 @@ func (v *storageIntegrations) ShowByID(ctx context.Context, id AccountObjectIden
 	return collections.FindFirst(storageIntegrations, func(r StorageIntegration) bool { return r.Name == id.Name() })
 }
 
+func (v *storageIntegrations) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *storageIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]StorageIntegrationProperty, error) {
 	opts := &DescribeStorageIntegrationOptions{
 		name: id,

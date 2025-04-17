@@ -47,6 +47,10 @@ func (v *applications) ShowByID(ctx context.Context, id AccountObjectIdentifier)
 	return collections.FindFirst(applications, func(r Application) bool { return r.Name == id.Name() })
 }
 
+func (v *applications) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Application, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *applications) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApplicationProperty, error) {
 	opts := &DescribeApplicationOptions{
 		name: id,

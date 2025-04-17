@@ -47,6 +47,10 @@ func (v *notificationIntegrations) ShowByID(ctx context.Context, id AccountObjec
 	return collections.FindFirst(notificationIntegrations, func(r NotificationIntegration) bool { return r.Name == id.Name() })
 }
 
+func (v *notificationIntegrations) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*NotificationIntegration, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *notificationIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NotificationIntegrationProperty, error) {
 	opts := &DescribeNotificationIntegrationOptions{
 		name: id,

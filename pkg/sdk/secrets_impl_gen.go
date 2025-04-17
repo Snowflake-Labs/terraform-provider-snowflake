@@ -63,6 +63,10 @@ func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Sec
 	return collections.FindFirst(secrets, func(r Secret) bool { return r.Name == id.Name() })
 }
 
+func (v *secrets) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error) {
 	opts := &DescribeSecretOptions{
 		name: id,

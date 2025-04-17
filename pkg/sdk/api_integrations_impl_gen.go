@@ -47,6 +47,10 @@ func (v *apiIntegrations) ShowByID(ctx context.Context, id AccountObjectIdentifi
 	return collections.FindFirst(apiIntegrations, func(r ApiIntegration) bool { return r.Name == id.Name() })
 }
 
+func (v *apiIntegrations) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ApiIntegration, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *apiIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApiIntegrationProperty, error) {
 	opts := &DescribeApiIntegrationOptions{
 		name: id,

@@ -12,6 +12,7 @@ type MaterializedViews interface {
 	Drop(ctx context.Context, request *DropMaterializedViewRequest) error
 	Show(ctx context.Context, request *ShowMaterializedViewRequest) ([]MaterializedView, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) ([]MaterializedViewDetails, error)
 }
 

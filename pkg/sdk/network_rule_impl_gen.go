@@ -49,6 +49,10 @@ func (v *networkRules) ShowByID(ctx context.Context, id SchemaObjectIdentifier) 
 	return collections.FindFirst(networkRules, func(r NetworkRule) bool { return r.Name == id.Name() })
 }
 
+func (v *networkRules) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *networkRules) Describe(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRuleDetails, error) {
 	opts := &DescribeNetworkRuleOptions{
 		name: id,

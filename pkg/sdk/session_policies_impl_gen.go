@@ -46,6 +46,10 @@ func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 	return collections.FindFirst(sessionPolicies, func(r SessionPolicy) bool { return r.Name == id.Name() })
 }
 
+func (v *sessionPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *sessionPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error) {
 	opts := &DescribeSessionPolicyOptions{
 		name: id,

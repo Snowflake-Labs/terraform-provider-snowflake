@@ -10,6 +10,7 @@ type EventTables interface {
 	Create(ctx context.Context, request *CreateEventTableRequest) error
 	Show(ctx context.Context, request *ShowEventTableRequest) ([]EventTable, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error)
 	Drop(ctx context.Context, request *DropEventTableRequest) error
 	Alter(ctx context.Context, request *AlterEventTableRequest) error

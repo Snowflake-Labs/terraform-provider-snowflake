@@ -12,6 +12,7 @@ type ApiIntegrations interface {
 	Drop(ctx context.Context, request *DropApiIntegrationRequest) error
 	Show(ctx context.Context, request *ShowApiIntegrationRequest) ([]ApiIntegration, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ApiIntegration, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ApiIntegration, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]ApiIntegrationProperty, error)
 }
 

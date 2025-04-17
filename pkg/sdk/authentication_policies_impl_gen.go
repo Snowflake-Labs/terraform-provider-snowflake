@@ -48,6 +48,10 @@ func (v *authenticationPolicies) ShowByID(ctx context.Context, id SchemaObjectId
 	return collections.FindFirst(authenticationPolicies, func(r AuthenticationPolicy) bool { return r.Name == id.Name() })
 }
 
+func (v *authenticationPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *authenticationPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]AuthenticationPolicyDescription, error) {
 	opts := &DescribeAuthenticationPolicyOptions{
 		name: id,

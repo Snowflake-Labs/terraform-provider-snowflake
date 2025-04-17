@@ -47,6 +47,10 @@ func (v *applicationPackages) ShowByID(ctx context.Context, id AccountObjectIden
 	return collections.FindFirst(applicationPackages, func(r ApplicationPackage) bool { return r.Name == id.Name() })
 }
 
+func (v *applicationPackages) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (r *CreateApplicationPackageRequest) toOpts() *CreateApplicationPackageOptions {
 	opts := &CreateApplicationPackageOptions{
 		IfNotExists:                r.IfNotExists,

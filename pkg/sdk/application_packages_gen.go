@@ -11,6 +11,7 @@ type ApplicationPackages interface {
 	Drop(ctx context.Context, request *DropApplicationPackageRequest) error
 	Show(ctx context.Context, request *ShowApplicationPackageRequest) ([]ApplicationPackage, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error)
 }
 
 // CreateApplicationPackageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-application-package.

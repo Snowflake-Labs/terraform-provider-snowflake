@@ -11,6 +11,7 @@ type NetworkRules interface {
 	Drop(ctx context.Context, request *DropNetworkRuleRequest) error
 	Show(ctx context.Context, request *ShowNetworkRuleRequest) ([]NetworkRule, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRuleDetails, error)
 }
 

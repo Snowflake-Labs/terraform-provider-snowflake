@@ -49,6 +49,10 @@ func (v *connections) ShowByID(ctx context.Context, id AccountObjectIdentifier) 
 	return collections.FindFirst(connections, func(r Connection) bool { return r.Name == id.Name() })
 }
 
+func (v *connections) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Connection, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {
 	opts := &CreateConnectionOptions{
 		IfNotExists: r.IfNotExists,

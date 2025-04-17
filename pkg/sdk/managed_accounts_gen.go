@@ -10,6 +10,7 @@ type ManagedAccounts interface {
 	Drop(ctx context.Context, request *DropManagedAccountRequest) error
 	Show(ctx context.Context, request *ShowManagedAccountRequest) ([]ManagedAccount, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error)
 }
 
 // CreateManagedAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-managed-account.

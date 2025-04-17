@@ -15,6 +15,7 @@ type Secrets interface {
 	Drop(ctx context.Context, request *DropSecretRequest) error
 	Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error)
 }
 

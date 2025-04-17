@@ -11,6 +11,7 @@ type SessionPolicies interface {
 	Drop(ctx context.Context, request *DropSessionPolicyRequest) error
 	Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error)
 }
 

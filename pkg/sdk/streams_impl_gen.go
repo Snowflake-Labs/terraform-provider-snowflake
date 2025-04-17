@@ -69,6 +69,10 @@ func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Str
 	return collections.FindFirst(streams, func(r Stream) bool { return r.Name == id.Name() })
 }
 
+func (v *streams) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *streams) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
 	opts := &DescribeStreamOptions{
 		name: id,

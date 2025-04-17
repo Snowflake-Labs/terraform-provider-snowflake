@@ -58,6 +58,10 @@ func (v *externalVolumes) ShowByID(ctx context.Context, id AccountObjectIdentifi
 	return collections.FindFirst(externalVolumes, func(r ExternalVolume) bool { return r.Name == id.Name() })
 }
 
+func (v *externalVolumes) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ExternalVolume, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (r *CreateExternalVolumeRequest) toOpts() *CreateExternalVolumeOptions {
 	opts := &CreateExternalVolumeOptions{
 		OrReplace:        r.OrReplace,

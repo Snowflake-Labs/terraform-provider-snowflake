@@ -64,6 +64,10 @@ func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task,
 	return collections.FindFirst(tasks, func(r Task) bool { return r.Name == id.Name() })
 }
 
+func (v *tasks) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *tasks) ShowParameters(ctx context.Context, id SchemaObjectIdentifier) ([]*Parameter, error) {
 	return v.client.Parameters.ShowParameters(ctx, &ShowParametersOptions{
 		In: &ParametersIn{

@@ -128,6 +128,10 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 	return collections.FindFirst(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
 }
 
+func (v *securityIntegrations) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {
 	opts := &CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions{
 		OrReplace:                   r.OrReplace,

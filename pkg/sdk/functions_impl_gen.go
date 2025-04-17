@@ -70,6 +70,10 @@ func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithA
 	return collections.FindFirst(functions, func(r Function) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
+func (v *functions) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *functions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error) {
 	opts := &DescribeFunctionOptions{
 		name: id,

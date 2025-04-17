@@ -27,7 +27,7 @@
         }
 
         func (v *{{ $impl }}) ShowByIDSafely(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
-            return SafeShowById(v.client, c.ShowByID, ctx, id)
+            return SafeShowById(v.client, v.ShowByID, ctx, id)
         }
     {{ else if and (eq .Name "Describe") .DescribeMapping }}
         {{ if .DescribeKind }}

@@ -50,6 +50,10 @@ func (v *views) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View,
 	return collections.FindFirst(views, func(r View) bool { return r.Name == id.Name() })
 }
 
+func (v *views) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*View, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *views) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]ViewDetails, error) {
 	opts := &DescribeViewOptions{
 		name: id,

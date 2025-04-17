@@ -18,6 +18,7 @@ type Functions interface {
 	Drop(ctx context.Context, request *DropFunctionRequest) error
 	Show(ctx context.Context, request *ShowFunctionRequest) ([]Function, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error)
 
 	// DescribeDetails is added manually; it returns aggregated describe results for the given function.

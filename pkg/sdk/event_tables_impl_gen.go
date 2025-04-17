@@ -38,6 +38,10 @@ func (v *eventTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 	return collections.FindFirst(eventTables, func(r EventTable) bool { return r.Name == id.Name() })
 }
 
+func (v *eventTables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *eventTables) Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error) {
 	opts := &DescribeEventTableOptions{
 		name: id,

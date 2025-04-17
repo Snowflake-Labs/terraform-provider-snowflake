@@ -104,6 +104,10 @@ func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stag
 	return collections.FindFirst(stages, func(r Stage) bool { return r.Name == id.Name() })
 }
 
+func (v *stages) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stage, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (s *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {
 	opts := &CreateInternalStageOptions{
 		OrReplace:   s.OrReplace,

@@ -11,6 +11,7 @@ type CortexSearchServices interface {
 	Alter(ctx context.Context, request *AlterCortexSearchServiceRequest) error
 	Show(ctx context.Context, request *ShowCortexSearchServiceRequest) ([]CortexSearchService, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchServiceDetails, error)
 	Drop(ctx context.Context, request *DropCortexSearchServiceRequest) error
 }

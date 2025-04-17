@@ -43,6 +43,10 @@ func (v *sequences) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*S
 	return collections.FindFirst(sequences, func(r Sequence) bool { return r.Name == id.Name() })
 }
 
+func (v *sequences) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Sequence, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *sequences) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SequenceDetail, error) {
 	opts := &DescribeSequenceOptions{
 		name: id,

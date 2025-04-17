@@ -49,6 +49,10 @@ func (v *rowAccessPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentif
 	return collections.FindFirst(rowAccessPolicies, func(r RowAccessPolicy) bool { return r.Name == id.Name() })
 }
 
+func (v *rowAccessPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *rowAccessPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicyDescription, error) {
 	opts := &DescribeRowAccessPolicyOptions{
 		name: id,

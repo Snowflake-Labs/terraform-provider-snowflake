@@ -48,6 +48,10 @@ func (v *networkPolicies) ShowByID(ctx context.Context, id AccountObjectIdentifi
 	return collections.FindFirst(networkPolicies, func(r NetworkPolicy) bool { return r.Name == id.Name() })
 }
 
+func (v *networkPolicies) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *networkPolicies) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyProperty, error) {
 	opts := &DescribeNetworkPolicyOptions{
 		name: id,
