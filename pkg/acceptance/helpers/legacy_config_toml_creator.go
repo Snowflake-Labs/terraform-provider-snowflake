@@ -9,10 +9,10 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
-// FullTomlConfigForServiceUser is a temporary function used to test provider configuration
+// FullLegacyTomlConfigForServiceUser is a temporary function used to test provider configuration
 // TODO [SNOW-1827309]: use toml marshaling from "github.com/pelletier/go-toml/v2"
 // TODO [SNOW-1827309]: add builders for our toml config struct
-func FullTomlConfigForServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string) string {
+func FullLegacyTomlConfigForServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string) string {
 	t.Helper()
 
 	return fmt.Sprintf(`
@@ -54,8 +54,8 @@ foo = 'bar'
 `, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey, testvars.ExampleOktaUrlString)
 }
 
-// FullInvalidTomlConfigForServiceUser is a temporary function used to test provider configuration
-func FullInvalidTomlConfigForServiceUser(t *testing.T, profile string) string {
+// FullInvalidLegacyTomlConfigForServiceUser is a temporary function used to test provider configuration
+func FullInvalidLegacyTomlConfigForServiceUser(t *testing.T, profile string) string {
 	t.Helper()
 
 	privateKey, _, _, _ := random.GenerateRSAKeyPair(t, "")
@@ -97,8 +97,8 @@ disableconsolelogin = true
 foo = 'bar'`, profile, privateKey)
 }
 
-// TomlConfigForServiceUser is a temporary function used to test provider configuration
-func TomlConfigForServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string) string {
+// LegacyTomlConfigForServiceUser is a temporary function used to test provider configuration
+func LegacyTomlConfigForServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string) string {
 	t.Helper()
 
 	return fmt.Sprintf(`
@@ -113,8 +113,8 @@ authenticator = 'SNOWFLAKE_JWT'
 `, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
 }
 
-// TomlConfigForServiceUserWithEncryptedKey is a temporary function used to test provider configuration
-func TomlConfigForServiceUserWithEncryptedKey(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string, pass string) string {
+// LegacyTomlConfigForServiceUserWithEncryptedKey is a temporary function used to test provider configuration
+func LegacyTomlConfigForServiceUserWithEncryptedKey(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, privateKey string, pass string) string {
 	t.Helper()
 
 	return fmt.Sprintf(`
@@ -130,8 +130,8 @@ authenticator = 'SNOWFLAKE_JWT'
 `, profile, userId.Name(), roleId.Name(), warehouseId.Name(), accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey, pass)
 }
 
-// TomlIncorrectConfigForServiceUser is a temporary function used to test provider configuration
-func TomlIncorrectConfigForServiceUser(t *testing.T, profile string, accountIdentifier sdk.AccountIdentifier) string {
+// LegacyTomlIncorrectConfigForServiceUser is a temporary function used to test provider configuration
+func LegacyTomlIncorrectConfigForServiceUser(t *testing.T, profile string, accountIdentifier sdk.AccountIdentifier) string {
 	t.Helper()
 
 	privateKey, _, _, _ := random.GenerateRSAKeyPair(t, "")
@@ -146,8 +146,8 @@ authenticator = 'SNOWFLAKE_JWT'
 `, profile, accountIdentifier.OrganizationName(), accountIdentifier.AccountName(), privateKey)
 }
 
-// TomlConfigForLegacyServiceUser is a temporary function used to test provider configuration
-func TomlConfigForLegacyServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, pass string) string {
+// LegacyTomlConfigForLegacyServiceUser is a temporary function used to test provider configuration
+func LegacyTomlConfigForLegacyServiceUser(t *testing.T, profile string, userId sdk.AccountObjectIdentifier, roleId sdk.AccountObjectIdentifier, warehouseId sdk.AccountObjectIdentifier, accountIdentifier sdk.AccountIdentifier, pass string) string {
 	t.Helper()
 
 	return fmt.Sprintf(`

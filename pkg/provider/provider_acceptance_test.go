@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -179,13 +178,6 @@ func TestAcc_Provider_configHierarchy(t *testing.T) {
 	})
 }
 
-func configAccountId(t *testing.T, cfg *gosnowflake.Config) sdk.AccountIdentifier {
-	t.Helper()
-	accountIdRaw := cfg.Account
-	parts := strings.SplitN(accountIdRaw, "-", 2)
-	return sdk.NewAccountIdentifier(parts[0], parts[1])
-}
-
 func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
@@ -229,14 +221,14 @@ func TestAcc_Provider_configureClientOnceSwitching(t *testing.T) {
 	})
 }
 
-func TestAcc_Provider_tomlConfig(t *testing.T) {
+func TestAcc_Provider_LegacyTomlConfig(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)
 	t.Setenv(string(testenvs.ConfigureClientOnce), "")
 
 	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
 	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
-		return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+		return helpers.FullLegacyTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
 	})
 
 	resource.Test(t, resource.TestCase{
@@ -398,7 +390,7 @@ func TestAcc_Provider_envConfig(t *testing.T) {
 
 	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
 	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
-		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
+		return helpers.FullInvalidLegacyTomlConfigForServiceUser(t, profile)
 	})
 
 	resource.Test(t, resource.TestCase{
@@ -506,7 +498,7 @@ func TestAcc_Provider_tfConfig(t *testing.T) {
 
 	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
 	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
-		return helpers.FullInvalidTomlConfigForServiceUser(t, profile)
+		return helpers.FullInvalidLegacyTomlConfigForServiceUser(t, profile)
 	})
 
 	resource.Test(t, resource.TestCase{
