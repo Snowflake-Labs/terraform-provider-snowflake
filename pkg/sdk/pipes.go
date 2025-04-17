@@ -11,6 +11,7 @@ type Pipes interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, copyStatement string, opts *CreatePipeOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPipeOptions) error
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPipeOptions) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowPipeOptions) ([]Pipe, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error)

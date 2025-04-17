@@ -13,6 +13,7 @@ type EventTables interface {
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error)
 	Drop(ctx context.Context, request *DropEventTableRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Alter(ctx context.Context, request *AlterEventTableRequest) error
 }
 

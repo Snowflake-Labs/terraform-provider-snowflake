@@ -25,6 +25,7 @@ type Warehouses interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateWarehouseOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterWarehouseOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
@@ -393,6 +394,10 @@ func (c *warehouses) Drop(ctx context.Context, id AccountObjectIdentifier, opts 
 		return err
 	}
 	return err
+}
+
+func (c *warehouses) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(c.client, func() error { return c.Drop(ctx, id, &DropWarehouseOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // ShowWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-warehouses.

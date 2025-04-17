@@ -27,6 +27,10 @@ func (v *storageIntegrations) Drop(ctx context.Context, request *DropStorageInte
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *storageIntegrations) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropStorageIntegrationRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *storageIntegrations) Show(ctx context.Context, request *ShowStorageIntegrationRequest) ([]StorageIntegration, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showStorageIntegrationsDbRow](v.client, ctx, opts)

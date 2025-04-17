@@ -27,6 +27,10 @@ func (v *databaseRoles) Drop(ctx context.Context, request *DropDatabaseRoleReque
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *databaseRoles) DropSafely(ctx context.Context, id DatabaseObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropDatabaseRoleRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *databaseRoles) Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[databaseRoleDBRow](v.client, ctx, opts)

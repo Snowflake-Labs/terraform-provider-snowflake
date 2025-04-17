@@ -72,6 +72,10 @@ func (v *stages) Drop(ctx context.Context, request *DropStageRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *stages) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropStageRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *stages) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]StageProperty, error) {
 	opts := &DescribeStageOptions{
 		name: id,

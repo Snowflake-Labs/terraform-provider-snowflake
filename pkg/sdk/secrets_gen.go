@@ -13,6 +13,7 @@ type Secrets interface {
 	CreateWithGenericString(ctx context.Context, request *CreateWithGenericStringSecretRequest) error
 	Alter(ctx context.Context, request *AlterSecretRequest) error
 	Drop(ctx context.Context, request *DropSecretRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error)

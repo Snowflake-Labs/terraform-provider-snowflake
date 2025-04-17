@@ -42,6 +42,10 @@ func (v *secrets) Drop(ctx context.Context, request *DropSecretRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *secrets) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSecretRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[secretDBRow](v.client, ctx, opts)

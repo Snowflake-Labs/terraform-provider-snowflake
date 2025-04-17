@@ -14,6 +14,7 @@ type DynamicTables interface {
 	Alter(ctx context.Context, request *AlterDynamicTableRequest) error
 	Describe(ctx context.Context, request *DescribeDynamicTableRequest) (*DynamicTableDetails, error)
 	Drop(ctx context.Context, request *DropDynamicTableRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowDynamicTableRequest) ([]DynamicTable, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error)

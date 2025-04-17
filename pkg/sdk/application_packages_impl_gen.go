@@ -27,6 +27,10 @@ func (v *applicationPackages) Drop(ctx context.Context, request *DropApplication
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *applicationPackages) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropApplicationPackageRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *applicationPackages) Show(ctx context.Context, request *ShowApplicationPackageRequest) ([]ApplicationPackage, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[applicationPackageRow](v.client, ctx, opts)

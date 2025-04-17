@@ -27,6 +27,10 @@ func (v *networkPolicies) Drop(ctx context.Context, request *DropNetworkPolicyRe
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *networkPolicies) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropNetworkPolicyRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *networkPolicies) Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showNetworkPolicyDBRow](v.client, ctx, opts)

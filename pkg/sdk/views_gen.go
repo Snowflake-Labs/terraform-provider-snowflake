@@ -10,6 +10,7 @@ type Views interface {
 	Create(ctx context.Context, request *CreateViewRequest) error
 	Alter(ctx context.Context, request *AlterViewRequest) error
 	Drop(ctx context.Context, request *DropViewRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowViewRequest) ([]View, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*View, error)

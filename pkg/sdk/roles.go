@@ -10,6 +10,7 @@ type Roles interface {
 	Create(ctx context.Context, req *CreateRoleRequest) error
 	Alter(ctx context.Context, req *AlterRoleRequest) error
 	Drop(ctx context.Context, req *DropRoleRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Role, error)

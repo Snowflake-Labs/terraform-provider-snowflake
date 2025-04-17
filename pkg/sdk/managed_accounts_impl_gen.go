@@ -22,6 +22,10 @@ func (v *managedAccounts) Drop(ctx context.Context, request *DropManagedAccountR
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *managedAccounts) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropManagedAccountRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *managedAccounts) Show(ctx context.Context, request *ShowManagedAccountRequest) ([]ManagedAccount, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[managedAccountDBRow](v.client, ctx, opts)
@@ -60,7 +64,8 @@ func (r *CreateManagedAccountRequest) toOpts() *CreateManagedAccountOptions {
 
 func (r *DropManagedAccountRequest) toOpts() *DropManagedAccountOptions {
 	opts := &DropManagedAccountOptions{
-		name: r.name,
+		name:     r.name,
+		IfExists: r.IfExists,
 	}
 	return opts
 }

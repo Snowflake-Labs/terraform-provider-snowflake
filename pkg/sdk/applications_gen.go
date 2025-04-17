@@ -8,6 +8,7 @@ import (
 type Applications interface {
 	Create(ctx context.Context, request *CreateApplicationRequest) error
 	Drop(ctx context.Context, request *DropApplicationRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Alter(ctx context.Context, request *AlterApplicationRequest) error
 	Show(ctx context.Context, request *ShowApplicationRequest) ([]Application, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Application, error)

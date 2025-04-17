@@ -29,6 +29,10 @@ func (v *connections) Drop(ctx context.Context, request *DropConnectionRequest) 
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *connections) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropConnectionRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *connections) Show(ctx context.Context, request *ShowConnectionRequest) ([]Connection, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[connectionRow](v.client, ctx, opts)

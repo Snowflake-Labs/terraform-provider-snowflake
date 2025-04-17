@@ -48,6 +48,10 @@ func (v *streams) Drop(ctx context.Context, request *DropStreamRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *streams) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropStreamRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showStreamsDbRow](v.client, ctx, opts)

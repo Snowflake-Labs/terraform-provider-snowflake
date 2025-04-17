@@ -27,6 +27,10 @@ func (v *authenticationPolicies) Drop(ctx context.Context, request *DropAuthenti
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *authenticationPolicies) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropAuthenticationPolicyRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *authenticationPolicies) Show(ctx context.Context, request *ShowAuthenticationPolicyRequest) ([]AuthenticationPolicy, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showAuthenticationPolicyDBRow](v.client, ctx, opts)

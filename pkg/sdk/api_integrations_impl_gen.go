@@ -27,6 +27,10 @@ func (v *apiIntegrations) Drop(ctx context.Context, request *DropApiIntegrationR
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *apiIntegrations) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropApiIntegrationRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *apiIntegrations) Show(ctx context.Context, request *ShowApiIntegrationRequest) ([]ApiIntegration, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showApiIntegrationsDbRow](v.client, ctx, opts)

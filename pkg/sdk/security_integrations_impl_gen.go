@@ -97,6 +97,10 @@ func (v *securityIntegrations) Drop(ctx context.Context, request *DropSecurityIn
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *securityIntegrations) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSecurityIntegrationRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *securityIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]SecurityIntegrationProperty, error) {
 	opts := &DescribeSecurityIntegrationOptions{
 		name: id,

@@ -14,6 +14,7 @@ type Tasks interface {
 	Clone(ctx context.Context, request *CloneTaskRequest) error
 	Alter(ctx context.Context, request *AlterTaskRequest) error
 	Drop(ctx context.Context, request *DropTaskRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Task, error)

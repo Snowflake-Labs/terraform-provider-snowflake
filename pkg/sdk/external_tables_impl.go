@@ -40,6 +40,10 @@ func (v *externalTables) Drop(ctx context.Context, req *DropExternalTableRequest
 	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
+func (v *externalTables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropExternalTableRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error) {
 	dbRows, err := validateAndQuery[externalTableRow](v.client, ctx, req.toOpts())
 	if err != nil {

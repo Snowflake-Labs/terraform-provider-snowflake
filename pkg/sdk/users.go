@@ -21,6 +21,7 @@ type Users interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropUserOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
 	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
@@ -499,6 +500,10 @@ func (v *users) Drop(ctx context.Context, id AccountObjectIdentifier, opts *Drop
 		return err
 	}
 	return err
+}
+
+func (v *users) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropUserOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // UserDetails contains details about a user.

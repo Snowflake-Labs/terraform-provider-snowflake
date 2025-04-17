@@ -63,6 +63,10 @@ func (v *sequences) Drop(ctx context.Context, request *DropSequenceRequest) erro
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *sequences) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSequenceRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (r *CreateSequenceRequest) toOpts() *CreateSequenceOptions {
 	opts := &CreateSequenceOptions{
 		OrReplace:      r.OrReplace,

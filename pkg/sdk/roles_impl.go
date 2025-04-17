@@ -27,6 +27,10 @@ func (v *roles) Drop(ctx context.Context, req *DropRoleRequest) error {
 	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
+func (v *roles) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropRoleRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *roles) Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error) {
 	dbRows, err := validateAndQuery[roleDBRow](v.client, ctx, req.toOpts())
 	if err != nil {

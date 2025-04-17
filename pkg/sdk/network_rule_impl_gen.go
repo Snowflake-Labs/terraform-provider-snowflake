@@ -28,6 +28,10 @@ func (v *networkRules) Drop(ctx context.Context, request *DropNetworkRuleRequest
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *networkRules) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropNetworkRuleRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *networkRules) Show(ctx context.Context, request *ShowNetworkRuleRequest) ([]NetworkRule, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[ShowNetworkRulesRow](v.client, ctx, opts)

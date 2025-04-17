@@ -24,6 +24,7 @@ type ResourceMonitors interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
@@ -388,6 +389,10 @@ func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier,
 	opts = createIfNil(opts)
 	opts.name = id
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *resourceMonitors) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropResourceMonitorOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // ShowResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-resource-monitors.

@@ -16,6 +16,7 @@ type Procedures interface {
 	CreateForSQL(ctx context.Context, request *CreateForSQLProcedureRequest) error
 	Alter(ctx context.Context, request *AlterProcedureRequest) error
 	Drop(ctx context.Context, request *DropProcedureRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) error
 	Show(ctx context.Context, request *ShowProcedureRequest) ([]Procedure, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Procedure, error)

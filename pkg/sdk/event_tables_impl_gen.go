@@ -58,6 +58,10 @@ func (v *eventTables) Drop(ctx context.Context, request *DropEventTableRequest) 
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *eventTables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropEventTableRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *eventTables) Alter(ctx context.Context, request *AlterEventTableRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)

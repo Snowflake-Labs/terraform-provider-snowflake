@@ -28,6 +28,10 @@ func (v *materializedViews) Drop(ctx context.Context, request *DropMaterializedV
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *materializedViews) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropMaterializedViewRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *materializedViews) Show(ctx context.Context, request *ShowMaterializedViewRequest) ([]MaterializedView, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[materializedViewDBRow](v.client, ctx, opts)

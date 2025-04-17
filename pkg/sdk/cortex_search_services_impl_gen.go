@@ -64,6 +64,10 @@ func (v *cortexSearchServices) Drop(ctx context.Context, request *DropCortexSear
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *cortexSearchServices) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropCortexSearchServiceRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (r *CreateCortexSearchServiceRequest) toOpts() *CreateCortexSearchServiceOptions {
 	opts := &CreateCortexSearchServiceOptions{
 		OrReplace:   r.OrReplace,

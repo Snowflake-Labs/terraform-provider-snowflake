@@ -27,6 +27,10 @@ func (v *dynamicTables) Drop(ctx context.Context, request *DropDynamicTableReque
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *dynamicTables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropDynamicTableRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *dynamicTables) Describe(ctx context.Context, request *DescribeDynamicTableRequest) (*DynamicTableDetails, error) {
 	opts := request.toOpts()
 	row, err := validateAndQueryOne[dynamicTableDetailsRow](v.client, ctx, opts)

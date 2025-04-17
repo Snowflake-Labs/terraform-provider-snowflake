@@ -55,6 +55,10 @@ func (v *tags) Drop(ctx context.Context, request *DropTagRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tags) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropTagRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *tags) Undrop(ctx context.Context, request *UndropTagRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)

@@ -31,6 +31,10 @@ func (v *pipes) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropP
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *pipes) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, nil) }, ctx, id)
+}
+
 func (v *pipes) Show(ctx context.Context, opts *ShowPipeOptions) ([]Pipe, error) {
 	dbRows, err := validateAndQuery[pipeDBRow](v.client, ctx, opts)
 	if err != nil {

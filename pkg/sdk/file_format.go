@@ -23,6 +23,7 @@ type FileFormats interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreateFileFormatOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterFileFormatOptions) error
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropFileFormatOptions) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
@@ -622,6 +623,10 @@ func (v *fileFormats) Drop(ctx context.Context, id SchemaObjectIdentifier, opts 
 	}
 	_, err = v.client.exec(ctx, sql)
 	return err
+}
+
+func (v *fileFormats) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropFileFormatOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // ShowFileFormatsOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-file-formats.

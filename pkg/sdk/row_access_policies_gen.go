@@ -9,6 +9,7 @@ type RowAccessPolicies interface {
 	Create(ctx context.Context, request *CreateRowAccessPolicyRequest) error
 	Alter(ctx context.Context, request *AlterRowAccessPolicyRequest) error
 	Drop(ctx context.Context, request *DropRowAccessPolicyRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowRowAccessPolicyRequest) ([]RowAccessPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicy, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicy, error)

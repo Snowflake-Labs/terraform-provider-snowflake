@@ -28,6 +28,7 @@ type Accounts interface {
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 	Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int) error
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	ShowParameters(ctx context.Context) ([]*Parameter, error)
 }
@@ -570,6 +571,10 @@ func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePe
 	opts.name = id
 	opts.gracePeriodInDays = gracePeriodInDays
 	return validateAndExec(c.client, ctx, opts)
+}
+
+func (c *accounts) DropSafely(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int) error {
+	return SafeDrop(c.client, func() error { return c.Drop(ctx, id, gracePeriodInDays, &DropAccountOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // undropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-account.

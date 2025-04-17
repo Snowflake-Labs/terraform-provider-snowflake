@@ -27,6 +27,10 @@ func (v *sessionPolicies) Drop(ctx context.Context, request *DropSessionPolicyRe
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *sessionPolicies) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSessionPolicyRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *sessionPolicies) Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showSessionPolicyDBRow](v.client, ctx, opts)

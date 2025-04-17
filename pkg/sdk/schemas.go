@@ -23,6 +23,7 @@ type Schemas interface {
 	Create(ctx context.Context, id DatabaseObjectIdentifier, opts *CreateSchemaOptions) error
 	Alter(ctx context.Context, id DatabaseObjectIdentifier, opts *AlterSchemaOptions) error
 	Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *DropSchemaOptions) error
+	DropSafely(ctx context.Context, id DatabaseObjectIdentifier) error
 	Undrop(ctx context.Context, id DatabaseObjectIdentifier) error
 	Describe(ctx context.Context, id DatabaseObjectIdentifier) ([]SchemaDetails, error)
 	Show(ctx context.Context, opts *ShowSchemaOptions) ([]Schema, error)
@@ -433,6 +434,10 @@ func (v *schemas) Drop(ctx context.Context, id DatabaseObjectIdentifier, opts *D
 	}
 	_, err = v.client.exec(ctx, sql)
 	return err
+}
+
+func (v *schemas) DropSafely(ctx context.Context, id DatabaseObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropSchemaOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // undropSchemaOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-schema.

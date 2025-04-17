@@ -9,6 +9,7 @@ type ApplicationPackages interface {
 	Create(ctx context.Context, request *CreateApplicationPackageRequest) error
 	Alter(ctx context.Context, request *AlterApplicationPackageRequest) error
 	Drop(ctx context.Context, request *DropApplicationPackageRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, request *ShowApplicationPackageRequest) ([]ApplicationPackage, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error)

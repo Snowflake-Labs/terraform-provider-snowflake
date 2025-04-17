@@ -22,6 +22,7 @@ type Alerts interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, warehouse AccountObjectIdentifier, schedule string, condition string, action string, opts *CreateAlertOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterAlertOptions) error
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropAlertOptions) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
@@ -196,6 +197,10 @@ func (v *alerts) Drop(ctx context.Context, id SchemaObjectIdentifier, opts *Drop
 		return err
 	}
 	return err
+}
+
+func (v *alerts) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropAlertOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // ShowAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-alerts.

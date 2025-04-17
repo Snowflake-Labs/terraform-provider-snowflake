@@ -27,6 +27,10 @@ func (v *externalVolumes) Drop(ctx context.Context, request *DropExternalVolumeR
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *externalVolumes) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropExternalVolumeRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *externalVolumes) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ExternalVolumeProperty, error) {
 	opts := &DescribeExternalVolumeOptions{
 		name: id,

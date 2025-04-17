@@ -30,6 +30,7 @@ type FailoverGroups interface {
 	AlterSource(ctx context.Context, id AccountObjectIdentifier, opts *AlterSourceFailoverGroupOptions) error
 	AlterTarget(ctx context.Context, id AccountObjectIdentifier, opts *AlterTargetFailoverGroupOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropFailoverGroupOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
@@ -342,6 +343,10 @@ func (v *failoverGroups) Drop(ctx context.Context, id AccountObjectIdentifier, o
 		return err
 	}
 	return err
+}
+
+func (v *failoverGroups) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropFailoverGroupOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // ShowFailoverGroupOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-failover-groups.

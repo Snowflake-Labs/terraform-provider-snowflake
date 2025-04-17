@@ -8,6 +8,7 @@ import (
 type ManagedAccounts interface {
 	Create(ctx context.Context, request *CreateManagedAccountRequest) error
 	Drop(ctx context.Context, request *DropManagedAccountRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, request *ShowManagedAccountRequest) ([]ManagedAccount, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error)
 	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ManagedAccount, error)
@@ -32,6 +33,7 @@ type CreateManagedAccountParams struct {
 type DropManagedAccountOptions struct {
 	drop           bool                    `ddl:"static" sql:"DROP"`
 	managedAccount bool                    `ddl:"static" sql:"MANAGED ACCOUNT"`
+	IfExists       *bool                   `ddl:"keyword" sql:"IF EXISTS"`
 	name           AccountObjectIdentifier `ddl:"identifier"`
 }
 

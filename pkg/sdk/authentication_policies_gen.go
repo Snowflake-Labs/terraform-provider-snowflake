@@ -6,6 +6,7 @@ type AuthenticationPolicies interface {
 	Create(ctx context.Context, request *CreateAuthenticationPolicyRequest) error
 	Alter(ctx context.Context, request *AlterAuthenticationPolicyRequest) error
 	Drop(ctx context.Context, request *DropAuthenticationPolicyRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowAuthenticationPolicyRequest) ([]AuthenticationPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*AuthenticationPolicy, error)

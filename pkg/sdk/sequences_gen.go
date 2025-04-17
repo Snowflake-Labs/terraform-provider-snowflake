@@ -10,6 +10,7 @@ type Sequences interface {
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Sequence, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SequenceDetail, error)
 	Drop(ctx context.Context, request *DropSequenceRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 }
 
 // CreateSequenceOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-sequence.

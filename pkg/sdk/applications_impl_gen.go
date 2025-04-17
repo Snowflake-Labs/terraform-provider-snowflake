@@ -22,6 +22,10 @@ func (v *applications) Drop(ctx context.Context, request *DropApplicationRequest
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *applications) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropApplicationRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *applications) Alter(ctx context.Context, request *AlterApplicationRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)

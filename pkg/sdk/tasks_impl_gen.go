@@ -43,6 +43,10 @@ func (v *tasks) Drop(ctx context.Context, request *DropTaskRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tasks) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropTaskRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[taskDBRow](v.client, ctx, opts)

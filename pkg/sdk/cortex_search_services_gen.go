@@ -14,6 +14,7 @@ type CortexSearchServices interface {
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchServiceDetails, error)
 	Drop(ctx context.Context, request *DropCortexSearchServiceRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 }
 
 // CreateCortexSearchServiceOptions is based on https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/create-cortex-search.
