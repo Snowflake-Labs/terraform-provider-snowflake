@@ -57,7 +57,7 @@ func TestClient_queryOne(t *testing.T) {
 
 func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
 	t.Run("get default gosnowflake driver logging level", func(t *testing.T) {
-		config := DefaultConfig()
+		config := DefaultConfig(WithVerifyPermissions(true))
 		_, err := NewClient(config)
 		require.NoError(t, err)
 
@@ -71,7 +71,7 @@ func TestClient_NewClientDriverLoggingLevel(t *testing.T) {
 	})
 
 	t.Run("set gosnowflake driver logging level with config", func(t *testing.T) {
-		config := DefaultConfig()
+		config := DefaultConfig(WithVerifyPermissions(true))
 		config.Tracing = "trace"
 		_, err := NewClient(config)
 		require.NoError(t, err)

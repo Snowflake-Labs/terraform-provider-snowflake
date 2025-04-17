@@ -25,7 +25,7 @@ import (
 // TODO [SNOW-1827310]: use generated config for these tests
 func TestInt_Client_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
-		config := sdk.DefaultConfig()
+		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 	})
@@ -35,7 +35,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config := sdk.DefaultConfig()
+		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err = sdk.NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
@@ -46,7 +46,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 
 		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 
-		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile)
+		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile, sdk.WithVerifyPermissions(true))
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
@@ -62,7 +62,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 
 		t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
 
-		_, err := sdk.ProfileConfig(tomlConfig.Profile)
+		_, err := sdk.ProfileConfig(tomlConfig.Profile, sdk.WithVerifyPermissions(true))
 		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path))
 	})
 
@@ -99,7 +99,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 	})
 
 	t.Run("with missing config - should not care about correct env variables", func(t *testing.T) {
-		config, err := sdk.ProfileConfig(testprofiles.Default)
+		config, err := sdk.ProfileConfig(testprofiles.Default, sdk.WithVerifyPermissions(true))
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
@@ -112,13 +112,13 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config = sdk.DefaultConfig()
+		config = sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err = sdk.NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
 
 	t.Run("registers snowflake driver", func(t *testing.T) {
-		config := sdk.DefaultConfig()
+		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 

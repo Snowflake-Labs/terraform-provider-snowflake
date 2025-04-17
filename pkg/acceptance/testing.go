@@ -80,7 +80,7 @@ func init() {
 	}
 	_ = testAccProtoV6ProviderFactoriesNew
 
-	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default)
+	defaultConfig, err := sdk.ProfileConfig(testprofiles.Default, sdk.WithVerifyPermissions(true))
 	if err != nil {
 		log.Panicf("Could not read configuration from profile: %v", err)
 	}
@@ -95,7 +95,7 @@ func init() {
 	}
 	atc.client = client
 
-	cfg, err := sdk.ProfileConfig(testprofiles.Secondary)
+	cfg, err := sdk.ProfileConfig(testprofiles.Secondary, sdk.WithVerifyPermissions(true))
 	if err != nil {
 		log.Panicf("Config for the secondary client is needed to run acceptance tests, err: %v", err)
 	}
