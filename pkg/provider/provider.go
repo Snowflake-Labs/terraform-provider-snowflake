@@ -588,14 +588,14 @@ func expandStringList(configured []interface{}) []string {
 
 func getDriverConfigFromTOML(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
 	if profile == "default" {
-		return sdk.DefaultConfig(verifyPermissions), nil
+		return sdk.DefaultConfig(sdk.WithVerifyPermissions(verifyPermissions)), nil
 	}
 	path, err := sdk.GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	profileConfig, err := sdk.ProfileConfig(profile, verifyPermissions)
+	profileConfig, err := sdk.ProfileConfig(profile, sdk.WithVerifyPermissions(verifyPermissions))
 	if err != nil {
 		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
 	}

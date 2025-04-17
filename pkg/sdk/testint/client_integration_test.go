@@ -5,11 +5,14 @@ package testint
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/tracking"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -22,7 +25,7 @@ import (
 // TODO [SNOW-1827310]: use generated config for these tests
 func TestInt_Client_NewClient(t *testing.T) {
 	t.Run("with default config", func(t *testing.T) {
-		config := sdk.DefaultConfig(true)
+		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 	})
@@ -32,7 +35,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config := sdk.DefaultConfig(true)
+		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err = sdk.NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
@@ -43,7 +46,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 
 		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
 
-		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile, true)
+		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile, sdk.WithVerifyPermissions(true))
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
@@ -51,8 +54,52 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.ErrorContains(t, err, "JWT token is invalid")
 	})
 
+	t.Run("with too big file", func(t *testing.T) {
+		c := make([]byte, 11*1024*1024)
+		tomlConfig := testClientHelper().StoreTempTomlConfig(t, func(profile string) string {
+			return string(c)
+		})
+
+		t.Setenv(snowflakeenvs.ConfigPath, tomlConfig.Path)
+
+		_, err := sdk.ProfileConfig(tomlConfig.Profile, sdk.WithVerifyPermissions(true))
+		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path))
+	})
+
+	t.Run("with incorrect privileges and enabled check", func(t *testing.T) {
+		if oswrapper.IsRunningOnWindows() {
+			t.Skip("checking file permissions on Windows is currently done in manual tests package")
+		}
+		permissions := fs.FileMode(0o755)
+		tmpServiceUser := testClientHelper().SetUpTemporaryServiceUser(t)
+		tmpServiceUserConfig := testClientHelper().TempTomlConfigWithCustomPermissionsForServiceUser(t, tmpServiceUser, permissions)
+
+		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+
+		_, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile, sdk.WithVerifyPermissions(true))
+		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: config file %s has unsafe permissions - %#o", tmpServiceUserConfig.Path, permissions))
+	})
+
+	t.Run("with incorrect privileges and disabled check (default)", func(t *testing.T) {
+		if oswrapper.IsRunningOnWindows() {
+			t.Skip("checking file permissions on Windows is currently done in manual tests package")
+		}
+		permissions := fs.FileMode(0o755)
+		tmpServiceUser := testClientHelper().SetUpTemporaryServiceUser(t)
+		tmpServiceUserConfig := testClientHelper().TempTomlConfigWithCustomPermissionsForServiceUser(t, tmpServiceUser, permissions)
+
+		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+
+		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile)
+		require.NoError(t, err)
+		require.NotNil(t, config)
+
+		_, err = sdk.NewClient(config)
+		require.NoError(t, err)
+	})
+
 	t.Run("with missing config - should not care about correct env variables", func(t *testing.T) {
-		config, err := sdk.ProfileConfig(testprofiles.Default, true)
+		config, err := sdk.ProfileConfig(testprofiles.Default, sdk.WithVerifyPermissions(true))
 		require.NoError(t, err)
 		require.NotNil(t, config)
 
@@ -65,13 +112,13 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
 
-		config = sdk.DefaultConfig(true)
+		config = sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err = sdk.NewClient(config)
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
 
 	t.Run("registers snowflake driver", func(t *testing.T) {
-		config := sdk.DefaultConfig(true)
+		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 
