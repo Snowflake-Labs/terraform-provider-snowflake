@@ -40,6 +40,8 @@ const (
 	GeneratedRandomValue        env = "TEST_SF_TF_GENERATED_RANDOM_VALUE"
 
 	SimplifiedIntegrationTestsSetup env = "TEST_SF_TF_SIMPLIFIED_INTEGRATION_TESTS_SETUP"
+
+	TestResourceDataTypeDiffHandlingEnv env = "TEST_SF_TF_TEST_RESOURCE_DATA_DIFF_HANDLING_ENV"
 )
 
 func GetOrSkipTest(t *testing.T, envName Env) string {
