@@ -21,14 +21,17 @@ func TestAcc_TestResource_DataTypeDiffHandling(t *testing.T) {
 	acc.TestAccPreCheck(t)
 
 	envName := fmt.Sprintf("%s_%s", testenvs.TestResourceDataTypeDiffHandlingEnv, strings.ToUpper(random.AlphaN(10)))
+	resourceType := "snowflake_test_resource_data_type_diff_handling"
+	resourceName := "test"
+	resourceReference := fmt.Sprintf("%s.%s", resourceType, resourceName)
 
 	testConfig := func(configValue string) string {
 		return fmt.Sprintf(`
-resource "snowflake_test_resource_data_type_diff_handling" "test" {
+resource "%[3]s" "%[4]s" {
 	env_name = "%[2]s"
 	return_data_type = "%[1]s"
 }
-`, configValue, envName)
+`, configValue, envName, resourceType, resourceName)
 	}
 
 	testCases := []struct {
@@ -47,19 +50,20 @@ resource "snowflake_test_resource_data_type_diff_handling" "test" {
 			var planchecks []plancheck.PlanCheck
 			if tc.ExpectChanges {
 				planchecks = []plancheck.PlanCheck{
-					plancheck.ExpectResourceAction("snowflake_test_resource_data_type_diff_handling.test", plancheck.ResourceActionCreate),
+					// TODO: add more checks (change from-to)
+					plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionCreate),
 				}
 			} else {
 				planchecks = []plancheck.PlanCheck{
-					plancheck.ExpectEmptyPlan("snowflake_test_resource_data_type_diff_handling.test"),
+					plancheck.ExpectEmptyPlan(resourceReference),
 				}
 			}
 
-			var newValue string
+			var newConfigValue string
 			if tc.NewConfigValue != "" {
-				newValue = tc.NewConfigValue
+				newConfigValue = tc.NewConfigValue
 			} else {
-				newValue = tc.ConfigValue
+				newConfigValue = tc.ConfigValue
 			}
 
 			resource.Test(t, resource.TestCase{
@@ -70,7 +74,14 @@ resource "snowflake_test_resource_data_type_diff_handling" "test" {
 				CheckDestroy: acc.CheckDestroy(t, resources.Schema),
 				Steps: []resource.TestStep{
 					{
+						// our test resource does not set the env, so we set it proactively
+						PreConfig: func() {
+							t.Setenv(envName, tc.ConfigValue)
+						},
 						Config: testConfig(tc.ConfigValue),
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceReference, "return_data_type", tc.ConfigValue),
+						),
 					},
 					{
 						PreConfig: func() {
@@ -79,7 +90,10 @@ resource "snowflake_test_resource_data_type_diff_handling" "test" {
 						ConfigPlanChecks: resource.ConfigPlanChecks{
 							PreApply: planchecks,
 						},
-						Config: testConfig(newValue),
+						Config: testConfig(newConfigValue),
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(resourceReference, "return_data_type", newConfigValue),
+						),
 					},
 				},
 			})

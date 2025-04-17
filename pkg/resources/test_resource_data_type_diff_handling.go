@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -35,22 +36,28 @@ func TestResourceDataTypeDiffHandling() *schema.Resource {
 }
 
 func TestResourceCreateDataTypeDiffHandling(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	// TODO: implement
-
+	// it seems that it can be almost a no-op as we don't need to set the env up; it can be set as part of the test setup.
 	d.SetId(d.Get("env_name").(string))
-	return ReadObjectRenamingListsAndSets(false)(ctx, d, meta)
+	return TestResourceReadDataTypeDiffHandling(false)(ctx, d, meta)
 }
 
 func TestResourceUpdateDataTypeDiffHandling(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	// TODO: implement
-
-	return ReadObjectRenamingListsAndSets(false)(ctx, d, meta)
+	// it seems that it can be a no-op as we don't care about making changes but the changes recognition
+	return TestResourceReadDataTypeDiffHandling(false)(ctx, d, meta)
 }
 
 func TestResourceReadDataTypeDiffHandling(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		// TODO: implement
+		value := oswrapper.Getenv(d.Id())
+		if value != "" {
+			if err := d.Set("return_data_type", value); err != nil {
+				return diag.FromErr(err)
+			}
+		}
 
+		if withExternalChangesMarking {
+			// TODO: show output if needed
+		}
 		return nil
 	}
 }
