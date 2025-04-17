@@ -22,6 +22,7 @@ type Shares interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropShareOptions) error
 	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
 	DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error)
 	DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error)
 }
@@ -320,6 +321,10 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (s *shares) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Share, error) {
+	return SafeShowById(s.client, s.ShowByID, ctx, id)
 }
 
 type ShareDetails struct {

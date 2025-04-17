@@ -44,6 +44,10 @@ func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role
 	return collections.FindFirst(roleList, func(r Role) bool { return r.ID().name == id.Name() })
 }
 
+func (v *roles) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Role, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {
 	return validateAndExec(v.client, ctx, req.toOpts())
 }

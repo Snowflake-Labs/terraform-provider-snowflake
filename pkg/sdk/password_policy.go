@@ -23,6 +23,7 @@ type PasswordPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
 	Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error)
 }
 
@@ -337,6 +338,10 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *passwordPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // describePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-password-policy.

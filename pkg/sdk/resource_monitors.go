@@ -26,6 +26,7 @@ type ResourceMonitors interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error
 	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
 
 var _ ResourceMonitors = (*resourceMonitors)(nil)
@@ -430,4 +431,8 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 		return nil, err
 	}
 	return collections.FindFirst(resourceMonitors, func(r ResourceMonitor) bool { return r.ID().Name() == id.Name() })
+}
+
+func (v *resourceMonitors) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }

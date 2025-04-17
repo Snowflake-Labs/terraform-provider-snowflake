@@ -28,6 +28,7 @@ type MaskingPolicies interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropMaskingPolicyOptions) error
 	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
 
@@ -327,6 +328,10 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 	return collections.FindFirst(maskingPolicies, func(r MaskingPolicy) bool { return r.Name == id.Name() })
+}
+
+func (v *maskingPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.

@@ -64,6 +64,10 @@ func (v *externalTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier
 	return collections.FindFirst(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
+func (v *externalTables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {
 	rows, err := validateAndQuery[externalTableColumnDetailsRow](v.client, ctx, req.toOpts())
 	if err != nil {

@@ -8,6 +8,7 @@ type {{ .Name }} interface {
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error)
 		{{- else if eq .Name "ShowByID" }}
 			{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error)
+			{{ .Name }}Safely(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error)
 		{{- else if and (eq .Name "Describe") .DescribeMapping }}
 			{{- if .DescribeKind }}
 				{{- if eq (deref .DescribeKind) "single_value" }}

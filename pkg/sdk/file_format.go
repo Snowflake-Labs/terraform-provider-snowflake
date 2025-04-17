@@ -25,6 +25,7 @@ type FileFormats interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropFileFormatOptions) error
 	Show(ctx context.Context, opts *ShowFileFormatsOptions) ([]FileFormat, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*FileFormatDetails, error)
 }
 
@@ -663,6 +664,10 @@ func (v *fileFormats) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *fileFormats) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*FileFormat, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 type FileFormatDetails struct {

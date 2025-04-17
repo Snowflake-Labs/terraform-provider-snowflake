@@ -23,6 +23,7 @@ type ExternalTables interface {
 	Drop(ctx context.Context, req *DropExternalTableRequest) error
 	Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error)
 	DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error)
 	DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error)
 }

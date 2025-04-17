@@ -58,6 +58,10 @@ func (v *pipes) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Pipe,
 	return collections.FindFirst(pipes, func(p Pipe) bool { return p.ID().name == id.Name() })
 }
 
+func (v *pipes) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *pipes) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Pipe, error) {
 	opts := &describePipeOptions{
 		name: id,

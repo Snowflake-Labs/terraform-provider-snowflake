@@ -46,6 +46,10 @@ func (v *tags) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, e
 	return collections.FindFirst(tags, func(r Tag) bool { return r.Name == id.Name() })
 }
 
+func (v *tags) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *tags) Drop(ctx context.Context, request *DropTagRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)

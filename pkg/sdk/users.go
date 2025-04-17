@@ -24,6 +24,7 @@ type Users interface {
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
 	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*User, error)
 	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
@@ -697,6 +698,10 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *users) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*User, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *users) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {

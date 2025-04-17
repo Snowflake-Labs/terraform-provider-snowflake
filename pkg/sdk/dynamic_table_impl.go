@@ -55,6 +55,10 @@ func (v *dynamicTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier)
 	return collections.FindFirst(dynamicTables, func(r DynamicTable) bool { return r.Name == id.Name() })
 }
 
+func (v *dynamicTables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (s *CreateDynamicTableRequest) toOpts() *createDynamicTableOptions {
 	return &createDynamicTableOptions{
 		OrReplace:   Bool(s.orReplace),

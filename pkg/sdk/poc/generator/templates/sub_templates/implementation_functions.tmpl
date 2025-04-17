@@ -5,13 +5,13 @@
 {{ range .Operations }}
     {{ if and (eq .Name "Show") .ShowMapping }}
         func (v *{{ $impl }}) Show(ctx context.Context, request *{{ .OptsField.DtoDecl }}) ([]{{ .ShowMapping.To.Name }}, error) {
-        opts := request.toOpts()
-        dbRows, err := validateAndQuery[{{ .ShowMapping.From.Name }}](v.client, ctx, opts)
-        if err != nil {
-        return nil, err
-        }
-        resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
-        return resultList, nil
+            opts := request.toOpts()
+            dbRows, err := validateAndQuery[{{ .ShowMapping.From.Name }}](v.client, ctx, opts)
+            if err != nil {
+                return nil, err
+            }
+            resultList := convertRows[{{ .ShowMapping.From.Name }}, {{ .ShowMapping.To.Name }}](dbRows)
+            return resultList, nil
         }
     {{ else if eq .Name "ShowByID" }}
         func (v *{{ $impl }}) ShowByID(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
@@ -19,42 +19,46 @@
             {{- range .ShowByIDFiltering }}.
                 {{ .WithFiltering }}
             {{- end }}
-        {{ $impl }}, err := v.Show(ctx, request)
-        if err != nil {
-        return nil, err
+            {{ $impl }}, err := v.Show(ctx, request)
+            if err != nil {
+                return nil, err
+            }
+            return collections.FindFirst({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
         }
-        return collections.FindFirst({{ $impl }}, func(r {{ .ObjectInterface.NameSingular }}) bool { return r.Name == id.Name() })
+
+        func (v *{{ $impl }}) ShowByIDSafely(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .ObjectInterface.NameSingular }}, error) {
+            return SafeShowByID(v.client, c.ShowByID, ctx, id)
         }
     {{ else if and (eq .Name "Describe") .DescribeMapping }}
         {{ if .DescribeKind }}
             {{ if eq (deref .DescribeKind) "single_value" }}
                 func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) (*{{ .DescribeMapping.To.Name }}, error) {
-                opts := &{{ .OptsField.Name }}{
-                name: id,
-                }
-                result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
-                if err != nil {
-                return nil, err
-                }
-                return result.convert(), nil
+                    opts := &{{ .OptsField.Name }}{
+                        name: id,
+                    }
+                    result, err := validateAndQueryOne[{{ .DescribeMapping.From.Name }}](v.client, ctx, opts)
+                    if err != nil {
+                        return nil, err
+                    }
+                    return result.convert(), nil
                 }
             {{ else if eq (deref .DescribeKind) "slice" }}
                 func (v *{{ $impl }}) Describe(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error) {
-                opts := &{{ .OptsField.Name }}{
-                name: id,
-                }
-                rows, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
-                if err != nil {
-                return nil, err
-                }
-                return convertRows[{{ .DescribeMapping.From.Name }}, {{ .DescribeMapping.To.Name }}](rows), nil
+                    opts := &{{ .OptsField.Name }}{
+                        name: id,
+                    }
+                    rows, err := validateAndQuery[{{ .DescribeMapping.From.Name}}](v.client, ctx, opts)
+                    if err != nil {
+                        return nil, err
+                    }
+                    return convertRows[{{ .DescribeMapping.From.Name }}, {{ .DescribeMapping.To.Name }}](rows), nil
                 }
             {{ end }}
         {{ end }}
     {{ else }}
         func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {
-        opts := request.toOpts()
-        return validateAndExec(v.client, ctx, opts)
+            opts := request.toOpts()
+            return validateAndExec(v.client, ctx, opts)
         }
     {{ end }}
 {{ end }}

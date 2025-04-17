@@ -27,6 +27,7 @@ type Warehouses interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropWarehouseOptions) error
 	Show(ctx context.Context, opts *ShowWarehouseOptions) ([]Warehouse, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*WarehouseDetails, error)
 	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
@@ -560,6 +561,10 @@ func (c *warehouses) ShowByID(ctx context.Context, id AccountObjectIdentifier) (
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (c *warehouses) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error) {
+	return SafeShowById(c.client, c.ShowByID, ctx, id)
 }
 
 // describeWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-warehouse.

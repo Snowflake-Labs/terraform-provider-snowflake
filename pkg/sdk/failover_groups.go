@@ -32,6 +32,7 @@ type FailoverGroups interface {
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropFailoverGroupOptions) error
 	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
 	ShowDatabases(ctx context.Context, id AccountObjectIdentifier) ([]AccountObjectIdentifier, error)
 	ShowShares(ctx context.Context, id AccountObjectIdentifier) ([]AccountObjectIdentifier, error)
 }
@@ -520,6 +521,10 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *failoverGroups) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // showFailoverGroupDatabasesOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-databases-in-failover-group.

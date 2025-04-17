@@ -24,6 +24,7 @@ type Alerts interface {
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropAlertOptions) error
 	Show(ctx context.Context, opts *ShowAlertOptions) ([]Alert, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*AlertDetails, error)
 }
 
@@ -305,6 +306,10 @@ func (v *alerts) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Aler
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *alerts) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Alert, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // describeAlertOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-alert.

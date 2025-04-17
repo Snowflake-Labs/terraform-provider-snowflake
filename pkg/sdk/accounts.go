@@ -26,6 +26,7 @@ type Accounts interface {
 	Alter(ctx context.Context, opts *AlterAccountOptions) error
 	Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 	Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	ShowParameters(ctx context.Context) ([]*Parameter, error)
@@ -536,6 +537,10 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 	return collections.FindFirst(accounts, func(account Account) bool {
 		return account.AccountName == id.Name()
 	})
+}
+
+func (c *accounts) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Account, error) {
+	return SafeShowById(c.client, c.ShowByID, ctx, id)
 }
 
 // DropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-account.
