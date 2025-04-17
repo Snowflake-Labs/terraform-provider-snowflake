@@ -15,3 +15,15 @@ func readDatatypeCommon(d *schema.ResourceData, key string) (datatypes.DataType,
 	}
 	return dataType, nil
 }
+
+// sqlNew is temporary as not all the data types has the temporary method implemented
+func sqlNew(dt datatypes.DataType) string {
+	switch v := dt.(type) {
+	case *datatypes.NumberDataType:
+		return v.ToSqlNew()
+	case *datatypes.TextDataType:
+		return v.ToSqlNew()
+	default:
+		return v.ToSql()
+	}
+}

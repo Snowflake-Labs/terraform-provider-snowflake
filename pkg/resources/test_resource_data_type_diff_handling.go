@@ -41,7 +41,7 @@ func TestResourceCreateDataTypeDiffHandling(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Printf("[DEBUG] corretly parsed data type %v", dataType)
+	log.Printf("[DEBUG] correctly parsed data type %v, new sql: %s", dataType, sqlNew(dataType))
 
 	d.SetId(d.Get("env_name").(string))
 	return TestResourceReadDataTypeDiffHandling(false)(ctx, d, meta)

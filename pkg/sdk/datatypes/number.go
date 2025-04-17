@@ -19,6 +19,9 @@ type NumberDataType struct {
 	precision      int
 	scale          int
 	underlyingType string
+
+	precisionKnown bool
+	scaleKnown     bool
 }
 
 func (t *NumberDataType) ToSql() string {
@@ -34,6 +37,19 @@ func (t *NumberDataType) ToLegacyDataTypeSql() string {
 
 func (t *NumberDataType) Canonical() string {
 	return fmt.Sprintf("%s(%d,%d)", NumberLegacyDataType, t.precision, t.scale)
+}
+
+func (t *NumberDataType) ToSqlNew() string {
+	switch {
+	case slices.Contains(NumberDataTypeSubTypes, t.underlyingType):
+		return t.underlyingType
+	case t.precisionKnown && t.scaleKnown:
+		return fmt.Sprintf("%s(%d, %d)", t.underlyingType, t.precision, t.scale)
+	case t.precisionKnown:
+		return fmt.Sprintf("%s(%d)", t.underlyingType, t.precision)
+	default:
+		return fmt.Sprintf("%s", t.underlyingType)
+	}
 }
 
 var (
@@ -58,7 +74,7 @@ func parseNumberDataTypeRaw(raw sanitizedDataTypeRaw) (*NumberDataType, error) {
 func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*NumberDataType, error) {
 	r := strings.TrimSpace(strings.TrimPrefix(raw.raw, raw.matchedByType))
 	if r == "" {
-		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType}, nil
+		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType, false, false}, nil
 	}
 	if !strings.HasPrefix(r, "(") || !strings.HasSuffix(r, ")") {
 		return nil, fmt.Errorf(`number %s could not be parsed, use "%s(precision, scale)" format`, raw.raw, raw.matchedByType)
@@ -71,7 +87,7 @@ func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*Number
 		if err != nil {
 			return nil, fmt.Errorf(`could not parse the number's precision: "%s", err: %w`, parts[0], err)
 		}
-		return &NumberDataType{precision, DefaultNumberScale, raw.matchedByType}, nil
+		return &NumberDataType{precision, DefaultNumberScale, raw.matchedByType, true, false}, nil
 	case 2:
 		precision, err := strconv.Atoi(strings.TrimSpace(parts[0]))
 		if err != nil {
@@ -81,7 +97,7 @@ func parseNumberDataTypeWithPrecisionAndScale(raw sanitizedDataTypeRaw) (*Number
 		if err != nil {
 			return nil, fmt.Errorf(`could not parse the number's scale: "%s", err: %w`, parts[1], err)
 		}
-		return &NumberDataType{precision, scale, raw.matchedByType}, nil
+		return &NumberDataType{precision, scale, raw.matchedByType, true, true}, nil
 	default:
 		return nil, fmt.Errorf(`number cannot have %d arguments: "%s"; only precision and scale are allowed`, l, onlyArgs)
 	}
@@ -92,7 +108,7 @@ func parseNumberDataTypeWithoutPrecisionAndScale(raw sanitizedDataTypeRaw) (*Num
 		args := strings.TrimPrefix(raw.raw, raw.matchedByType)
 		return nil, fmt.Errorf("number type %s cannot have arguments: %s", raw.matchedByType, args)
 	} else {
-		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType}, nil
+		return &NumberDataType{DefaultNumberPrecision, DefaultNumberScale, raw.matchedByType, false, false}, nil
 	}
 }
 
