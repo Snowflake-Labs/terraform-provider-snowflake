@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"log"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -36,7 +37,12 @@ func TestResourceDataTypeDiffHandling() *schema.Resource {
 }
 
 func TestResourceCreateDataTypeDiffHandling(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	// it seems that it can be almost a no-op as we don't need to set the env up; it can be set as part of the test setup.
+	dataType, err := readDatatypeCommon(d, "return_data_type")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	log.Printf("[DEBUG] corretly parsed data type %v", dataType)
+
 	d.SetId(d.Get("env_name").(string))
 	return TestResourceReadDataTypeDiffHandling(false)(ctx, d, meta)
 }
