@@ -11,7 +11,7 @@ import (
 )
 
 // generatedRandomValue is used to mask random values in GitHub Action logs.
-// It always starts with a letter and contains only letters and numbers.
+// It always starts with a letter and contains only letters.
 var generatedRandomValue string
 
 func init() {
@@ -36,7 +36,7 @@ func Comment() string {
 // 090088 (22000): ADMIN_NAME can only contain letters, numbers and underscores.
 // 090089 (22000): ADMIN_NAME must start with a letter.
 func AdminName() string {
-	return SensitiveAlphanumeric()
+	return SensitiveAlpha()
 }
 
 func Email() string {
@@ -57,6 +57,12 @@ func SensitiveString() string {
 // The string returned by SensitiveAlphanumeric always starts with a letter and contains only letters and numbers.
 func SensitiveAlphanumeric() string {
 	return generatedRandomValue + AlphanumericN(10)
+}
+
+// SensitiveAlpha returns a random string prefixed with a generated random value that is masked in GitHub Action logs.
+// The string returned by SensitiveAlphanumeric always starts with a letter and contains only letters.
+func SensitiveAlpha() string {
+	return generatedRandomValue + AlphaN(10)
 }
 
 func Bool() bool {

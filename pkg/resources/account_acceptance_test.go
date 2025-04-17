@@ -244,7 +244,7 @@ func TestAcc_Account_Rename(t *testing.T) {
 	id := acc.TestClient().Ids.RandomSensitiveAccountObjectIdentifier()
 	accountId := sdk.NewAccountIdentifier(organizationName, id.Name())
 
-	newId := random.SensitiveString()
+	newId := acc.TestClient().Ids.RandomSensitiveAccountObjectIdentifier()
 	newAccountId := sdk.NewAccountIdentifier(organizationName, newId)
 
 	email := random.Email()
