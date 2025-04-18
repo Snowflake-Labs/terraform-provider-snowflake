@@ -32,11 +32,18 @@ var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
 }()
 
 func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
+	deleteFunc := ResourceDeleteContextFunc(
+		sdk.ParseAccountObjectIdentifier,
+		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
+			return client.SecurityIntegrations.DropSafely
+		},
+	)
+
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, CreateContextApiAuthenticationIntegrationWithJwtBearer),
 		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, ReadContextApiAuthenticationIntegrationWithJwtBearer(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, UpdateContextApiAuthenticationIntegrationWithJwtBearer),
-		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, DeleteContextApiAuthenticationIntegrationWithJwtBearer),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, deleteFunc),
 		Description:   "Resource used to manage api authentication security integration objects with jwt bearer. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
 		Schema: apiAuthJwtBearerSchema,
@@ -133,7 +140,7 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 			return diag.FromErr(err)
 		}
 
-		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		integration, err := client.SecurityIntegrations.ShowByIDSafely(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
@@ -141,7 +148,7 @@ func ReadContextApiAuthenticationIntegrationWithJwtBearer(withExternalChangesMar
 					diag.Diagnostic{
 						Severity: diag.Warning,
 						Summary:  "Failed to query security integration. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
+						Detail:   fmt.Sprintf("Security integration id: %s, Err: %s", id.FullyQualifiedName(), err),
 					},
 				}
 			}
@@ -219,26 +226,4 @@ func UpdateContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context,
 		}
 	}
 	return ReadContextApiAuthenticationIntegrationWithJwtBearer(false)(ctx, d, meta)
-}
-
-func DeleteContextApiAuthenticationIntegrationWithJwtBearer(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*provider.Context).Client
-	id, err := sdk.ParseAccountObjectIdentifier(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = client.SecurityIntegrations.Drop(ctx, sdk.NewDropSecurityIntegrationRequest(id).WithIfExists(true))
-	if err != nil {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Error deleting integration",
-				Detail:   fmt.Sprintf("id %v err = %v", id.Name(), err),
-			},
-		}
-	}
-
-	d.SetId("")
-	return nil
 }

@@ -152,11 +152,18 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 }
 
 func SAML2Integration() *schema.Resource {
+	deleteFunc := ResourceDeleteContextFunc(
+		sdk.ParseAccountObjectIdentifier,
+		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
+			return client.SecurityIntegrations.DropSafely
+		},
+	)
+
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.Saml2SecurityIntegration, CreateContextSAML2Integration),
 		ReadContext:   TrackingReadWrapper(resources.Saml2SecurityIntegration, ReadContextSAML2Integration(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Saml2SecurityIntegration, UpdateContextSAML2Integration),
-		DeleteContext: TrackingDeleteWrapper(resources.Saml2SecurityIntegration, DeleteContextSAM2LIntegration),
+		DeleteContext: TrackingDeleteWrapper(resources.Saml2SecurityIntegration, deleteFunc),
 		Description:   "Resource used to manage SAML2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
 
 		Schema: saml2IntegrationSchema,
@@ -465,7 +472,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 			return diag.FromErr(err)
 		}
 
-		integration, err := client.SecurityIntegrations.ShowByID(ctx, id)
+		integration, err := client.SecurityIntegrations.ShowByIDSafely(ctx, id)
 		if err != nil {
 			if errors.Is(err, sdk.ErrObjectNotFound) {
 				d.SetId("")
@@ -473,7 +480,7 @@ func ReadContextSAML2Integration(withExternalChangesMarking bool) schema.ReadCon
 					diag.Diagnostic{
 						Severity: diag.Warning,
 						Summary:  "Failed to query security integration. Marking the resource as removed.",
-						Detail:   fmt.Sprintf("Security integration name: %s, Err: %s", id.FullyQualifiedName(), err),
+						Detail:   fmt.Sprintf("Security integration id: %s, Err: %s", id.FullyQualifiedName(), err),
 					},
 				}
 			}
