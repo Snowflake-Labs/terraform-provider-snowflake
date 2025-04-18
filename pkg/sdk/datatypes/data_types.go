@@ -156,3 +156,67 @@ func castSuccessfully[T any](a T, b DataType, invoke func(a T, b T) bool) bool {
 func noArgsDataTypesAreTheSame[T DataType](_ T, _ T) bool {
 	return true
 }
+
+// AreDefinitelyDifferent compares any two data types.
+// If both data types are nil it returns false.
+// If only one data type is nil it returns true.
+// It returns true for different underlying types.
+// For the same type it performs type-specific check.
+// TODO: test this function if approved
+// TODO: implement all missing checks if approved
+func AreDefinitelyDifferent(a DataType, b DataType) bool {
+	if a == nil && b == nil {
+		return false
+	}
+	if a == nil || b == nil {
+		return true
+	}
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return true
+	}
+	switch v := a.(type) {
+	case *ArrayDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *BinaryDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	case *BooleanDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *DateDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *FloatDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *GeographyDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *GeometryDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *NumberDataType:
+		return castSuccessfully(v, b, areNumberDataTypesDefinitelyDifferent)
+	case *ObjectDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *TableDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	case *TextDataType:
+		return castSuccessfully(v, b, areTextDataTypesDefinitelyDifferent)
+	case *TimeDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	case *TimestampLtzDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	case *TimestampNtzDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	case *TimestampTzDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	case *VariantDataType:
+		return castSuccessfully(v, b, noArgsDataTypesAreDefinitelyDifferent)
+	case *VectorDataType:
+		return castSuccessfully(v, b, willBeImplemented)
+	}
+	return false
+}
+
+func noArgsDataTypesAreDefinitelyDifferent[T DataType](_ T, _ T) bool {
+	return false
+}
+
+func willBeImplemented[T DataType](_ T, _ T) bool {
+	return false
+}

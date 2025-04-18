@@ -18,6 +18,8 @@ const (
 type TextDataType struct {
 	length         int
 	underlyingType string
+
+	lengthKnown bool
 }
 
 func (t *TextDataType) ToSql() string {
@@ -30,6 +32,20 @@ func (t *TextDataType) ToLegacyDataTypeSql() string {
 
 func (t *TextDataType) Canonical() string {
 	return fmt.Sprintf("%s(%d)", VarcharLegacyDataType, t.length)
+}
+
+func (t *TextDataType) ToSqlNew() string {
+	switch {
+	case t.lengthKnown:
+		return fmt.Sprintf("%s(%d)", t.underlyingType, t.length)
+	default:
+		return fmt.Sprintf("%s", t.underlyingType)
+	}
+}
+
+func (t *TextDataType) AsFullyKnown() DataType {
+	t.lengthKnown = true
+	return t
 }
 
 var (
@@ -45,9 +61,9 @@ func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 	if r == "" {
 		switch {
 		case slices.Contains(TextDataTypeSynonyms, raw.matchedByType):
-			return &TextDataType{DefaultVarcharLength, raw.matchedByType}, nil
+			return &TextDataType{DefaultVarcharLength, raw.matchedByType, false}, nil
 		case slices.Contains(TextDataTypeSubtypes, raw.matchedByType):
-			return &TextDataType{DefaultCharLength, raw.matchedByType}, nil
+			return &TextDataType{DefaultCharLength, raw.matchedByType, false}, nil
 		default:
 			return nil, fmt.Errorf("unknown text data type: %s", raw.raw)
 		}
@@ -60,9 +76,17 @@ func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 	if err != nil {
 		return nil, fmt.Errorf(`could not parse the varchar's length: "%s", err: %w`, lengthRaw, err)
 	}
-	return &TextDataType{length, raw.matchedByType}, nil
+	return &TextDataType{length, raw.matchedByType, true}, nil
 }
 
 func areTextDataTypesTheSame(a, b *TextDataType) bool {
 	return a.length == b.length
+}
+
+func areTextDataTypesDefinitelyDifferent(a, b *TextDataType) bool {
+	var lengthDefinitelyDifferent bool
+	if a.lengthKnown && b.lengthKnown {
+		lengthDefinitelyDifferent = a.length != b.length
+	}
+	return lengthDefinitelyDifferent
 }

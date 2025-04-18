@@ -65,6 +65,7 @@ func init() {
 
 	TestAccProvider = provider.Provider()
 	TestAccProvider.ResourcesMap["snowflake_object_renaming"] = resources.ObjectRenamingListsAndSets()
+	TestAccProvider.ResourcesMap["snowflake_test_resource_data_type_diff_handling"] = resources.TestResourceDataTypeDiffHandling()
 	TestAccProvider.ConfigureContextFunc = ConfigureProviderWithConfigCache
 
 	v5Server = TestAccProvider.GRPCProvider()
