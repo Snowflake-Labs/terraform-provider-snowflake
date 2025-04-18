@@ -1,8 +1,9 @@
 package resourceparametersassert
 
 import (
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvidentifiers"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvidentifiers"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
