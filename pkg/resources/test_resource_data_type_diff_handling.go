@@ -41,11 +41,9 @@ func TestResourceDataTypeDiffHandlingCreate(ctx context.Context, d *schema.Resou
 	envName := d.Get("env_name").(string)
 	log.Printf("[DEBUG] handling create for %s", envName)
 
-	dataType, err := readDatatypeCommon(d, "return_data_type")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if err := testResourceDataTypeDiffHandlingSet(envName, dataType); err != nil {
+	if err := handleDatatypeCreate(d, "return_data_type", func(dataType datatypes.DataType) error {
+		return testResourceDataTypeDiffHandlingSet(envName, dataType)
+	}); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -57,14 +55,10 @@ func TestResourceDataTypeDiffHandlingUpdate(ctx context.Context, d *schema.Resou
 	envName := d.Id()
 	log.Printf("[DEBUG] handling update for %s", envName)
 
-	if d.HasChange("return_data_type") {
-		dataType, err := readChangedDatatypeCommon(d, "return_data_type")
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err := testResourceDataTypeDiffHandlingSet(envName, dataType); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := handleDatatypeUpdate(d, "return_data_type", func(dataType datatypes.DataType) error {
+		return testResourceDataTypeDiffHandlingSet(envName, dataType)
+	}); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return TestResourceDataTypeDiffHandlingRead(false)(ctx, d, meta)
@@ -82,14 +76,9 @@ func TestResourceDataTypeDiffHandlingRead(withExternalChangesMarking bool) schem
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			currentConfigDataType, err := readDatatypeCommon(d, "return_data_type")
-			if err != nil {
+
+			if err := handleDatatypeSet(d, "return_data_type", externalDataType); err != nil {
 				return diag.FromErr(err)
-			}
-			if datatypes.AreDefinitelyDifferent(AsFullyKnown(currentConfigDataType), externalDataType) {
-				if err := d.Set("return_data_type", value); err != nil {
-					return diag.FromErr(err)
-				}
 			}
 		}
 

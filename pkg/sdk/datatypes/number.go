@@ -39,6 +39,19 @@ func (t *NumberDataType) Canonical() string {
 	return fmt.Sprintf("%s(%d,%d)", NumberLegacyDataType, t.precision, t.scale)
 }
 
+func (t *NumberDataType) ToSqlNew() string {
+	switch {
+	case slices.Contains(NumberDataTypeSubTypes, t.underlyingType):
+		return t.underlyingType
+	case t.precisionKnown && t.scaleKnown:
+		return fmt.Sprintf("%s(%d, %d)", t.underlyingType, t.precision, t.scale)
+	case t.precisionKnown:
+		return fmt.Sprintf("%s(%d)", t.underlyingType, t.precision)
+	default:
+		return fmt.Sprintf("%s", t.underlyingType)
+	}
+}
+
 func (t *NumberDataType) AsFullyKnown() DataType {
 	t.precisionKnown = true
 	t.scaleKnown = true
