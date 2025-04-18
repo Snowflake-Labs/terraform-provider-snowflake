@@ -17,6 +17,9 @@ type {{ .Name }} interface {
 					{{ .Name }}(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) ([]{{ .DescribeMapping.To.Name }}, error)
 				{{- end }}
 			{{- end }}
+		{{- else if eq .Name "Drop" }}
+			Drop(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
+			DropSafely(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) error
 		{{- else }}
 			{{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error
 		{{- end -}}
