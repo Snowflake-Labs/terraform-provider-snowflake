@@ -30,6 +30,8 @@ NOTE: With this change, we are not bringing back the `account` field yet. This m
 
 References: [#3553](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3553)
 
+[//]: # (// TODO: Document new Read and Delete behavior, and mention grants and attachments that we have plans for those)
+
 ### Fixes in handling references to computed fields in context of `show_output`
 The issue could arise in almost any object using show_output when the following steps happen:
 1. Object is created.
