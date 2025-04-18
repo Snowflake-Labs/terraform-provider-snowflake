@@ -3,13 +3,15 @@ package resourceparametersassert
 import (
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvidentifiers"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 )
 
 func (u *UserResourceParametersAssert) HasAllDefaults() *UserResourceParametersAssert {
 	return u.
 		HasEnableUnredactedQuerySyntaxError(false).
-		HasNetworkPolicy("").
+		HasNetworkPolicy(testenvidentifiers.NetworkPolicy.Name()).
 		HasPreventUnloadToInternalStages(false).
 		HasAbortDetachedQuery(false).
 		HasAutocommit(true).

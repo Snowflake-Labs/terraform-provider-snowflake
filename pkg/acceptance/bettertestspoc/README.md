@@ -405,6 +405,7 @@ func (w *WarehouseDatasourceShowOutputAssert) IsEmpty() {
 - remove schema.TypeMap workaround or make it wiser (e.g. during generation we could programmatically gather all schema.TypeMap and use this workaround only for them)
 - support asserting resource id in `assert/resourceassert/*_gen.go`
 - add possibility for object parameter assert not take any identifier (currently there's a workaround in `account_parameters_snowflake_gen.go`, because `SHOW PARAMETERS FOR ACCOUNT` don't take any identifiers)
+- SNOW-2048330: add possibility to override the default value (and optionally default level) used in HasAllDefaults -> HasDefaultParameterValueOnLevel parameter assertions (it's required for cases like asserting `NETWORK_POLICY` which is predefined for our testing environments and causes test failures)
 
 ## Known limitations
 - generating provider config may misbehave when used only with one object/map paramter (like `params`), e.g.:
