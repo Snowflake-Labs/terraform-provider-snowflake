@@ -36,7 +36,7 @@ func TestLoadConfigFile(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := LoadConfigFile[ConfigDTO](configPath, true)
+	m, err := LoadConfigFile[*ConfigDTO](configPath, true)
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", *m["default"].AccountName)
 	assert.Equal(t, "TEST_ORG", *m["default"].OrganizationName)
@@ -58,9 +58,9 @@ func TestLoadConfigFileWithUnknownFields(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := LoadConfigFile[ConfigDTO](configPath, true)
+	m, err := LoadConfigFile[*ConfigDTO](configPath, true)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]ConfigDTO{
+	assert.Equal(t, map[string]*ConfigDTO{
 		"default": {
 			AccountName: Pointer("TEST_ACCOUNT"),
 		},
@@ -112,7 +112,7 @@ func TestLoadConfigFileWithInvalidFieldTypeFails(t *testing.T) {
 		`, tt.fieldName)
 			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-			_, err := LoadConfigFile[ConfigDTO](configPath, true)
+			_, err := LoadConfigFile[*ConfigDTO](configPath, true)
 			require.ErrorContains(t, err, fmt.Sprintf("toml: cannot decode TOML integer into struct field sdk.ConfigDTO.%s of type %s", tt.name, tt.wantType))
 		})
 	}
@@ -140,7 +140,7 @@ func TestLoadConfigFileWithInvalidFieldTypeIntFails(t *testing.T) {
 		`, tt.fieldName)
 			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-			_, err := LoadConfigFile[ConfigDTO](configPath, true)
+			_, err := LoadConfigFile[*ConfigDTO](configPath, true)
 			require.ErrorContains(t, err, "toml: incomplete number")
 		})
 	}
@@ -205,7 +205,7 @@ func TestLoadConfigFileWithInvalidTOMLFails(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configPath := testhelpers.TestFile(t, "config", []byte(tt.config))
 
-			_, err := LoadConfigFile[ConfigDTO](configPath, true)
+			_, err := LoadConfigFile[*ConfigDTO](configPath, true)
 			require.ErrorContains(t, err, tt.err)
 			require.NotContains(t, err.Error(), "sensitive")
 		})

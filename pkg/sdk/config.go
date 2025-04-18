@@ -21,6 +21,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// ConfigProvider is an interface that allows us to use the same code to parse both the new and legacy config formats.
+type ConfigProvider interface {
+	*ConfigDTO | *LegacyConfigDTO
+	DriverConfig() (gosnowflake.Config, error)
+}
+
+// FileReaderConfig is a struct that holds the configuration for the file reader.
 type FileReaderConfig struct {
 	verifyPermissions   bool
 	useLegacyTomlFormat bool
@@ -48,10 +55,6 @@ func DefaultConfig(opts ...func(*FileReaderConfig)) *gosnowflake.Config {
 }
 
 func ProfileConfig(profile string, opts ...func(*FileReaderConfig)) (*gosnowflake.Config, error) {
-	if profile == "" {
-		profile = "default"
-	}
-	log.Printf("[DEBUG] Retrieving %s profile from a TOML file", profile)
 	cfg := FileReaderConfig{
 		verifyPermissions:   false,
 		useLegacyTomlFormat: true,
@@ -64,11 +67,15 @@ func ProfileConfig(profile string, opts ...func(*FileReaderConfig)) (*gosnowflak
 		return nil, err
 	}
 
+	if profile == "" {
+		profile = "default"
+	}
+	log.Printf("[DEBUG] Retrieving %s profile from a TOML file", profile)
 	var config *gosnowflake.Config
 	if cfg.useLegacyTomlFormat {
-		config, err = LoadProfileFromLegacyFile(profile, path, cfg.verifyPermissions)
+		config, err = LoadProfileFromFile[*LegacyConfigDTO](profile, path, cfg.verifyPermissions)
 	} else {
-		config, err = LoadProfileFromFile(profile, path, cfg.verifyPermissions)
+		config, err = LoadProfileFromFile[*ConfigDTO](profile, path, cfg.verifyPermissions)
 	}
 	if err != nil {
 		return nil, err
@@ -381,8 +388,9 @@ func pointerUrlAttributeSet(src *string, dst **url.URL) error {
 	return nil
 }
 
-func LoadProfileFromFile(profile string, path string, verifyPermissions bool) (*gosnowflake.Config, error) {
-	configs, err := LoadConfigFile[ConfigDTO](path, verifyPermissions)
+// LoadProfileFromFile loads a config file from the path and returns a ready configuration.
+func LoadProfileFromFile[T ConfigProvider](profile string, path string, verifyPermissions bool) (*gosnowflake.Config, error) {
+	configs, err := LoadConfigFile[T](path, verifyPermissions)
 	if err != nil {
 		return nil, fmt.Errorf("could not load config file: %w", err)
 	}
@@ -397,23 +405,8 @@ func LoadProfileFromFile(profile string, path string, verifyPermissions bool) (*
 	return nil, nil
 }
 
-func LoadProfileFromLegacyFile(profile string, path string, verifyPermissions bool) (*gosnowflake.Config, error) {
-	configs, err := LoadConfigFile[LegacyConfigDTO](path, verifyPermissions)
-	if err != nil {
-		return nil, fmt.Errorf("could not load config file: %w", err)
-	}
-	if cfg, ok := configs[profile]; ok {
-		log.Printf("[DEBUG] Loading config for profile: \"%s\"", profile)
-		driverCfg, err := cfg.DriverConfig()
-		if err != nil {
-			return nil, fmt.Errorf("converting profile \"%s\" in file %s failed: %w", profile, path, err)
-		}
-		return &driverCfg, nil
-	}
-	return nil, nil
-}
-
-func LoadConfigFile[T ConfigDTO | LegacyConfigDTO](path string, verifyPermissions bool) (map[string]T, error) {
+// LoadConfigFile loads a config file from the path and returns a map of profiles to one of the TOML formats.
+func LoadConfigFile[T ConfigProvider](path string, verifyPermissions bool) (map[string]T, error) {
 	data, err := oswrapper.ReadFileSafe(path, verifyPermissions)
 	if err != nil {
 		return nil, err
