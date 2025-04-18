@@ -32,18 +32,11 @@ var apiAuthJwtBearerSchema = func() map[string]*schema.Schema {
 }()
 
 func ApiAuthenticationIntegrationWithJwtBearer() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, CreateContextApiAuthenticationIntegrationWithJwtBearer),
 		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, ReadContextApiAuthenticationIntegrationWithJwtBearer(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, UpdateContextApiAuthenticationIntegrationWithJwtBearer),
-		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithJwtBearer, DeleteSecurityIntegration),
 		Description:   "Resource used to manage api authentication security integration objects with jwt bearer. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
 		Schema: apiAuthJwtBearerSchema,

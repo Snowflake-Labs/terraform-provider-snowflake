@@ -29,18 +29,11 @@ var apiAuthClientCredentialsSchema = func() map[string]*schema.Schema {
 }()
 
 func ApiAuthenticationIntegrationWithClientCredentials() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, CreateContextApiAuthenticationIntegrationWithClientCredentials),
 		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, ReadContextApiAuthenticationIntegrationWithClientCredentials(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, UpdateContextApiAuthenticationIntegrationWithClientCredentials),
-		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithClientCredentials, DeleteSecurityIntegration),
 		Description:   "Resource used to manage api authentication security integration objects with client credentials. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
 		Schema: apiAuthClientCredentialsSchema,

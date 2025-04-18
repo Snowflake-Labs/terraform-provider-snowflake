@@ -120,20 +120,13 @@ var oauthIntegrationForPartnerApplicationsSchema = map[string]*schema.Schema{
 }
 
 func OauthIntegrationForPartnerApplications() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		Schema: oauthIntegrationForPartnerApplicationsSchema,
 
 		CreateContext: TrackingCreateWrapper(resources.OauthIntegrationForPartnerApplications, CreateContextOauthIntegrationForPartnerApplications),
 		ReadContext:   TrackingReadWrapper(resources.OauthIntegrationForPartnerApplications, ReadContextOauthIntegrationForPartnerApplications(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.OauthIntegrationForPartnerApplications, UpdateContextOauthIntegrationForPartnerApplications),
-		DeleteContext: TrackingDeleteWrapper(resources.OauthIntegrationForPartnerApplications, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.OauthIntegrationForPartnerApplications, DeleteSecurityIntegration),
 		Description:   "Resource used to manage oauth security integration for partner applications objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.OauthIntegrationForPartnerApplications, customdiff.All(

@@ -155,18 +155,11 @@ var externalOauthIntegrationSchema = map[string]*schema.Schema{
 }
 
 func ExternalOauthIntegration() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ExternalOauthSecurityIntegration, CreateContextExternalOauthIntegration),
 		ReadContext:   TrackingReadWrapper(resources.ExternalOauthSecurityIntegration, ReadContextExternalOauthIntegration(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.ExternalOauthSecurityIntegration, UpdateContextExternalOauthIntegration),
-		DeleteContext: TrackingDeleteWrapper(resources.ExternalOauthSecurityIntegration, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.ExternalOauthSecurityIntegration, DeleteSecurityIntegration),
 		Description:   "Resource used to manage external oauth security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-external).",
 
 		Schema: externalOauthIntegrationSchema,

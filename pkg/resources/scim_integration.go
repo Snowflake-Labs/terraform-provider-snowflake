@@ -90,18 +90,11 @@ var scimIntegrationSchema = map[string]*schema.Schema{
 }
 
 func SCIMIntegration() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ScimSecurityIntegration, CreateContextSCIMIntegration),
 		ReadContext:   TrackingReadWrapper(resources.ScimSecurityIntegration, ReadContextSCIMIntegration(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.ScimSecurityIntegration, UpdateContextSCIMIntegration),
-		DeleteContext: TrackingDeleteWrapper(resources.ScimSecurityIntegration, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.ScimSecurityIntegration, DeleteSecurityIntegration),
 		Description:   "Resource used to manage scim security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-scim).",
 
 		Schema: scimIntegrationSchema,

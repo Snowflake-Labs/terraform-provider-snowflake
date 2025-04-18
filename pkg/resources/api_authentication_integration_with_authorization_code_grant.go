@@ -34,18 +34,11 @@ var apiAuthAuthorizationCodeGrantSchema = func() map[string]*schema.Schema {
 }()
 
 func ApiAuthenticationIntegrationWithAuthorizationCodeGrant() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, CreateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant),
 		ReadContext:   TrackingReadWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, ReadContextApiAuthenticationIntegrationWithAuthorizationCodeGrant(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, UpdateContextApiAuthenticationIntegrationWithAuthorizationCodeGrant),
-		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, DeleteSecurityIntegration),
 		Description:   "Resource used to manage api authentication security integration objects with authorization code grant. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.ApiAuthenticationIntegrationWithAuthorizationCodeGrant, customdiff.All(

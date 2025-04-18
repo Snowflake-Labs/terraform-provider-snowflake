@@ -152,18 +152,11 @@ var saml2IntegrationSchema = map[string]*schema.Schema{
 }
 
 func SAML2Integration() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		CreateContext: TrackingCreateWrapper(resources.Saml2SecurityIntegration, CreateContextSAML2Integration),
 		ReadContext:   TrackingReadWrapper(resources.Saml2SecurityIntegration, ReadContextSAML2Integration(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.Saml2SecurityIntegration, UpdateContextSAML2Integration),
-		DeleteContext: TrackingDeleteWrapper(resources.Saml2SecurityIntegration, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.Saml2SecurityIntegration, DeleteSecurityIntegration),
 		Description:   "Resource used to manage SAML2 security integration objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-saml2).",
 
 		Schema: saml2IntegrationSchema,

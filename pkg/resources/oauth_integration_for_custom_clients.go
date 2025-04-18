@@ -163,20 +163,13 @@ var oauthIntegrationForCustomClientsSchema = map[string]*schema.Schema{
 }
 
 func OauthIntegrationForCustomClients() *schema.Resource {
-	deleteFunc := ResourceDeleteContextFunc(
-		sdk.ParseAccountObjectIdentifier,
-		func(client *sdk.Client) DropSafelyFunc[sdk.AccountObjectIdentifier] {
-			return client.SecurityIntegrations.DropSafely
-		},
-	)
-
 	return &schema.Resource{
 		Schema: oauthIntegrationForCustomClientsSchema,
 
 		CreateContext: TrackingCreateWrapper(resources.OauthIntegrationForCustomClients, CreateContextOauthIntegrationForCustomClients),
 		ReadContext:   TrackingReadWrapper(resources.OauthIntegrationForCustomClients, ReadContextOauthIntegrationForCustomClients(true)),
 		UpdateContext: TrackingUpdateWrapper(resources.OauthIntegrationForCustomClients, UpdateContextOauthIntegrationForCustomClients),
-		DeleteContext: TrackingDeleteWrapper(resources.OauthIntegrationForCustomClients, deleteFunc),
+		DeleteContext: TrackingDeleteWrapper(resources.OauthIntegrationForCustomClients, DeleteSecurityIntegration),
 		Description:   "Resource used to manage oauth security integration for custom clients objects. For more information, check [security integrations documentation](https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-oauth-snowflake).",
 
 		CustomizeDiff: TrackingCustomDiffWrapper(resources.OauthIntegrationForCustomClients, customdiff.All(
