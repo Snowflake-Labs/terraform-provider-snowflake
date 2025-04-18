@@ -70,7 +70,7 @@ provider "snowflake" {
 
 **Warning: these values are passed directly to the gosnowflake library, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
 
--> **Note: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
+-> **Note**: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
 
 -> **Note** If a field has a default value, it is shown next to the type in the schema. Most of the values in provider schema can be sourced from environment value (check field descriptions), but If a specified environment variable is not found, then the driver's default value is used instead.
 
@@ -117,6 +117,7 @@ provider "snowflake" {
 - `tmp_directory_path` (String) Sets temporary directory used by the driver for operations like encrypting, compressing etc. Can also be sourced from the `SNOWFLAKE_TMP_DIRECTORY_PATH` environment variable.
 - `token` (String, Sensitive) Token to use for OAuth and other forms of token based auth. Can also be sourced from the `SNOWFLAKE_TOKEN` environment variable.
 - `token_accessor` (Block List, Max: 1) (see [below for nested schema](#nestedblock--token_accessor))
+- `use_legacy_toml_file` (Boolean) True by default. When this is set to true, the provider expects the legacy TOML format. Otherwise, it expects the new format. See more in [the section below](#order-precedence) Can also be sourced from the `SNOWFLAKE_USE_LEGACY_TOML_FILE` environment variable.
 - `user` (String) Username. Required unless using `profile`. Can also be sourced from the `SNOWFLAKE_USER` environment variable.
 - `validate_default_parameters` (String) True by default. If false, disables the validation checks for Database, Schema, Warehouse and Role at the time a connection is established. Can also be sourced from the `SNOWFLAKE_VALIDATE_DEFAULT_PARAMETERS` environment variable.
 - `warehouse` (String) Specifies the virtual warehouse to use by default for queries, loading, etc. in the client session. Can also be sourced from the `SNOWFLAKE_WAREHOUSE` environment variable.
@@ -277,9 +278,9 @@ password='password'
 role='ACCOUNTADMIN'
 ```
 
--> **Note: TOML file size is limited to 10MB.
+-> **Note**: TOML file size is limited to 10MB.
 
--> **Note: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
+-> **Note**: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
 
 Not all fields must be configured in one source; users can choose which fields are configured in which source.
 Provider uses an established hierarchy of sources. The current behavior is that for each field:
@@ -289,7 +290,50 @@ Provider uses an established hierarchy of sources. The current behavior is that 
 
 -> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https://github.com/snowflakedb/terraform-provider-snowflake/issues/3332). This will be fixed in the future.
 
-An example TOML file contents:
+-> **Note** Currently both legacy and new formats are supported. The new format can be enabled with setting `use_legacy_toml_file = false` in the provider configuration. We encourage using the new format for now, as it will be a default one in v2 version of the provider. The differences between these formats are:
+- The keys in the provider contain an underscore (`_`) as a separator, but the TOML schema has fields without any separator.
+- The field `driver_tracing` in the provider is related to `tracing` in the TOML schema.
+
+An example new TOML file contents:
+
+```toml
+[example]
+account_name = 'account_name'
+organization_name = 'organization_name'
+user = 'user'
+password = 'password'
+warehouse = 'SNOWFLAKE'
+role = 'ACCOUNTADMIN'
+client_ip = '1.2.3.4'
+protocol = 'https'
+port = 443
+okta_url = 'https://example.com'
+client_timeout = 10
+jwt_client_timeout = 20
+login_timeout = 30
+request_timeout = 40
+jwt_expire_timeout = 50
+external_browser_timeout = 60
+max_retry_count = 1
+authenticator = 'snowflake'
+insecure_mode = true
+ocsp_fail_open = true
+keep_session_alive = true
+disable_telemetry = true
+validate_default_parameters = true
+client_request_mfa_token = true
+client_store_temporary_credential = true
+driver_tracing = 'info'
+tmp_dir_path = '/tmp/terraform-provider/'
+disable_query_context_cache = true
+include_retry_reason = true
+disable_console_login = true
+
+[example.params]
+param_key = 'param_value'
+```
+
+An example legacy TOML file contents:
 
 ```toml
 [example]

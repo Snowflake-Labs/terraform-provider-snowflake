@@ -12,7 +12,23 @@ across different versions.
 > [!TIP]
 > If you're still using the `Snowflake-Labs/snowflake` source, see [Upgrading from Snowflake-Labs Provider](./SNOWFLAKEDB_MIGRATION.md) to upgrade to the snowflakedb namespace.
 
-## v1.1.0 ➞ v1.1.1
+## v1.1.0 ➞ v1.2.0
+
+### New TOML file schema
+The TOML file schema before v1.2.0 was not consistent with the configuration keys in the provider. The main differences were:
+- The keys in the provider contain an underscore (`_`) as a separator, but the TOML schema has fields without any separator.
+- The field `driver_tracing` in the provider is related to `tracing` in the TOML schema.
+
+These differences caused some confusion for the users. This is why we decided to introduce a new TOML schema addressing these flaws.
+The new schema uses underscore (`_`) as a separator, and changes `tracing` to `driver_tracing` to be consistent with the provider schema.
+You can see an example in [our registry](https://registry.terraform.io/providers/snowflakedb/snowflake/1.2.0/docs#order-precedence).
+
+The default behavior is the same as before v1.2.0. You can enable the new behavior by setting `use_legacy_toml_file = false` in the provider, or by setting `SNOWFLAKE_USE_LEGACY_TOML_FILE=false` environmental variable.
+Please note that we will change the default behavior in v2: the new TOML schema will be read by default, but there will still be a possibility to read the old format. However, we encourage you to use our new schema now and give us feedback.
+
+NOTE: With this change, we are not bringing back the `account` field yet. This means that `account_name` and `organization_name` fields must still be used. We will discuss about this field after v2.
+
+References: [#3553](https://github.com/snowflakedb/terraform-provider-snowflake/issues/3553)
 
 ### Fixes in handling references to computed fields in context of `show_output`
 The issue could arise in almost any object using show_output when the following steps happen:

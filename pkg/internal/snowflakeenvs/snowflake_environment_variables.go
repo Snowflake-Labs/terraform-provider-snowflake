@@ -46,6 +46,7 @@ const (
 	TmpDirectoryPath                   = "SNOWFLAKE_TMP_DIRECTORY_PATH"
 	DisableConsoleLogin                = "SNOWFLAKE_DISABLE_CONSOLE_LOGIN"
 	SkipTomlFilePermissionVerification = "SNOWFLAKE_SKIP_TOML_FILE_PERMISSION_VERIFICATION"
+	UseLegacyTomlFile                  = "SNOWFLAKE_USE_LEGACY_TOML_FILE"
 
 	ConfigPath = "SNOWFLAKE_CONFIG_PATH"
 )

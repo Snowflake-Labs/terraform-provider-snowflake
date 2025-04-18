@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testprofiles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
@@ -24,13 +25,26 @@ import (
 
 // TODO [SNOW-1827310]: use generated config for these tests
 func TestInt_Client_NewClient(t *testing.T) {
-	t.Run("with default config", func(t *testing.T) {
+	t.Run("with default config (legacy)", func(t *testing.T) {
 		config := sdk.DefaultConfig(sdk.WithVerifyPermissions(true))
 		_, err := sdk.NewClient(config)
 		require.NoError(t, err)
 	})
 
-	t.Run("with missing config", func(t *testing.T) {
+	t.Run("with config", func(t *testing.T) {
+		tmpServiceUser := testClientHelper().SetUpTemporaryServiceUser(t)
+		tmpServiceUserConfig := testClientHelper().StoreTempTomlConfig(t, func(profile string) string {
+			return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+		})
+		t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+
+		config, err := sdk.ProfileConfig(tmpServiceUserConfig.Profile, sdk.WithVerifyPermissions(true), sdk.WithUseLegacyTomlFormat(false))
+		require.NoError(t, err)
+		_, err = sdk.NewClient(config)
+		require.NoError(t, err)
+	})
+
+	t.Run("with missing config (legacy)", func(t *testing.T) {
 		dir, err := os.UserHomeDir()
 		require.NoError(t, err)
 		t.Setenv(snowflakeenvs.ConfigPath, dir)
@@ -40,7 +54,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.ErrorContains(t, err, "260000: account is empty")
 	})
 
-	t.Run("with incorrect config", func(t *testing.T) {
+	t.Run("with incorrect config (legacy)", func(t *testing.T) {
 		tmpServiceUser := testClientHelper().SetUpTemporaryServiceUser(t)
 		tmpServiceUserConfig := testClientHelper().TempIncorrectTomlConfigForServiceUser(t, tmpServiceUser)
 
@@ -54,7 +68,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.ErrorContains(t, err, "JWT token is invalid")
 	})
 
-	t.Run("with too big file", func(t *testing.T) {
+	t.Run("with too big file (legacy)", func(t *testing.T) {
 		c := make([]byte, 11*1024*1024)
 		tomlConfig := testClientHelper().StoreTempTomlConfig(t, func(profile string) string {
 			return string(c)
@@ -66,7 +80,7 @@ func TestInt_Client_NewClient(t *testing.T) {
 		require.ErrorContains(t, err, fmt.Sprintf("could not load config file: config file %s is too big - maximum allowed size is 10MB", tomlConfig.Path))
 	})
 
-	t.Run("with incorrect privileges and enabled check", func(t *testing.T) {
+	t.Run("with incorrect privileges and enabled check (legacy)", func(t *testing.T) {
 		if oswrapper.IsRunningOnWindows() {
 			t.Skip("checking file permissions on Windows is currently done in manual tests package")
 		}

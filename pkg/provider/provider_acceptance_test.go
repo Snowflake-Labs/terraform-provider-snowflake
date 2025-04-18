@@ -293,6 +293,124 @@ func TestAcc_Provider_LegacyTomlConfig(t *testing.T) {
 	})
 }
 
+func TestAcc_Provider_TomlConfig(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+	})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+
+			t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile).WithUseLegacyTomlFile(false), datasourceModel()),
+				Check: func(s *terraform.State) error {
+					config := acc.TestAccProvider.Meta().(*internalprovider.Context).Client.GetConfig()
+					assert.Equal(t, tmpServiceUser.OrgAndAccount(), config.Account)
+					assert.Equal(t, tmpServiceUser.UserId.Name(), config.User)
+					assert.Equal(t, tmpServiceUser.WarehouseId.Name(), config.Warehouse)
+					assert.Equal(t, tmpServiceUser.RoleId.Name(), config.Role)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ValidateDefaultParameters)
+					assert.Equal(t, net.ParseIP("1.2.3.4"), config.ClientIP)
+					assert.Equal(t, "https", config.Protocol)
+					assert.Equal(t, fmt.Sprintf("%s.snowflakecomputing.com", tmpServiceUser.OrgAndAccount()), config.Host)
+					assert.Equal(t, 443, config.Port)
+					assert.Equal(t, gosnowflake.AuthTypeJwt, config.Authenticator)
+					assert.Equal(t, false, config.PasscodeInPassword)
+					assert.Equal(t, testvars.ExampleOktaUrl, config.OktaURL)
+					assert.Equal(t, 30*time.Second, config.LoginTimeout)
+					assert.Equal(t, 40*time.Second, config.RequestTimeout)
+					assert.Equal(t, 50*time.Second, config.JWTExpireTimeout)
+					assert.Equal(t, 10*time.Second, config.ClientTimeout)
+					assert.Equal(t, 20*time.Second, config.JWTClientTimeout)
+					assert.Equal(t, 60*time.Second, config.ExternalBrowserTimeout)
+					assert.Equal(t, 1, config.MaxRetryCount)
+					assert.Equal(t, "terraform-provider-snowflake", config.Application)
+					assert.Equal(t, true, config.InsecureMode) //nolint:staticcheck
+					assert.Equal(t, gosnowflake.OCSPFailOpenTrue, config.OCSPFailOpen)
+					assert.Equal(t, "token", config.Token)
+					assert.Equal(t, true, config.KeepSessionAlive)
+					assert.Equal(t, true, config.DisableTelemetry)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), config.Tracing)
+					assert.Equal(t, ".", config.TmpDirPath)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientRequestMfaToken)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.ClientStoreTemporaryCredential)
+					assert.Equal(t, true, config.DisableQueryContextCache)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.IncludeRetryReason)
+					assert.Equal(t, gosnowflake.ConfigBoolTrue, config.DisableConsoleLogin)
+					assert.Equal(t, map[string]*string{
+						"foo": sdk.Pointer("bar"),
+					}, config.Params)
+					assert.Equal(t, string(sdk.DriverLogLevelWarning), gosnowflake.GetLogger().GetLogLevel())
+
+					return nil
+				},
+			},
+		},
+	})
+}
+
+func TestAcc_Provider_TomlConfigFailsIfFormatsMismatch(t *testing.T) {
+	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
+	acc.TestAccPreCheck(t)
+	t.Setenv(string(testenvs.ConfigureClientOnce), "")
+
+	tmpServiceUser := acc.TestClient().SetUpTemporaryServiceUser(t)
+	tmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+	})
+
+	legacyTomlTmpServiceUserConfig := acc.TestClient().StoreTempTomlConfig(t, func(profile string) string {
+		return helpers.FullLegacyTomlConfigForServiceUser(t, profile, tmpServiceUser.UserId, tmpServiceUser.RoleId, tmpServiceUser.WarehouseId, tmpServiceUser.AccountId, tmpServiceUser.PrivateKey)
+	})
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
+		PreCheck: func() {
+			acc.TestAccPreCheck(t)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.User)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.Password)
+			testenvs.AssertEnvNotSet(t, snowflakeenvs.ConfigPath)
+		},
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			// Try reading the legacy format, but provide a file with the new format.
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, tmpServiceUserConfig.Path)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(tmpServiceUserConfig.Profile), datasourceModel()),
+				ExpectError: regexp.MustCompile("account is empty"),
+			},
+			// Try reading the new format, but provide a file with the legacy format.
+			{
+				PreConfig: func() {
+					t.Setenv(snowflakeenvs.ConfigPath, legacyTomlTmpServiceUserConfig.Path)
+				},
+				Config:      config.FromModels(t, providermodel.SnowflakeProvider().WithProfile(legacyTomlTmpServiceUserConfig.Profile).WithUseLegacyTomlFile(false), datasourceModel()),
+				ExpectError: regexp.MustCompile("account is empty"),
+			},
+		},
+	})
+}
+
 func TestAcc_Provider_tomlConfigIsTooBig(t *testing.T) {
 	_ = testenvs.GetOrSkipTest(t, testenvs.EnableAcceptance)
 	acc.TestAccPreCheck(t)

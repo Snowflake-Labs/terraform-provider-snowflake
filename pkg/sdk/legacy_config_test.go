@@ -35,7 +35,7 @@ func TestLoadConfigFileLegacy(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := LoadConfigFile[LegacyConfigDTO](configPath, true)
+	m, err := LoadConfigFile[*LegacyConfigDTO](configPath, true)
 	require.NoError(t, err)
 	assert.Equal(t, "TEST_ACCOUNT", *m["default"].AccountName)
 	assert.Equal(t, "TEST_ORG", *m["default"].OrganizationName)
@@ -57,9 +57,9 @@ func TestLoadConfigFileWithUnknownFieldsLegacy(t *testing.T) {
 	`
 	configPath := testhelpers.TestFile(t, "config", []byte(c))
 
-	m, err := LoadConfigFile[LegacyConfigDTO](configPath, true)
+	m, err := LoadConfigFile[*LegacyConfigDTO](configPath, true)
 	require.NoError(t, err)
-	assert.Equal(t, map[string]LegacyConfigDTO{
+	assert.Equal(t, map[string]*LegacyConfigDTO{
 		"default": {
 			AccountName: Pointer("TEST_ACCOUNT"),
 		},
@@ -97,7 +97,7 @@ func TestLoadConfigFileWithInvalidFieldTypeFailsLegacy(t *testing.T) {
 		{name: "ValidateDefaultParameters", fieldName: "validatedefaultparameters", wantType: "*bool"},
 		{name: "ClientRequestMfaToken", fieldName: "clientrequestmfatoken", wantType: "*bool"},
 		{name: "ClientStoreTemporaryCredential", fieldName: "clientstoretemporarycredential", wantType: "*bool"},
-		{name: "Tracing", fieldName: "tracing", wantType: "*string"},
+		{name: "DriverTracing", fieldName: "tracing", wantType: "*string"},
 		{name: "TmpDirPath", fieldName: "tmpdirpath", wantType: "*string"},
 		{name: "DisableQueryContextCache", fieldName: "disablequerycontextcache", wantType: "*bool"},
 		{name: "IncludeRetryReason", fieldName: "includeretryreason", wantType: "*bool"},
@@ -111,7 +111,7 @@ func TestLoadConfigFileWithInvalidFieldTypeFailsLegacy(t *testing.T) {
 		`, tt.fieldName)
 			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-			_, err := LoadConfigFile[LegacyConfigDTO](configPath, true)
+			_, err := LoadConfigFile[*LegacyConfigDTO](configPath, true)
 			require.ErrorContains(t, err, fmt.Sprintf("toml: cannot decode TOML integer into struct field sdk.LegacyConfigDTO.%s of type %s", tt.name, tt.wantType))
 		})
 	}
@@ -139,7 +139,7 @@ func TestLoadConfigFileWithInvalidFieldTypeIntFailsLegacy(t *testing.T) {
 		`, tt.fieldName)
 			configPath := testhelpers.TestFile(t, "config", []byte(config))
 
-			_, err := LoadConfigFile[LegacyConfigDTO](configPath, true)
+			_, err := LoadConfigFile[*LegacyConfigDTO](configPath, true)
 			require.ErrorContains(t, err, "toml: incomplete number")
 		})
 	}
@@ -204,7 +204,7 @@ func TestLoadConfigFileWithInvalidTOMLFailsLegacy(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configPath := testhelpers.TestFile(t, "config", []byte(tt.config))
 
-			_, err := LoadConfigFile[LegacyConfigDTO](configPath, true)
+			_, err := LoadConfigFile[*LegacyConfigDTO](configPath, true)
 			require.ErrorContains(t, err, tt.err)
 			require.NotContains(t, err.Error(), "sensitive")
 		})
