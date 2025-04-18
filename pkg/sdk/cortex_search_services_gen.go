@@ -11,8 +11,10 @@ type CortexSearchServices interface {
 	Alter(ctx context.Context, request *AlterCortexSearchServiceRequest) error
 	Show(ctx context.Context, request *ShowCortexSearchServiceRequest) ([]CortexSearchService, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchServiceDetails, error)
 	Drop(ctx context.Context, request *DropCortexSearchServiceRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 }
 
 // CreateCortexSearchServiceOptions is based on https://docs.snowflake.com/LIMITEDACCESS/cortex-search/sql/create-cortex-search.

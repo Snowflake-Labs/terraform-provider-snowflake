@@ -52,6 +52,10 @@ func (v *streamlits) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*
 	return collections.FindFirst(streamlits, func(r Streamlit) bool { return r.Name == id.Name() })
 }
 
+func (v *streamlits) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *streamlits) Describe(ctx context.Context, id SchemaObjectIdentifier) (*StreamlitDetail, error) {
 	opts := &DescribeStreamlitOptions{
 		name: id,

@@ -44,6 +44,10 @@ func (v *cortexSearchServices) ShowByID(ctx context.Context, id SchemaObjectIden
 	return collections.FindFirst(cortexSearchServices, func(r CortexSearchService) bool { return r.Name == id.Name() })
 }
 
+func (v *cortexSearchServices) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchService, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *cortexSearchServices) Describe(ctx context.Context, id SchemaObjectIdentifier) (*CortexSearchServiceDetails, error) {
 	opts := &DescribeCortexSearchServiceOptions{
 		name: id,
@@ -58,6 +62,10 @@ func (v *cortexSearchServices) Describe(ctx context.Context, id SchemaObjectIden
 func (v *cortexSearchServices) Drop(ctx context.Context, request *DropCortexSearchServiceRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *cortexSearchServices) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropCortexSearchServiceRequest(id).WithIfExists(true)) }, ctx, id)
 }
 
 func (r *CreateCortexSearchServiceRequest) toOpts() *CreateCortexSearchServiceOptions {

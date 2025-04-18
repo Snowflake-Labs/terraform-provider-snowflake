@@ -43,6 +43,10 @@ func (v *tasks) Drop(ctx context.Context, request *DropTaskRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *tasks) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropTaskRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *tasks) Show(ctx context.Context, request *ShowTaskRequest) ([]Task, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[taskDBRow](v.client, ctx, opts)
@@ -62,6 +66,10 @@ func (v *tasks) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Task,
 		return nil, err
 	}
 	return collections.FindFirst(tasks, func(r Task) bool { return r.Name == id.Name() })
+}
+
+func (v *tasks) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Task, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *tasks) ShowParameters(ctx context.Context, id SchemaObjectIdentifier) ([]*Parameter, error) {

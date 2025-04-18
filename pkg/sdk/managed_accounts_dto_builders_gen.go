@@ -24,8 +24,8 @@ func NewCreateManagedAccountParamsRequest(
 	return &s
 }
 
-func (s *CreateManagedAccountParamsRequest) WithComment(Comment *string) *CreateManagedAccountParamsRequest {
-	s.Comment = Comment
+func (s *CreateManagedAccountParamsRequest) WithComment(Comment string) *CreateManagedAccountParamsRequest {
+	s.Comment = &Comment
 	return s
 }
 
@@ -35,6 +35,11 @@ func NewDropManagedAccountRequest(
 	s := DropManagedAccountRequest{}
 	s.name = name
 	return &s
+}
+
+func (s *DropManagedAccountRequest) WithIfExists(IfExists bool) *DropManagedAccountRequest {
+	s.IfExists = &IfExists
+	return s
 }
 
 func NewShowManagedAccountRequest() *ShowManagedAccountRequest {

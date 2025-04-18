@@ -10,8 +10,10 @@ type MaterializedViews interface {
 	Create(ctx context.Context, request *CreateMaterializedViewRequest) error
 	Alter(ctx context.Context, request *AlterMaterializedViewRequest) error
 	Drop(ctx context.Context, request *DropMaterializedViewRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowMaterializedViewRequest) ([]MaterializedView, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) ([]MaterializedViewDetails, error)
 }
 

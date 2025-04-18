@@ -29,6 +29,10 @@ func (v *views) Drop(ctx context.Context, request *DropViewRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *views) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropViewRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *views) Show(ctx context.Context, request *ShowViewRequest) ([]View, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[viewDBRow](v.client, ctx, opts)
@@ -48,6 +52,10 @@ func (v *views) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*View,
 		return nil, err
 	}
 	return collections.FindFirst(views, func(r View) bool { return r.Name == id.Name() })
+}
+
+func (v *views) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*View, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *views) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]ViewDetails, error) {

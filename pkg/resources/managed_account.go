@@ -112,7 +112,7 @@ func CreateManagedAccount(ctx context.Context, d *schema.ResourceData, meta any)
 	createParams := sdk.NewCreateManagedAccountParamsRequest(adminName, adminPassword)
 
 	if v, ok := d.GetOk("comment"); ok {
-		createParams.WithComment(sdk.String(v.(string)))
+		createParams.WithComment(v.(string))
 	}
 
 	createRequest := sdk.NewCreateManagedAccountRequest(id, *createParams)

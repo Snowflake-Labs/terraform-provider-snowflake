@@ -28,6 +28,10 @@ func (v *materializedViews) Drop(ctx context.Context, request *DropMaterializedV
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *materializedViews) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropMaterializedViewRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *materializedViews) Show(ctx context.Context, request *ShowMaterializedViewRequest) ([]MaterializedView, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[materializedViewDBRow](v.client, ctx, opts)
@@ -47,6 +51,10 @@ func (v *materializedViews) ShowByID(ctx context.Context, id SchemaObjectIdentif
 		return nil, err
 	}
 	return collections.FindFirst(materializedViews, func(r MaterializedView) bool { return r.Name == id.Name() })
+}
+
+func (v *materializedViews) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaterializedView, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *materializedViews) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]MaterializedViewDetails, error) {

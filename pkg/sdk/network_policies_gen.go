@@ -6,8 +6,10 @@ type NetworkPolicies interface {
 	Create(ctx context.Context, request *CreateNetworkPolicyRequest) error
 	Alter(ctx context.Context, request *AlterNetworkPolicyRequest) error
 	Drop(ctx context.Context, request *DropNetworkPolicyRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, request *ShowNetworkPolicyRequest) ([]NetworkPolicy, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*NetworkPolicy, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]NetworkPolicyProperty, error)
 }
 

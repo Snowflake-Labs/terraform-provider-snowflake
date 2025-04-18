@@ -97,6 +97,10 @@ func (v *securityIntegrations) Drop(ctx context.Context, request *DropSecurityIn
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *securityIntegrations) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSecurityIntegrationRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *securityIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]SecurityIntegrationProperty, error) {
 	opts := &DescribeSecurityIntegrationOptions{
 		name: id,
@@ -126,6 +130,10 @@ func (v *securityIntegrations) ShowByID(ctx context.Context, id AccountObjectIde
 		return nil, err
 	}
 	return collections.FindFirst(securityIntegrations, func(r SecurityIntegration) bool { return r.Name == id.Name() })
+}
+
+func (v *securityIntegrations) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (r *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationRequest) toOpts() *CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions {

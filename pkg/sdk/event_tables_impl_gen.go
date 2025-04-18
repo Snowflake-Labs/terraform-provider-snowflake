@@ -38,6 +38,10 @@ func (v *eventTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (
 	return collections.FindFirst(eventTables, func(r EventTable) bool { return r.Name == id.Name() })
 }
 
+func (v *eventTables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*EventTable, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *eventTables) Describe(ctx context.Context, id SchemaObjectIdentifier) (*EventTableDetails, error) {
 	opts := &DescribeEventTableOptions{
 		name: id,
@@ -52,6 +56,10 @@ func (v *eventTables) Describe(ctx context.Context, id SchemaObjectIdentifier) (
 func (v *eventTables) Drop(ctx context.Context, request *DropEventTableRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *eventTables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropEventTableRequest(id).WithIfExists(Bool(true))) }, ctx, id)
 }
 
 func (v *eventTables) Alter(ctx context.Context, request *AlterEventTableRequest) error {

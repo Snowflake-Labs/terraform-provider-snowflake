@@ -10,8 +10,10 @@ type Connections interface {
 	Create(ctx context.Context, request *CreateConnectionRequest) error
 	Alter(ctx context.Context, request *AlterConnectionRequest) error
 	Drop(ctx context.Context, request *DropConnectionRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, request *ShowConnectionRequest) ([]Connection, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Connection, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Connection, error)
 }
 
 // CreateConnectionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-connection.

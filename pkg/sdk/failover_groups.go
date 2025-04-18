@@ -30,8 +30,10 @@ type FailoverGroups interface {
 	AlterSource(ctx context.Context, id AccountObjectIdentifier, opts *AlterSourceFailoverGroupOptions) error
 	AlterTarget(ctx context.Context, id AccountObjectIdentifier, opts *AlterTargetFailoverGroupOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropFailoverGroupOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowFailoverGroupOptions) ([]FailoverGroup, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error)
 	ShowDatabases(ctx context.Context, id AccountObjectIdentifier) ([]AccountObjectIdentifier, error)
 	ShowShares(ctx context.Context, id AccountObjectIdentifier) ([]AccountObjectIdentifier, error)
 }
@@ -343,6 +345,10 @@ func (v *failoverGroups) Drop(ctx context.Context, id AccountObjectIdentifier, o
 	return err
 }
 
+func (v *failoverGroups) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropFailoverGroupOptions{IfExists: Bool(true)}) }, ctx, id)
+}
+
 // ShowFailoverGroupOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-failover-groups.
 type ShowFailoverGroupOptions struct {
 	show           bool              `ddl:"static" sql:"SHOW"`
@@ -520,6 +526,10 @@ func (v *failoverGroups) ShowByID(ctx context.Context, id AccountObjectIdentifie
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *failoverGroups) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*FailoverGroup, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // showFailoverGroupDatabasesOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-databases-in-failover-group.

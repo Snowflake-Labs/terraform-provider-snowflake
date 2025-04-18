@@ -40,6 +40,10 @@ func (v *externalTables) Drop(ctx context.Context, req *DropExternalTableRequest
 	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
+func (v *externalTables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropExternalTableRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *externalTables) Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error) {
 	dbRows, err := validateAndQuery[externalTableRow](v.client, ctx, req.toOpts())
 	if err != nil {
@@ -62,6 +66,10 @@ func (v *externalTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier
 	}
 
 	return collections.FindFirst(externalTables, func(t ExternalTable) bool { return t.ID().FullyQualifiedName() == id.FullyQualifiedName() })
+}
+
+func (v *externalTables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *externalTables) DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error) {

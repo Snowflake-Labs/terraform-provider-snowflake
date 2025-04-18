@@ -58,6 +58,7 @@ var ManagedAccountsDef = g.NewInterface(
 		g.NewQueryStruct("DropManagedAccount").
 			Drop().
 			SQL("MANAGED ACCOUNT").
+			IfExists().
 			Name().
 			WithValidation(g.ValidIdentifier, "name"),
 	).

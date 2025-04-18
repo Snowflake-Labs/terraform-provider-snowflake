@@ -27,6 +27,10 @@ func (v *dynamicTables) Drop(ctx context.Context, request *DropDynamicTableReque
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *dynamicTables) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropDynamicTableRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *dynamicTables) Describe(ctx context.Context, request *DescribeDynamicTableRequest) (*DynamicTableDetails, error) {
 	opts := request.toOpts()
 	row, err := validateAndQueryOne[dynamicTableDetailsRow](v.client, ctx, opts)
@@ -53,6 +57,10 @@ func (v *dynamicTables) ShowByID(ctx context.Context, id SchemaObjectIdentifier)
 		return nil, err
 	}
 	return collections.FindFirst(dynamicTables, func(r DynamicTable) bool { return r.Name == id.Name() })
+}
+
+func (v *dynamicTables) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*DynamicTable, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (s *CreateDynamicTableRequest) toOpts() *createDynamicTableOptions {

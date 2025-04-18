@@ -49,6 +49,10 @@ func (v *procedures) Drop(ctx context.Context, request *DropProcedureRequest) er
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *procedures) DropSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropProcedureRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *procedures) Show(ctx context.Context, request *ShowProcedureRequest) ([]Procedure, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[procedureRow](v.client, ctx, opts)

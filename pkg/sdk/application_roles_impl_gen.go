@@ -42,6 +42,10 @@ func (v *applicationRoles) ShowByID(ctx context.Context, id DatabaseObjectIdenti
 	return collections.FindFirst(applicationRoles, func(r ApplicationRole) bool { return r.Name == id.Name() })
 }
 
+func (v *applicationRoles) ShowByIDSafely(ctx context.Context, id DatabaseObjectIdentifier) (*ApplicationRole, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (r *GrantApplicationRoleRequest) toOpts() *GrantApplicationRoleOptions {
 	opts := &GrantApplicationRoleOptions{
 		name: r.name,

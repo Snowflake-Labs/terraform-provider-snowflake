@@ -29,6 +29,10 @@ func (v *connections) Drop(ctx context.Context, request *DropConnectionRequest) 
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *connections) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropConnectionRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *connections) Show(ctx context.Context, request *ShowConnectionRequest) ([]Connection, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[connectionRow](v.client, ctx, opts)
@@ -47,6 +51,10 @@ func (v *connections) ShowByID(ctx context.Context, id AccountObjectIdentifier) 
 		return nil, err
 	}
 	return collections.FindFirst(connections, func(r Connection) bool { return r.Name == id.Name() })
+}
+
+func (v *connections) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Connection, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (r *CreateConnectionRequest) toOpts() *CreateConnectionOptions {

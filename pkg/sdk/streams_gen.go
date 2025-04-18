@@ -14,8 +14,10 @@ type Streams interface {
 	Clone(ctx context.Context, request *CloneStreamRequest) error
 	Alter(ctx context.Context, request *AlterStreamRequest) error
 	Drop(ctx context.Context, request *DropStreamRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error)
 }
 

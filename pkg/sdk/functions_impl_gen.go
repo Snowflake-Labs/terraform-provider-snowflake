@@ -49,6 +49,10 @@ func (v *functions) Drop(ctx context.Context, request *DropFunctionRequest) erro
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *functions) DropSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropFunctionRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *functions) Show(ctx context.Context, request *ShowFunctionRequest) ([]Function, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[functionRow](v.client, ctx, opts)
@@ -68,6 +72,10 @@ func (v *functions) ShowByID(ctx context.Context, id SchemaObjectIdentifierWithA
 		return nil, err
 	}
 	return collections.FindFirst(functions, func(r Function) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
+}
+
+func (v *functions) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *functions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error) {

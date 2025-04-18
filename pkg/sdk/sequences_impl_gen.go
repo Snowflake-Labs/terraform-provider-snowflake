@@ -43,6 +43,10 @@ func (v *sequences) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*S
 	return collections.FindFirst(sequences, func(r Sequence) bool { return r.Name == id.Name() })
 }
 
+func (v *sequences) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Sequence, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *sequences) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SequenceDetail, error) {
 	opts := &DescribeSequenceOptions{
 		name: id,
@@ -57,6 +61,10 @@ func (v *sequences) Describe(ctx context.Context, id SchemaObjectIdentifier) (*S
 func (v *sequences) Drop(ctx context.Context, request *DropSequenceRequest) error {
 	opts := request.toOpts()
 	return validateAndExec(v.client, ctx, opts)
+}
+
+func (v *sequences) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSequenceRequest(id).WithIfExists(Bool(true))) }, ctx, id)
 }
 
 func (r *CreateSequenceRequest) toOpts() *CreateSequenceOptions {

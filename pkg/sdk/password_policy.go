@@ -21,8 +21,10 @@ type PasswordPolicies interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, opts *CreatePasswordPolicyOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterPasswordPolicyOptions) error
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropPasswordPolicyOptions) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowPasswordPolicyOptions) ([]PasswordPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicyDetails, error)
 }
 
@@ -233,6 +235,10 @@ func (v *passwordPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, 
 	return err
 }
 
+func (v *passwordPolicies) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropPasswordPolicyOptions{IfExists: Bool(true)}) }, ctx, id)
+}
+
 // ShowPasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-password-policies.
 type ShowPasswordPolicyOptions struct {
 	show             bool  `ddl:"static" sql:"SHOW"`
@@ -337,6 +343,10 @@ func (v *passwordPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifi
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *passwordPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*PasswordPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // describePasswordPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-password-policy.

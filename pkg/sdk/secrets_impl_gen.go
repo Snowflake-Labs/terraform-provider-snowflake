@@ -42,6 +42,10 @@ func (v *secrets) Drop(ctx context.Context, request *DropSecretRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *secrets) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSecretRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *secrets) Show(ctx context.Context, request *ShowSecretRequest) ([]Secret, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[secretDBRow](v.client, ctx, opts)
@@ -61,6 +65,10 @@ func (v *secrets) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Sec
 		return nil, err
 	}
 	return collections.FindFirst(secrets, func(r Secret) bool { return r.Name == id.Name() })
+}
+
+func (v *secrets) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Secret, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *secrets) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SecretDetails, error) {

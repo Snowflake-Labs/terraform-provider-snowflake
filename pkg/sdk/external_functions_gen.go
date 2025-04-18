@@ -10,6 +10,7 @@ type ExternalFunctions interface {
 	Alter(ctx context.Context, request *AlterExternalFunctionRequest) error
 	Show(ctx context.Context, request *ShowExternalFunctionRequest) ([]ExternalFunction, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*ExternalFunction, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*ExternalFunction, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ExternalFunctionProperty, error)
 }
 

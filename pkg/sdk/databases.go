@@ -34,6 +34,7 @@ type Databases interface {
 	AlterReplication(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseReplicationOptions) error
 	AlterFailover(ctx context.Context, id AccountObjectIdentifier, opts *AlterDatabaseFailoverOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropDatabaseOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowDatabasesOptions) ([]Database, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Database, error)
@@ -723,6 +724,10 @@ func (v *databases) Drop(ctx context.Context, id AccountObjectIdentifier, opts *
 	}
 	_, err = v.client.exec(ctx, sql)
 	return err
+}
+
+func (v *databases) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropDatabaseOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // undropDatabaseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-database.

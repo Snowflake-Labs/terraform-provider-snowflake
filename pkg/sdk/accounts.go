@@ -26,7 +26,9 @@ type Accounts interface {
 	Alter(ctx context.Context, opts *AlterAccountOptions) error
 	Show(ctx context.Context, opts *ShowAccountOptions) ([]Account, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Account, error)
 	Drop(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int, opts *DropAccountOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int) error
 	Undrop(ctx context.Context, id AccountObjectIdentifier) error
 	ShowParameters(ctx context.Context) ([]*Parameter, error)
 }
@@ -538,6 +540,10 @@ func (c *accounts) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*A
 	})
 }
 
+func (c *accounts) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Account, error) {
+	return SafeShowById(c.client, c.ShowByID, ctx, id)
+}
+
 // DropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-account.
 type DropAccountOptions struct {
 	drop              bool                    `ddl:"static" sql:"DROP"`
@@ -565,6 +571,10 @@ func (c *accounts) Drop(ctx context.Context, id AccountObjectIdentifier, gracePe
 	opts.name = id
 	opts.gracePeriodInDays = gracePeriodInDays
 	return validateAndExec(c.client, ctx, opts)
+}
+
+func (c *accounts) DropSafely(ctx context.Context, id AccountObjectIdentifier, gracePeriodInDays int) error {
+	return SafeDrop(c.client, func() error { return c.Drop(ctx, id, gracePeriodInDays, &DropAccountOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // undropAccountOptions is based on https://docs.snowflake.com/en/sql-reference/sql/undrop-account.

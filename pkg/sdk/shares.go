@@ -20,8 +20,10 @@ type Shares interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateShareOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterShareOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropShareOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowShareOptions) ([]Share, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Share, error)
 	DescribeProvider(ctx context.Context, id AccountObjectIdentifier) (*ShareDetails, error)
 	DescribeConsumer(ctx context.Context, id ExternalObjectIdentifier) (*ShareDetails, error)
 }
@@ -167,6 +169,10 @@ func (s *shares) Drop(ctx context.Context, id AccountObjectIdentifier, opts *Dro
 	}
 	_, err = s.client.exec(ctx, sql)
 	return err
+}
+
+func (s *shares) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(s.client, func() error { return s.Drop(ctx, id, &DropShareOptions{IfExists: Bool(true)}) }, ctx, id)
 }
 
 // AlterShareOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-share.
@@ -320,6 +326,10 @@ func (s *shares) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Sha
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (s *shares) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Share, error) {
+	return SafeShowById(s.client, s.ShowByID, ctx, id)
 }
 
 type ShareDetails struct {

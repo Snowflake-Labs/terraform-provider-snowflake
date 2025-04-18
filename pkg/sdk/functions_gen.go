@@ -16,8 +16,10 @@ type Functions interface {
 	CreateForSQL(ctx context.Context, request *CreateForSQLFunctionRequest) error
 	Alter(ctx context.Context, request *AlterFunctionRequest) error
 	Drop(ctx context.Context, request *DropFunctionRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) error
 	Show(ctx context.Context, request *ShowFunctionRequest) ([]Function, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*Function, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]FunctionDetail, error)
 
 	// DescribeDetails is added manually; it returns aggregated describe results for the given function.

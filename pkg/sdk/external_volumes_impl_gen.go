@@ -27,6 +27,10 @@ func (v *externalVolumes) Drop(ctx context.Context, request *DropExternalVolumeR
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *externalVolumes) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropExternalVolumeRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *externalVolumes) Describe(ctx context.Context, id AccountObjectIdentifier) ([]ExternalVolumeProperty, error) {
 	opts := &DescribeExternalVolumeOptions{
 		name: id,
@@ -56,6 +60,10 @@ func (v *externalVolumes) ShowByID(ctx context.Context, id AccountObjectIdentifi
 		return nil, err
 	}
 	return collections.FindFirst(externalVolumes, func(r ExternalVolume) bool { return r.Name == id.Name() })
+}
+
+func (v *externalVolumes) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ExternalVolume, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (r *CreateExternalVolumeRequest) toOpts() *CreateExternalVolumeOptions {
