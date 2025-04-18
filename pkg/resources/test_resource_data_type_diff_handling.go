@@ -49,30 +49,29 @@ func TestResourceCreateDataTypeDiffHandling(ctx context.Context, d *schema.Resou
 
 func TestResourceUpdateDataTypeDiffHandling(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// it seems that it can be a no-op as we don't care about making changes but the changes recognition
+	log.Printf("[DEBUG] handling update")
 	return TestResourceReadDataTypeDiffHandling(false)(ctx, d, meta)
 }
 
 func TestResourceReadDataTypeDiffHandling(withExternalChangesMarking bool) schema.ReadContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-		value := oswrapper.Getenv(d.Id())
-		if value != "" {
-			externalDataType, err := datatypes.ParseDataType(value)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			currentConfigDataType, err := readDatatypeCommon(d, "return_data_type")
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if datatypes.AreDefinitelyDifferent(currentConfigDataType, externalDataType) {
-				if err := d.Set("return_data_type", value); err != nil {
+		if withExternalChangesMarking {
+			value := oswrapper.Getenv(d.Id())
+			if value != "" {
+				externalDataType, err := datatypes.ParseDataType(value)
+				if err != nil {
 					return diag.FromErr(err)
 				}
+				currentConfigDataType, err := readDatatypeCommon(d, "return_data_type")
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if datatypes.AreDefinitelyDifferent(currentConfigDataType, externalDataType) {
+					if err := d.Set("return_data_type", value); err != nil {
+						return diag.FromErr(err)
+					}
+				}
 			}
-		}
-
-		if withExternalChangesMarking {
-			// TODO: show output if needed
 		}
 		return nil
 	}
