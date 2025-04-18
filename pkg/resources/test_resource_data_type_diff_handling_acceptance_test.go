@@ -193,9 +193,9 @@ resource "%[3]s" "%[4]s" {
 				},
 				Steps: []resource.TestStep{
 					{
-						// our test resource does not set the env, so we set it proactively
+						// our test resource manages this env, so we remove it before the test start
 						PreConfig: func() {
-							t.Setenv(envName, tc.ConfigValue)
+							t.Setenv(envName, "")
 						},
 						Config: testConfig(tc.ConfigValue),
 						Check: resource.ComposeTestCheckFunc(

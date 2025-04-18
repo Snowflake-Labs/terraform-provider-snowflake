@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"log"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk/datatypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -13,17 +15,16 @@ func readDatatypeCommon(d *schema.ResourceData, key string) (datatypes.DataType,
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[DEBUG] correctly parsed data type %v", dataType)
 	return dataType, nil
 }
 
-// sqlNew is temporary as not all the data types has the temporary method implemented
-func sqlNew(dt datatypes.DataType) string {
-	switch v := dt.(type) {
-	case *datatypes.NumberDataType:
-		return v.ToSqlNew()
-	case *datatypes.TextDataType:
-		return v.ToSqlNew()
-	default:
-		return v.ToSql()
+func readChangedDatatypeCommon(d *schema.ResourceData, key string) (datatypes.DataType, error) {
+	_, n := d.GetChange(key)
+	dataType, err := datatypes.ParseDataType(n.(string))
+	if err != nil {
+		return nil, err
 	}
+	log.Printf("[DEBUG] correctly parsed data type %v", dataType)
+	return dataType, nil
 }
