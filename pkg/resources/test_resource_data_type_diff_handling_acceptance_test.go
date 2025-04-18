@@ -69,14 +69,14 @@ resource "%[3]s" "%[4]s" {
 		changeInConfig("NUMBER", "NUMBER", false),
 		changeInConfig("NUMBER", "NUMBER(20)", true),
 		changeInConfig("NUMBER", "NUMBER(20, 4)", true),
-		changeInConfig("NUMBER", "NUMBER(38)", true),
-		changeInConfig("NUMBER", "NUMBER(38, 0)", true),
+		changeInConfig("NUMBER", "NUMBER(38)", false),
+		changeInConfig("NUMBER", "NUMBER(38, 0)", false),
 
 		// same data type - one attribute before
 		changeInConfig("NUMBER(20)", "NUMBER(20)", false),
 		changeInConfig("NUMBER(20)", "NUMBER", true),
 		changeInConfig("NUMBER(20)", "NUMBER(21)", true),
-		changeInConfig("NUMBER(20)", "NUMBER(20, 0)", true),
+		changeInConfig("NUMBER(20)", "NUMBER(20, 0)", false),
 		changeInConfig("NUMBER(20)", "NUMBER(20, 4)", true),
 		changeInConfig("NUMBER(20)", "NUMBER(21, 4)", true),
 
@@ -91,16 +91,16 @@ resource "%[3]s" "%[4]s" {
 
 		// same data type - one attribute but default before
 		changeInConfig("NUMBER(38)", "NUMBER(38)", false),
-		changeInConfig("NUMBER(38)", "NUMBER", true),
+		changeInConfig("NUMBER(38)", "NUMBER", false),
 		changeInConfig("NUMBER(38)", "NUMBER(20)", true),
 		changeInConfig("NUMBER(38)", "NUMBER(20, 3)", true),
 		changeInConfig("NUMBER(38)", "NUMBER(38, 2)", true),
-		changeInConfig("NUMBER(38)", "NUMBER(38, 0)", true),
+		changeInConfig("NUMBER(38)", "NUMBER(38, 0)", false),
 
 		// same data type - two attributes but default before
 		changeInConfig("NUMBER(38, 0)", "NUMBER(38, 0)", false),
-		changeInConfig("NUMBER(38, 0)", "NUMBER", true),
-		changeInConfig("NUMBER(38, 0)", "NUMBER(38)", true),
+		changeInConfig("NUMBER(38, 0)", "NUMBER", false),
+		changeInConfig("NUMBER(38, 0)", "NUMBER(38)", false),
 		changeInConfig("NUMBER(38, 0)", "NUMBER(20)", true),
 		changeInConfig("NUMBER(38, 0)", "NUMBER(20, 3)", true),
 		changeInConfig("NUMBER(38, 0)", "NUMBER(38, 2)", true),
@@ -116,14 +116,14 @@ resource "%[3]s" "%[4]s" {
 		externalChange("NUMBER", "NUMBER", false),
 		externalChange("NUMBER", "NUMBER(20)", true),
 		externalChange("NUMBER", "NUMBER(20, 4)", true),
-		externalChange("NUMBER", "NUMBER(38)", true),
-		externalChange("NUMBER", "NUMBER(38, 0)", true),
+		externalChange("NUMBER", "NUMBER(38)", false),
+		externalChange("NUMBER", "NUMBER(38, 0)", false),
 
 		// same data type - one attribute before
 		externalChange("NUMBER(20)", "NUMBER(20)", false),
 		externalChange("NUMBER(20)", "NUMBER", false),
 		externalChange("NUMBER(20)", "NUMBER(21)", true),
-		externalChange("NUMBER(20)", "NUMBER(20, 0)", true),
+		externalChange("NUMBER(20)", "NUMBER(20, 0)", false),
 		externalChange("NUMBER(20)", "NUMBER(20, 4)", true),
 		externalChange("NUMBER(20)", "NUMBER(21, 4)", true),
 
@@ -142,12 +142,12 @@ resource "%[3]s" "%[4]s" {
 		externalChange("NUMBER(38)", "NUMBER(20)", true),
 		externalChange("NUMBER(38)", "NUMBER(20, 3)", true),
 		externalChange("NUMBER(38)", "NUMBER(38, 2)", true),
-		externalChange("NUMBER(38)", "NUMBER(38, 0)", true),
+		externalChange("NUMBER(38)", "NUMBER(38, 0)", false),
 
 		// same data type - two attributes but default before
 		externalChange("NUMBER(38, 0)", "NUMBER(38, 0)", false),
 		externalChange("NUMBER(38, 0)", "NUMBER", false),
-		externalChange("NUMBER(38, 0)", "NUMBER(38)", true),
+		externalChange("NUMBER(38, 0)", "NUMBER(38)", false),
 		externalChange("NUMBER(38, 0)", "NUMBER(20)", true),
 		externalChange("NUMBER(38, 0)", "NUMBER(20, 3)", true),
 		externalChange("NUMBER(38, 0)", "NUMBER(38, 2)", true),
