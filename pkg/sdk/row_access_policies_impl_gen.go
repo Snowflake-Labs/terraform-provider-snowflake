@@ -28,6 +28,10 @@ func (v *rowAccessPolicies) Drop(ctx context.Context, request *DropRowAccessPoli
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *rowAccessPolicies) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropRowAccessPolicyRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *rowAccessPolicies) Show(ctx context.Context, request *ShowRowAccessPolicyRequest) ([]RowAccessPolicy, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[rowAccessPolicyDBRow](v.client, ctx, opts)
@@ -47,6 +51,10 @@ func (v *rowAccessPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentif
 		return nil, err
 	}
 	return collections.FindFirst(rowAccessPolicies, func(r RowAccessPolicy) bool { return r.Name == id.Name() })
+}
+
+func (v *rowAccessPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *rowAccessPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*RowAccessPolicyDescription, error) {

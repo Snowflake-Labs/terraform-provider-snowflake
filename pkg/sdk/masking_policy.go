@@ -26,8 +26,10 @@ type MaskingPolicies interface {
 	Create(ctx context.Context, id SchemaObjectIdentifier, signature []TableColumnSignature, returns DataType, expression string, opts *CreateMaskingPolicyOptions) error
 	Alter(ctx context.Context, id SchemaObjectIdentifier, opts *AlterMaskingPolicyOptions) error
 	Drop(ctx context.Context, id SchemaObjectIdentifier, opts *DropMaskingPolicyOptions) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowMaskingPolicyOptions) ([]MaskingPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicyDetails, error)
 }
 
@@ -217,6 +219,10 @@ func (v *maskingPolicies) Drop(ctx context.Context, id SchemaObjectIdentifier, o
 	return err
 }
 
+func (v *maskingPolicies) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropMaskingPolicyOptions{IfExists: Bool(true)}) }, ctx, id)
+}
+
 // ShowMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-masking-policies.
 type ShowMaskingPolicyOptions struct {
 	show            bool        `ddl:"static" sql:"SHOW"`
@@ -327,6 +333,10 @@ func (v *maskingPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 	return collections.FindFirst(maskingPolicies, func(r MaskingPolicy) bool { return r.Name == id.Name() })
+}
+
+func (v *maskingPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*MaskingPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 // describeMaskingPolicyOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-masking-policy.

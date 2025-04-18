@@ -27,6 +27,10 @@ func (v *notificationIntegrations) Drop(ctx context.Context, request *DropNotifi
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *notificationIntegrations) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropNotificationIntegrationRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *notificationIntegrations) Show(ctx context.Context, request *ShowNotificationIntegrationRequest) ([]NotificationIntegration, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showNotificationIntegrationsDbRow](v.client, ctx, opts)
@@ -45,6 +49,10 @@ func (v *notificationIntegrations) ShowByID(ctx context.Context, id AccountObjec
 		return nil, err
 	}
 	return collections.FindFirst(notificationIntegrations, func(r NotificationIntegration) bool { return r.Name == id.Name() })
+}
+
+func (v *notificationIntegrations) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*NotificationIntegration, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *notificationIntegrations) Describe(ctx context.Context, id AccountObjectIdentifier) ([]NotificationIntegrationProperty, error) {

@@ -24,7 +24,8 @@ type CreateManagedAccountParamsRequest struct {
 }
 
 type DropManagedAccountRequest struct {
-	name AccountObjectIdentifier // required
+	name     AccountObjectIdentifier // required
+	IfExists *bool
 }
 
 type ShowManagedAccountRequest struct {

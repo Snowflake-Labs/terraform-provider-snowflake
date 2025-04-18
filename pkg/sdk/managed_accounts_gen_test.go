@@ -76,6 +76,12 @@ func TestManagedAccounts_Drop(t *testing.T) {
 		opts := defaultOpts()
 		assertOptsValidAndSQLEquals(t, opts, "DROP MANAGED ACCOUNT %s", id.FullyQualifiedName())
 	})
+
+	t.Run("if exists", func(t *testing.T) {
+		opts := defaultOpts()
+		opts.IfExists = Bool(true)
+		assertOptsValidAndSQLEquals(t, opts, "DROP MANAGED ACCOUNT IF EXISTS %s", id.FullyQualifiedName())
+	})
 }
 
 func TestManagedAccounts_Show(t *testing.T) {

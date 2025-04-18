@@ -47,6 +47,7 @@ type SnowflakeModel struct {
 	TmpDirectoryPath                   tfconfig.Variable `json:"tmp_directory_path,omitempty"`
 	Token                              tfconfig.Variable `json:"token,omitempty"`
 	TokenAccessor                      tfconfig.Variable `json:"token_accessor,omitempty"`
+	UseLegacyTomlFile                  tfconfig.Variable `json:"use_legacy_toml_file,omitempty"`
 	User                               tfconfig.Variable `json:"user,omitempty"`
 	ValidateDefaultParameters          tfconfig.Variable `json:"validate_default_parameters,omitempty"`
 	Warehouse                          tfconfig.Variable `json:"warehouse,omitempty"`
@@ -255,6 +256,11 @@ func (s *SnowflakeModel) WithToken(token string) *SnowflakeModel {
 
 // token_accessor attribute type is not yet supported, so WithTokenAccessor can't be generated
 
+func (s *SnowflakeModel) WithUseLegacyTomlFile(useLegacyTomlFile bool) *SnowflakeModel {
+	s.UseLegacyTomlFile = tfconfig.BoolVariable(useLegacyTomlFile)
+	return s
+}
+
 func (s *SnowflakeModel) WithUser(user string) *SnowflakeModel {
 	s.User = tfconfig.StringVariable(user)
 	return s
@@ -461,6 +467,11 @@ func (s *SnowflakeModel) WithTokenValue(value tfconfig.Variable) *SnowflakeModel
 
 func (s *SnowflakeModel) WithTokenAccessorValue(value tfconfig.Variable) *SnowflakeModel {
 	s.TokenAccessor = value
+	return s
+}
+
+func (s *SnowflakeModel) WithUseLegacyTomlFileValue(value tfconfig.Variable) *SnowflakeModel {
+	s.UseLegacyTomlFile = value
 	return s
 }
 

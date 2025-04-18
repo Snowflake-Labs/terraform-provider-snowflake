@@ -26,7 +26,7 @@ This is an example configuration of the provider in `main.tf` in a configuration
 
 **Warning: these values are passed directly to the gosnowflake library, which may not work exactly the way you expect. See the [gosnowflake docs](https://godoc.org/github.com/snowflakedb/gosnowflake#hdr-Connection_Parameters) for more.**
 
--> **Note: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
+-> **Note**: In Go Snowflake driver 1.12.1 ([release notes](https://docs.snowflake.com/en/release-notes/clients-drivers/golang-2024#version-1-12-1-december-05-2024)), configuration field `InsecureMode` has been deprecated in favor of `DisableOCSPChecks`. This field is not available in the provider yet. Please use `InsecureMode` instead, which has the same behavior. We are planning to support this new field and deprecate the old one.
 
 -> **Note** If a field has a default value, it is shown next to the type in the schema. Most of the values in provider schema can be sourced from environment value (check field descriptions), but If a specified environment variable is not found, then the driver's default value is used instead.
 
@@ -186,9 +186,9 @@ role='ACCOUNTADMIN'
 #### TOML file limitations
 To ensure a better security of the provider, the following limitations are introduced:
 
--> **Note: TOML file size is limited to 10MB.
+-> **Note**: TOML file size is limited to 10MB.
 
--> **Note: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
+-> **Note**: Only TOML file with restricted privileges can be read. Any privileges for group or others cannot be set (the maximum valid privilege is `700`). You can set the expected privileges like `chmod 0600 ~/.snowflake/config`. This is checked only on non-Windows platforms. If you are using the provider on Windows, please make sure that your configuration file has not too permissive privileges.
 
 ### Source Hierarchy
 Not all fields must be configured in one source; users can choose which fields are configured in which source.
@@ -199,10 +199,19 @@ Provider uses an established hierarchy of sources. The current behavior is that 
 
 -> **Note** Currently `private_key` and `private_key_passphrase` are coupled and must be set in one source (both on Terraform side or both in TOML config, see https://github.com/snowflakedb/terraform-provider-snowflake/issues/3332). This will be fixed in the future.
 
+-> **Note** Currently both legacy and new formats are supported. The new format can be enabled with setting `use_legacy_toml_file = false` in the provider configuration. We encourage using the new format for now, as it will be a default one in v2 version of the provider. The differences between these formats are:
+- The keys in the provider contain an underscore (`_`) as a separator, but the TOML schema has fields without any separator.
+- The field `driver_tracing` in the provider is related to `tracing` in the TOML schema.
+
 ### Examples
-An example TOML file contents:
+
+An example new TOML file contents:
 
 {{ codefile "toml" "examples/additional/provider_config_toml.MD" | trimspace }}
+
+An example legacy TOML file contents:
+
+{{ codefile "toml" "examples/additional/provider_config_legacy_toml.MD" | trimspace }}
 
 An example terraform configuration file equivalent:
 

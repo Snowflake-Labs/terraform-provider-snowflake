@@ -19,9 +19,11 @@ type Stages interface {
 	AlterExternalAzureStage(ctx context.Context, request *AlterExternalAzureStageStageRequest) error
 	AlterDirectoryTable(ctx context.Context, request *AlterDirectoryTableStageRequest) error
 	Drop(ctx context.Context, request *DropStageRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Describe(ctx context.Context, id SchemaObjectIdentifier) ([]StageProperty, error)
 	Show(ctx context.Context, request *ShowStageRequest) ([]Stage, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stage, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stage, error)
 }
 
 // CreateInternalStageOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-stage.

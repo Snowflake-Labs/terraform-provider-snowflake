@@ -21,8 +21,10 @@ type ExternalTables interface {
 	Alter(ctx context.Context, req *AlterExternalTableRequest) error
 	AlterPartitions(ctx context.Context, req *AlterExternalTablePartitionRequest) error
 	Drop(ctx context.Context, req *DropExternalTableRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, req *ShowExternalTableRequest) ([]ExternalTable, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*ExternalTable, error)
 	DescribeColumns(ctx context.Context, req *DescribeExternalTableColumnsRequest) ([]ExternalTableColumnDetails, error)
 	DescribeStage(ctx context.Context, req *DescribeExternalTableStageRequest) ([]ExternalTableStageDetails, error)
 }

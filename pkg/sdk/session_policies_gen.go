@@ -9,8 +9,10 @@ type SessionPolicies interface {
 	Create(ctx context.Context, request *CreateSessionPolicyRequest) error
 	Alter(ctx context.Context, request *AlterSessionPolicyRequest) error
 	Drop(ctx context.Context, request *DropSessionPolicyRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error)
 }
 

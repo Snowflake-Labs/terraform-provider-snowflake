@@ -45,6 +45,10 @@ func (v *externalFunctions) ShowByID(ctx context.Context, id SchemaObjectIdentif
 	return collections.FindFirst(externalFunctions, func(r ExternalFunction) bool { return r.ID().FullyQualifiedName() == id.FullyQualifiedName() })
 }
 
+func (v *externalFunctions) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifierWithArguments) (*ExternalFunction, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
+}
+
 func (v *externalFunctions) Describe(ctx context.Context, id SchemaObjectIdentifierWithArguments) ([]ExternalFunctionProperty, error) {
 	opts := &DescribeFunctionOptions{
 		name: id,

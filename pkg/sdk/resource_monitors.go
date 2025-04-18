@@ -24,8 +24,10 @@ type ResourceMonitors interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateResourceMonitorOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterResourceMonitorOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropResourceMonitorOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, opts *ShowResourceMonitorOptions) ([]ResourceMonitor, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error)
 }
 
 var _ ResourceMonitors = (*resourceMonitors)(nil)
@@ -389,6 +391,10 @@ func (v *resourceMonitors) Drop(ctx context.Context, id AccountObjectIdentifier,
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *resourceMonitors) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropResourceMonitorOptions{IfExists: Bool(true)}) }, ctx, id)
+}
+
 // ShowResourceMonitorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-resource-monitors.
 type ShowResourceMonitorOptions struct {
 	show             bool  `ddl:"static" sql:"SHOW"`
@@ -430,4 +436,8 @@ func (v *resourceMonitors) ShowByID(ctx context.Context, id AccountObjectIdentif
 		return nil, err
 	}
 	return collections.FindFirst(resourceMonitors, func(r ResourceMonitor) bool { return r.ID().Name() == id.Name() })
+}
+
+func (v *resourceMonitors) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ResourceMonitor, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }

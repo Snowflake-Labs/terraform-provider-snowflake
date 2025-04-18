@@ -10,8 +10,10 @@ type StorageIntegrations interface {
 	Create(ctx context.Context, request *CreateStorageIntegrationRequest) error
 	Alter(ctx context.Context, request *AlterStorageIntegrationRequest) error
 	Drop(ctx context.Context, request *DropStorageIntegrationRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, request *ShowStorageIntegrationRequest) ([]StorageIntegration, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*StorageIntegration, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]StorageIntegrationProperty, error)
 }
 

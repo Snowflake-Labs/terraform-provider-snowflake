@@ -388,6 +388,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.SkipTomlFilePermissionVerification, false),
 			},
+			"use_legacy_toml_file": {
+				Type:        schema.TypeBool,
+				Description: envNameFieldDescription("True by default. When this is set to true, the provider expects the legacy TOML format. Otherwise, it expects the new format. See more in [the section below](#order-precedence)", snowflakeenvs.UseLegacyTomlFile),
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc(snowflakeenvs.UseLegacyTomlFile, true),
+			},
 		},
 		ResourcesMap:         getResources(),
 		DataSourcesMap:       getDataSources(),
@@ -551,9 +557,15 @@ func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.D
 	} else {
 		verifyPermissions = true
 	}
+	var useLegacyTomlFile bool
+	if v := s.Get("use_legacy_toml_file"); v.(bool) {
+		useLegacyTomlFile = true
+	} else {
+		useLegacyTomlFile = false
+	}
 
 	if v, ok := s.GetOk("profile"); ok && v.(string) != "" {
-		tomlConfig, err := getDriverConfigFromTOML(v.(string), verifyPermissions)
+		tomlConfig, err := getDriverConfigFromTOML(v.(string), verifyPermissions, useLegacyTomlFile)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
@@ -587,16 +599,23 @@ func expandStringList(configured []interface{}) []string {
 	return vs
 }
 
-func getDriverConfigFromTOML(profile string, verifyPermissions bool) (*gosnowflake.Config, error) {
+func getDriverConfigFromTOML(profile string, verifyPermissions, useLegacyTomlFile bool) (*gosnowflake.Config, error) {
 	if profile == "default" {
-		return sdk.DefaultConfig(sdk.WithVerifyPermissions(verifyPermissions)), nil
+		return sdk.DefaultConfig(
+			sdk.WithVerifyPermissions(verifyPermissions),
+			sdk.WithUseLegacyTomlFormat(useLegacyTomlFile),
+		), nil
 	}
 	path, err := sdk.GetConfigFileName()
 	if err != nil {
 		return nil, err
 	}
 
-	profileConfig, err := sdk.ProfileConfig(profile, sdk.WithVerifyPermissions(verifyPermissions))
+	profileConfig, err := sdk.ProfileConfig(
+		profile,
+		sdk.WithVerifyPermissions(verifyPermissions),
+		sdk.WithUseLegacyTomlFormat(useLegacyTomlFile),
+	)
 	if err != nil {
 		return nil, fmt.Errorf(`could not retrieve "%s" profile config from file %s: %w`, profile, path, err)
 	}

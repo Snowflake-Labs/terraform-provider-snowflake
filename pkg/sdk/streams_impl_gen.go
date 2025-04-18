@@ -48,6 +48,10 @@ func (v *streams) Drop(ctx context.Context, request *DropStreamRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *streams) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropStreamRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *streams) Show(ctx context.Context, request *ShowStreamRequest) ([]Stream, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showStreamsDbRow](v.client, ctx, opts)
@@ -67,6 +71,10 @@ func (v *streams) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Str
 		return nil, err
 	}
 	return collections.FindFirst(streams, func(r Stream) bool { return r.Name == id.Name() })
+}
+
+func (v *streams) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *streams) Describe(ctx context.Context, id SchemaObjectIdentifier) (*Stream, error) {

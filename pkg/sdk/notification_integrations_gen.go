@@ -10,8 +10,10 @@ type NotificationIntegrations interface {
 	Create(ctx context.Context, request *CreateNotificationIntegrationRequest) error
 	Alter(ctx context.Context, request *AlterNotificationIntegrationRequest) error
 	Drop(ctx context.Context, request *DropNotificationIntegrationRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Show(ctx context.Context, request *ShowNotificationIntegrationRequest) ([]NotificationIntegration, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*NotificationIntegration, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*NotificationIntegration, error)
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]NotificationIntegrationProperty, error)
 }
 

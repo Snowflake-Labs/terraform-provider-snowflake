@@ -16,6 +16,7 @@ type ApplicationRoles interface {
 	Revoke(ctx context.Context, request *RevokeApplicationRoleRequest) error
 	Show(ctx context.Context, request *ShowApplicationRoleRequest) ([]ApplicationRole, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*ApplicationRole, error)
+	ShowByIDSafely(ctx context.Context, id DatabaseObjectIdentifier) (*ApplicationRole, error)
 }
 
 // GrantApplicationRoleOptions is based on https://docs.snowflake.com/en/sql-reference/sql/grant-application-role.

@@ -26,9 +26,11 @@ type SecurityIntegrations interface {
 	AlterSaml2(ctx context.Context, request *AlterSaml2SecurityIntegrationRequest) error
 	AlterScim(ctx context.Context, request *AlterScimSecurityIntegrationRequest) error
 	Drop(ctx context.Context, request *DropSecurityIntegrationRequest) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) ([]SecurityIntegrationProperty, error)
 	Show(ctx context.Context, request *ShowSecurityIntegrationRequest) ([]SecurityIntegration, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*SecurityIntegration, error)
 }
 
 // CreateApiAuthenticationWithClientCredentialsFlowSecurityIntegrationOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-security-integration-api-auth.

@@ -72,6 +72,10 @@ func (v *stages) Drop(ctx context.Context, request *DropStageRequest) error {
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *stages) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropStageRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *stages) Describe(ctx context.Context, id SchemaObjectIdentifier) ([]StageProperty, error) {
 	opts := &DescribeStageOptions{
 		name: id,
@@ -102,6 +106,10 @@ func (v *stages) ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Stag
 		return nil, err
 	}
 	return collections.FindFirst(stages, func(r Stage) bool { return r.Name == id.Name() })
+}
+
+func (v *stages) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Stage, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (s *CreateInternalStageRequest) toOpts() *CreateInternalStageOptions {

@@ -21,9 +21,11 @@ type Users interface {
 	Create(ctx context.Context, id AccountObjectIdentifier, opts *CreateUserOptions) error
 	Alter(ctx context.Context, id AccountObjectIdentifier, opts *AlterUserOptions) error
 	Drop(ctx context.Context, id AccountObjectIdentifier, opts *DropUserOptions) error
+	DropSafely(ctx context.Context, id AccountObjectIdentifier) error
 	Describe(ctx context.Context, id AccountObjectIdentifier) (*UserDetails, error)
 	Show(ctx context.Context, opts *ShowUserOptions) ([]User, error)
 	ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User, error)
+	ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*User, error)
 	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
@@ -500,6 +502,10 @@ func (v *users) Drop(ctx context.Context, id AccountObjectIdentifier, opts *Drop
 	return err
 }
 
+func (v *users) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, id, &DropUserOptions{IfExists: Bool(true)}) }, ctx, id)
+}
+
 // UserDetails contains details about a user.
 type UserDetails struct {
 	Name                                *StringProperty
@@ -697,6 +703,10 @@ func (v *users) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*User
 		}
 	}
 	return nil, ErrObjectNotExistOrAuthorized
+}
+
+func (v *users) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*User, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *users) ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error) {

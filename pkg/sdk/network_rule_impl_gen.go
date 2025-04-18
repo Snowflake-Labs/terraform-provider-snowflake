@@ -28,6 +28,10 @@ func (v *networkRules) Drop(ctx context.Context, request *DropNetworkRuleRequest
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *networkRules) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropNetworkRuleRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *networkRules) Show(ctx context.Context, request *ShowNetworkRuleRequest) ([]NetworkRule, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[ShowNetworkRulesRow](v.client, ctx, opts)
@@ -47,6 +51,10 @@ func (v *networkRules) ShowByID(ctx context.Context, id SchemaObjectIdentifier) 
 		return nil, err
 	}
 	return collections.FindFirst(networkRules, func(r NetworkRule) bool { return r.Name == id.Name() })
+}
+
+func (v *networkRules) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *networkRules) Describe(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRuleDetails, error) {

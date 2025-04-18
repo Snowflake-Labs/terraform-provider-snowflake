@@ -27,6 +27,10 @@ func (v *roles) Drop(ctx context.Context, req *DropRoleRequest) error {
 	return validateAndExec(v.client, ctx, req.toOpts())
 }
 
+func (v *roles) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropRoleRequest(id).WithIfExists(true)) }, ctx, id)
+}
+
 func (v *roles) Show(ctx context.Context, req *ShowRoleRequest) ([]Role, error) {
 	dbRows, err := validateAndQuery[roleDBRow](v.client, ctx, req.toOpts())
 	if err != nil {
@@ -42,6 +46,10 @@ func (v *roles) ShowByID(ctx context.Context, id AccountObjectIdentifier) (*Role
 		return nil, err
 	}
 	return collections.FindFirst(roleList, func(r Role) bool { return r.ID().name == id.Name() })
+}
+
+func (v *roles) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*Role, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *roles) Grant(ctx context.Context, req *GrantRoleRequest) error {

@@ -12,6 +12,7 @@ type Streamlits interface {
 	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowStreamlitRequest) ([]Streamlit, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Streamlit, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*StreamlitDetail, error)
 }
 

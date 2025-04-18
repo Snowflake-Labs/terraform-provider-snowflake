@@ -27,6 +27,10 @@ func (v *applicationPackages) Drop(ctx context.Context, request *DropApplication
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *applicationPackages) DropSafely(ctx context.Context, id AccountObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropApplicationPackageRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *applicationPackages) Show(ctx context.Context, request *ShowApplicationPackageRequest) ([]ApplicationPackage, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[applicationPackageRow](v.client, ctx, opts)
@@ -45,6 +49,10 @@ func (v *applicationPackages) ShowByID(ctx context.Context, id AccountObjectIden
 		return nil, err
 	}
 	return collections.FindFirst(applicationPackages, func(r ApplicationPackage) bool { return r.Name == id.Name() })
+}
+
+func (v *applicationPackages) ShowByIDSafely(ctx context.Context, id AccountObjectIdentifier) (*ApplicationPackage, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (r *CreateApplicationPackageRequest) toOpts() *CreateApplicationPackageOptions {

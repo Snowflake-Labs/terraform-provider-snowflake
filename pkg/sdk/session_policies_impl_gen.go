@@ -27,6 +27,10 @@ func (v *sessionPolicies) Drop(ctx context.Context, request *DropSessionPolicyRe
 	return validateAndExec(v.client, ctx, opts)
 }
 
+func (v *sessionPolicies) DropSafely(ctx context.Context, id SchemaObjectIdentifier) error {
+	return SafeDrop(v.client, func() error { return v.Drop(ctx, NewDropSessionPolicyRequest(id).WithIfExists(Bool(true))) }, ctx, id)
+}
+
 func (v *sessionPolicies) Show(ctx context.Context, request *ShowSessionPolicyRequest) ([]SessionPolicy, error) {
 	opts := request.toOpts()
 	dbRows, err := validateAndQuery[showSessionPolicyDBRow](v.client, ctx, opts)
@@ -44,6 +48,10 @@ func (v *sessionPolicies) ShowByID(ctx context.Context, id SchemaObjectIdentifie
 		return nil, err
 	}
 	return collections.FindFirst(sessionPolicies, func(r SessionPolicy) bool { return r.Name == id.Name() })
+}
+
+func (v *sessionPolicies) ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicy, error) {
+	return SafeShowById(v.client, v.ShowByID, ctx, id)
 }
 
 func (v *sessionPolicies) Describe(ctx context.Context, id SchemaObjectIdentifier) (*SessionPolicyDescription, error) {

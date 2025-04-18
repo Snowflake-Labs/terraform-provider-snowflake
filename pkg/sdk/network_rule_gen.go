@@ -9,8 +9,10 @@ type NetworkRules interface {
 	Create(ctx context.Context, request *CreateNetworkRuleRequest) error
 	Alter(ctx context.Context, request *AlterNetworkRuleRequest) error
 	Drop(ctx context.Context, request *DropNetworkRuleRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Show(ctx context.Context, request *ShowNetworkRuleRequest) ([]NetworkRule, error)
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error)
+	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRule, error)
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*NetworkRuleDetails, error)
 }
 

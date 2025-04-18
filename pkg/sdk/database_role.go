@@ -11,6 +11,7 @@ type DatabaseRoles interface {
 	Create(ctx context.Context, request *CreateDatabaseRoleRequest) error
 	Alter(ctx context.Context, request *AlterDatabaseRoleRequest) error
 	Drop(ctx context.Context, request *DropDatabaseRoleRequest) error
+	DropSafely(ctx context.Context, id DatabaseObjectIdentifier) error
 	Show(ctx context.Context, request *ShowDatabaseRoleRequest) ([]DatabaseRole, error)
 	ShowByID(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
 	ShowByIDSafely(ctx context.Context, id DatabaseObjectIdentifier) (*DatabaseRole, error)
