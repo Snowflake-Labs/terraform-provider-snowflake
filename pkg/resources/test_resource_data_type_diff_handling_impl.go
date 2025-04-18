@@ -28,3 +28,15 @@ func readChangedDatatypeCommon(d *schema.ResourceData, key string) (datatypes.Da
 	log.Printf("[DEBUG] correctly parsed data type %v", dataType)
 	return dataType, nil
 }
+
+// AsFullyKnown is temporary as not all the data types has the temporary method implemented
+func AsFullyKnown(dt datatypes.DataType) datatypes.DataType {
+	switch v := dt.(type) {
+	case *datatypes.NumberDataType:
+		return v.AsFullyKnown()
+	case *datatypes.TextDataType:
+		return v.AsFullyKnown()
+	default:
+		return v
+	}
+}

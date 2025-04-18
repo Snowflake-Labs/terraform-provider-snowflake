@@ -39,6 +39,12 @@ func (t *NumberDataType) Canonical() string {
 	return fmt.Sprintf("%s(%d,%d)", NumberLegacyDataType, t.precision, t.scale)
 }
 
+func (t *NumberDataType) AsFullyKnown() DataType {
+	t.precisionKnown = true
+	t.scaleKnown = true
+	return t
+}
+
 var (
 	NumberDataTypeSynonyms = []string{NumberLegacyDataType, "DECIMAL", "DEC", "NUMERIC"}
 	NumberDataTypeSubTypes = []string{"INTEGER", "INT", "BIGINT", "SMALLINT", "TINYINT", "BYTEINT"}

@@ -86,7 +86,7 @@ func TestResourceDataTypeDiffHandlingRead(withExternalChangesMarking bool) schem
 			if err != nil {
 				return diag.FromErr(err)
 			}
-			if datatypes.AreDefinitelyDifferent(currentConfigDataType, externalDataType) {
+			if datatypes.AreDefinitelyDifferent(AsFullyKnown(currentConfigDataType), externalDataType) {
 				if err := d.Set("return_data_type", value); err != nil {
 					return diag.FromErr(err)
 				}

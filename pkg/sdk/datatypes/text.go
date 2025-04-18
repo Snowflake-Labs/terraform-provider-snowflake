@@ -34,6 +34,11 @@ func (t *TextDataType) Canonical() string {
 	return fmt.Sprintf("%s(%d)", VarcharLegacyDataType, t.length)
 }
 
+func (t *TextDataType) AsFullyKnown() DataType {
+	t.lengthKnown = true
+	return t
+}
+
 var (
 	TextDataTypeSynonyms = []string{VarcharLegacyDataType, "STRING", "TEXT", "NVARCHAR2", "NVARCHAR", "CHAR VARYING", "NCHAR VARYING"}
 	TextDataTypeSubtypes = []string{"CHARACTER", "CHAR", "NCHAR"}
