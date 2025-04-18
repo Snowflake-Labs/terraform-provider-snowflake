@@ -17,7 +17,7 @@ across different versions.
 ### *(breaking change)* Changes in sensitive values
 To ensure better security of users' data, we adjusted the fields containing sensitive information to be sensitive in the provider. This means these values will not be printed by Terraform during planning, etc. Note that the users are still responsible for storing the state securely. Read more about sensitive values in the [Terraform documentation](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables).
 
-The fields that were not marked as sensitive but are now marked as sensitive are the following:
+Fields changed to sensitive:
 - provider configuration: `passcode` field
 - `snowflake_system_generate_scim_access_token` data source: `access_token` field
 - `snowflake_api_authentication_integration_with_authorization_code_grant` resource: `oauth_client_id` and `oauth_client_secret` fields,
@@ -26,11 +26,27 @@ The fields that were not marked as sensitive but are now marked as sensitive are
 - `snowflake_saml2_integration` resource: `saml2_x509_cert` field
 - `snowflake_storage_integration` resource: `azure_consent_url` field
 
-If you reference one of these fields in an output or a variable block, then it needs to be marked as `sensitive = true` in the Terraform configuration. Read [Output documentation](https://developer.hashicorp.com/terraform/language/values/outputs#sensitive-suppressing-values-in-cli-output) and [Variable documentation](https://developer.hashicorp.com/terraform/language/values/variables#suppressing-values-in-cli-output) for more details.
+If you reference one of these fields in an output or a variable block, then it needs to be marked as `sensitive = true` in the Terraform configuration. Read [Output documentation](https://developer.hashicorp.com/terraform/language/values/outputs#sensitive-suppressing-values-in-cli-output) and [Variable documentation](https://developer.hashicorp.com/terraform/language/values/variables#suppressing-values-in-cli-output) for more details. In other case, you will get an error like this:
+```
+Planning failed. Terraform encountered an error while generating this plan.
 
-Some fields, like secure function definitions, can also contain sensitive values. However, because of SDK limitations:
-- fields cannot be marked as sensitive conditionally, depending on the value of `secure` parameter,
-- nested fields, like in `show_output` and `describe_output`, cannot be marked as sensitive.
+╷
+│ Error: Output refers to sensitive values
+│
+│   on 3565.tf line 84:
+│   84: output "sensitive_output" {
+│
+│ To reduce the risk of accidentally exporting sensitive data that was intended to be only internal, Terraform requires that any root module output containing sensitive data be explicitly marked
+│ as sensitive, to confirm your intent.
+│
+│ If you do intend to export this data, annotate the output value as sensitive by adding the following argument:
+│     sensitive = true
+╵
+```
+
+Some fields, like secure function definitions, can also contain sensitive values. However, because of [SDK v2](https://developer.hashicorp.com/terraform/plugin/sdkv2) limitations:
+- There is no possibility to mark sensitive values conditionally ([reference](https://github.com/hashicorp/terraform-plugin-sdk/issues/736)). This means it is not possible to mark sensitive values based on other fields, like marking `body` based on the value of `secure` field in views, functions, and procedures. As a result, this field is not marked as sensitive. For such cases, we add disclaimers in the resource documentation.
+- There is no possibility to mark sensitive values in nested fields ([reference](https://github.com/hashicorp/terraform-plugin-sdk/issues/201)). This means the nested fields, like these in `show_output` and `describe_output` cannot be sensitive. fields, like in `show_output` and `describe_output`, cannot be marked as sensitive.
 
 Instead, we added notes in the documentation of the related resources. The full list includes:
 - `snowflake_execute` resource: `execute`, `revert`, `query` and `query_results` fields,
