@@ -81,10 +81,6 @@ func TestResourceDataTypeDiffHandlingRead(withExternalChangesMarking bool) schem
 				return diag.FromErr(err)
 			}
 		}
-
-		if withExternalChangesMarking {
-			// TODO: implement if needed
-		}
 		return nil
 	}
 }
