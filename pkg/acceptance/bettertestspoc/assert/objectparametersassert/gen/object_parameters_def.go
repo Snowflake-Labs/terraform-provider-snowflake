@@ -1,6 +1,9 @@
 package gen
 
-import "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvidentifiers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
+)
 
 type SnowflakeObjectParameters struct {
 	Name              string
@@ -33,7 +36,7 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 		Level:  sdk.ParameterTypeUser,
 		Parameters: []SnowflakeParameter{
 			{ParameterName: string(sdk.UserParameterEnableUnredactedQuerySyntaxError), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			{ParameterName: string(sdk.UserParameterNetworkPolicy), ParameterType: "string", DefaultValue: "RESTRICTED_ACCESS", DefaultLevel: "sdk.ParameterTypeAccount"},
+			{ParameterName: string(sdk.UserParameterNetworkPolicy), ParameterType: "string", DefaultValue: testenvidentifiers.NetworkPolicy.Name(), DefaultLevel: "sdk.ParameterTypeAccount"},
 			{ParameterName: string(sdk.UserParameterPreventUnloadToInternalStages), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.UserParameterAbortDetachedQuery), ParameterType: "bool", DefaultValue: "false", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.UserParameterAutocommit), ParameterType: "bool", DefaultValue: "true", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
