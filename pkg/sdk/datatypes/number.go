@@ -115,3 +115,17 @@ func parseNumberDataTypeWithoutPrecisionAndScale(raw sanitizedDataTypeRaw) (*Num
 func areNumberDataTypesTheSame(a, b *NumberDataType) bool {
 	return a.precision == b.precision && a.scale == b.scale
 }
+
+func areNumberDataTypesDefinitelyDifferent(a, b *NumberDataType) bool {
+	var precisionDefinitelyDifferent bool
+	if a.precisionKnown && b.precisionKnown {
+		precisionDefinitelyDifferent = a.precision != b.precision
+	}
+
+	var scaleDefinitelyDifferent bool
+	if a.scaleKnown && b.scaleKnown {
+		scaleDefinitelyDifferent = a.scale != b.scale
+	}
+
+	return precisionDefinitelyDifferent || scaleDefinitelyDifferent
+}

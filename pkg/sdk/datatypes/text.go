@@ -77,3 +77,11 @@ func parseTextDataTypeRaw(raw sanitizedDataTypeRaw) (*TextDataType, error) {
 func areTextDataTypesTheSame(a, b *TextDataType) bool {
 	return a.length == b.length
 }
+
+func areTextDataTypesDefinitelyDifferent(a, b *TextDataType) bool {
+	var lengthDefinitelyDifferent bool
+	if a.lengthKnown && b.lengthKnown {
+		lengthDefinitelyDifferent = a.length != b.length
+	}
+	return lengthDefinitelyDifferent
+}
