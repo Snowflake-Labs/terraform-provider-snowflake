@@ -55,6 +55,17 @@
                 }
             {{ end }}
         {{ end }}
+    {{ else if eq .Name "Drop" }}
+        func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {
+            opts := request.toOpts()
+            return validateAndExec(v.client, ctx, opts)
+        }
+
+        func (v *{{ $impl }}) DropSafely(ctx context.Context, id {{ .ObjectInterface.IdentifierKind }}) error {
+            return SafeDrop(client, func(ctx context.Context) error {
+                return v.Drop(ctx, NewDrop{{ .ObjectInterface.NameSingular }}Request(id).WithIfExists(true))
+            }, ctx, id)
+        }
     {{ else }}
         func (v *{{ $impl }}) {{ .Name }}(ctx context.Context, request *{{ .OptsField.DtoDecl }}) error {
             opts := request.toOpts()

@@ -13,7 +13,7 @@ type Tags interface {
 	ShowByID(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error)
 	ShowByIDSafely(ctx context.Context, id SchemaObjectIdentifier) (*Tag, error)
 	Drop(ctx context.Context, request *DropTagRequest) error
-	DropSafely(ctx context.Context, request *DropTagRequest) error
+	DropSafely(ctx context.Context, id SchemaObjectIdentifier) error
 	Undrop(ctx context.Context, request *UndropTagRequest) error
 	Set(ctx context.Context, request *SetTagRequest) error
 	Unset(ctx context.Context, request *UnsetTagRequest) error
