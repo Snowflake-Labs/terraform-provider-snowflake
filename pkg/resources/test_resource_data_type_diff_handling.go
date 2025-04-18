@@ -17,7 +17,7 @@ var testResourceDataTypeDiffHandlingSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Used to make the tests faster (instead of communicating with SF, we read from environment variable).",
 	},
-	"return_data_type": {
+	"top_level_datatype": {
 		Type:             schema.TypeString,
 		Required:         true,
 		Description:      "An example field being a data type.",
@@ -41,7 +41,7 @@ func TestResourceDataTypeDiffHandlingCreate(ctx context.Context, d *schema.Resou
 	envName := d.Get("env_name").(string)
 	log.Printf("[DEBUG] handling create for %s", envName)
 
-	if err := handleDatatypeCreate(d, "return_data_type", func(dataType datatypes.DataType) error {
+	if err := handleDatatypeCreate(d, "top_level_datatype", func(dataType datatypes.DataType) error {
 		return testResourceDataTypeDiffHandlingSet(envName, dataType)
 	}); err != nil {
 		return diag.FromErr(err)
@@ -55,7 +55,7 @@ func TestResourceDataTypeDiffHandlingUpdate(ctx context.Context, d *schema.Resou
 	envName := d.Id()
 	log.Printf("[DEBUG] handling update for %s", envName)
 
-	if err := handleDatatypeUpdate(d, "return_data_type", func(dataType datatypes.DataType) error {
+	if err := handleDatatypeUpdate(d, "top_level_datatype", func(dataType datatypes.DataType) error {
 		return testResourceDataTypeDiffHandlingSet(envName, dataType)
 	}); err != nil {
 		return diag.FromErr(err)
@@ -77,7 +77,7 @@ func TestResourceDataTypeDiffHandlingRead(withExternalChangesMarking bool) schem
 				return diag.FromErr(err)
 			}
 
-			if err := handleDatatypeSet(d, "return_data_type", externalDataType); err != nil {
+			if err := handleDatatypeSet(d, "top_level_datatype", externalDataType); err != nil {
 				return diag.FromErr(err)
 			}
 		}

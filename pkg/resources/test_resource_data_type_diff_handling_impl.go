@@ -38,6 +38,8 @@ func handleDatatypeSet(d *schema.ResourceData, key string, externalDataType data
 	if err != nil {
 		return err
 	}
+	// current config data type is always considered as fully known because we know the defaults on the SDK level
+	// external data type is left without changes as all the unknowns should remain as unknowns
 	if datatypes.AreDefinitelyDifferent(AsFullyKnown(currentConfigDataType), externalDataType) {
 		return d.Set(key, SqlNew(externalDataType))
 	}

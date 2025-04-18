@@ -27,14 +27,15 @@ func TestAcc_TestResource_DataTypeDiffHandling(t *testing.T) {
 	resourceType := "snowflake_test_resource_data_type_diff_handling"
 	resourceName := "test"
 	resourceReference := fmt.Sprintf("%s.%s", resourceType, resourceName)
+	propertyName := "top_level_datatype"
 
 	testConfig := func(configValue string) string {
 		return fmt.Sprintf(`
 resource "%[3]s" "%[4]s" {
 	env_name = "%[2]s"
-	return_data_type = "%[1]s"
+	%[5]s = "%[1]s"
 }
-`, configValue, envName, resourceType, resourceName)
+`, configValue, envName, resourceType, resourceName, propertyName)
 	}
 
 	type DataTypeDiffHandlingTestCase struct {
@@ -164,13 +165,13 @@ resource "%[3]s" "%[4]s" {
 				if tc.ExternalValue != "" {
 					checks = []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
-						planchecks.ExpectDrift(resourceReference, "return_data_type", sdk.String(tc.ConfigValue), sdk.String(tc.ExternalValue)),
-						planchecks.ExpectChange(resourceReference, "return_data_type", tfjson.ActionUpdate, sdk.String(tc.ExternalValue), sdk.String(tc.ConfigValue)),
+						planchecks.ExpectDrift(resourceReference, propertyName, sdk.String(tc.ConfigValue), sdk.String(tc.ExternalValue)),
+						planchecks.ExpectChange(resourceReference, propertyName, tfjson.ActionUpdate, sdk.String(tc.ExternalValue), sdk.String(tc.ConfigValue)),
 					}
 				} else {
 					checks = []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceReference, plancheck.ResourceActionUpdate),
-						planchecks.ExpectChange(resourceReference, "return_data_type", tfjson.ActionUpdate, sdk.String(tc.ConfigValue), sdk.String(tc.NewConfigValue)),
+						planchecks.ExpectChange(resourceReference, propertyName, tfjson.ActionUpdate, sdk.String(tc.ConfigValue), sdk.String(tc.NewConfigValue)),
 					}
 				}
 			} else {
@@ -206,7 +207,7 @@ resource "%[3]s" "%[4]s" {
 						},
 						Config: testConfig(tc.ConfigValue),
 						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr(resourceReference, "return_data_type", tc.ConfigValue),
+							resource.TestCheckResourceAttr(resourceReference, propertyName, tc.ConfigValue),
 						),
 					},
 					{
@@ -218,7 +219,7 @@ resource "%[3]s" "%[4]s" {
 						},
 						Config: testConfig(newConfigValue),
 						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr(resourceReference, "return_data_type", expectedValue),
+							resource.TestCheckResourceAttr(resourceReference, propertyName, expectedValue),
 						),
 					},
 				},
