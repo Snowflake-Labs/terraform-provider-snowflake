@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
+
 	acc "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
@@ -27,8 +29,8 @@ func TestAcc_ManagedAccount(t *testing.T) {
 	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	adminName := acc.TestClient().Ids.Alpha()
-	adminPass := acc.TestClient().Ids.AlphaWithPrefix("A1")
+	adminName := random.AdminName()
+	adminPass := random.Password()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
@@ -68,8 +70,8 @@ func TestAcc_ManagedAccount_HandleShowOutputChanges_BCR_2024_08(t *testing.T) {
 	testenvs.SkipTestIfSet(t, testenvs.SkipManagedAccountTest, "error: 090337 (23001): Number of managed accounts allowed exceeded the limit. Please contact Snowflake support")
 
 	id := acc.TestClient().Ids.RandomAccountObjectIdentifier()
-	adminName := acc.TestClient().Ids.Alpha()
-	adminPass := acc.TestClient().Ids.AlphaWithPrefix("ABC_abc_123!!!")
+	adminName := random.AdminName()
+	adminPass := random.Password()
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: acc.TestAccProtoV6ProviderFactories,
