@@ -75,6 +75,11 @@ type GrantOnAccountObject struct {
 	ReplicationGroup      *AccountObjectIdentifier `ddl:"identifier" sql:"REPLICATION GROUP"`
 	ExternalVolume        *AccountObjectIdentifier `ddl:"identifier" sql:"EXTERNAL VOLUME"`
 	SnowflakeIntelligence *AccountObjectIdentifier `ddl:"identifier" sql:"SNOWFLAKE INTELLIGENCE"`
+	// Object is a fallback for account-level types that do not have a dedicated field.
+	// It renders as ON <OBJECT_TYPE> <name>.
+	// TODO [SNOW-4053390]: Remove dedicated account-object fields and emit grants
+	// through Object, matching OwnershipGrantOn and GrantOnSchemaObject.
+	Object *Object `ddl:"-"`
 }
 
 type GrantOnSchema struct {
@@ -325,51 +330,37 @@ func (v *Grant) ID() ObjectIdentifier {
 	return v.Name
 }
 
+// ObjectTypeFromShowGrants maps GRANTED_ON / GRANT_ON from SHOW GRANTS to an ObjectType.
+// Snowflake sometimes returns a shortened name (VOLUME, POSTGRES) instead of the SQL type
+// (EXTERNAL VOLUME, POSTGRES INSTANCE).
+func ObjectTypeFromShowGrants(raw string) ObjectType {
+	if raw == "" {
+		return ""
+	}
+	switch raw {
+	case "VOLUME":
+		return ObjectTypeExternalVolume
+	case "MODULE":
+		return ObjectTypeModel
+	case "CORTEX_AGENT":
+		return ObjectTypeAgent
+	case "CORTEX_AGENT_SERVER":
+		return ObjectTypeMcpServer
+	case "QUALITY_MONITOR":
+		return ObjectTypeModelMonitor
+	case "POSTGRES":
+		return ObjectTypePostgresInstance
+	default:
+		return ObjectType(strings.ReplaceAll(raw, "_", " "))
+	}
+}
+
 // TODO(SNOW-2097063): Improve SHOW GRANTS implementation
 func (row grantRow) convert() (*Grant, error) {
 	grantedTo := ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	grantTo := ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
-	var grantedOn ObjectType
-	// true for current grants
-	if row.GrantedOn != "" {
-		grantedOn = ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
-	}
-	if row.GrantedOn == "VOLUME" {
-		grantedOn = ObjectTypeExternalVolume
-	}
-	if row.GrantedOn == "MODULE" {
-		grantedOn = ObjectTypeModel
-	}
-	if row.GrantedOn == "CORTEX_AGENT" {
-		grantedOn = ObjectTypeAgent
-	}
-	if row.GrantedOn == "CORTEX_AGENT_SERVER" {
-		grantedOn = ObjectTypeMcpServer
-	}
-	if row.GrantedOn == "QUALITY_MONITOR" {
-		grantedOn = ObjectTypeModelMonitor
-	}
-
-	var grantOn ObjectType
-	// true for future grants
-	if row.GrantOn != "" {
-		grantOn = ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
-	}
-	if row.GrantOn == "VOLUME" {
-		grantOn = ObjectTypeExternalVolume
-	}
-	if row.GrantOn == "MODULE" {
-		grantOn = ObjectTypeModel
-	}
-	if row.GrantOn == "CORTEX_AGENT" {
-		grantOn = ObjectTypeAgent
-	}
-	if row.GrantOn == "CORTEX_AGENT_SERVER" {
-		grantOn = ObjectTypeMcpServer
-	}
-	if row.GrantOn == "QUALITY_MONITOR" {
-		grantOn = ObjectTypeModelMonitor
-	}
+	grantedOn := ObjectTypeFromShowGrants(row.GrantedOn)
+	grantOn := ObjectTypeFromShowGrants(row.GrantOn)
 
 	var name ObjectIdentifier
 	var err error

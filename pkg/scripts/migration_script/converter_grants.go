@@ -25,29 +25,8 @@ type GrantCsvRow struct {
 func (row GrantCsvRow) convert() (*sdk.Grant, error) {
 	grantedTo := sdk.ObjectType(strings.ReplaceAll(row.GrantedTo, "_", " "))
 	grantTo := sdk.ObjectType(strings.ReplaceAll(row.GrantTo, "_", " "))
-	var grantedOn sdk.ObjectType
-	// true for current grants
-	if row.GrantedOn != "" {
-		grantedOn = sdk.ObjectType(strings.ReplaceAll(row.GrantedOn, "_", " "))
-	}
-	if row.GrantedOn == "VOLUME" {
-		grantedOn = sdk.ObjectTypeExternalVolume
-	}
-	if row.GrantedOn == "MODULE" {
-		grantedOn = sdk.ObjectTypeModel
-	}
-
-	var grantOn sdk.ObjectType
-	// true for future grants
-	if row.GrantOn != "" {
-		grantOn = sdk.ObjectType(strings.ReplaceAll(row.GrantOn, "_", " "))
-	}
-	if row.GrantOn == "VOLUME" {
-		grantOn = sdk.ObjectTypeExternalVolume
-	}
-	if row.GrantOn == "MODULE" {
-		grantOn = sdk.ObjectTypeModel
-	}
+	grantedOn := sdk.ObjectTypeFromShowGrants(row.GrantedOn)
+	grantOn := sdk.ObjectTypeFromShowGrants(row.GrantOn)
 
 	var name sdk.ObjectIdentifier
 	var err error

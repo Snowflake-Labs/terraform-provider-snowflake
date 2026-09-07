@@ -294,8 +294,8 @@ func init() {
 // allowedUnquotedCharactersRegex matches non-empty strings consisting only of allowed characters
 var allowedUnquotedCharactersRegex = regexp.MustCompile(`^[a-zA-Z ._]+$`)
 
-// validateUnquotedInput checks that the passed string contains only allowed characters.
-func validateUnquotedInput(s string) error {
+// validateUserInput checks that the passed string contains only allowed characters.
+func validateUserInput(s string) error {
 	var errs []error
 	if !allowedUnquotedCharactersRegex.MatchString(s) {
 		errs = append(errs, fmt.Errorf("%s contains disallowed characters; it must follow this regex: %s", s, allowedUnquotedCharactersRegex.String()))
@@ -307,7 +307,7 @@ func validateUnquotedInput(s string) error {
 func validatePrivileges[T fmt.Stringer](privileges []T) error {
 	var errs []error
 	for _, privilege := range privileges {
-		if err := validateUnquotedInput(privilege.String()); err != nil {
+		if err := validateUserInput(privilege.String()); err != nil {
 			errs = append(errs, fmt.Errorf("invalid privilege: %w", err))
 		}
 	}
@@ -319,7 +319,7 @@ func validatePrivileges[T fmt.Stringer](privileges []T) error {
 // There is no dedicated privilege type in the SDK, so we use string instead.
 func ToPrivilege(s string) (string, error) {
 	s = strings.ToUpper(s)
-	if err := validateUnquotedInput(s); err != nil {
+	if err := validateUserInput(s); err != nil {
 		return "", fmt.Errorf("invalid privilege: %w", err)
 	}
 	return s, nil
@@ -383,8 +383,13 @@ func (v *AccountRoleGrantOn) validate() error {
 }
 
 func (v *GrantOnAccountObject) validate() error {
-	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.ComputePool, v.Database, v.Integration, v.Connection, v.FailoverGroup, v.ReplicationGroup, v.ExternalVolume, v.SnowflakeIntelligence) {
-		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence")
+	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.ComputePool, v.Database, v.Integration, v.Connection, v.FailoverGroup, v.ReplicationGroup, v.ExternalVolume, v.SnowflakeIntelligence, v.Object) {
+		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence", "Object")
+	}
+	if valueSet(v.Object) {
+		if err := validateUserInput(v.Object.ObjectType.String()); err != nil {
+			return fmt.Errorf("invalid object type: %w", err)
+		}
 	}
 	return nil
 }

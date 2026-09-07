@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/experimentalfeatures"
 	providerresources "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 )
 
 func possibleValuesListed[T ~string | ~int](values []T) string {
@@ -90,6 +89,10 @@ func ignoredAfterCreationDescription() string {
 
 func enumValuesDescription[T ~string](values []T) string {
 	return fmt.Sprintf("Valid values are (case-insensitive): %s.", possibleValuesListed(values))
+}
+
+func objectTypeExamplesDescription[T ~string](description string, examples []T) string {
+	return fmt.Sprintf("%s Known examples (case-insensitive): %s. Snowflake validates the type at apply time.", description, possibleValuesListed(examples))
 }
 
 func doubleDollarQuotesDescription() string {
