@@ -96,6 +96,7 @@ Read-Only:
 - `granted_to_roles` (Number)
 - `is_current` (Boolean)
 - `is_default` (Boolean)
+- `is_from_organization_user_group` (Boolean)
 - `is_inherited` (Boolean)
 - `name` (String)
 - `owner` (String)

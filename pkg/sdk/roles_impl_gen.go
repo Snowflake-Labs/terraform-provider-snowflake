@@ -124,6 +124,7 @@ func (r roleDBRow) convert() (*Role, error) {
 	mapNullStringToRequiredBool(&result.IsDefault, r.IsDefault)
 	mapNullStringToRequiredBool(&result.IsCurrent, r.IsCurrent)
 	mapNullStringToRequiredBool(&result.IsInherited, r.IsInherited)
+	mapNullStringToRequiredBool(&result.IsFromOrganizationUserGroup, r.IsFromOrganizationUserGroup)
 	mapNullStringToNonNullableField(&result.Owner, r.Owner)
 	mapNullStringToNonNullableField(&result.Comment, r.Comment)
 	return result, nil

@@ -66,6 +66,7 @@ var rolesDef = g.NewInterface(
 		OptionalBoolFromText("is_default", g.WithRequiredInPlain()).
 		OptionalBoolFromText("is_current", g.WithRequiredInPlain()).
 		OptionalBoolFromText("is_inherited", g.WithRequiredInPlain()).
+		OptionalBoolFromText("is_from_organization_user_group", g.WithRequiredInPlain()).
 		Number("assigned_to_users").
 		Number("granted_to_roles").
 		Number("granted_roles").

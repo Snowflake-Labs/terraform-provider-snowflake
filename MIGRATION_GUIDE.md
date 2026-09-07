@@ -211,6 +211,12 @@ No changes in configuration are required.
 
 Reference: [#5085](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5085)
 
+### *(new feature)* New `is_from_organization_user_group` field in `show_output` for `snowflake_account_role` and `snowflake_account_roles`
+
+A new `is_from_organization_user_group` field has been added to the `show_output` attribute on both the [`snowflake_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account_role) resource and the [`snowflake_account_roles`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/account_roles) data source. It reflects whether the role was imported from an organization user group, as returned by `SHOW ROLES`.
+
+No configuration changes are required.
+
 ### *(improvement)* `snowflake_account` create polling now uses the resource create timeout
 
 After `CREATE ACCOUNT` succeeded, [`snowflake_account`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account) retried `SHOW ACCOUNTS` a fixed five times (about 15 seconds). Cross-region accounts can take longer than that to become visible, so create failed with:

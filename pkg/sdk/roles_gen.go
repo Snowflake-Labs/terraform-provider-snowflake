@@ -64,29 +64,31 @@ type ShowRoleOptions struct {
 }
 
 type roleDBRow struct {
-	CreatedOn       time.Time      `db:"created_on"`
-	Name            string         `db:"name"`
-	IsDefault       sql.NullString `db:"is_default"`
-	IsCurrent       sql.NullString `db:"is_current"`
-	IsInherited     sql.NullString `db:"is_inherited"`
-	AssignedToUsers int            `db:"assigned_to_users"`
-	GrantedToRoles  int            `db:"granted_to_roles"`
-	GrantedRoles    int            `db:"granted_roles"`
-	Owner           sql.NullString `db:"owner"`
-	Comment         sql.NullString `db:"comment"`
+	CreatedOn                   time.Time      `db:"created_on"`
+	Name                        string         `db:"name"`
+	IsDefault                   sql.NullString `db:"is_default"`
+	IsCurrent                   sql.NullString `db:"is_current"`
+	IsInherited                 sql.NullString `db:"is_inherited"`
+	IsFromOrganizationUserGroup sql.NullString `db:"is_from_organization_user_group"`
+	AssignedToUsers             int            `db:"assigned_to_users"`
+	GrantedToRoles              int            `db:"granted_to_roles"`
+	GrantedRoles                int            `db:"granted_roles"`
+	Owner                       sql.NullString `db:"owner"`
+	Comment                     sql.NullString `db:"comment"`
 }
 
 type Role struct {
-	CreatedOn       time.Time
-	Name            string
-	IsDefault       bool
-	IsCurrent       bool
-	IsInherited     bool
-	AssignedToUsers int
-	GrantedToRoles  int
-	GrantedRoles    int
-	Owner           string
-	Comment         string
+	CreatedOn                   time.Time
+	Name                        string
+	IsDefault                   bool
+	IsCurrent                   bool
+	IsInherited                 bool
+	IsFromOrganizationUserGroup bool
+	AssignedToUsers             int
+	GrantedToRoles              int
+	GrantedRoles                int
+	Owner                       string
+	Comment                     string
 }
 
 type RolesInClass struct {

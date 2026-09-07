@@ -34,6 +34,7 @@ func TestInt_Roles(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, roleID.Name(), role.Name)
+		assert.Equal(t, false, role.IsFromOrganizationUserGroup)
 	})
 
 	t.Run("create if not exists", func(t *testing.T) {
@@ -77,6 +78,7 @@ func TestInt_Roles(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, roleID.Name(), role.Name)
 		assert.Equal(t, comment, role.Comment)
+		assert.Equal(t, false, role.IsFromOrganizationUserGroup)
 
 		// verify tags
 		tag1Value, err := client.SystemFunctions.GetTag(ctx, tag.ID(), role.ID(), sdk.ObjectTypeRole)
