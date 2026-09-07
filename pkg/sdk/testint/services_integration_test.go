@@ -3,6 +3,7 @@
 package testint
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
@@ -640,7 +641,7 @@ func TestInt_Services(t *testing.T) {
 				HasSchemaName(service.ID().SchemaName()).
 				HasOwner(snowflakeroles.Accountadmin.Name()).
 				HasComputePool(computePool.ID()).
-				HasSpecThatContains("snowflake/images/snowflake_images/exampleimage:latest").
+				HasSpecThatContains(strings.TrimPrefix(testClientHelper().Service.SampleImagePath(t), "/")).
 				HasDnsNameNotEmpty().
 				HasCurrentInstancesBetween(0, 1).
 				HasTargetInstancesBetween(0, 1).
