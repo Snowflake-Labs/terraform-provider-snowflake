@@ -26,9 +26,14 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 
 ## v2.20.x ➞ v2.21.0
 
-### *(new feature)* Added `EXPERIMENTS` support for `on_schema_object.all` and `on.all` in grant resources
+### *(new feature)* Additional object types in grant resources
 
-Snowflake now supports `GRANT ... ON ALL EXPERIMENTS` (and ownership of all experiments). The following resources now accept `EXPERIMENTS` in the `object_type_plural` field for bulk **all** grants:
+[`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role)
+no longer rejects object types that are missing from the provider allowlist. Snowflake validates the object type at apply. Existing configurations are unchanged.
+
+This absorbs cases like granting on `POSTGRES INSTANCE` ([GH #5084](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5084)) without a dedicated provider release.
+
+Snowflake also now supports `GRANT ... ON ALL EXPERIMENTS` (and ownership of all experiments). The following resources now accept `EXPERIMENTS` in the `object_type_plural` field for bulk **all** grants:
 
 - `snowflake_grant_privileges_to_account_role` (`on_schema_object.all`)
 - `snowflake_grant_privileges_to_database_role` (`on_schema_object.all`)

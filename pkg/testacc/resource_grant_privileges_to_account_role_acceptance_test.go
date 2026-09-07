@@ -576,6 +576,53 @@ func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject_SnowflakeIntelligence(
 	})
 }
 
+// proves https://github.com/snowflakedb/terraform-provider-snowflake/issues/5084
+func TestAcc_GrantPrivilegesToAccountRole_OnAccountObject_PostgresInstance(t *testing.T) {
+	role, roleCleanup := testClient().Role.CreateRole(t)
+	t.Cleanup(roleCleanup)
+
+	postgresInstance, postgresInstanceCleanup := testClient().PostgresInstance.Create(t)
+	t.Cleanup(postgresInstanceCleanup)
+
+	roleId := role.ID()
+	privilege := string(sdk.AccountObjectPrivilegeUsage)
+	resourceModel := model.GrantPrivilegesToAccountRole("test", roleId.FullyQualifiedName()).
+		WithPrivileges(privilege).
+		WithOnAccountObject(sdk.ObjectTypePostgresInstance, postgresInstance.ID())
+	ref := resourceModel.ResourceReference()
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckAccountRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			{
+				Config: accconfig.FromModels(t, resourceModel),
+				Check: assertThat(
+					t,
+					resourceassert.GrantPrivilegesToAccountRoleResource(t, ref).
+						HasAccountRoleName(roleId.FullyQualifiedName()).
+						HasPrivileges(privilege).
+						HasAllPrivileges(false).
+						HasWithGrantOption(false).
+						HasAlwaysApply(false).
+						HasStrictPrivilegeManagement(false).
+						HasOnAccountObject(sdk.ObjectTypePostgresInstance, postgresInstance.ID()).
+						HasResourceId(fmt.Sprintf("%s|false|false|%s|OnAccountObject|%s|%s", roleId.FullyQualifiedName(), privilege, sdk.ObjectTypePostgresInstance, postgresInstance.ID().FullyQualifiedName())),
+				),
+			},
+			{
+				Config:                  accconfig.FromModels(t, resourceModel),
+				ResourceName:            ref,
+				ImportState:             true,
+				ImportStateVerifyIgnore: []string{"on_account_object.0.object_name"},
+			},
+		},
+	})
+}
+
 // This proves that infinite plan is not produced as in snowflake_grant_privileges_to_role.
 // More details can be found in the fix pr https://github.com/Snowflake-Labs/terraform-provider-snowflake/pull/2364.
 func TestAcc_GrantPrivilegesToApplicationRole_OnAccountObject_InfinitePlan(t *testing.T) {
@@ -2117,11 +2164,11 @@ func TestAcc_GrantPrivilegesToAccountRole_Inherited_Validation(t *testing.T) {
 
 	invalidAccountObjectTypeModel := model.GrantPrivilegesToAccountRole("test", "test_role").
 		WithPrivileges(string(sdk.AccountObjectPrivilegeModify)).
-		WithOnInheritedAccountObjects("INVALID_PLURAL_OBJECT_TYPE")
+		WithOnInheritedAccountObjects("INVALID; TYPE")
 
 	invalidSchemaObjectTypeModel := model.GrantPrivilegesToAccountRole("test", "test_role").
 		WithPrivileges(string(sdk.SchemaObjectPrivilegeSelect)).
-		WithOnInheritedSchemaObjectsInDatabase("INVALID_PLURAL_OBJECT_TYPE", sdk.NewAccountObjectIdentifier("test_database"))
+		WithOnInheritedSchemaObjectsInDatabase("INVALID; TYPE", sdk.NewAccountObjectIdentifier("test_database"))
 
 	providerModel := providermodel.SnowflakeProvider().
 		WithExperimentalFeaturesEnabled(experimentalfeatures.InheritedGrants)
@@ -2146,12 +2193,12 @@ func TestAcc_GrantPrivilegesToAccountRole_Inherited_Validation(t *testing.T) {
 			{
 				Config:      accconfig.FromModels(t, providerModel, invalidAccountObjectTypeModel),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("expected .* to be one of .* got INVALID_PLURAL_OBJECT_TYPE"),
+				ExpectError: regexp.MustCompile("invalid plural object type: INVALID; TYPE contains disallowed characters"),
 			},
 			{
 				Config:      accconfig.FromModels(t, providerModel, invalidSchemaObjectTypeModel),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("expected .* to be one of .* got INVALID_PLURAL_OBJECT_TYPE"),
+				ExpectError: regexp.MustCompile("invalid plural object type: INVALID; TYPE contains disallowed characters"),
 			},
 		},
 	})

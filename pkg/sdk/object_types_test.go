@@ -92,12 +92,14 @@ func Test_ToObjectType(t *testing.T) {
 		{input: "STORAGE LIFECYCLE POLICY", want: ObjectTypeStorageLifecyclePolicy},
 		{input: "WORKSPACE", want: ObjectTypeWorkspace},
 		{input: "CATALOG INTEGRATION", want: ObjectTypeCatalogIntegration},
+		{input: "POSTGRES INSTANCE", want: ObjectTypePostgresInstance},
 	}
 
 	invalid := []test{
 		{input: ""},
 		{input: "foo;"},
 		{input: "TABLE; SELECT 1;--"},
+		{input: "TABLE--"},
 	}
 
 	for _, tc := range valid {
@@ -135,6 +137,7 @@ func Test_ToPluralObjectType(t *testing.T) {
 		{input: "EXTERNAL TABLES", want: PluralObjectTypeExternalTables},
 		{input: "FUNCTIONS", want: PluralObjectTypeFunctions},
 		{input: "PROCEDURES", want: PluralObjectTypeProcedures},
+		{input: "POSTGRES INSTANCES", want: PluralObjectTypePostgresInstances},
 	}
 
 	invalid := []test{

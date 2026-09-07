@@ -230,7 +230,7 @@ var allObjectTypes = []ObjectType{
 // TODO(SNOW-1834370): use ToObjectType in other places with type conversion (instead of sdk.ObjectType)
 func ToObjectType(s string) (ObjectType, error) {
 	s = strings.ToUpper(s)
-	if err := validateUnquotedInput(s); err != nil {
+	if err := validateUserInput(s); err != nil {
 		return "", fmt.Errorf("invalid object type: %w", err)
 	}
 	return ObjectType(s), nil
@@ -250,7 +250,7 @@ func allPluralObjectTypes() []PluralObjectType {
 // PluralObjectType conversion whenever the input is not trusted (e.g. user-provided resource identifiers parsed during import).
 func ToPluralObjectType(s string) (PluralObjectType, error) {
 	s = strings.ToUpper(s)
-	if err := validateUnquotedInput(s); err != nil {
+	if err := validateUserInput(s); err != nil {
 		return "", fmt.Errorf("invalid plural object type: %w", err)
 	}
 	return PluralObjectType(s), nil

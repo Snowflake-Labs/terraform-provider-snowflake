@@ -126,7 +126,7 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence"))
+		assertOptsInvalid(t, opts, errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence", "Object"))
 	})
 
 	t.Run("on account object - exactly one of validation - empty options", func(t *testing.T) {
@@ -139,7 +139,43 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence"))
+		assertOptsInvalid(t, opts, errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence", "Object"))
+	})
+
+	t.Run("on account object - unknown type fallback", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AllPrivileges: Bool(true),
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					Object: &Object{
+						ObjectType: ObjectTypePostgresInstance,
+						Name:       NewAccountObjectIdentifier("pg1"),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		assertOptsValidAndSqlEqualsf(t, opts, `GRANT ALL PRIVILEGES ON POSTGRES INSTANCE "pg1" TO ROLE "role1"`)
+	})
+
+	t.Run("on account object - unknown type fallback rejects injection", func(t *testing.T) {
+		opts := &GrantPrivilegesToAccountRoleOptions{
+			privileges: &AccountRoleGrantPrivileges{
+				AllPrivileges: Bool(true),
+			},
+			on: &AccountRoleGrantOn{
+				AccountObject: &GrantOnAccountObject{
+					Object: &Object{
+						ObjectType: ObjectType("TABLE; DROP"),
+						Name:       NewAccountObjectIdentifier("pg1"),
+					},
+				},
+			},
+			accountRole: NewAccountObjectIdentifier("role1"),
+		}
+		assertOptsInvalidJoinedErrors(t, opts, fmt.Errorf("invalid object type: %s contains disallowed characters; it must follow this regex: %s", "TABLE; DROP", allowedUnquotedCharactersRegex.String()))
 	})
 
 	t.Run("on schema", func(t *testing.T) {
@@ -1739,4 +1775,27 @@ func TestRevokeInheritedPrivilegesFromDatabaseRole(t *testing.T) {
 		opts.privileges = InheritedDatabaseRoleGrantPrivileges{AllPrivileges: new(true)}
 		assertOptsValidAndSqlEqualsf(t, opts, `REVOKE INHERITED ALL PRIVILEGES ON ALL TABLES IN DATABASE %s FROM DATABASE ROLE %s`, dbId.FullyQualifiedName(), databaseRoleId.FullyQualifiedName())
 	})
+}
+
+func TestObjectTypeFromShowGrants(t *testing.T) {
+	tests := []struct {
+		raw  string
+		want ObjectType
+	}{
+		{raw: "", want: ""},
+		{raw: "DATABASE", want: ObjectTypeDatabase},
+		{raw: "EXTERNAL_VOLUME", want: ObjectTypeExternalVolume},
+		{raw: "VOLUME", want: ObjectTypeExternalVolume},
+		{raw: "POSTGRES", want: ObjectTypePostgresInstance},
+		{raw: "POSTGRES_INSTANCE", want: ObjectTypePostgresInstance},
+		{raw: "MODULE", want: ObjectTypeModel},
+		{raw: "CORTEX_AGENT", want: ObjectTypeAgent},
+		{raw: "CORTEX_AGENT_SERVER", want: ObjectTypeMcpServer},
+		{raw: "QUALITY_MONITOR", want: ObjectTypeModelMonitor},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%q", tt.raw), func(t *testing.T) {
+			assert.Equal(t, tt.want, ObjectTypeFromShowGrants(tt.raw))
+		})
+	}
 }
