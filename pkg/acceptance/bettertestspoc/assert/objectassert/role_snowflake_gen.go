@@ -109,6 +109,17 @@ func (r *RoleAssert) HasIsInherited(expected bool) *RoleAssert {
 	return r
 }
 
+func (r *RoleAssert) HasIsFromOrganizationUserGroup(expected bool) *RoleAssert {
+	r.AddAssertion(func(t *testing.T, o *sdk.Role) error {
+		t.Helper()
+		if o.IsFromOrganizationUserGroup != expected {
+			return fmt.Errorf("expected is from organization user group: %v; got: %v", expected, o.IsFromOrganizationUserGroup)
+		}
+		return nil
+	})
+	return r
+}
+
 func (r *RoleAssert) HasAssignedToUsers(expected int) *RoleAssert {
 	r.AddAssertion(func(t *testing.T, o *sdk.Role) error {
 		t.Helper()

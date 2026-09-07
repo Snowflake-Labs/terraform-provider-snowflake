@@ -75,6 +75,11 @@ func (r *RoleShowOutputAssert) HasIsInherited(expected bool) *RoleShowOutputAsse
 	return r
 }
 
+func (r *RoleShowOutputAssert) HasIsFromOrganizationUserGroup(expected bool) *RoleShowOutputAssert {
+	r.BoolValueSet("is_from_organization_user_group", expected)
+	return r
+}
+
 func (r *RoleShowOutputAssert) HasAssignedToUsers(expected int) *RoleShowOutputAssert {
 	r.IntValueSet("assigned_to_users", expected)
 	return r
@@ -126,6 +131,11 @@ func (r *RoleShowOutputAssert) HasNoIsCurrent() *RoleShowOutputAssert {
 
 func (r *RoleShowOutputAssert) HasNoIsInherited() *RoleShowOutputAssert {
 	r.ValueNotSet("is_inherited")
+	return r
+}
+
+func (r *RoleShowOutputAssert) HasNoIsFromOrganizationUserGroup() *RoleShowOutputAssert {
+	r.ValueNotSet("is_from_organization_user_group")
 	return r
 }
 

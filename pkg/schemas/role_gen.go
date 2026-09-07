@@ -29,6 +29,10 @@ var ShowRoleSchema = map[string]*schema.Schema{
 		Type:     schema.TypeBool,
 		Computed: true,
 	},
+	"is_from_organization_user_group": {
+		Type:     schema.TypeBool,
+		Computed: true,
+	},
 	"assigned_to_users": {
 		Type:     schema.TypeInt,
 		Computed: true,
@@ -60,6 +64,7 @@ func RoleToSchema(role *sdk.Role) map[string]any {
 	roleSchema["is_default"] = role.IsDefault
 	roleSchema["is_current"] = role.IsCurrent
 	roleSchema["is_inherited"] = role.IsInherited
+	roleSchema["is_from_organization_user_group"] = role.IsFromOrganizationUserGroup
 	roleSchema["assigned_to_users"] = role.AssignedToUsers
 	roleSchema["granted_to_roles"] = role.GrantedToRoles
 	roleSchema["granted_roles"] = role.GrantedRoles

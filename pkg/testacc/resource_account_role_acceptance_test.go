@@ -39,6 +39,7 @@ func TestAcc_AccountRole_BasicUseCase(t *testing.T) {
 			HasIsDefault(false).
 			HasIsCurrent(false).
 			HasIsInherited(false).
+			HasIsFromOrganizationUserGroup(false).
 			HasAssignedToUsers(0).
 			HasGrantedToRoles(0).
 			HasGrantedRoles(0).
@@ -56,6 +57,7 @@ func TestAcc_AccountRole_BasicUseCase(t *testing.T) {
 			HasIsDefault(false).
 			HasIsCurrent(false).
 			HasIsInherited(false).
+			HasIsFromOrganizationUserGroup(false).
 			HasAssignedToUsers(0).
 			HasGrantedToRoles(0).
 			HasGrantedRoles(0).
@@ -69,6 +71,7 @@ func TestAcc_AccountRole_BasicUseCase(t *testing.T) {
 			HasIsDefault(false).
 			HasIsCurrent(false).
 			HasIsInherited(false).
+			HasIsFromOrganizationUserGroup(false).
 			HasAssignedToUsers(0).
 			HasGrantedToRoles(0).
 			HasGrantedRoles(0).
@@ -86,6 +89,7 @@ func TestAcc_AccountRole_BasicUseCase(t *testing.T) {
 			HasIsDefault(false).
 			HasIsCurrent(false).
 			HasIsInherited(false).
+			HasIsFromOrganizationUserGroup(false).
 			HasAssignedToUsers(0).
 			HasGrantedToRoles(0).
 			HasGrantedRoles(0).
@@ -189,6 +193,7 @@ func TestAcc_AccountRole_CompleteUseCase(t *testing.T) {
 			HasIsDefault(false).
 			HasIsCurrent(false).
 			HasIsInherited(false).
+			HasIsFromOrganizationUserGroup(false).
 			HasAssignedToUsers(0).
 			HasGrantedToRoles(0).
 			HasGrantedRoles(0).
@@ -206,6 +211,7 @@ func TestAcc_AccountRole_CompleteUseCase(t *testing.T) {
 			HasIsDefault(false).
 			HasIsCurrent(false).
 			HasIsInherited(false).
+			HasIsFromOrganizationUserGroup(false).
 			HasAssignedToUsers(0).
 			HasGrantedToRoles(0).
 			HasGrantedRoles(0).
