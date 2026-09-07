@@ -21,7 +21,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/importchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeroles"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -32,11 +31,6 @@ import (
 )
 
 func TestAcc_Service_BasicUseCase_FromSpecification(t *testing.T) {
-	// TODO(SNOW-3949220): Unskip when the SPCS example image is available on preprod
-	if testenvs.GetSnowflakeEnvironmentWithProdDefault() != testenvs.SnowflakeProdEnvironment {
-		t.Skip("Skipping: SPCS example image missing in preprod image repository")
-	}
-
 	computePool, computePoolCleanup := testClient().ComputePool.Create(t)
 	t.Cleanup(computePoolCleanup)
 
@@ -1163,11 +1157,6 @@ func TestAcc_Service_fromSpecificationTemplateOnStage(t *testing.T) {
 }
 
 func TestAcc_Service_CompleteUseCase(t *testing.T) {
-	// TODO(SNOW-3949220): Unskip when the SPCS example image is available on preprod
-	if testenvs.GetSnowflakeEnvironmentWithProdDefault() != testenvs.SnowflakeProdEnvironment {
-		t.Skip("Skipping: SPCS example image missing in preprod image repository")
-	}
-
 	computePool, computePoolCleanup := testClient().ComputePool.Create(t)
 	t.Cleanup(computePoolCleanup)
 

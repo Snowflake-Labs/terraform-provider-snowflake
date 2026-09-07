@@ -111,6 +111,15 @@ func (c *ServiceClient) WaitForStatus(t *testing.T, id sdk.SchemaObjectIdentifie
 	}, timeout, 5*time.Second)
 }
 
+// SampleImagePath is the container image used in SPCS service specs.
+// It always points at the precreated TERRAFORM_TEST_SETUP_OBJECTS.PUBLIC.IMAGES repository
+// (dcp-client pinned by digest). See the testing environment setup Image
+// Repository section.
+func (c *ServiceClient) SampleImagePath(t *testing.T) string {
+	t.Helper()
+	return "/terraform_test_setup_objects/public/images/dcp-client:96b2b1341d455a4ff53c41fe02c595dc3a7401732a578db8475c22b9d4e11193"
+}
+
 func (c *ServiceClient) SampleSpec(t *testing.T) string {
 	t.Helper()
 
@@ -124,8 +133,8 @@ func (c *ServiceClient) SampleSpecWithContainerName(t *testing.T, containerName 
 spec:
   containers:
   - name: %s
-    image: /snowflake/images/snowflake_images/exampleimage:latest
-`, containerName)
+    image: %s
+`, containerName, c.SampleImagePath(t))
 }
 
 func (c *ServiceClient) SampleSpecWithEndpoint(t *testing.T, endpointName string) string {
@@ -135,42 +144,42 @@ func (c *ServiceClient) SampleSpecWithEndpoint(t *testing.T, endpointName string
 spec:
   containers:
   - name: example-container
-    image: /snowflake/images/snowflake_images/exampleimage:latest
+    image: %s
   endpoints:
   - name: %s
     port: 4242
     protocol: TCP
-`, endpointName)
+`, c.SampleImagePath(t), endpointName)
 }
 
 func (c *ServiceClient) SampleSpecWithBlockVolume(t *testing.T) string {
 	t.Helper()
-	return `
+	return fmt.Sprintf(`
 spec:
   containers:
   - name: example-container
-    image: /snowflake/images/snowflake_images/exampleimage:latest
+    image: %s
   volumes:
   - name: block-volume
     source: block
     size: 1Gi
-`
+`, c.SampleImagePath(t))
 }
 
 func (c *ServiceClient) SampleSpecTemplate(t *testing.T) string {
 	t.Helper()
 
-	return `
+	return fmt.Sprintf(`
 spec:
   containers:
   - name: example-container
-    image: /snowflake/images/snowflake_images/exampleimage:latest
+    image: %s
   endpoints:
   - name: {{ endpoint_name }}
     public: {{ endpoint_is_public }}
     protocol: TCP
     port: {{ endpoint_port }}
-`
+`, c.SampleImagePath(t))
 }
 
 type ServiceSpecUsing struct {
