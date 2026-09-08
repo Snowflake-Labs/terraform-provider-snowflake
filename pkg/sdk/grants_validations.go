@@ -383,13 +383,11 @@ func (v *AccountRoleGrantOn) validate() error {
 }
 
 func (v *GrantOnAccountObject) validate() error {
-	if !exactlyOneValueSet(v.User, v.ResourceMonitor, v.Warehouse, v.ComputePool, v.Database, v.Integration, v.Connection, v.FailoverGroup, v.ReplicationGroup, v.ExternalVolume, v.SnowflakeIntelligence, v.Object) {
-		return errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence", "Object")
+	if !valueSet(v.Object) {
+		return errNotSet("GrantOnAccountObject", "Object")
 	}
-	if valueSet(v.Object) {
-		if err := validateUserInput(v.Object.ObjectType.String()); err != nil {
-			return fmt.Errorf("invalid object type: %w", err)
-		}
+	if err := validateUserInput(v.Object.ObjectType.String()); err != nil {
+		return fmt.Errorf("invalid object type: %w", err)
 	}
 	return nil
 }

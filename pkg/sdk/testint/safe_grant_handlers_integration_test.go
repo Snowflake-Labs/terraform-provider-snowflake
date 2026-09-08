@@ -142,15 +142,15 @@ func TestInt_SafeRevokeOnNonExistingAccountObject(t *testing.T) {
 		ObjectType sdk.ObjectType
 		On         *sdk.AccountRoleGrantOn
 	}{
-		{ObjectType: sdk.ObjectTypeDatabase, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Database: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeWarehouse, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Warehouse: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeComputePool, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{ComputePool: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeExternalVolume, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{ExternalVolume: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeUser, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{User: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeResourceMonitor, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{ResourceMonitor: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeIntegration, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Integration: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeFailoverGroup, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{FailoverGroup: sdk.Pointer(nonExistingId)}}},
-		{ObjectType: sdk.ObjectTypeReplicationGroup, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{ReplicationGroup: sdk.Pointer(nonExistingId)}}},
+		{ObjectType: sdk.ObjectTypeDatabase, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeDatabase, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeWarehouse, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeWarehouse, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeComputePool, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeComputePool, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeExternalVolume, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeExternalVolume, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeUser, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeUser, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeResourceMonitor, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeResourceMonitor, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeIntegration, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeIntegration, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeFailoverGroup, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeFailoverGroup, Name: nonExistingId}}}},
+		{ObjectType: sdk.ObjectTypeReplicationGroup, On: &sdk.AccountRoleGrantOn{AccountObject: &sdk.GrantOnAccountObject{Object: &sdk.Object{ObjectType: sdk.ObjectTypeReplicationGroup, Name: nonExistingId}}}},
 	}
 
 	for _, tt := range testCases {

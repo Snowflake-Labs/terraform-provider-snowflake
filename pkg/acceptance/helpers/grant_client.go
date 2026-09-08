@@ -367,7 +367,10 @@ func (c *GrantClient) RevokePrivilegesOnDatabaseFromAccountRole(
 		},
 		&sdk.AccountRoleGrantOn{
 			AccountObject: &sdk.GrantOnAccountObject{
-				Database: sdk.Pointer(databaseId),
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeDatabase,
+					Name:       databaseId,
+				},
 			},
 		},
 		accountRoleId,
@@ -389,7 +392,10 @@ func (c *GrantClient) GrantPrivilegesOnDatabaseToAccountRole(
 		accountRoleId,
 		&sdk.AccountRoleGrantOn{
 			AccountObject: &sdk.GrantOnAccountObject{
-				Database: sdk.Pointer(databaseId),
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeDatabase,
+					Name:       databaseId,
+				},
 			},
 		},
 		privileges,
@@ -438,7 +444,10 @@ func (c *GrantClient) GrantPrivilegesOnWarehouseToAccountRole(
 		accountRoleId,
 		&sdk.AccountRoleGrantOn{
 			AccountObject: &sdk.GrantOnAccountObject{
-				Warehouse: sdk.Pointer(warehouseId),
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeWarehouse,
+					Name:       warehouseId,
+				},
 			},
 		},
 		privileges,
