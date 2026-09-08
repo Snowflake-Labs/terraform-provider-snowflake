@@ -26,34 +26,6 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 
 ## v2.20.x ➞ v2.21.0
 
-### *(bug fix)* `snowflake_warehouse_interactive` no longer leaves the provider's session on the new warehouse after creation
-
-Creating an interactive warehouse switches the current session onto it (this is standard Snowflake behavior for warehouse creation). Because interactive warehouses have a short statement timeout, any subsequent operation the provider ran in that same session could time out - for example, on accounts with a large number of warehouses, the following `terraform apply` could fail during the immediate post-create read.
-
-The provider now restores the session to whichever warehouse (or lack of one) was active beforehand. If none was selected, Snowflake has no way to directly unset the current warehouse, so the provider may briefly create and drop a small helper warehouse (named with a `TF_TEMP_` prefix) to achieve the same effect - you may notice it appear and disappear in `SHOW WAREHOUSES` or query history.
-
-No configuration changes are required.
-
-### *(new feature)* Additional object types in grant and tag resources
-
-[`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role),
-[`snowflake_grant_privileges_to_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role),
-[`snowflake_grant_ownership`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership),
-and [`snowflake_tag_association`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/tag_association)
-no longer reject object types that are missing from the provider allowlist. Snowflake validates the object type at apply. Existing configurations are unchanged.
-
-For unknown types, identifier level is inferred from the number of fully qualified name parts (1 = account object, 2 = database object, 3 = schema object, 4 = column). Known types keep their existing identifier mapping.
-
-This absorbs cases like granting on `POSTGRES INSTANCE` ([GH #5084](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5084)) without a dedicated provider release.
-
-Snowflake also now supports `GRANT ... ON ALL EXPERIMENTS` (and ownership of all experiments). The following resources now accept `EXPERIMENTS` in the `object_type_plural` field for bulk **all** grants:
-
-- `snowflake_grant_privileges_to_account_role` (`on_schema_object.all`)
-- `snowflake_grant_privileges_to_database_role` (`on_schema_object.all`)
-- `snowflake_grant_ownership` (`on.all`)
-
-No changes in configuration are required.
-
 ### *(breaking change)* Renamed constraint column fields in `snowflake_iceberg_table`
 
 Note: this resource is in preview allowing us to make breaking changes without bumping the major version (following [our docs](https://docs.snowflake.com/en/user-guide/terraform#preview-features)).
@@ -103,7 +75,41 @@ The new configuration looks like this:
 
 Please rename these fields in your configuration files. After updating the configuration, `terraform plan` should be empty.
 
-### Multiple resources and data sources promoted to stable
+### *(new feature)* Additional object types in grant and tag resources
+
+[`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role),
+[`snowflake_grant_privileges_to_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role),
+[`snowflake_grant_ownership`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership),
+and [`snowflake_tag_association`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/tag_association)
+no longer reject object types that are missing from the provider allowlist. Snowflake validates the object type at apply. Existing configurations are unchanged.
+
+For unknown types, identifier level is inferred from the number of fully qualified name parts (1 = account object, 2 = database object, 3 = schema object, 4 = column). Known types keep their existing identifier mapping.
+
+This absorbs cases like granting on `POSTGRES INSTANCE` ([GH #5084](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5084)) without a dedicated provider release.
+
+Snowflake also now supports `GRANT ... ON ALL EXPERIMENTS` (and ownership of all experiments). The following resources now accept `EXPERIMENTS` in the `object_type_plural` field for bulk **all** grants:
+
+- `snowflake_grant_privileges_to_account_role` (`on_schema_object.all`)
+- `snowflake_grant_privileges_to_database_role` (`on_schema_object.all`)
+- `snowflake_grant_ownership` (`on.all`)
+
+No changes in configuration are required.
+
+### *(new feature)* New `is_from_organization_user_group` field in `show_output` for `snowflake_account_role` and `snowflake_account_roles`
+
+A new `is_from_organization_user_group` field has been added to the `show_output` attribute on both the [`snowflake_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account_role) resource and the [`snowflake_account_roles`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/account_roles) data source. It reflects whether the role was imported from an organization user group, as returned by `SHOW ROLES`.
+
+No configuration changes are required.
+
+### *(new feature)* New hybrid tables data source
+
+We have added a new preview data source for querying hybrid tables: [snowflake_hybrid_tables](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/hybrid_tables). It supports filtering with `like`, `in`, `starts_with`, and `limit`.
+
+This feature will be marked as stable in a future release. Breaking changes are expected, even without bumping the major version. To use it, add `snowflake_hybrid_tables_datasource` to the `preview_features_enabled` field in the provider configuration.
+
+No changes are required for existing configurations unless you want to adopt this preview feature with Terraform.
+
+### *(improvement)* Multiple resources and data sources promoted to stable
 
 The following resources and data sources are now stable and no longer require the `preview_features_enabled` flag to be
 used. Please remove their corresponding entries from the `preview_features_enabled` list in your provider configuration
@@ -149,13 +155,37 @@ will be removed in the next major version.
 Read more about preview and stable features in
 our [documentation](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#support).
 
-### *(new feature)* New hybrid tables data source
+### *(improvement)* `snowflake_account` create polling now uses the resource create timeout
 
-We have added a new preview data source for querying hybrid tables: [snowflake_hybrid_tables](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/hybrid_tables). It supports filtering with `like`, `in`, `starts_with`, and `limit`.
+After `CREATE ACCOUNT` succeeded, [`snowflake_account`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account) retried `SHOW ACCOUNTS` a fixed five times (about 15 seconds). Cross-region accounts can take longer than that to become visible, so create failed with:
 
-This feature will be marked as stable in a future release. Breaking changes are expected, even without bumping the major version. To use it, add `snowflake_hybrid_tables_datasource` to the `preview_features_enabled` field in the provider configuration.
+```
+Error: failed to query account ("ACCOUNT_NAME") after creation, err: giving up after 5 attempts
+```
 
-No changes are required for existing configurations unless you want to adopt this preview feature with Terraform.
+The provider now polls until the account appears or the resource create timeout is reached (default as of now is 20 minutes). No configuration changes are required. If create still times out in your environment, raise `timeouts.create`:
+
+```terraform
+resource "snowflake_account" "example" {
+  # ...
+
+  timeouts {
+    create = "30m"
+  }
+}
+```
+
+Read more about resource timeouts in the [Terraform documentation](https://developer.hashicorp.com/terraform/plugin/framework/resources/timeouts).
+
+References: [#5189](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5189)
+
+### *(bug fix)* `snowflake_warehouse_interactive` no longer leaves the provider's session on the new warehouse after creation
+
+Creating an interactive warehouse switches the current session onto it (this is standard Snowflake behavior for warehouse creation). Because interactive warehouses have a short statement timeout, any subsequent operation the provider ran in that same session could time out - for example, on accounts with a large number of warehouses, the following `terraform apply` could fail during the immediate post-create read.
+
+The provider now restores the session to whichever warehouse (or lack of one) was active beforehand. If none was selected, Snowflake has no way to directly unset the current warehouse, so the provider may briefly create and drop a small helper warehouse (named with a `TF_TEMP_` prefix) to achieve the same effect - you may notice it appear and disappear in `SHOW WAREHOUSES` or query history.
+
+No configuration changes are required.
 
 ### *(bug fix)* Empty lists in fields with a `none` option crashed the provider
 
@@ -228,36 +258,6 @@ Importing `snowflake_file_format_csv` (and setting `encoding` on CSV stage file 
 No changes in configuration are required.
 
 Reference: [#5085](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5085)
-
-### *(new feature)* New `is_from_organization_user_group` field in `show_output` for `snowflake_account_role` and `snowflake_account_roles`
-
-A new `is_from_organization_user_group` field has been added to the `show_output` attribute on both the [`snowflake_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account_role) resource and the [`snowflake_account_roles`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/account_roles) data source. It reflects whether the role was imported from an organization user group, as returned by `SHOW ROLES`.
-
-No configuration changes are required.
-
-### *(improvement)* `snowflake_account` create polling now uses the resource create timeout
-
-After `CREATE ACCOUNT` succeeded, [`snowflake_account`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/account) retried `SHOW ACCOUNTS` a fixed five times (about 15 seconds). Cross-region accounts can take longer than that to become visible, so create failed with:
-
-```
-Error: failed to query account ("ACCOUNT_NAME") after creation, err: giving up after 5 attempts
-```
-
-The provider now polls until the account appears or the resource create timeout is reached (default as of now is 20 minutes). No configuration changes are required. If create still times out in your environment, raise `timeouts.create`:
-
-```terraform
-resource "snowflake_account" "example" {
-  # ...
-
-  timeouts {
-    create = "30m"
-  }
-}
-```
-
-Read more about resource timeouts in the [Terraform documentation](https://developer.hashicorp.com/terraform/plugin/framework/resources/timeouts).
-
-References: [#5189](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5189)
 
 ## v2.19.x ➞ v2.20.0
 
