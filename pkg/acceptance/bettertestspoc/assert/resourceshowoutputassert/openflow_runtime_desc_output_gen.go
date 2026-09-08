@@ -31,6 +31,21 @@ func ImportedOpenflowRuntimeDescribeOutput(t *testing.T, id string) *OpenflowRun
 	return &openflowRuntimeAssert
 }
 
+func OpenflowRuntimesDatasourceDescribeOutput(t *testing.T, name string) *OpenflowRuntimeDescribeOutputAssert {
+	t.Helper()
+
+	return OpenflowRuntimesDatasourceDescribeOutputOnIdx(t, name, 0)
+}
+
+func OpenflowRuntimesDatasourceDescribeOutputOnIdx(t *testing.T, name string, idx int) *OpenflowRuntimeDescribeOutputAssert {
+	t.Helper()
+
+	openflowRuntimeAssert := OpenflowRuntimeDescribeOutputAssert{
+		ResourceAssert: assert.NewDatasourceDescribeOutputAssert(name, "openflow_runtimes", idx),
+	}
+	return &openflowRuntimeAssert
+}
+
 ////////////////////////////
 // Attribute value checks //
 ////////////////////////////
