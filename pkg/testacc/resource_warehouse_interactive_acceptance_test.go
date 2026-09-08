@@ -170,8 +170,6 @@ func TestAcc_WarehouseInteractive_CompleteUseCase(t *testing.T) {
 	table, tableCleanup := testClient().Table.CreateInteractiveTable(t)
 	t.Cleanup(tableCleanup)
 
-	statementTimeoutInSeconds := testClient().SnowflakeDefaults.InteractiveWarehouseStatementTimeoutInSeconds(t, 45)
-
 	complete := model.WarehouseInteractiveWithId(warehouseId).
 		WithWarehouseSize(string(sdk.WarehouseSizeSmall)).
 		WithMaxClusterCount(2).
@@ -184,7 +182,7 @@ func TestAcc_WarehouseInteractive_CompleteUseCase(t *testing.T) {
 		WithComment(comment).
 		WithMaxConcurrencyLevel(8).
 		WithStatementQueuedTimeoutInSeconds(30).
-		WithStatementTimeoutInSeconds(statementTimeoutInSeconds).
+		WithStatementTimeoutInSeconds(4).
 		WithTables(table.ID().FullyQualifiedName())
 
 	ref := complete.ResourceReference()
@@ -214,7 +212,7 @@ func TestAcc_WarehouseInteractive_CompleteUseCase(t *testing.T) {
 						HasCommentString(comment).
 						HasMaxConcurrencyLevel(8).
 						HasStatementQueuedTimeoutInSeconds(30).
-						HasStatementTimeoutInSeconds(statementTimeoutInSeconds).
+						HasStatementTimeoutInSeconds(4).
 						HasTables(table.ID().FullyQualifiedName()).
 						HasFullyQualifiedNameString(warehouseId.FullyQualifiedName()),
 					resourceshowoutputassert.WarehouseShowOutput(t, ref).

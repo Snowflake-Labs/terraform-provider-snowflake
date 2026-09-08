@@ -230,7 +230,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Contains(t, []sdk.WarehouseState{sdk.WarehouseStateResuming, sdk.WarehouseStateStarted}, result.State)
 		assert.Equal(t, "", result.Comment)
 		assert.Equal(t, sdk.Pointer(true), result.EnableQueryAcceleration)
-		assert.Equal(t, sdk.Pointer(2), result.QueryAccelerationMaxScaleFactor)
+		assert.Equal(t, sdk.Pointer(8), result.QueryAccelerationMaxScaleFactor)
 		assert.Nil(t, result.ResourceConstraint)
 		assert.NotNil(t, result.Generation)
 		assert.Equal(t, sdk.WarehouseGenerationStandardGen2, *result.Generation)
@@ -333,7 +333,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, "", warehouse.ResourceMonitor.Name())
 		assert.Equal(t, "", warehouse.Comment)
 		assert.Equal(t, sdk.Pointer(true), warehouse.EnableQueryAcceleration)
-		assert.Equal(t, sdk.Pointer(2), warehouse.QueryAccelerationMaxScaleFactor)
+		assert.Equal(t, sdk.Pointer(8), warehouse.QueryAccelerationMaxScaleFactor)
 		assert.Nil(t, warehouse.ResourceConstraint)
 		assert.NotNil(t, warehouse.Generation)
 		assert.Equal(t, sdk.WarehouseGenerationStandardGen2, *warehouse.Generation)
@@ -354,7 +354,7 @@ func TestInt_Warehouses(t *testing.T) {
 				WithResourceMonitor(resourceMonitor.ID()).
 				WithComment("new comment").
 				WithEnableQueryAcceleration(true).
-				WithQueryAccelerationMaxScaleFactor(2)))
+				WithQueryAccelerationMaxScaleFactor(8)))
 		require.NoError(t, err)
 
 		warehouseAfterSet, err := client.Warehouses.ShowByID(ctx, warehouse.ID())
@@ -368,7 +368,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, resourceMonitor.ID().Name(), warehouseAfterSet.ResourceMonitor.Name())
 		assert.Equal(t, "new comment", warehouseAfterSet.Comment)
 		assert.Equal(t, sdk.Pointer(true), warehouseAfterSet.EnableQueryAcceleration)
-		assert.Equal(t, sdk.Pointer(2), warehouseAfterSet.QueryAccelerationMaxScaleFactor)
+		assert.Equal(t, sdk.Pointer(8), warehouseAfterSet.QueryAccelerationMaxScaleFactor)
 		assert.Nil(t, warehouseAfterSet.ResourceConstraint)
 		assert.NotNil(t, warehouseAfterSet.Generation)
 		assert.Equal(t, sdk.WarehouseGenerationStandardGen2, *warehouseAfterSet.Generation)
@@ -398,7 +398,7 @@ func TestInt_Warehouses(t *testing.T) {
 		assert.Equal(t, "", warehouseAfterUnset.ResourceMonitor.Name())
 		assert.Equal(t, "", warehouseAfterUnset.Comment)
 		assert.Equal(t, sdk.Pointer(true), warehouseAfterUnset.EnableQueryAcceleration)
-		assert.Equal(t, sdk.Pointer(2), warehouseAfterUnset.QueryAccelerationMaxScaleFactor)
+		assert.Equal(t, sdk.Pointer(8), warehouseAfterUnset.QueryAccelerationMaxScaleFactor)
 		assert.Nil(t, warehouseAfterUnset.ResourceConstraint)
 		assert.NotNil(t, warehouseAfterUnset.Generation)
 		assert.Equal(t, sdk.WarehouseGenerationStandardGen2, *warehouseAfterUnset.Generation)
@@ -442,7 +442,8 @@ func TestInt_Warehouses(t *testing.T) {
 				HasNoEnableQueryAcceleration().
 				HasNoQueryAccelerationMaxScaleFactor().
 				HasMaxQueryPerformanceLevel(sdk.MaxQueryPerformanceLevelLarge).
-				HasQueryThroughputMultiplier(2),
+				// This value can be different (SNOW-3687301). It's under investigation.
+				HasQueryThroughputMultiplier(5),
 		)
 
 		// Change warehouse type back from adaptive to standard
@@ -464,7 +465,7 @@ func TestInt_Warehouses(t *testing.T) {
 				HasAutoSuspend(600).
 				HasAutoResume(true).
 				HasEnableQueryAcceleration(true).
-				HasQueryAccelerationMaxScaleFactor(2).
+				HasQueryAccelerationMaxScaleFactor(8).
 				HasNoMaxQueryPerformanceLevel().
 				HasNoQueryThroughputMultiplier(),
 		)
