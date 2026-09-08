@@ -26,6 +26,14 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 
 ## v2.20.x ➞ v2.21.0
 
+### *(bug fix)* `snowflake_warehouse_interactive` no longer leaves the provider's session on the new warehouse after creation
+
+Creating an interactive warehouse switches the current session onto it (this is standard Snowflake behavior for warehouse creation). Because interactive warehouses have a short statement timeout, any subsequent operation the provider ran in that same session could time out - for example, on accounts with a large number of warehouses, the following `terraform apply` could fail during the immediate post-create read.
+
+The provider now restores the session to whichever warehouse (or lack of one) was active beforehand. If none was selected, Snowflake has no way to directly unset the current warehouse, so the provider may briefly create and drop a small helper warehouse (named with a `TF_TEMP_` prefix) to achieve the same effect - you may notice it appear and disappear in `SHOW WAREHOUSES` or query history.
+
+No configuration changes are required.
+
 ### *(new feature)* Additional object types in grant resources
 
 [`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role)

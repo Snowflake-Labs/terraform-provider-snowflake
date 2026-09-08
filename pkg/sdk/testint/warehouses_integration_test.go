@@ -1101,4 +1101,61 @@ func TestInt_Warehouses_Interactive(t *testing.T) {
 				HasFallbackWarehouse(""),
 		)
 	})
+
+	t.Run("create interactive preserving session: warehouse selected before creation is restored", func(t *testing.T) {
+		t.Cleanup(func() {
+			err := client.Sessions.UseWarehouse(ctx, sdk.NewUseWarehouseSessionRequest(testClientHelper().Ids.WarehouseId()))
+			require.NoError(t, err)
+		})
+
+		previousWarehouse, err := client.ContextFunctions.CurrentWarehouse(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, previousWarehouse, "expected a warehouse to already be selected in the session")
+
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err = client.Warehouses.CreateInteractivePreservingSession(ctx, sdk.NewCreateInteractiveWarehouseRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Warehouses.Drop(ctx, sdk.NewDropWarehouseRequest(id).WithIfExists(true))
+			require.NoError(t, err)
+		})
+
+		assertThatObject(t, objectassert.Warehouse(t, id).HasType(sdk.WarehouseTypeInteractive))
+
+		current, err := client.ContextFunctions.CurrentWarehouse(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, previousWarehouse, current)
+	})
+
+	t.Run("create interactive preserving session: no warehouse selected before creation stays cleared", func(t *testing.T) {
+		t.Cleanup(func() {
+			err := client.Sessions.UseWarehouse(ctx, sdk.NewUseWarehouseSessionRequest(testClientHelper().Ids.WarehouseId()))
+			require.NoError(t, err)
+		})
+
+		// new warehouse created on purpose, immediately dropped to leave the session with no current
+		// warehouse (see TestInt_DropCurrentWarehouseClearsCurrentWarehouse)
+		clearingId := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.Warehouses.Create(ctx, sdk.NewCreateWarehouseRequest(clearingId))
+		require.NoError(t, err)
+		err = client.Warehouses.Drop(ctx, sdk.NewDropWarehouseRequest(clearingId))
+		require.NoError(t, err)
+		current, err := client.ContextFunctions.CurrentWarehouse(ctx)
+		require.NoError(t, err)
+		require.Empty(t, current)
+
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err = client.Warehouses.CreateInteractivePreservingSession(ctx, sdk.NewCreateInteractiveWarehouseRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(func() {
+			err := client.Warehouses.Drop(ctx, sdk.NewDropWarehouseRequest(id).WithIfExists(true))
+			require.NoError(t, err)
+		})
+
+		assertThatObject(t, objectassert.Warehouse(t, id).HasType(sdk.WarehouseTypeInteractive))
+
+		current, err = client.ContextFunctions.CurrentWarehouse(ctx)
+		require.NoError(t, err)
+		assert.Empty(t, current)
+	})
 }

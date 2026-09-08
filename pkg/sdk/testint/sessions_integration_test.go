@@ -109,6 +109,32 @@ func TestInt_UseWarehouse(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func TestInt_DropCurrentWarehouseClearsCurrentWarehouse(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
+
+	t.Cleanup(func() {
+		err := client.Sessions.UseWarehouse(ctx, sdk.NewUseWarehouseSessionRequest(testClientHelper().Ids.WarehouseId()))
+		require.NoError(t, err)
+	})
+
+	id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+	err := client.Warehouses.Create(ctx, sdk.NewCreateWarehouseRequest(id))
+	require.NoError(t, err)
+
+	// CREATE WAREHOUSE implicitly switches the session to the newly created warehouse.
+	current, err := client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	require.Equal(t, id.Name(), current)
+
+	err = client.Warehouses.Drop(ctx, sdk.NewDropWarehouseRequest(id))
+	require.NoError(t, err)
+
+	current, err = client.ContextFunctions.CurrentWarehouse(ctx)
+	require.NoError(t, err)
+	assert.Empty(t, current)
+}
+
 func TestInt_UseDatabase(t *testing.T) {
 	client := testClient(t)
 	ctx := testContext(t)

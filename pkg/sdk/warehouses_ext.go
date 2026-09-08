@@ -12,6 +12,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/util"
+	"github.com/hashicorp/go-uuid"
 )
 
 // Backward-compatible enum constant aliases.
@@ -211,6 +212,55 @@ func (v *warehouses) AlterWithSuspend(ctx context.Context, request *AlterWarehou
 		}
 	}
 	return v.Alter(ctx, request)
+}
+
+// CreateInteractivePreservingSession wraps CreateInteractive to work around a known Snowflake behavior:
+// creating a warehouse implicitly switches the session onto it, and for interactive warehouses (which
+// always have a short statement timeout) this can cause any subsequent statement run in the same session
+// to time out. After creation succeeds, this restores whichever warehouse was active in the session
+// beforehand. If no warehouse was active, there is no "USE WAREHOUSE NONE"/unset syntax, so a temporary
+// warehouse is created and immediately dropped - dropping the warehouse currently in use for a session
+// clears CURRENT_WAREHOUSE() back to empty.
+// Restoring the session warehouse is best-effort: the interactive warehouse has already been created
+// successfully by the time this runs, so a failure here is logged rather than returned, to avoid the
+// resource being reported as failed (and possibly recreated) when the object itself is fine.
+func (v *warehouses) CreateInteractivePreservingSession(ctx context.Context, request *CreateInteractiveWarehouseRequest) error {
+	previousWarehouse, err := v.client.ContextFunctions.CurrentWarehouse(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := v.CreateInteractive(ctx, request); err != nil {
+		return err
+	}
+
+	if previousWarehouse != "" {
+		if err := v.client.Sessions.UseWarehouse(ctx, NewUseWarehouseSessionRequest(NewAccountObjectIdentifier(previousWarehouse))); err != nil {
+			log.Printf("[WARN] could not restore session warehouse to %s after creating interactive warehouse %s, err=%v", previousWarehouse, request.ID().FullyQualifiedName(), err)
+		}
+		return nil
+	}
+
+	if err := v.clearSessionWarehouse(ctx); err != nil {
+		log.Printf("[WARN] could not clear session warehouse after creating interactive warehouse %s, err=%v", request.ID().FullyQualifiedName(), err)
+	}
+	return nil
+}
+
+// clearSessionWarehouse leaves the session with no current warehouse, mirroring a session that never had
+// one selected. There is no direct syntax for this, so it creates a minimal temporary warehouse (which
+// implicitly becomes the session's current warehouse) and drops it again, which clears CURRENT_WAREHOUSE().
+func (v *warehouses) clearSessionWarehouse(ctx context.Context) error {
+	suffix, err := uuid.GenerateUUID()
+	if err != nil {
+		return err
+	}
+	tempId := NewAccountObjectIdentifier(fmt.Sprintf("TF_TEMP_%s", strings.ReplaceAll(suffix, "-", "_")))
+
+	if err := v.Create(ctx, NewCreateWarehouseRequest(tempId).WithWarehouseSize(WarehouseSizeXSmall).WithInitiallySuspended(true)); err != nil {
+		return err
+	}
+	return v.Drop(ctx, NewDropWarehouseRequest(tempId).WithIfExists(true))
 }
 
 // additionalConvert handles manual field conversions that the generator cannot express.

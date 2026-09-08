@@ -307,10 +307,7 @@ func CreateWarehouseInteractive(ctx context.Context, d *schema.ResourceData, met
 		req.WithStatementTimeoutInSeconds(*v)
 	}
 
-	// NOTE: This has the side effect of using the newly created warehouse in the current session.
-	// Because interactive warehouses always have a 5-second statement timeout, this can sometimes
-	// cause subsequent DDLs to timeout. This is a known issue.
-	if err := client.Warehouses.CreateInteractive(ctx, req); err != nil {
+	if err := client.Warehouses.CreateInteractivePreservingSession(ctx, req); err != nil {
 		return diag.FromErr(fmt.Errorf("error creating interactive warehouse %s: %w", id.FullyQualifiedName(), err))
 	}
 	d.SetId(helpers.EncodeResourceIdentifier(id))
