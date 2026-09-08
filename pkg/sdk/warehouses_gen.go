@@ -25,6 +25,8 @@ type Warehouses interface {
 	ShowByIDExperimentalSafely(ctx context.Context, id AccountObjectIdentifier) (*Warehouse, error)
 	// AlterWithSuspend wraps Alter with automatic suspend/resume when changing warehouse type, or resizing an interactive warehouse
 	AlterWithSuspend(ctx context.Context, request *AlterWarehouseRequest) error
+	// CreateInteractivePreservingSession wraps CreateInteractive to work around a known Snowflake behavior: creating a warehouse implicitly switches the session to it, which for interactive warehouses (5 second statement timeout) can cause subsequent statements in the same session to time out. It restores whichever warehouse (or lack of one) was active in the session before creation
+	CreateInteractivePreservingSession(ctx context.Context, request *CreateInteractiveWarehouseRequest) error
 }
 
 // CreateWarehouseOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-warehouse.

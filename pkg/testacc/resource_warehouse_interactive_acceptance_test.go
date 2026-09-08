@@ -3,24 +3,29 @@
 package testacc
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/invokeactionassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
-	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAcc_WarehouseInteractive_BasicUseCase(t *testing.T) {
@@ -449,6 +454,44 @@ func TestAcc_WarehouseInteractive_Validations(t *testing.T) {
 				Config:      accconfig.FromModels(t, modelInvalidStatementTimeout),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`expected statement_timeout_in_seconds to be in the range \(0 - 604800\), got -1`),
+			},
+		},
+	})
+}
+
+// TestAcc_WarehouseInteractive_PreservesSessionWarehouse exercises the fix for the session-warehouse-switch
+// issue through the resource itself: CREATE INTERACTIVE WAREHOUSE implicitly switches the session onto the
+// new warehouse, which used to leave later statements in the same session running against the interactive
+// warehouse's short statement timeout.
+func TestAcc_WarehouseInteractive_PreservesSessionWarehouse(t *testing.T) {
+	interactiveWarehouseId := testClient().Ids.RandomAccountObjectIdentifier()
+	interactiveModel := model.WarehouseInteractiveWithId(interactiveWarehouseId)
+
+	sessionClient := func() *sdk.Client {
+		return interactiveWarehouseProvider.Meta().(*provider.Context).Client
+	}
+
+	var previousSessionWarehouse string
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: interactiveWarehouseProviderFactory,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckDestroy(t, resources.WarehouseInteractive),
+		Steps: []resource.TestStep{
+			{
+				Config: accconfig.FromModels(t, interactiveModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						planchecks.Execute(func() {
+							current, err := sessionClient().ContextFunctions.CurrentWarehouse(context.Background())
+							require.NoError(t, err)
+							previousSessionWarehouse = current
+						}),
+					},
+				},
+				Check: assertThat(t, invokeactionassert.SessionCurrentWarehouseEquals(sessionClient, func() string { return previousSessionWarehouse })),
 			},
 		},
 	})

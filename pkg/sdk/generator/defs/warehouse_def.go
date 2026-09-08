@@ -275,6 +275,10 @@ var warehousesDef = g.NewInterface(
 	"AlterWithSuspend", "AlterWithSuspend wraps Alter with automatic suspend/resume when changing warehouse type, or resizing an interactive warehouse",
 	[]*g.MethodParameter{g.NewMethodParameter("request", "*AlterWarehouseRequest")},
 	"error",
+).WithCustomInterfaceMethod(
+	"CreateInteractivePreservingSession", "CreateInteractivePreservingSession wraps CreateInteractive to work around a known Snowflake behavior: creating a warehouse implicitly switches the session to it, which for interactive warehouses (5 second statement timeout) can cause subsequent statements in the same session to time out. It restores whichever warehouse (or lack of one) was active in the session before creation",
+	[]*g.MethodParameter{g.NewMethodParameter("request", "*CreateInteractiveWarehouseRequest")},
+	"error",
 ).WithEnums(
 	warehouseTypeEnum,
 	warehouseSizeEnum,
