@@ -354,7 +354,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 		Name                   string
 		Identifier             GrantOwnershipId
 		ExpectedShowGrantsOpts *sdk.ShowGrantOptions
-		ExpectedGrantedOn      sdk.ObjectType
+		ExpectedGrantedOn      []sdk.ObjectType
 	}{
 		{
 			Name: "show for object - database",
@@ -373,7 +373,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 					},
 				},
 			},
-			ExpectedGrantedOn: sdk.ObjectTypeDatabase,
+			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeDatabase},
 		},
 		{
 			Name: "show for object - schema",
@@ -392,7 +392,27 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 					},
 				},
 			},
-			ExpectedGrantedOn: sdk.ObjectTypeSchema,
+			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeSchema},
+		},
+		{
+			Name: "show for object - database role",
+			Identifier: GrantOwnershipId{
+				Kind: OnObjectGrantOwnershipKind,
+				Data: &OnObjectGrantOwnershipData{
+					ObjectType: sdk.ObjectTypeDatabaseRole,
+					ObjectName: sdk.NewDatabaseObjectIdentifier("test_database", "test_database_role"),
+				},
+			},
+			ExpectedShowGrantsOpts: &sdk.ShowGrantOptions{
+				On: &sdk.ShowGrantsOn{
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeDatabaseRole,
+						Name:       sdk.NewDatabaseObjectIdentifier("test_database", "test_database_role"),
+					},
+				},
+			},
+			// Before BCR-2371 (2026_06 bundle) SHOW GRANTS ON DATABASE ROLE reports granted_on = ROLE, after it reports DATABASE_ROLE; both must match.
+			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeRole, sdk.ObjectTypeDatabaseRole},
 		},
 		{
 			Name: "show for all in database",
@@ -405,7 +425,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 				},
 			},
 			ExpectedShowGrantsOpts: nil,
-			ExpectedGrantedOn:      "",
+			ExpectedGrantedOn:      nil,
 		},
 		{
 			Name: "show for all in schema",
@@ -418,7 +438,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 				},
 			},
 			ExpectedShowGrantsOpts: nil,
-			ExpectedGrantedOn:      "",
+			ExpectedGrantedOn:      nil,
 		},
 		{
 			Name: "show for future in database",
@@ -436,7 +456,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 					Database: sdk.Pointer(sdk.NewAccountObjectIdentifier("test_database")),
 				},
 			},
-			ExpectedGrantedOn: sdk.ObjectTypeTable,
+			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeTable},
 		},
 		{
 			Name: "show for future in schema",
@@ -454,7 +474,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 					Schema: sdk.Pointer(sdk.NewDatabaseObjectIdentifier("test_database", "test_schema")),
 				},
 			},
-			ExpectedGrantedOn: sdk.ObjectTypeTable,
+			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeTable},
 		},
 	}
 

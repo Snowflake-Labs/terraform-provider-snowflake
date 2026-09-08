@@ -259,6 +259,20 @@ No changes in configuration are required.
 
 Reference: [#5085](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5085)
 
+### *(bug fix)* Fixed ownership of a database role not being found after apply in `snowflake_grant_ownership` (2026_06 bundle / BCR-2371)
+
+Previously, when transferring ownership of a database role (`on.object_type = "DATABASE ROLE"`), the provider expected `SHOW GRANTS ON DATABASE ROLE` to report the OWNERSHIP grant with `granted_on = ROLE`. The 2026_06 bundle (BCR-2371) changes this output so that `granted_on` is reported as `DATABASE_ROLE`. With the bundle enabled, the provider no longer matched the OWNERSHIP grant, so the Read operation of the `snowflake_grant_ownership` resource cleared the id and marked the resource as removed. `terraform apply` then returned an error like
+
+```
+│ Warning: Couldn't find OWNERSHIP privilege on the target object. Marking the resource as removed.
+│
+│ Error: Provider produced inconsistent result after apply
+│
+│ When applying changes to snowflake_grant_ownership.example, provider "provider[\"registry.terraform.io/snowflakedb/snowflake\"]" produced an unexpected new value: Root object was present, but now absent.
+```
+
+In this release, the provider accepts both `granted_on = ROLE` and `granted_on = DATABASE_ROLE` when reading ownership of a database role, so the grant is matched again regardless of whether the bundle is enabled. No configuration changes are required.
+
 ## v2.19.x ➞ v2.20.0
 
 ### *(new feature)* New hybrid table resource

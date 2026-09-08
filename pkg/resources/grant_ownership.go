@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/experimentalfeatures"
@@ -412,7 +413,7 @@ func ReadGrantOwnership(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		// grant_on is for future grants, granted_on is for current grants.
 		// They function the same way though in a test for matching the object type
-		if expectedGrantedOn != grant.GrantedOn && expectedGrantedOn != grant.GrantOn {
+		if !slices.Contains(expectedGrantedOn, grant.GrantedOn) && !slices.Contains(expectedGrantedOn, grant.GrantOn) {
 			continue
 		}
 
@@ -616,18 +617,20 @@ func getOwnershipGrantOpts(id *GrantOwnershipId) *sdk.GrantOwnershipOptions {
 	return opts
 }
 
-func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowGrantOptions, sdk.ObjectType) {
+func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowGrantOptions, []sdk.ObjectType) {
 	opts := new(sdk.ShowGrantOptions)
-	var expectedGrantedOn sdk.ObjectType
+	var expectedGrantedOn []sdk.ObjectType
 
 	switch id.Kind {
 	case OnObjectGrantOwnershipKind:
 		data := id.Data.(*OnObjectGrantOwnershipData)
 		switch data.ObjectType {
 		case sdk.ObjectTypeDatabaseRole:
-			expectedGrantedOn = sdk.ObjectTypeRole
+			// SHOW GRANTS ON DATABASE ROLE reports granted_on = ROLE before the 2026_06 bundle (BCR-2371) and DATABASE_ROLE after; accept both.
+			// TODO(SNOW-4075337): drop sdk.ObjectTypeRole once the 2026_06 bundle is GA and can no longer be disabled.
+			expectedGrantedOn = []sdk.ObjectType{sdk.ObjectTypeRole, sdk.ObjectTypeDatabaseRole}
 		default:
-			expectedGrantedOn = data.ObjectType
+			expectedGrantedOn = []sdk.ObjectType{data.ObjectType}
 		}
 		opts.On = &sdk.ShowGrantsOn{
 			Object: &sdk.Object{
@@ -642,10 +645,10 @@ func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowG
 		case InSchemaBulkOperationGrantKind:
 			log.Printf("[INFO] Show with on.all option is skipped. No changes in ownership on all %s in schema %s in Snowflake will be detected.", data.ObjectNamePlural, data.Schema)
 		}
-		return nil, ""
+		return nil, nil
 	case OnFutureGrantOwnershipKind:
 		data := id.Data.(*BulkOperationGrantData)
-		expectedGrantedOn = data.ObjectNamePlural.Singular()
+		expectedGrantedOn = []sdk.ObjectType{data.ObjectNamePlural.Singular()}
 		opts.Future = sdk.Bool(true)
 
 		switch data.Kind {
