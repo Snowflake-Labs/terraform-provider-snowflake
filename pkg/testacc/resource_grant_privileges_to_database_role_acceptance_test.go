@@ -905,7 +905,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_Inherited_Validation(t *testing.T) {
 
 	invalidSchemaObjectTypeModel := model.GrantPrivilegesToDatabaseRole("test", "\"test_db\".\"test_role\"").
 		WithSchemaObjectPrivileges(sdk.SchemaObjectPrivilegeSelect).
-		WithOnInheritedSchemaObjectsInDatabase("INVALID_PLURAL_OBJECT_TYPE", databaseId)
+		WithOnInheritedSchemaObjectsInDatabase("INVALID; TYPE", databaseId)
 
 	providerModel := providermodel.SnowflakeProvider().
 		WithExperimentalFeaturesEnabled(experimentalfeatures.InheritedGrants)
@@ -930,7 +930,7 @@ func TestAcc_GrantPrivilegesToDatabaseRole_Inherited_Validation(t *testing.T) {
 			{
 				Config:      accconfig.FromModels(t, providerModel, invalidSchemaObjectTypeModel),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("expected .* to be one of .* got INVALID_PLURAL_OBJECT_TYPE"),
+				ExpectError: regexp.MustCompile("invalid plural object type: INVALID; TYPE contains disallowed characters"),
 			},
 		},
 	})

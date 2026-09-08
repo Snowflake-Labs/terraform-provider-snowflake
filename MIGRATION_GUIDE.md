@@ -29,7 +29,8 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 ### *(new feature)* Additional object types in grant resources
 
 [`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role)
-no longer rejects object types that are missing from the provider allowlist. Snowflake validates the object type at apply. Existing configurations are unchanged.
+and [`snowflake_grant_privileges_to_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role)
+no longer reject object types that are missing from the provider allowlist. Snowflake validates the object type at apply. Existing configurations are unchanged.
 
 This absorbs cases like granting on `POSTGRES INSTANCE` ([GH #5084](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5084)) without a dedicated provider release.
 

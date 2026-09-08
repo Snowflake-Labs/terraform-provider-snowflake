@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/experimentalfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -181,7 +180,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: fmt.Sprintf("The object type of the schema object on which privileges will be granted. Valid values are: %s", strings.Join(sdk.ValidGrantToSchemaObjectTypesString, " | ")),
+					Description: objectTypeExamplesDescription("The object type of the schema object on which privileges will be granted.", sdk.ValidGrantToSchemaObjectTypesString),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -190,7 +189,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 						"on_schema_object.0.future",
 						"on_schema_object.0.inherited",
 					},
-					ValidateDiagFunc: StringInSlice(sdk.ValidGrantToSchemaObjectTypesString, true),
+					ValidateDiagFunc: sdkValidation(sdk.ToObjectType),
 				},
 				"object_name": {
 					Type:        schema.TypeString,
@@ -280,8 +279,8 @@ func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes
 			Type:             schema.TypeString,
 			Required:         true,
 			ForceNew:         true,
-			Description:      fmt.Sprintf("The plural object type of the schema object on which privileges will be granted. Valid values are: %s.", strings.Join(validGrantToObjectTypes, " | ")),
-			ValidateDiagFunc: StringInSlice(validGrantToObjectTypes, true),
+			Description:      objectTypeExamplesDescription("The plural object type of the schema object on which privileges will be granted.", validGrantToObjectTypes),
+			ValidateDiagFunc: sdkValidation(sdk.ToPluralObjectType),
 		},
 		"in_database": {
 			Type:             schema.TypeString,
