@@ -135,6 +135,10 @@ var allDatasourcesSchemaDefs = []DatasourceSchemaDef{
 		schema: datasources.Notebooks().Schema,
 	},
 	{
+		name:   "OpenflowConnectors",
+		schema: datasources.OpenflowConnectors().Schema,
+	},
+	{
 		name:   "OpenflowDeployments",
 		schema: datasources.OpenflowDeployments().Schema,
 	},
