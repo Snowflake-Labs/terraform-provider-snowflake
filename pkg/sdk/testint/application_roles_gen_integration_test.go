@@ -157,7 +157,7 @@ func TestInt_ApplicationRoles(t *testing.T) {
 		}
 		grants, err := client.Grants.Show(ctx, opts)
 		require.NoError(t, err)
-		assertGrant(t, grants, sdk.ObjectPrivilegeUsage, sdk.ObjectTypeDatabase, sdk.ObjectTypeApplicationRole)
+		assertGrant(t, grants, sdk.ObjectPrivilegeUsage, sdk.ObjectTypeApplication, sdk.ObjectTypeApplicationRole)
 	})
 
 	t.Run("show grants of application role", func(t *testing.T) {

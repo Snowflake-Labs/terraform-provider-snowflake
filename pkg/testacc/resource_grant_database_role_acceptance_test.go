@@ -278,7 +278,62 @@ func TestAcc_GrantDatabaseRole_shareWithDots(t *testing.T) {
 	})
 }
 
+func TestAcc_GrantDatabaseRole_shareNameContainingDots(t *testing.T) {
+	// Granting a database role to a share requires USAGE on the database to be granted to
+	// the share first. On 2.20.0 that privileges grant permadiffs when the share name
+	// contains dots (same SHOW GRANTS grantee parsing as
+	// TestAcc_GrantPrivilegesToShare_shareNameContainingDots). Upgrading to the current
+	// provider makes Read match the grant, so both resources stay stable.
+	database, databaseCleanup := testClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	databaseRole, databaseRoleCleanup := testClient().DatabaseRole.CreateDatabaseRoleInDatabase(t, database.ID())
+	t.Cleanup(databaseRoleCleanup)
+
+	shareId := testClient().Ids.RandomAccountObjectIdentifierContaining(".foo.bar")
+	_, shareCleanup := testClient().Share.CreateShareWithIdentifier(t, shareId)
+	t.Cleanup(shareCleanup)
+
+	privilegesModel := model.GrantPrivilegesToShare("test", []string{sdk.ObjectPrivilegeUsage.String()}, shareId.Name()).
+		WithOnDatabase(database.ID().Name())
+	grantModel := model.GrantDatabaseRole("test", databaseRole.ID().FullyQualifiedName()).
+		WithShareName(shareId.Name()).
+		WithDependsOn(privilegesModel.ResourceReference())
+	expectedId := fmt.Sprintf(`%s|SHARE|%s`, databaseRole.ID().FullyQualifiedName(), shareId.FullyQualifiedName())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckGrantDatabaseRoleDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders:  ExternalProviderWithExactVersion("2.20.0"),
+				Config:             accconfig.FromModels(t, privilegesModel, grantModel),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+				Config:                   accconfig.FromModels(t, privilegesModel, grantModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assertThat(t,
+					resourceassert.GrantDatabaseRoleResource(t, grantModel.ResourceReference()).
+						HasDatabaseRoleNameString(databaseRole.ID().FullyQualifiedName()).
+						HasShareNameString(shareId.Name()),
+					assert.Check(resource.TestCheckResourceAttr(grantModel.ResourceReference(), "id", expectedId)),
+				),
+			},
+		},
+	})
+}
+
 func TestAcc_GrantDatabaseRole_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
+	// TODO(SNOW-4075545): unskip or rebase after cleaning up unstable old-version acceptance tests
+	t.Skip("TODO(SNOW-4075545): Provider 0.94.1 panics on current SHOW GRANTS OF DATABASE ROLE output (index out of range)")
 	databaseRoleId := testClient().Ids.RandomDatabaseObjectIdentifier()
 	parentRoleId := testClient().Ids.RandomDatabaseObjectIdentifier()
 	providerConfig := providermodel.V097CompatibleProviderConfig(t)
@@ -336,6 +391,8 @@ resource "snowflake_grant_database_role" "test" {
 }
 
 func TestAcc_GrantDatabaseRole_IdentifierQuotingDiffSuppression(t *testing.T) {
+	// TODO(SNOW-4075545): unskip or rebase after cleaning up unstable old-version acceptance tests
+	t.Skip("TODO(SNOW-4075545): Provider 0.94.1 panics on current SHOW GRANTS OF DATABASE ROLE output (index out of range)")
 	databaseRoleId := testClient().Ids.RandomDatabaseObjectIdentifier()
 	parentRoleId := testClient().Ids.RandomDatabaseObjectIdentifier()
 	providerConfig := providermodel.V097CompatibleProviderConfig(t)
