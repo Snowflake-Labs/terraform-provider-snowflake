@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
@@ -626,6 +628,53 @@ func TestAcc_GrantPrivilegesToShareWithNameContainingDots_OnTable(t *testing.T) 
 			{
 				Config: accconfig.FromModels(t, tableModel),
 				Check:  CheckSharePrivilegesRevoked(t),
+			},
+		},
+	})
+}
+
+func TestAcc_GrantPrivilegesToShare_shareNameContainingDots(t *testing.T) {
+	// Regression test: SHOW GRANTS used to strip everything before the first '.' in a share
+	// grantee name, treating it as an account locator. Share names containing dots then failed
+	// to match on Read, so 2.20.0 applied successfully but the next plan re-added the same
+	// privileges. The current provider strips the locator only when it matches the current
+	// account, so Read on upgrade matches the grant and the plan stays empty.
+	database, databaseCleanup := testClient().Database.CreateDatabaseWithParametersSet(t)
+	t.Cleanup(databaseCleanup)
+
+	shareId := testClient().Ids.RandomAccountObjectIdentifierContaining(".foo.bar")
+	_, shareCleanup := testClient().Share.CreateShareWithIdentifier(t, shareId)
+	t.Cleanup(shareCleanup)
+
+	grantModel := model.GrantPrivilegesToShare("test", []string{sdk.ObjectPrivilegeUsage.String()}, shareId.Name()).
+		WithOnDatabase(database.ID().Name())
+	expectedId := fmt.Sprintf(`%s|USAGE|OnDatabase|%s`, shareId.FullyQualifiedName(), database.ID().FullyQualifiedName())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders:  ExternalProviderWithExactVersion("2.20.0"),
+				Config:             accconfig.FromModels(t, grantModel),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+				Config:                   accconfig.FromModels(t, grantModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assertThat(t,
+					resourceassert.GrantPrivilegesToShareResource(t, grantModel.ResourceReference()).
+						HasToShare(shareId.Name()).
+						HasOnDatabase(database.ID().Name()).
+						HasPrivileges(sdk.ObjectPrivilegeUsage.String()),
+					assert.Check(resource.TestCheckResourceAttr(grantModel.ResourceReference(), "id", expectedId)),
+				),
 			},
 		},
 	})

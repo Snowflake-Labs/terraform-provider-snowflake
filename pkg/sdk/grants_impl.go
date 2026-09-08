@@ -401,7 +401,7 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 		if !(valueSet(opts.Of) && valueSet(opts.Of.DatabaseRole)) { //nolint:gocritic
 			granteeName := granteeNameRaw
 			if grant.GrantedTo == ObjectTypeShare {
-				granteeName = granteeName[strings.IndexRune(granteeName, '.')+1:]
+				granteeName = normalizeShareGranteeName(granteeName, v.client.GetAccountLocator())
 			}
 			resultList[i].GranteeName = NewAccountObjectIdentifier(granteeName)
 		} else if !slices.Contains([]ObjectType{ObjectTypeRole, ObjectTypeShare, ObjectTypeUser, ObjectTypeApplication}, grant.GrantedTo) {
@@ -415,6 +415,8 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 			} else {
 				return nil, err
 			}
+		} else if grant.GrantedTo == ObjectTypeShare {
+			resultList[i].GranteeName = NewAccountObjectIdentifier(normalizeShareGranteeName(granteeNameRaw, v.client.GetAccountLocator()))
 		} else if grant.GrantedTo == ObjectTypeUser {
 			resultList[i].GranteeName = NewAccountObjectIdentifier(strings.TrimPrefix(granteeNameRaw, "USER$"))
 		} else {
@@ -422,6 +424,17 @@ func (v *grants) Show(ctx context.Context, opts *ShowGrantOptions) ([]Grant, err
 		}
 	}
 	return resultList, nil
+}
+
+func normalizeShareGranteeName(granteeName string, accountLocator string) string {
+	if accountLocator == "" {
+		return granteeName
+	}
+	prefix := accountLocator + "."
+	if len(granteeName) >= len(prefix) && strings.EqualFold(granteeName[:len(prefix)], prefix) {
+		return granteeName[len(prefix):]
+	}
+	return granteeName
 }
 
 // grantOwnershipOnPipe execution sequence

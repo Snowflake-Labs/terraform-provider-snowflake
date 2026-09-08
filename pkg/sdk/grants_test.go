@@ -1327,6 +1327,26 @@ func TestGrantShow(t *testing.T) {
 	})
 }
 
+func TestNormalizeShareGranteeName(t *testing.T) {
+	accountLocator := "AB12345"
+	testCases := []struct {
+		name        string
+		granteeName string
+		expected    string
+	}{
+		{name: "account-prefixed share", granteeName: "AB12345.MY_SHARE", expected: "MY_SHARE"},
+		{name: "account-prefixed dotted share", granteeName: `AB12345."MY.SHARE"`, expected: `"MY.SHARE"`},
+		{name: "quoted account prefix is left unchanged", granteeName: `"AB12345"."MY.SHARE"`, expected: `"AB12345"."MY.SHARE"`},
+		{name: "unprefixed dotted share", granteeName: "MY.SHARE", expected: "MY.SHARE"},
+		{name: "case-insensitive account prefix", granteeName: "ab12345.MY_SHARE", expected: "MY_SHARE"},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			assert.Equal(t, testCase.expected, normalizeShareGranteeName(testCase.granteeName, accountLocator))
+		})
+	}
+}
+
 // TestStructToSQL_MatchesGrantsShow covers the property StructToSQL is relied on for as a cache
 // key: it must render exactly what Grants.Show would issue for the same opts.
 func TestStructToSQL_MatchesGrantsShow(t *testing.T) {

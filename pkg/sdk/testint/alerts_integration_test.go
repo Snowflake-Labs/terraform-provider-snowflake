@@ -76,7 +76,6 @@ func TestInt_AlertCreate(t *testing.T) {
 		comment := random.Comment()
 		err := client.Alerts.Create(ctx, sdk.NewCreateAlertRequest(id, testClientHelper().Ids.WarehouseId(), schedule, sdk.NewAlertConditionFromString(condition), action).
 			WithOrReplace(true).
-			WithIfNotExists(false).
 			WithComment(comment))
 		require.NoError(t, err)
 		alertDetails, err := client.Alerts.Describe(ctx, id)
@@ -105,7 +104,6 @@ func TestInt_AlertCreate(t *testing.T) {
 		action := "SELECT 1"
 		comment := random.Comment()
 		err := client.Alerts.Create(ctx, sdk.NewCreateAlertRequest(id, testClientHelper().Ids.WarehouseId(), schedule, sdk.NewAlertConditionFromString(condition), action).
-			WithOrReplace(false).
 			WithIfNotExists(true).
 			WithComment(comment))
 		require.NoError(t, err)

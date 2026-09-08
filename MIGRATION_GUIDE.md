@@ -273,6 +273,26 @@ Previously, when transferring ownership of a database role (`on.object_type = "D
 
 In this release, the provider accepts both `granted_on = ROLE` and `granted_on = DATABASE_ROLE` when reading ownership of a database role, so the grant is matched again regardless of whether the bundle is enabled. No configuration changes are required.
 
+### *(bug fix)* Grants to shares with dots in the share name no longer drift on every plan
+
+[`snowflake_grant_privileges_to_share`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_share)
+and [`snowflake_grant_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_database_role)
+(when granted to a share) treated the first `.` in a share name as an account-locator separator.
+If the share name itself contained dots (for example `team.analytics.share`), Read could not match the grant Snowflake returned.
+
+`terraform plan` then showed a perpetual in-place update that re-added the same privileges, even though the grant already existed:
+
+```
+  # snowflake_grant_privileges_to_share.example will be updated in-place
+  ~ resource "snowflake_grant_privileges_to_share" "example" {
+      ~ privileges = [
+          + "USAGE",
+        ]
+    }
+```
+
+The provider now strips an account locator from a share grantee only when it matches the current account. Share names that contain dots are preserved. No configuration changes are required.
+
 ## v2.19.x ➞ v2.20.0
 
 ### *(new feature)* New hybrid table resource
