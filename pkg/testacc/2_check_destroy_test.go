@@ -388,6 +388,9 @@ var showByIdFunctions = map[resources.Resource]runShowByIdFunc{
 	resources.OauthIntegrationForPartnerApplications: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.SecurityIntegrations.ShowByID)
 	},
+	resources.OpenflowConnector: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
+		return runShowById(ctx, id, client.OpenflowConnectors.ShowByID)
+	},
 	resources.OpenflowDeploymentByoc: func(ctx context.Context, client *sdk.Client, id sdk.ObjectIdentifier) error {
 		return runShowById(ctx, id, client.OpenflowDeployments.ShowByID)
 	},

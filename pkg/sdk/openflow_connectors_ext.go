@@ -33,6 +33,9 @@ func (l OpenflowConnectorVersionLocation) ToSql() string {
 }
 
 // OpenflowConnectorFailureStatuses are terminal: a connector in one of these will never move on its own.
+// Teardown is refused from all of them: Snowflake rejects TERMINATE, TERMINATE FORCE and DROP, and ABORT needs
+// a live version a connector that never started does not have. STOP is what clears them, with one exception.
+// DELETE_FAILED refuses STOP and accepts TERMINATE, so a failed teardown is retried rather than stopped first.
 var OpenflowConnectorFailureStatuses = []OpenflowConnectorStatus{
 	OpenflowConnectorStatusCreateFailed,
 	OpenflowConnectorStatusStartFailed,

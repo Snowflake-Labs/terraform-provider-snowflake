@@ -310,6 +310,10 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		schema: resources.OauthIntegrationForPartnerApplications().Schema,
 	},
 	{
+		name:   "OpenflowConnector",
+		schema: resources.OpenflowConnector().Schema,
+	},
+	{
 		name:   "OpenflowDeploymentByoc",
 		schema: resources.OpenflowDeploymentByoc().Schema,
 	},

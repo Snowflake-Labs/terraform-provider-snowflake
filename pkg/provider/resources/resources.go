@@ -92,6 +92,7 @@ const (
 	OauthIntegrationForCustomClients                       resource = "snowflake_oauth_integration_for_custom_clients"
 	OauthIntegrationForPartnerApplications                 resource = "snowflake_oauth_integration_for_partner_applications"
 	ObjectParameter                                        resource = "snowflake_object_parameter"
+	OpenflowConnector                                      resource = "snowflake_openflow_connector"
 	OpenflowDeploymentByoc                                 resource = "snowflake_openflow_deployment_byoc"
 	OpenflowDeploymentSnowflakeManaged                     resource = "snowflake_openflow_deployment_snowflake_managed"
 	OpenflowRuntime                                        resource = "snowflake_openflow_runtime"
