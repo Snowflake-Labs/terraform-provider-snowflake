@@ -1,7 +1,5 @@
 package sdk
 
-import "slices"
-
 var (
 	// based on https://docs.snowflake.com/en/user-guide/object-tagging.html#supported-objects
 	TagAssociationAllowedObjectTypes = []ObjectType{
@@ -60,10 +58,6 @@ var (
 	}
 	TagAssociationAllowedObjectTypesString = make([]string, len(TagAssociationAllowedObjectTypes))
 )
-
-func canBeAssociatedWithTag(o ObjectType) bool {
-	return slices.Contains(TagAssociationAllowedObjectTypes, o)
-}
 
 func init() {
 	for i, v := range TagAssociationAllowedObjectTypes {

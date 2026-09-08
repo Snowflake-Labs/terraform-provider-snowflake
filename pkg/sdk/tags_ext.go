@@ -71,15 +71,15 @@ func (opts *ShowTagOptions) additionalValidations() error {
 }
 
 func (opts *SetTagOptions) additionalValidations() error {
-	if !canBeAssociatedWithTag(opts.objectType) {
-		return fmt.Errorf("tagging for object type %s is not supported", opts.objectType)
+	if err := validateUserInput(opts.objectType.String()); err != nil {
+		return fmt.Errorf("invalid object type: %w", err)
 	}
 	return nil
 }
 
 func (opts *UnsetTagOptions) additionalValidations() error {
-	if !canBeAssociatedWithTag(opts.objectType) {
-		return fmt.Errorf("tagging for object type %s is not supported", opts.objectType)
+	if err := validateUserInput(opts.objectType.String()); err != nil {
+		return fmt.Errorf("invalid object type: %w", err)
 	}
 	return nil
 }
