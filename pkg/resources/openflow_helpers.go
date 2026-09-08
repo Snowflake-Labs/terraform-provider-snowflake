@@ -205,3 +205,77 @@ func waitForOpenflowRuntimeTerminated(ctx context.Context, client *sdk.Client, i
 			missingIsDone: true,
 		})
 }
+
+const openflowConnectorKind = "connector"
+
+func connectorStatus(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier) func() (sdk.OpenflowConnectorStatus, error) {
+	return func() (sdk.OpenflowConnectorStatus, error) {
+		connector, err := client.OpenflowConnectors.ShowByIDSafely(ctx, id)
+		if err != nil {
+			return "", err
+		}
+		return connector.Status, nil
+	}
+}
+
+// waitForOpenflowConnectorReady waits out a create or an alter. A connector settles on RUNNING or STOPPED
+// depending on whether its version has been committed.
+func waitForOpenflowConnectorReady(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {
+	return waitForOpenflowObject(ctx, openflowConnectorKind, id.Name(), timeout,
+		connectorStatus(ctx, client, id),
+		openflowWait[sdk.OpenflowConnectorStatus]{
+			done: []sdk.OpenflowConnectorStatus{
+				sdk.OpenflowConnectorStatusRunning,
+				sdk.OpenflowConnectorStatusStopped,
+			},
+			// The SDK's failure statuses, plus the troubleshooting ones. done lists only RUNNING and STOPPED,
+			// so an unnamed status is retried to the timeout rather than reported as the failure it is.
+			failed: append(
+				slices.Clone(sdk.OpenflowConnectorFailureStatuses),
+				sdk.OpenflowConnectorStatusTroubleshooting,
+				sdk.OpenflowConnectorStatusEnterTroubleshootingFailed,
+				sdk.OpenflowConnectorStatusExitTroubleshootingFailed,
+			),
+			goal: "it to be ready",
+		})
+}
+
+// waitForOpenflowConnectorSettled waits out a mutation still in flight, which TERMINATE requires.
+func waitForOpenflowConnectorSettled(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {
+	settled := slices.DeleteFunc(slices.Clone(sdk.AllOpenflowConnectorStatuses), func(status sdk.OpenflowConnectorStatus) bool {
+		return slices.Contains(sdk.OpenflowConnectorTransientStatuses, status)
+	})
+	return waitForOpenflowObject(ctx, openflowConnectorKind, id.Name(), timeout,
+		connectorStatus(ctx, client, id),
+		openflowWait[sdk.OpenflowConnectorStatus]{
+			done:          settled,
+			goal:          "it to settle",
+			missingIsDone: true,
+		})
+}
+
+// waitForOpenflowConnectorStopped waits for STOP to finish. Delete needs it because a connector in a failed
+// status refuses every other teardown statement.
+func waitForOpenflowConnectorStopped(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {
+	return waitForOpenflowObject(ctx, openflowConnectorKind, id.Name(), timeout,
+		connectorStatus(ctx, client, id),
+		openflowWait[sdk.OpenflowConnectorStatus]{
+			done:          []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusStopped},
+			failed:        []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusStopFailed},
+			goal:          "it to stop",
+			missingIsDone: true,
+		})
+}
+
+// waitForOpenflowConnectorTerminated waits for TERMINATE to finish, which DROP requires: Snowflake refuses
+// DROP from any status other than DELETED.
+func waitForOpenflowConnectorTerminated(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {
+	return waitForOpenflowObject(ctx, openflowConnectorKind, id.Name(), timeout,
+		connectorStatus(ctx, client, id),
+		openflowWait[sdk.OpenflowConnectorStatus]{
+			done:          []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusDeleted},
+			failed:        []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusDeleteFailed},
+			goal:          string(sdk.OpenflowConnectorStatusDeleted),
+			missingIsDone: true,
+		})
+}
