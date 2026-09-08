@@ -19,6 +19,7 @@ import (
 )
 
 func TestInt_PostgresInstances(t *testing.T) {
+	t.Skip("TODO(SNOW-4075516): These tests will be extracted as a separate workflow due to slow execution.")
 	client := testClient(t)
 	ctx := testContext(t)
 

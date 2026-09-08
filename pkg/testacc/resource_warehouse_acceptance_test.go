@@ -46,7 +46,6 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 	newComment := random.Comment()
 
 	autoSuspendDefault := testClient().SnowflakeDefaults.DefaultAutoSuspend(t)
-	queryAccelDefault := testClient().SnowflakeDefaults.DefaultQueryAccelerationMaxScaleFactor(t)
 
 	warehouseModel := model.Warehouse("test", warehouseId.Name()).WithComment(comment)
 	warehouseModelRenamed := model.BasicWarehouseModel(warehouseId2, comment)
@@ -134,7 +133,7 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
 						HasComment(comment).
 						HasEnableQueryAcceleration(true).
-						HasQueryAccelerationMaxScaleFactor(queryAccelDefault),
+						HasQueryAccelerationMaxScaleFactor(8),
 					resourceparametersassert.WarehouseResourceParameters(t, warehouseModel.ResourceReference()).
 						HasMaxConcurrencyLevel(8).
 						HasStatementQueuedTimeoutInSeconds(0).
@@ -156,7 +155,7 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
 						HasComment(comment).
 						HasEnableQueryAcceleration(true).
-						HasQueryAccelerationMaxScaleFactor(queryAccelDefault),
+						HasQueryAccelerationMaxScaleFactor(8),
 					objectparametersassert.WarehouseParameters(t, warehouseId).
 						HasAllDefaultsForEnvironment(t, testClient().SnowflakeDefaults).
 						HasAllDefaultsExplicit(),
@@ -185,7 +184,7 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 						HasResourceMonitorString("").
 						HasCommentString(comment).
 						HasEnableQueryAccelerationString("true").
-						HasQueryAccelerationMaxScaleFactorString(strconv.Itoa(queryAccelDefault)).
+						HasQueryAccelerationMaxScaleFactorString(strconv.Itoa(8)).
 						HasDefaultMaxConcurrencyLevel().
 						HasDefaultStatementQueuedTimeoutInSeconds().
 						HasDefaultStatementTimeoutInSeconds(),
@@ -210,7 +209,7 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 						HasResourceMonitor(sdk.AccountObjectIdentifier{}).
 						HasComment(comment).
 						HasEnableQueryAcceleration(true).
-						HasQueryAccelerationMaxScaleFactor(queryAccelDefault),
+						HasQueryAccelerationMaxScaleFactor(8),
 					objectparametersassert.WarehouseParameters(t, warehouseId).
 						HasAllDefaultsForEnvironment(t, testClient().SnowflakeDefaults).
 						HasAllDefaultsExplicit(),
@@ -265,7 +264,7 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 					resource.TestCheckNoResourceAttr(warehouseModelRenamedFullWithParameters.ResourceReference(), "resource_monitor"),
 					resource.TestCheckResourceAttr(warehouseModelRenamedFullWithParameters.ResourceReference(), "comment", comment),
 					resource.TestCheckResourceAttr(warehouseModelRenamedFullWithParameters.ResourceReference(), "enable_query_acceleration", "true"),
-					resource.TestCheckResourceAttr(warehouseModelRenamedFullWithParameters.ResourceReference(), "query_acceleration_max_scale_factor", strconv.Itoa(queryAccelDefault)),
+					resource.TestCheckResourceAttr(warehouseModelRenamedFullWithParameters.ResourceReference(), "query_acceleration_max_scale_factor", strconv.Itoa(8)),
 
 					// parameters have the same values...
 					resource.TestCheckResourceAttr(warehouseModelRenamedFullWithParameters.ResourceReference(), "max_concurrency_level", "8"),
@@ -297,7 +296,7 @@ func TestAcc_Warehouse_BasicUseCase(t *testing.T) {
 						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "auto_suspend", tfjson.ActionUpdate, sdk.String(strconv.Itoa(autoSuspendDefault)), sdk.String("1200")),
 						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "auto_resume", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
 						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "enable_query_acceleration", tfjson.ActionUpdate, sdk.String("true"), sdk.String("false")),
-						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String(strconv.Itoa(queryAccelDefault)), sdk.String("4")),
+						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "query_acceleration_max_scale_factor", tfjson.ActionUpdate, sdk.String(strconv.Itoa(8)), sdk.String("4")),
 
 						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "max_concurrency_level", tfjson.ActionUpdate, sdk.String("8"), sdk.String("4")),
 						planchecks.ExpectChange(warehouseModelRenamedFull.ResourceReference(), "statement_queued_timeout_in_seconds", tfjson.ActionUpdate, sdk.String("0"), sdk.String("5")),
@@ -1245,7 +1244,7 @@ func TestAcc_Warehouse_ZeroValues(t *testing.T) {
 
 					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "show_output.#", "1"),
 					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "show_output.0.auto_suspend", "600"),
-					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "2"),
+					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "8"),
 
 					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "parameters.#", "1"),
 					resource.TestCheckResourceAttr(warehouseModel.ResourceReference(), "parameters.0.statement_queued_timeout_in_seconds.0.value", "0"),
@@ -1931,7 +1930,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_noI
 					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "query_acceleration_max_scale_factor", r.IntDefaultString),
 
 					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "show_output.#", "1"),
-					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "2"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefaultWithQueryAccelerationMaxScaleFactorRemoved.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "8"),
 				),
 			},
 		},

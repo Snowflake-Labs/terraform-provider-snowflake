@@ -47,28 +47,6 @@ func (c *SnowflakeDefaultsClient) DefaultAutoSuspend(t *testing.T) int {
 	return 600
 }
 
-// DefaultQueryAccelerationMaxScaleFactor returns the Snowflake default for
-// QUERY_ACCELERATION_MAX_SCALE_FACTOR. Prod accounts default to 2; preprod still defaults to 8.
-func (c *SnowflakeDefaultsClient) DefaultQueryAccelerationMaxScaleFactor(t *testing.T) int {
-	t.Helper()
-	if c.context.snowflakeEnvironment != testenvs.SnowflakeProdEnvironment {
-		return 8
-	}
-	return 2
-}
-
-// InteractiveWarehouseStatementTimeoutInSeconds returns the STATEMENT_TIMEOUT_IN_SECONDS
-// value Snowflake actually stores on an interactive warehouse. Prod honors the requested
-// value; non-prod environments cap it at 5 seconds (values at or below 5 are kept as-is).
-func (c *SnowflakeDefaultsClient) InteractiveWarehouseStatementTimeoutInSeconds(t *testing.T, requested int) int {
-	t.Helper()
-	const nonProdCap = 5
-	if c.context.snowflakeEnvironment != testenvs.SnowflakeProdEnvironment && requested > nonProdCap {
-		return nonProdCap
-	}
-	return requested
-}
-
 // DefaultStatementTimeoutInSecondsLevel returns the expected parameter level for
 // STATEMENT_TIMEOUT_IN_SECONDS on a newly created warehouse. Prod inherits the
 // Snowflake default (empty level); non-prod accounts currently surface ACCOUNT because they need to be overridden.

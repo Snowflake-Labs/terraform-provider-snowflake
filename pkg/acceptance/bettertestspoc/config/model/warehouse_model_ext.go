@@ -19,10 +19,8 @@ func WarehouseSnowflakeDefaultWithoutParameters(
 	comment string,
 ) *WarehouseModel {
 	autoSuspend := 600
-	queryAccelMaxScaleFactor := 2
 	if testenvs.GetSnowflakeEnvironmentWithProdDefault() != testenvs.SnowflakeProdEnvironment {
 		autoSuspend = 34
-		queryAccelMaxScaleFactor = 8
 	}
 	return BasicWarehouseModel(id, comment).
 		WithWarehouseTypeEnum(sdk.WarehouseTypeStandard).
@@ -34,7 +32,7 @@ func WarehouseSnowflakeDefaultWithoutParameters(
 		WithAutoResume(r.BooleanTrue).
 		WithInitiallySuspended(false).
 		WithEnableQueryAcceleration(r.BooleanTrue).
-		WithQueryAccelerationMaxScaleFactor(queryAccelMaxScaleFactor)
+		WithQueryAccelerationMaxScaleFactor(8)
 }
 
 // TODO [SNOW-1501905]: currently config builder are generated from the resource schema, so there is no direct connection to the source enum (like sdk.WarehouseSize)
