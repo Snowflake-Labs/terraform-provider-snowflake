@@ -55,6 +55,17 @@ To use the provider with the bundles containing this change:
 
 Reference: [BCR-1944](https://docs.snowflake.com/release-notes/bcr-bundles/un-bundled/bcr-1944)
 
+## [Bundle 2026_06](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_06_bundle)
+
+### `SHOW GRANTS` output changes for database roles
+
+This bundle (BCR-2371) makes `SHOW GRANTS` output consistent for database roles in two ways, each of which broke a grant resource until the provider was updated. No configuration changes are required - upgrade to at least the provider version listed for the affected resource.
+
+- [`snowflake_grant_ownership`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership): the `granted_on` column of `SHOW GRANTS ON DATABASE ROLE` now reports `DATABASE_ROLE` instead of `ROLE`. With the bundle enabled, transferring ownership of a database role (`on.object_type = "DATABASE ROLE"`) failed at the post-apply read with `Provider produced inconsistent result after apply`, because the provider no longer matched the `OWNERSHIP` grant it had just created. Fixed in **v2.21.0**: the provider now accepts both `ROLE` and `DATABASE_ROLE`.
+- [`snowflake_grant_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_database_role): the grantee database role in `SHOW GRANTS OF DATABASE ROLE` is now returned without its database prefix. With the bundle enabled, the provider could not parse the grantee name, producing a permanent plan diff and import failures. Fixed in **v2.20.0**: the grantee name is normalized back to a fully qualified identifier.
+
+Reference: [BCR-2371](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_06/bcr-2371)
+
 ## [Bundle 2026_04](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_04_bundle)
 
 ### CREATE FUNCTION and CREATE PROCEDURE: signature size limit reduced
