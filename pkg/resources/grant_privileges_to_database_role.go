@@ -180,7 +180,7 @@ var grantPrivilegesToDatabaseRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: objectTypeExamplesDescription("The object type of the schema object on which privileges will be granted.", sdk.ValidGrantToSchemaObjectTypesString),
+					Description: objectTypeExamplesDescription(joinWithSpace("The object type of the schema object on which privileges will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), sdk.ValidGrantToSchemaObjectTypesString),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -279,7 +279,7 @@ func getGrantPrivilegesOnDatabaseRoleBulkOperationSchema(validGrantToObjectTypes
 			Type:             schema.TypeString,
 			Required:         true,
 			ForceNew:         true,
-			Description:      objectTypeExamplesDescription("The plural object type of the schema object on which privileges will be granted.", validGrantToObjectTypes),
+			Description:      objectTypeExamplesDescription(joinWithSpace("The plural object type of the schema object on which privileges will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), validGrantToObjectTypes),
 			ValidateDiagFunc: sdkValidation(sdk.ToPluralObjectType),
 		},
 		"in_database": {

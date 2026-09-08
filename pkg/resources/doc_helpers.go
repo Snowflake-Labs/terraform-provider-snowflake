@@ -95,6 +95,15 @@ func objectTypeExamplesDescription[T ~string](description string, examples []T) 
 	return fmt.Sprintf("%s Known examples (case-insensitive): %s. Snowflake validates the type at apply time.", description, possibleValuesListed(examples))
 }
 
+const (
+	snowflakeGrantOwnershipRequiredParametersDocs = "https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters"
+	snowflakeGrantPrivilegeRequiredParametersDocs = "https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#required-parameters"
+)
+
+func snowflakeDocumentationLink(url string) string {
+	return fmt.Sprintf("For more information head over to [Snowflake documentation](%s).", url)
+}
+
 func doubleDollarQuotesDescription() string {
 	return "The provider wraps it in `$$` by default, so be aware of that while referencing the argument in the spec definition. Using `$$` in this field is disallowed."
 }

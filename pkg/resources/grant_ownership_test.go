@@ -90,10 +90,40 @@ func TestGetOnObjectIdentifier(t *testing.T) {
 			Expected:   sdk.NewAccountObjectIdentifier("to.many.parts.in.this.identifier"),
 		},
 		{
-			Name:       "validation - unsupported type (pseudo-object not in sdk.AllObjectTypes)",
-			ObjectType: sdk.ObjectTypeProgrammaticAccessToken,
-			ObjectName: "some_name",
-			Error:      "object_type PROGRAMMATIC ACCESS TOKEN is not supported",
+			Name:       "unknown type - one part is account object identifier",
+			ObjectType: sdk.ObjectTypePostgresInstance,
+			ObjectName: "pg_instance",
+			Expected:   sdk.NewAccountObjectIdentifier("pg_instance"),
+		},
+		{
+			Name:       "unknown type - two parts is database object identifier",
+			ObjectType: sdk.ObjectType("SOME NEW TYPE"),
+			ObjectName: "test_database.test_object",
+			Expected:   sdk.NewDatabaseObjectIdentifier("test_database", "test_object"),
+		},
+		{
+			Name:       "unknown type - three parts is schema object identifier",
+			ObjectType: sdk.ObjectType("SOME NEW TYPE"),
+			ObjectName: "test_database.test_schema.test_object",
+			Expected:   sdk.NewSchemaObjectIdentifier("test_database", "test_schema", "test_object"),
+		},
+		{
+			Name:       "unknown type - four parts is table column identifier",
+			ObjectType: sdk.ObjectType("SOME NEW TYPE"),
+			ObjectName: "test_database.test_schema.test_table.column_name",
+			Expected:   sdk.NewTableColumnIdentifier("test_database", "test_schema", "test_table", "column_name"),
+		},
+		{
+			Name:       "unknown type - quoted one part with dots is account object identifier",
+			ObjectType: sdk.ObjectTypePostgresInstance,
+			ObjectName: `"name.with.dots"`,
+			Expected:   sdk.NewAccountObjectIdentifier("name.with.dots"),
+		},
+		{
+			Name:       "unknown type - five parts is rejected",
+			ObjectType: sdk.ObjectType("SOME NEW TYPE"),
+			ObjectName: "a.b.c.d.e",
+			Error:      "unsupported identifier: a.b.c.d.e (number of parts: 5)",
 		},
 		{
 			Name:       "validation - invalid database object identifier",
@@ -246,6 +276,19 @@ func TestGetOwnershipGrantOn(t *testing.T) {
 				Future: &sdk.GrantOnSchemaObjectIn{
 					PluralObjectType: sdk.PluralObjectTypeTables,
 					InSchema:         sdk.Pointer(sdk.NewDatabaseObjectIdentifier("test_database", "test_schema")),
+				},
+			},
+		},
+		{
+			Name: "unknown account object type - postgres instance",
+			On: map[string]any{
+				"object_type": "POSTGRES INSTANCE",
+				"object_name": "pg1",
+			},
+			Expected: sdk.OwnershipGrantOn{
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypePostgresInstance,
+					Name:       sdk.NewAccountObjectIdentifier("pg1"),
 				},
 			},
 		},

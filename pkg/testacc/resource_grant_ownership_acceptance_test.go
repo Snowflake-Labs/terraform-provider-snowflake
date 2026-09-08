@@ -667,7 +667,7 @@ func TestAcc_GrantOwnership_Validations_EmptyObjectType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      accconfig.FromModels(t, accountRoleModel, grantModel),
-				ExpectError: regexp.MustCompile("expected on.0.object_type to be one of"),
+				ExpectError: regexp.MustCompile("invalid object type:  contains disallowed characters"),
 			},
 		},
 	})

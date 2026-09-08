@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/experimentalfeatures"
@@ -63,11 +62,11 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: fmt.Sprintf("Specifies the type of object on which you are transferring ownership. Available values are: %s", strings.Join(sdk.ValidGrantOwnershipObjectTypesString, " | ")),
+					Description: objectTypeExamplesDescription(joinWithSpace("Specifies the type of object on which you are transferring ownership.", snowflakeDocumentationLink(snowflakeGrantOwnershipRequiredParametersDocs)), sdk.ValidGrantOwnershipObjectTypesString),
 					RequiredWith: []string{
 						"on.0.object_name",
 					},
-					ValidateFunc: validation.StringInSlice(sdk.ValidGrantOwnershipObjectTypesString, true),
+					ValidateDiagFunc: sdkValidation(sdk.ToObjectType),
 				},
 				"object_name": {
 					Type:             schema.TypeString,
@@ -122,11 +121,11 @@ var grantOwnershipSchema = map[string]*schema.Schema{
 func grantOwnershipBulkOperationSchema(branchName string, validObjectTypesPlural []string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"object_type_plural": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			Description:  fmt.Sprintf("Specifies the type of object in plural form on which you are transferring ownership. Available values are: %s. For more information head over to [Snowflake documentation](https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters).", strings.Join(validObjectTypesPlural, " | ")),
-			ValidateFunc: validation.StringInSlice(validObjectTypesPlural, true),
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			Description:      objectTypeExamplesDescription(joinWithSpace("Specifies the type of object in plural form on which you are transferring ownership.", snowflakeDocumentationLink(snowflakeGrantOwnershipRequiredParametersDocs)), validObjectTypesPlural),
+			ValidateDiagFunc: sdkValidation(sdk.ToPluralObjectType),
 		},
 		"in_database": {
 			Type:             schema.TypeString,
@@ -536,7 +535,7 @@ func GetOnObjectIdentifier(objectType sdk.ObjectType, objectName string) (sdk.Ob
 		return sdk.ParseTableColumnIdentifier(objectName)
 
 	default:
-		return nil, sdk.NewError(fmt.Sprintf("object_type %s is not supported, please create a feature request for the provider if given object_type should be supported", objectType))
+		return sdk.ParseObjectIdentifierString(objectName)
 	}
 }
 
