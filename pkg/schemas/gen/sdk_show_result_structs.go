@@ -41,6 +41,7 @@ var SdkShowResultStructs = []any{
 	sdk.NetworkRule{},
 	sdk.Notebook{},
 	sdk.NotificationIntegration{},
+	sdk.OpenflowConnectorDefinition{},
 	sdk.OpenflowConnector{},
 	sdk.OpenflowDeployment{},
 	sdk.OpenflowRuntime{},
