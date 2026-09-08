@@ -39,6 +39,7 @@ const (
 	NetworkPolicies                datasource = "snowflake_network_policies"
 	NetworkRules                   datasource = "snowflake_network_rules"
 	Notebooks                      datasource = "snowflake_notebooks"
+	OpenflowConnectorDefinitions   datasource = "snowflake_openflow_connector_definitions"
 	OpenflowConnectors             datasource = "snowflake_openflow_connectors"
 	OpenflowDeployments            datasource = "snowflake_openflow_deployments"
 	OpenflowRuntimes               datasource = "snowflake_openflow_runtimes"

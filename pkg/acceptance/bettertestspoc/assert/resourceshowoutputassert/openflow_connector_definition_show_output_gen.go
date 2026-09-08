@@ -30,6 +30,21 @@ func ImportedOpenflowConnectorDefinitionShowOutput(t *testing.T, id string) *Ope
 	return &openflowConnectorDefinitionAssert
 }
 
+func OpenflowConnectorDefinitionsDatasourceShowOutput(t *testing.T, name string) *OpenflowConnectorDefinitionShowOutputAssert {
+	t.Helper()
+
+	return OpenflowConnectorDefinitionsDatasourceShowOutputOnIdx(t, name, 0)
+}
+
+func OpenflowConnectorDefinitionsDatasourceShowOutputOnIdx(t *testing.T, name string, idx int) *OpenflowConnectorDefinitionShowOutputAssert {
+	t.Helper()
+
+	openflowConnectorDefinitionAssert := OpenflowConnectorDefinitionShowOutputAssert{
+		ResourceAssert: assert.NewDatasourceShowOutputAssert(name, "openflow_connector_definitions", idx),
+	}
+	return &openflowConnectorDefinitionAssert
+}
+
 ////////////////////////////
 // Attribute value checks //
 ////////////////////////////

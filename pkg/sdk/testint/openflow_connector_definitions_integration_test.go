@@ -76,9 +76,9 @@ func TestInt_OpenflowConnectorDefinitions(t *testing.T) {
 		assert.LessOrEqual(t, len(limited), len(definitions), "LIMIT 1 returned more rows than an unlimited SHOW")
 	})
 
-	// Snowflake accepts STARTS WITH here but does not filter on it. LIKE and LIMIT filter on the same command
-	// and STARTS WITH works on the other three SHOWs, so the clause reaches the server intact. This fails
-	// once it is applied, which is the signal to assert real filtering instead.
+	// Snowflake accepts STARTS WITH here but does not filter on it (SNOW-4024255). LIKE and LIMIT filter on
+	// the same command and STARTS WITH works on the other three SHOWs, so the clause reaches the server
+	// intact. This fails once it is applied, which is the signal to assert real filtering instead.
 	t.Run("show: with starts with is accepted but not applied", func(t *testing.T) {
 		all, err := client.OpenflowConnectorDefinitions.Show(ctx, sdk.NewShowOpenflowConnectorDefinitionRequest())
 		require.NoError(t, err)
