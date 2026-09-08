@@ -1323,34 +1323,9 @@ func getAccountRoleGrantOn(d *schema.ResourceData) (*sdk.AccountRoleGrantOn, err
 			return nil, err
 		}
 
-		switch objectType {
-		case sdk.ObjectTypeDatabase:
-			grantOnAccountObject.Database = &objectIdentifier
-		case sdk.ObjectTypeConnection:
-			grantOnAccountObject.Connection = &objectIdentifier
-		case sdk.ObjectTypeFailoverGroup:
-			grantOnAccountObject.FailoverGroup = &objectIdentifier
-		case sdk.ObjectTypeIntegration:
-			grantOnAccountObject.Integration = &objectIdentifier
-		case sdk.ObjectTypeReplicationGroup:
-			grantOnAccountObject.ReplicationGroup = &objectIdentifier
-		case sdk.ObjectTypeResourceMonitor:
-			grantOnAccountObject.ResourceMonitor = &objectIdentifier
-		case sdk.ObjectTypeUser:
-			grantOnAccountObject.User = &objectIdentifier
-		case sdk.ObjectTypeWarehouse:
-			grantOnAccountObject.Warehouse = &objectIdentifier
-		case sdk.ObjectTypeComputePool:
-			grantOnAccountObject.ComputePool = &objectIdentifier
-		case sdk.ObjectTypeExternalVolume:
-			grantOnAccountObject.ExternalVolume = &objectIdentifier
-		case sdk.ObjectTypeSnowflakeIntelligence:
-			grantOnAccountObject.SnowflakeIntelligence = &objectIdentifier
-		default:
-			grantOnAccountObject.Object = &sdk.Object{
-				ObjectType: objectType,
-				Name:       objectIdentifier,
-			}
+		grantOnAccountObject.Object = &sdk.Object{
+			ObjectType: objectType,
+			Name:       objectIdentifier,
 		}
 
 		on.AccountObject = grantOnAccountObject
@@ -1587,48 +1562,15 @@ func createGrantPrivilegesToAccountRoleIdFromSchema(d *schema.ResourceData) (id 
 	case on.AccountObject != nil:
 		onAccountObjectGrantData := new(OnAccountObjectGrantData)
 
-		switch {
-		case on.AccountObject.User != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeUser
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.User
-		case on.AccountObject.ResourceMonitor != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeResourceMonitor
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.ResourceMonitor
-		case on.AccountObject.Warehouse != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeWarehouse
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.Warehouse
-		case on.AccountObject.Database != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeDatabase
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.Database
-		case on.AccountObject.Integration != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeIntegration
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.Integration
-		case on.AccountObject.Connection != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeConnection
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.Connection
-		case on.AccountObject.FailoverGroup != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeFailoverGroup
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.FailoverGroup
-		case on.AccountObject.ReplicationGroup != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeReplicationGroup
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.ReplicationGroup
-		case on.AccountObject.ComputePool != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeComputePool
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.ComputePool
-		case on.AccountObject.ExternalVolume != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeExternalVolume
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.ExternalVolume
-		case on.AccountObject.SnowflakeIntelligence != nil:
-			onAccountObjectGrantData.ObjectType = sdk.ObjectTypeSnowflakeIntelligence
-			onAccountObjectGrantData.ObjectName = *on.AccountObject.SnowflakeIntelligence
-		case on.AccountObject.Object != nil:
-			onAccountObjectGrantData.ObjectType = on.AccountObject.Object.ObjectType
-			objectName, ok := on.AccountObject.Object.Name.(sdk.AccountObjectIdentifier)
-			if !ok {
-				return nil, fmt.Errorf("expected account object identifier for object type %s, got %T", on.AccountObject.Object.ObjectType, on.AccountObject.Object.Name)
-			}
-			onAccountObjectGrantData.ObjectName = objectName
+		if on.AccountObject.Object == nil {
+			return nil, fmt.Errorf("account object is required")
 		}
+		onAccountObjectGrantData.ObjectType = on.AccountObject.Object.ObjectType
+		objectName, ok := on.AccountObject.Object.Name.(sdk.AccountObjectIdentifier)
+		if !ok {
+			return nil, fmt.Errorf("expected account object identifier for object type %s, got %T", on.AccountObject.Object.ObjectType, on.AccountObject.Object.Name)
+		}
+		onAccountObjectGrantData.ObjectName = objectName
 
 		id.Kind = OnAccountObjectAccountRoleGrantKind
 		id.Data = onAccountObjectGrantData

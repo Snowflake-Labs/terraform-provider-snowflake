@@ -60,7 +60,10 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			on: &AccountRoleGrantOn{
 				AccountObject: &GrantOnAccountObject{
-					Database: Pointer(NewAccountObjectIdentifier("db1")),
+					Object: &Object{
+						ObjectType: ObjectTypeDatabase,
+						Name:       NewAccountObjectIdentifier("db1"),
+					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
@@ -75,7 +78,10 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			on: &AccountRoleGrantOn{
 				AccountObject: &GrantOnAccountObject{
-					ExternalVolume: Pointer(NewAccountObjectIdentifier("ex volume")),
+					Object: &Object{
+						ObjectType: ObjectTypeExternalVolume,
+						Name:       NewAccountObjectIdentifier("ex volume"),
+					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
@@ -90,7 +96,10 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			on: &AccountRoleGrantOn{
 				AccountObject: &GrantOnAccountObject{
-					ComputePool: Pointer(NewAccountObjectIdentifier("compute pool")),
+					Object: &Object{
+						ObjectType: ObjectTypeComputePool,
+						Name:       NewAccountObjectIdentifier("compute pool"),
+					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
@@ -105,7 +114,10 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			on: &AccountRoleGrantOn{
 				AccountObject: &GrantOnAccountObject{
-					Connection: Pointer(NewAccountObjectIdentifier("myconn")),
+					Object: &Object{
+						ObjectType: ObjectTypeConnection,
+						Name:       NewAccountObjectIdentifier("myconn"),
+					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
@@ -113,23 +125,7 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 		assertOptsValidAndSqlEqualsf(t, opts, `GRANT ALL PRIVILEGES ON CONNECTION "myconn" TO ROLE "role1"`)
 	})
 
-	t.Run("on account object - exactly one of validation", func(t *testing.T) {
-		opts := &GrantPrivilegesToAccountRoleOptions{
-			privileges: &AccountRoleGrantPrivileges{
-				AllPrivileges: Bool(true),
-			},
-			on: &AccountRoleGrantOn{
-				AccountObject: &GrantOnAccountObject{
-					Database:    Pointer(NewAccountObjectIdentifier("database")),
-					ComputePool: Pointer(NewAccountObjectIdentifier("pool")),
-				},
-			},
-			accountRole: NewAccountObjectIdentifier("role1"),
-		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence", "Object"))
-	})
-
-	t.Run("on account object - exactly one of validation - empty options", func(t *testing.T) {
+	t.Run("on account object - object is required", func(t *testing.T) {
 		opts := &GrantPrivilegesToAccountRoleOptions{
 			privileges: &AccountRoleGrantPrivileges{
 				AllPrivileges: Bool(true),
@@ -139,7 +135,7 @@ func TestGrantPrivilegesToAccountRole(t *testing.T) {
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
 		}
-		assertOptsInvalid(t, opts, errExactlyOneOf("GrantOnAccountObject", "User", "ResourceMonitor", "Warehouse", "ComputePool", "Database", "Integration", "Connection", "FailoverGroup", "ReplicationGroup", "ExternalVolume", "SnowflakeIntelligence", "Object"))
+		assertOptsInvalid(t, opts, errNotSet("GrantOnAccountObject", "Object"))
 	})
 
 	t.Run("on account object - unknown type fallback", func(t *testing.T) {
@@ -317,7 +313,10 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 			},
 			on: &AccountRoleGrantOn{
 				AccountObject: &GrantOnAccountObject{
-					Database: Pointer(NewAccountObjectIdentifier("db1")),
+					Object: &Object{
+						ObjectType: ObjectTypeDatabase,
+						Name:       NewAccountObjectIdentifier("db1"),
+					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),
@@ -332,7 +331,10 @@ func TestRevokePrivilegesFromAccountRole(t *testing.T) {
 			},
 			on: &AccountRoleGrantOn{
 				AccountObject: &GrantOnAccountObject{
-					Database: Pointer(NewAccountObjectIdentifier("db1")),
+					Object: &Object{
+						ObjectType: ObjectTypeDatabase,
+						Name:       NewAccountObjectIdentifier("db1"),
+					},
 				},
 			},
 			accountRole: NewAccountObjectIdentifier("role1"),

@@ -97,7 +97,10 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		}
 		on := &sdk.AccountRoleGrantOn{
 			AccountObject: &sdk.GrantOnAccountObject{
-				ResourceMonitor: sdk.Pointer(resourceMonitorTest.ID()),
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeResourceMonitor,
+					Name:       resourceMonitorTest.ID(),
+				},
 			},
 		}
 		err := client.Grants.GrantPrivilegesToAccountRole(ctx, privileges, on, roleTest.ID(), nil)
@@ -137,7 +140,10 @@ func TestInt_GrantAndRevokePrivilegesToAccountRole(t *testing.T) {
 		}
 		on := &sdk.AccountRoleGrantOn{
 			AccountObject: &sdk.GrantOnAccountObject{
-				Connection: sdk.Pointer(connection.ID()),
+				Object: &sdk.Object{
+					ObjectType: sdk.ObjectTypeConnection,
+					Name:       connection.ID(),
+				},
 			},
 		}
 
@@ -1237,7 +1243,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			&sdk.AccountRoleGrantOn{
 				AccountObject: &sdk.GrantOnAccountObject{
-					Database: sdk.Pointer(testClientHelper().Ids.DatabaseId()),
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeDatabase,
+						Name:       testClientHelper().Ids.DatabaseId(),
+					},
 				},
 			},
 			roleId,
@@ -1315,7 +1324,10 @@ func TestInt_GrantOwnership(t *testing.T) {
 			},
 			&sdk.AccountRoleGrantOn{
 				AccountObject: &sdk.GrantOnAccountObject{
-					Warehouse: sdk.Pointer(testClientHelper().Ids.WarehouseId()),
+					Object: &sdk.Object{
+						ObjectType: sdk.ObjectTypeWarehouse,
+						Name:       testClientHelper().Ids.WarehouseId(),
+					},
 				},
 			},
 			roleId,
