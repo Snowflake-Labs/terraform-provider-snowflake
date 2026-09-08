@@ -131,7 +131,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:             schema.TypeString,
 					Optional:         true,
 					ForceNew:         true,
-					Description:      objectTypeExamplesDescription("The object type of the account object on which privileges will be granted.", sdk.ValidGrantToAccountObjectTypesString),
+					Description:      objectTypeExamplesDescription(joinWithSpace("The object type of the account object on which privileges will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), sdk.ValidGrantToAccountObjectTypesString),
 					ValidateDiagFunc: sdkValidation(sdk.ToObjectType),
 					RequiredWith: []string{
 						"on_account_object.0.object_name",
@@ -174,7 +174,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 								Type:             schema.TypeString,
 								Required:         true,
 								ForceNew:         true,
-								Description:      objectTypeExamplesDescription("The plural object type of the account object on which an inherited privilege will be granted.", sdk.ValidGrantToAccountObjectPluralTypesString),
+								Description:      objectTypeExamplesDescription(joinWithSpace("The plural object type of the account object on which an inherited privilege will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), sdk.ValidGrantToAccountObjectPluralTypesString),
 								ValidateDiagFunc: sdkValidation(sdk.ToPluralObjectType),
 							},
 						},
@@ -299,7 +299,7 @@ var grantPrivilegesToAccountRoleSchema = map[string]*schema.Schema{
 					Type:        schema.TypeString,
 					Optional:    true,
 					ForceNew:    true,
-					Description: objectTypeExamplesDescription("The object type of the schema object on which privileges will be granted.", sdk.ValidGrantToSchemaObjectTypesString),
+					Description: objectTypeExamplesDescription(joinWithSpace("The object type of the schema object on which privileges will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), sdk.ValidGrantToSchemaObjectTypesString),
 					RequiredWith: []string{
 						"on_schema_object.0.object_name",
 					},
@@ -394,7 +394,7 @@ func getGrantPrivilegesOnAccountRoleBulkOperationSchema(validGrantToObjectTypes 
 			Type:             schema.TypeString,
 			Required:         true,
 			ForceNew:         true,
-			Description:      objectTypeExamplesDescription("The plural object type of the schema object on which privileges will be granted.", validGrantToObjectTypes),
+			Description:      objectTypeExamplesDescription(joinWithSpace("The plural object type of the schema object on which privileges will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), validGrantToObjectTypes),
 			ValidateDiagFunc: sdkValidation(sdk.ToPluralObjectType),
 		},
 		"in_database": {
@@ -420,7 +420,7 @@ func getGrantPrivilegesOnAccountRoleInheritedSchemaObjectSchema() map[string]*sc
 			Type:             schema.TypeString,
 			Required:         true,
 			ForceNew:         true,
-			Description:      objectTypeExamplesDescription("The plural object type of the schema object on which an inherited privilege will be granted.", sdk.ValidGrantToAllPluralObjectTypesString),
+			Description:      objectTypeExamplesDescription(joinWithSpace("The plural object type of the schema object on which an inherited privilege will be granted.", snowflakeDocumentationLink(snowflakeGrantPrivilegeRequiredParametersDocs)), sdk.ValidGrantToAllPluralObjectTypesString),
 			ValidateDiagFunc: sdkValidation(sdk.ToPluralObjectType),
 		},
 		"in_account": {

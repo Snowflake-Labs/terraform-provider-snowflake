@@ -36,9 +36,12 @@ No configuration changes are required.
 
 ### *(new feature)* Additional object types in grant resources
 
-[`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role)
-and [`snowflake_grant_privileges_to_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role)
+[`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role),
+[`snowflake_grant_privileges_to_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role),
+and [`snowflake_grant_ownership`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_ownership)
 no longer reject object types that are missing from the provider allowlist. Snowflake validates the object type at apply. Existing configurations are unchanged.
+
+For unknown types, identifier level is inferred from the number of fully qualified name parts (1 = account object, 2 = database object, 3 = schema object, 4 = column). Known types keep their existing identifier mapping.
 
 This absorbs cases like granting on `POSTGRES INSTANCE` ([GH #5084](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5084)) without a dedicated provider release.
 
