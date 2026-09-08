@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var tagAssociationSchema = map[string]*schema.Schema{
@@ -34,8 +33,8 @@ var tagAssociationSchema = map[string]*schema.Schema{
 	"object_type": {
 		Type:             schema.TypeString,
 		Required:         true,
-		Description:      fmt.Sprintf("Specifies the type of object to add a tag. Allowed object types: %v.", possibleValuesListed(sdk.TagAssociationAllowedObjectTypesString)),
-		ValidateFunc:     validation.StringInSlice(sdk.TagAssociationAllowedObjectTypesString, true),
+		Description:      objectTypeExamplesDescription(joinWithSpace("Specifies the type of object to add a tag.", snowflakeDocumentationLink(snowflakeObjectTaggingSupportedObjectsDocs)), sdk.TagAssociationAllowedObjectTypesString),
+		ValidateDiagFunc: sdkValidation(sdk.ToObjectType),
 		DiffSuppressFunc: ignoreCaseSuppressFunc,
 		ForceNew:         true,
 	},

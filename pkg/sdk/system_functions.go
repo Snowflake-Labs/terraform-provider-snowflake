@@ -70,8 +70,8 @@ func (c *systemFunctions) GetTag(ctx context.Context, tagID ObjectIdentifier, ob
 // SQL compilation error: Invalid value VIEW for argument OBJECT_TYPE. Please use object type TABLE for all kinds of table-like objects.
 // TODO [SNOW-1022645]: discuss how we handle situation like this in the SDK
 func normalizeGetTagObjectType(objectType ObjectType) (ObjectType, error) {
-	if !canBeAssociatedWithTag(objectType) {
-		return "", fmt.Errorf("tagging for object type %s is not supported", objectType)
+	if err := validateUserInput(objectType.String()); err != nil {
+		return "", fmt.Errorf("invalid object type: %w", err)
 	}
 	if slices.Contains([]ObjectType{ObjectTypeView, ObjectTypeMaterializedView, ObjectTypeExternalTable, ObjectTypeEventTable}, objectType) {
 		return ObjectTypeTable, nil

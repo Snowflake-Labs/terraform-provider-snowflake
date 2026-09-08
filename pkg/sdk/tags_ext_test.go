@@ -280,9 +280,14 @@ func init() {
 			}
 		}).
 		withAdditionalValidationCase(
-			"validation_Set_unsupportedObjectType",
-			func(opts *SetTagOptions) { opts.objectType = ObjectTypeSequence },
-			fmt.Errorf("tagging for object type %s is not supported", ObjectTypeSequence),
+			"validation_Set_invalidObjectType",
+			func(opts *SetTagOptions) { opts.objectType = ObjectType("SEQUENCE;") },
+			fmt.Errorf("invalid object type: %s contains disallowed characters; it must follow this regex: %s", "SEQUENCE;", allowedUnquotedCharactersRegex.String()),
+		).
+		withAdditionalSqlCasef(
+			"sql_Set_unknownObjectType",
+			func(opts *SetTagOptions) { opts.objectType = ObjectTypePostgresInstance },
+			`ALTER %s %s SET TAG "tag1" = 'value1'`, ObjectTypePostgresInstance, id.FullyQualifiedName(),
 		).
 		withExpectedSqlf(
 			case_Tags_sql_Set_basic,
@@ -304,9 +309,9 @@ func init() {
 			}
 		}).
 		withAdditionalValidationCase(
-			"validation_Unset_unsupportedObjectType",
-			func(opts *UnsetTagOptions) { opts.objectType = ObjectTypeSequence },
-			fmt.Errorf("tagging for object type %s is not supported", ObjectTypeSequence),
+			"validation_Unset_invalidObjectType",
+			func(opts *UnsetTagOptions) { opts.objectType = ObjectType("SEQUENCE;") },
+			fmt.Errorf("invalid object type: %s contains disallowed characters; it must follow this regex: %s", "SEQUENCE;", allowedUnquotedCharactersRegex.String()),
 		).
 		withExpectedSqlf(
 			case_Tags_sql_Unset_basic,

@@ -98,6 +98,7 @@ func objectTypeExamplesDescription[T ~string](description string, examples []T) 
 const (
 	snowflakeGrantOwnershipRequiredParametersDocs = "https://docs.snowflake.com/en/sql-reference/sql/grant-ownership#required-parameters"
 	snowflakeGrantPrivilegeRequiredParametersDocs = "https://docs.snowflake.com/en/sql-reference/sql/grant-privilege#required-parameters"
+	snowflakeObjectTaggingSupportedObjectsDocs    = "https://docs.snowflake.com/en/user-guide/object-tagging#supported-objects"
 )
 
 func snowflakeDocumentationLink(url string) string {
