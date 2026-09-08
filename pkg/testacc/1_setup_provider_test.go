@@ -92,6 +92,7 @@ func acceptanceTestsProvider() *schema.Provider {
 	p.ResourcesMap["snowflake_openflow_deployment_snowflake_managed"] = resources.OpenflowDeploymentSnowflakeManaged()
 	p.ResourcesMap["snowflake_openflow_runtime"] = resources.OpenflowRuntime()
 	p.DataSourcesMap["snowflake_openflow_deployments"] = datasources.OpenflowDeployments()
+	p.DataSourcesMap["snowflake_openflow_runtimes"] = datasources.OpenflowRuntimes()
 	return p
 }
 
