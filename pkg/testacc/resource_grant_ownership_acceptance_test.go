@@ -1252,53 +1252,6 @@ func TestAcc_GrantOwnership_OnServerlessTask(t *testing.T) {
 	})
 }
 
-func TestAcc_GrantOwnership_OnDatabaseRole(t *testing.T) {
-	database, databaseCleanup := testClient().Database.CreateDatabaseWithParametersSet(t)
-	t.Cleanup(databaseCleanup)
-
-	databaseId := database.ID()
-
-	databaseRoleId := testClient().Ids.RandomDatabaseObjectIdentifierInDatabase(databaseId)
-	databaseRoleFullyQualifiedName := databaseRoleId.FullyQualifiedName()
-
-	accountRoleId := testClient().Ids.RandomAccountObjectIdentifier()
-	accountRoleFullyQualifiedName := accountRoleId.FullyQualifiedName()
-
-	accountRoleModel := model.AccountRole("test", accountRoleId.Name())
-	dbRoleModel := model.DatabaseRole("test", databaseId.Name(), databaseRoleId.Name())
-	grantModel := model.GrantOwnershipWithRawOn("test").
-		WithAccountRoleName(accountRoleId.Name()).
-		WithOnObject(sdk.ObjectTypeDatabaseRole, databaseRoleFullyQualifiedName).
-		WithDependsOn(accountRoleModel.ResourceReference(), dbRoleModel.ResourceReference())
-
-	resourceName := "snowflake_grant_ownership.test"
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.RequireAbove(tfversion.Version1_5_0),
-		},
-		Steps: []resource.TestStep{
-			{
-				Config: accconfig.FromModels(t, accountRoleModel, dbRoleModel, grantModel),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_role_name", accountRoleId.Name()),
-					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", string(sdk.ObjectTypeDatabaseRole)),
-					resource.TestCheckResourceAttr(resourceName, "on.0.object_name", databaseRoleFullyQualifiedName),
-					resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("ToAccountRole|%s||OnObject|DATABASE ROLE|%s", accountRoleFullyQualifiedName, databaseRoleFullyQualifiedName)),
-					checkResourceOwnershipIsGranted(&sdk.ShowGrantOptions{
-						On: &sdk.ShowGrantsOn{
-							Object: &sdk.Object{
-								ObjectType: sdk.ObjectTypeDatabaseRole,
-								Name:       databaseRoleId,
-							},
-						},
-					}, sdk.ObjectTypeRole, accountRoleId.Name(), databaseRoleFullyQualifiedName),
-				),
-			},
-		},
-	})
-}
-
 func TestAcc_GrantOwnership_migrateFromV0941_ensureSmoothUpgradeWithNewResourceId(t *testing.T) {
 	tableId := testClient().Ids.RandomSchemaObjectIdentifier()
 	accountRoleId := testClient().Ids.RandomAccountObjectIdentifier()

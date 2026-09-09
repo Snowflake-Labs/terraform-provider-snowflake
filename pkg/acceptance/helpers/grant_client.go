@@ -712,6 +712,20 @@ func (c *GrantClient) RevokeUsageOnProcedureToSnowflakeApplication(t *testing.T,
 	require.NoError(t, err)
 }
 
+func (c *GrantClient) ShowGrantsOnObject(t *testing.T, objectType sdk.ObjectType, objectName sdk.ObjectIdentifier) ([]sdk.Grant, error) {
+	t.Helper()
+	ctx := context.Background()
+
+	return c.client().Show(ctx, &sdk.ShowGrantOptions{
+		On: &sdk.ShowGrantsOn{
+			Object: &sdk.Object{
+				ObjectType: objectType,
+				Name:       objectName,
+			},
+		},
+	})
+}
+
 func (c *GrantClient) ShowGrantsToShare(t *testing.T, shareId sdk.AccountObjectIdentifier) ([]sdk.Grant, error) {
 	t.Helper()
 	ctx := context.Background()
