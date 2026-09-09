@@ -1856,7 +1856,7 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 				Config:            providerConfig + config.FromModels(t, warehouseModelFullDefault),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor", "2"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor", "8"),
 				),
 			},
 			{
@@ -1871,10 +1871,10 @@ func TestAcc_Warehouse_migrateFromVersion092_queryAccelerationMaxScaleFactor_sam
 				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "name", id.Name()),
-					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor", "2"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "query_acceleration_max_scale_factor", "8"),
 
 					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "show_output.#", "1"),
-					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "2"),
+					resource.TestCheckResourceAttr(warehouseModelFullDefault.ResourceReference(), "show_output.0.query_acceleration_max_scale_factor", "8"),
 				),
 			},
 		},
@@ -2252,7 +2252,7 @@ resource "snowflake_warehouse" "test" {
 	auto_resume                         = true
 	initially_suspended                 = false
     enable_query_acceleration           = true
-    query_acceleration_max_scale_factor = 2
+    query_acceleration_max_scale_factor = 8
 
     max_concurrency_level               = 8
     statement_queued_timeout_in_seconds = 0
