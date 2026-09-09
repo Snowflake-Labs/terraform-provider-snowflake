@@ -315,7 +315,10 @@ func (c *StageClient) PutOnStageWithContent(t *testing.T, id sdk.SchemaObjectIde
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		_, err = c.context.client.ExecForTests(ctx, fmt.Sprintf(`REMOVE @%s/%s`, id.FullyQualifiedName(), filename))
-		require.NoError(t, err)
+		// Only check the error if it's not related to the stage / file existence or access
+		if !errors.Is(err, sdk.ErrObjectNotExistOrAuthorized) {
+			require.NoError(t, err)
+		}
 	})
 }
 

@@ -179,6 +179,22 @@ Read more about resource timeouts in the [Terraform documentation](https://devel
 
 References: [#5189](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5189)
 
+### *(bug fix)* Stage directory refresh no longer drifts `directory.auto_refresh`
+
+Refreshing a directory table (for example from Snowsight, or with `ALTER STAGE ... REFRESH`) updates `LAST_REFRESHED_ON`. The provider treated that operational timestamp as a directory config change and copied Snowflake's actual `auto_refresh` value (`false`) into state. The next plan then showed:
+
+```hcl
+~ directory {
+    ~ auto_refresh = "false" -> "default"
+  }
+```
+
+This affected `snowflake_stage_external_azure`, `snowflake_stage_external_s3`, `snowflake_stage_external_gcs`, `snowflake_stage_external_s3_compatible`, and `snowflake_stage_internal` when `auto_refresh` was left unset (`"default"`).
+
+The provider now ignores `last_refreshed_on` when detecting external directory changes. `describe_output.directory_table.last_refreshed_on` is still updated.
+
+No configuration changes are required. Until you upgrade, you can set `auto_refresh = "false"` explicitly, or use `lifecycle { ignore_changes = [directory[0].auto_refresh] }` (the latter also hides real `auto_refresh` changes).
+
 ### *(bug fix)* `snowflake_warehouse_interactive` no longer leaves the provider's session on the new warehouse after creation
 
 Creating an interactive warehouse switches the current session onto it (this is standard Snowflake behavior for warehouse creation). Because interactive warehouses have a short statement timeout, any subsequent operation the provider ran in that same session could time out - for example, on accounts with a large number of warehouses, the following `terraform apply` could fail during the immediate post-create read.

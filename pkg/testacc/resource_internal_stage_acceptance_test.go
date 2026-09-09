@@ -3,9 +3,11 @@
 package testacc
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
@@ -20,6 +22,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
@@ -414,6 +417,86 @@ func TestAcc_InternalStage_Validations(t *testing.T) {
 				Config:      accconfig.FromModels(t, modelBothEncryptionTypes),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`encryption.0.snowflake_full,encryption.0.snowflake_sse.* can be specified`),
+			},
+		},
+	})
+}
+
+func TestAcc_InternalStage_DirectoryRefreshDoesNotDriftAutoRefresh(t *testing.T) {
+	id := testClient().Ids.RandomSchemaObjectIdentifier()
+	stageModel := model.InternalStageWithId(id).
+		WithDirectoryEnabled(r.BooleanTrue)
+
+	var lastRefreshedOn string
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckDestroy(t, resources.InternalStage),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: ExternalProviderWithExactVersion("2.20.0"),
+				Config:            accconfig.FromModels(t, stageModel),
+				Check: assertThat(
+					t,
+					resourceassert.InternalStageResource(t, stageModel.ResourceReference()).
+						HasDirectoryEnableString(r.BooleanTrue).
+						HasDirectoryAutoRefreshString(r.BooleanDefault),
+					assert.Check(resource.TestCheckResourceAttr(stageModel.ResourceReference(), "describe_output.0.directory_table.0.enable", "true")),
+					assert.Check(resource.TestCheckResourceAttr(stageModel.ResourceReference(), "describe_output.0.directory_table.0.auto_refresh", "false")),
+					assert.Check(func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[stageModel.ResourceReference()]
+						if !ok {
+							return fmt.Errorf("resource %s not found in state", stageModel.ResourceReference())
+						}
+						lastRefreshedOn = rs.Primary.Attributes["describe_output.0.directory_table.0.last_refreshed_on"]
+						return nil
+					}),
+				),
+			},
+			// v2.20.0 treats directory refresh (last_refreshed_on) as a config change, so the plan is not empty.
+			{
+				PreConfig: func() {
+					time.Sleep(time.Second)
+					testClient().Stage.PutOnStageWithContent(t, id, "directory_refresh.txt", "refresh")
+					testClient().Stage.AlterDirectoryTable(t, sdk.NewAlterDirectoryTableStageRequest(id).WithRefresh(*sdk.NewDirectoryTableRefreshRequest()))
+				},
+				ExternalProviders:  ExternalProviderWithExactVersion("2.20.0"),
+				Config:             accconfig.FromModels(t, stageModel),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			// Current provider ignores last_refreshed_on, so the plan stays empty.
+			{
+				ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+				Config:                   accconfig.FromModels(t, stageModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: assertThat(
+					t,
+					resourceassert.InternalStageResource(t, stageModel.ResourceReference()).
+						HasDirectoryEnableString(r.BooleanTrue).
+						HasDirectoryAutoRefreshString(r.BooleanDefault),
+					assert.Check(resource.TestCheckResourceAttr(stageModel.ResourceReference(), "describe_output.0.directory_table.0.auto_refresh", "false")),
+					assert.Check(func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[stageModel.ResourceReference()]
+						if !ok {
+							return fmt.Errorf("resource %s not found in state", stageModel.ResourceReference())
+						}
+						got := rs.Primary.Attributes["describe_output.0.directory_table.0.last_refreshed_on"]
+						if got == "" {
+							return fmt.Errorf("expected last_refreshed_on to be set after directory refresh")
+						}
+						if got == lastRefreshedOn {
+							return fmt.Errorf("expected last_refreshed_on to change after directory refresh, still %q", got)
+						}
+						return nil
+					}),
+				),
 			},
 		},
 	})
