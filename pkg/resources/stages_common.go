@@ -127,21 +127,34 @@ func directoryTableToSet(directoryTable sdk.StageDirectoryTable) []any {
 }
 
 func directoryTableToCompare(directoryTable sdk.StageDirectoryTable) []any {
-	lastRefreshedOn := ""
-	if directoryTable.LastRefreshedOn != nil {
-		lastRefreshedOn = *directoryTable.LastRefreshedOn
+	return []any{
+		map[string]any{
+			"enable":       directoryTable.Enable,
+			"auto_refresh": directoryTable.AutoRefresh,
+		},
 	}
-	directoryTableMap := map[string]any{
-		"enable":            directoryTable.Enable,
-		"auto_refresh":      directoryTable.AutoRefresh,
-		"last_refreshed_on": lastRefreshedOn,
+}
+
+func normalizeDirectoryTableForExternalChangeCompare(value any) any {
+	items, ok := value.([]any)
+	if !ok || len(items) != 1 {
+		return value
 	}
-	return []any{directoryTableMap}
+	directoryTable, ok := items[0].(map[string]any)
+	if !ok {
+		return value
+	}
+	return []any{
+		map[string]any{
+			"enable":       directoryTable["enable"],
+			"auto_refresh": directoryTable["auto_refresh"],
+		},
+	}
 }
 
 func directoryTableOutputMapping(directoryTable sdk.StageDirectoryTable) outputMapping {
 	return outputMapping{
-		"directory_table", "directory", directoryTableToCompare(directoryTable), directoryTableToSet(directoryTable), nil,
+		"directory_table", "directory", directoryTableToCompare(directoryTable), directoryTableToSet(directoryTable), normalizeDirectoryTableForExternalChangeCompare,
 	}
 }
 
