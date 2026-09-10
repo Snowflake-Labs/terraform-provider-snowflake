@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/experimentalfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
@@ -690,7 +691,11 @@ func DeleteGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	privileges := getDatabaseRolePrivilegesFromSchema(d)
+	// Derive the privileges from the id rather than from the state: Read empties the privileges attribute
+	// whenever it cannot match the grant (e.g. the object type in the configuration is not the one
+	// Snowflake reports), and an empty list makes the revoke fail validation before any SQL is sent, which
+	// leaves the resource impossible to destroy or replace. Update already derives them from the id.
+	privileges := getDatabaseRolePrivilegesFromId(id)
 	safely := experimentalfeatures.IsExperimentEnabled(experimentalfeatures.GrantsSafeDestroy, providerCtx.EnabledExperiments)
 	err = revokeDatabaseRolePrivileges(ctx, client, d, id, privileges, &sdk.RevokePrivilegesFromDatabaseRoleOptions{}, safely)
 	if err != nil {
@@ -799,7 +804,7 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	privileges := computeDatabaseRolePrivileges(id, grants, grantedOn, opts)
+	privileges, mismatchedObjectTypes := computeDatabaseRolePrivileges(id, grants, grantedOn, opts)
 
 	if err := d.Set("privileges", privileges); err != nil {
 		return diag.Diagnostics{
@@ -811,12 +816,20 @@ func ReadGrantPrivilegesToDatabaseRole(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	if len(privileges) == 0 && len(mismatchedObjectTypes) > 0 {
+		return diag.Diagnostics{objectTypeMismatchDiagnostic(id, *grantedOn, mismatchedObjectTypes)}
+	}
+
 	return nil
 }
 
-func computeDatabaseRolePrivileges(id GrantPrivilegesToDatabaseRoleId, grants []sdk.Grant, grantedOn *sdk.ObjectType, opts *sdk.ShowGrantOptions) (privileges []string) {
+// computeDatabaseRolePrivileges returns the privileges from the id that Snowflake currently reports as
+// granted. The second return value lists the object types Snowflake reported for grants that matched on
+// everything except the object type; it is only used to explain a mismatch to the user (see
+// objectTypeMismatchDiagnostic) and is empty when the grant matched.
+func computeDatabaseRolePrivileges(id GrantPrivilegesToDatabaseRoleId, grants []sdk.Grant, grantedOn *sdk.ObjectType, opts *sdk.ShowGrantOptions) (privileges []string, mismatchedObjectTypes []sdk.ObjectType) {
 	if id.Kind.IsInherited() {
-		return computeInheritedPrivileges(id.Data, id.DatabaseRoleName.Name(), sdk.ObjectTypeDatabaseRole, id.Privileges, grants, false)
+		return computeInheritedPrivileges(id.Data, id.DatabaseRoleName.Name(), sdk.ObjectTypeDatabaseRole, id.Privileges, grants, false), nil
 	}
 
 	for _, grant := range grants {
@@ -839,11 +852,39 @@ func computeDatabaseRolePrivileges(id GrantPrivilegesToDatabaseRoleId, grants []
 			// They function the same way though in a test for matching the object type
 			if *grantedOn == grant.GrantedOn || *grantedOn == grant.GrantOn {
 				privileges = append(privileges, grant.Privilege)
+			} else if grant.GrantedOn != "" && !slices.Contains(mismatchedObjectTypes, grant.GrantedOn) {
+				// Everything but the object type matched. Remember what Snowflake reported so the user can
+				// be told which object type the configuration should use.
+				mismatchedObjectTypes = append(mismatchedObjectTypes, grant.GrantedOn)
 			}
 		}
 	}
 
-	return privileges
+	return privileges, mismatchedObjectTypes
+}
+
+// objectTypeMismatchDiagnostic explains the most common reason for an unconvergent grant resource: the
+// configured object type is not the one Snowflake reports for the object, so no grant is ever matched on
+// Read, privileges are emptied and every plan re-grants them. Snowflake reports the specific object type
+// (ICEBERG TABLE, VIEW, MATERIALIZED VIEW, DYNAMIC TABLE, ...) rather than a generic one, and which type
+// it reports can change with a behavior change bundle - see the 2026_06 section of
+// SNOWFLAKE_BCR_MIGRATION_GUIDE.md for migration steps.
+func objectTypeMismatchDiagnostic(id GrantPrivilegesToDatabaseRoleId, configuredObjectType sdk.ObjectType, mismatchedObjectTypes []sdk.ObjectType) diag.Diagnostic {
+	reported := make([]string, len(mismatchedObjectTypes))
+	for i, objectType := range mismatchedObjectTypes {
+		reported[i] = string(objectType)
+	}
+	return diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  "No privileges matched the configured object type",
+		Detail: fmt.Sprintf(
+			"Id: %s\nSnowflake reports the privileges on this object as granted on %s, but the configuration uses object_type = %q. "+
+				"Because of that, no privileges are read back, and every plan will try to grant them again. "+
+				"Change object_type to the type Snowflake reports and re-create the resource; see the 2026_06 section of "+
+				"SNOWFLAKE_BCR_MIGRATION_GUIDE.md for the migration options and their caveats.",
+			id.String(), strings.Join(reported, ", "), configuredObjectType,
+		),
+	}
 }
 
 func prepareShowGrantsRequest(id GrantPrivilegesToDatabaseRoleId) (*sdk.ShowGrantOptions, *sdk.ObjectType) {
@@ -929,6 +970,19 @@ func getDatabaseRolePrivilegesFromSchema(d *schema.ResourceData) *sdk.DatabaseRo
 		onDatabaseOk,
 		onSchemaOk,
 		onSchemaObjectOk,
+	)
+}
+
+// getDatabaseRolePrivilegesFromId builds the revoke payload from the parsed id. Unlike
+// getDatabaseRolePrivilegesFromSchema it does not depend on the state, which Read may have emptied.
+func getDatabaseRolePrivilegesFromId(id GrantPrivilegesToDatabaseRoleId) *sdk.DatabaseRoleGrantPrivileges {
+	plainKind := id.Kind.Plain()
+	return getDatabaseRolePrivileges(
+		id.AllPrivileges,
+		id.Privileges,
+		plainKind == OnDatabaseDatabaseRoleGrantKind,
+		plainKind == OnSchemaDatabaseRoleGrantKind,
+		plainKind == OnSchemaObjectDatabaseRoleGrantKind,
 	)
 }
 
