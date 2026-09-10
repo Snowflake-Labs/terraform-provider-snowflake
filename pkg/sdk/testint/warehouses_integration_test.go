@@ -431,6 +431,8 @@ func TestInt_Warehouses(t *testing.T) {
 		assertThatObject(
 			t, objectassert.Warehouse(t, warehouse.ID()).
 				HasType(sdk.WarehouseTypeAdaptive).
+				// the previously suspended warehouse does not stay suspended - adaptive warehouses have no such state
+				HasState(sdk.WarehouseStateEnabled).
 				HasNoSize().
 				HasNoGeneration().
 				HasNoResourceConstraint().
@@ -469,6 +471,24 @@ func TestInt_Warehouses(t *testing.T) {
 				HasNoMaxQueryPerformanceLevel().
 				HasNoQueryThroughputMultiplier(),
 		)
+	})
+
+	t.Run("alter adaptive: suspend and resume are not supported", func(t *testing.T) {
+		warehouse, warehouseCleanup := testClientHelper().Warehouse.CreateAdaptive(t)
+		t.Cleanup(warehouseCleanup)
+
+		assertThatObject(t, objectassert.Warehouse(t, warehouse.ID()).HasState(sdk.WarehouseStateEnabled))
+
+		err := client.Warehouses.Alter(ctx, sdk.NewAlterWarehouseRequest(warehouse.ID()).WithSuspend(true))
+		require.ErrorContains(t, err, "Invalid operation Command not supported on an Adaptive Warehouse.")
+
+		err = client.Warehouses.Alter(ctx, sdk.NewAlterWarehouseRequest(warehouse.ID()).WithResume(true))
+		require.ErrorContains(t, err, "Invalid operation Command not supported on an Adaptive Warehouse.")
+
+		err = client.Warehouses.Alter(ctx, sdk.NewAlterWarehouseRequest(warehouse.ID()).WithResume(true).WithIfSuspended(true))
+		require.ErrorContains(t, err, "Invalid operation Command not supported on an Adaptive Warehouse.")
+
+		assertThatObject(t, objectassert.Warehouse(t, warehouse.ID()).HasState(sdk.WarehouseStateEnabled))
 	})
 
 	t.Run("alter adaptive: set and unset all adaptive params", func(t *testing.T) {
@@ -1158,5 +1178,18 @@ func TestInt_Warehouses_Interactive(t *testing.T) {
 		current, err = client.ContextFunctions.CurrentWarehouse(ctx)
 		require.NoError(t, err)
 		assert.Empty(t, current)
+	})
+
+	t.Run("alter interactive: change warehouse type away from interactive", func(t *testing.T) {
+		id := testClientHelper().Ids.RandomAccountObjectIdentifier()
+		err := client.Warehouses.CreateInteractive(ctx, sdk.NewCreateInteractiveWarehouseRequest(id))
+		require.NoError(t, err)
+		t.Cleanup(testClientHelper().Warehouse.DropWarehouseFunc(t, id))
+
+		err = client.Warehouses.AlterWithSuspend(ctx, sdk.NewAlterWarehouseRequest(id).
+			WithSet(*sdk.NewWarehouseSetRequest().WithWarehouseType(sdk.WarehouseTypeAdaptive)))
+		require.ErrorContains(t, err, "invalid property 'WAREHOUSE_TYPE cannot be changed on interactive warehouses' for 'WAREHOUSE'")
+
+		assertThatObject(t, objectassert.Warehouse(t, id).HasType(sdk.WarehouseTypeInteractive))
 	})
 }

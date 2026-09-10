@@ -3,21 +3,24 @@
 package testacc
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
+	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
+	tfjson "github.com/hashicorp/terraform-json"
+
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/objectassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceparametersassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceshowoutputassert"
-	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/helpers/random"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
-	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	tfjson "github.com/hashicorp/terraform-json"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
@@ -305,11 +308,11 @@ func TestAcc_WarehouseAdaptive_CompleteUseCase(t *testing.T) {
 
 func TestAcc_WarehouseAdaptive_Import_WrongWarehouseType(t *testing.T) {
 	adaptiveId := testClient().Ids.RandomAccountObjectIdentifier()
-	regularId := testClient().Ids.RandomAccountObjectIdentifier()
+	interactiveId := testClient().Ids.RandomAccountObjectIdentifier()
 
-	// Create a regular (non-adaptive) warehouse outside of Terraform to use as the import target.
-	_, regularCleanup := testClient().Warehouse.CreateWarehouseWithRequest(t, sdk.NewCreateWarehouseRequest(regularId))
-	t.Cleanup(regularCleanup)
+	// Create an interactive warehouse outside of Terraform to use as the import target.
+	_, interactiveCleanup := testClient().Warehouse.CreateInteractiveWithRequest(t, sdk.NewCreateInteractiveWarehouseRequest(interactiveId))
+	t.Cleanup(interactiveCleanup)
 
 	adaptiveModel := model.WarehouseAdaptiveWithId(adaptiveId)
 
@@ -324,12 +327,95 @@ func TestAcc_WarehouseAdaptive_Import_WrongWarehouseType(t *testing.T) {
 			{
 				Config: accconfig.FromModels(t, adaptiveModel),
 			},
-			// Attempt to import a regular warehouse via the adaptive resource — expects a type mismatch error.
+			// Attempt to import an interactive warehouse via the adaptive resource — expects a type mismatch error.
 			{
 				ResourceName:  adaptiveModel.ResourceReference(),
 				ImportState:   true,
-				ImportStateId: regularId.Name(),
-				ExpectError:   regexp.MustCompile("is not of type ADAPTIVE"),
+				ImportStateId: interactiveId.Name(),
+				ExpectError:   regexp.MustCompile("is an interactive warehouse and cannot be converted to ADAPTIVE"),
+			},
+		},
+	})
+}
+
+// Proves that an existing snowflake_warehouse can be migrated to snowflake_warehouse_adaptive in a single apply,
+// by combining a removed block, the new resource, and an import block. See https://github.com/snowflakedb/terraform-provider-snowflake/issues/5201.
+func TestAcc_WarehouseAdaptive_MigrateFromStandardWarehouseInSingleApply(t *testing.T) {
+	id := testClient().Ids.RandomAccountObjectIdentifier()
+
+	standardModel := model.Warehouse("test", id.Name()).
+		WithWarehouseSizeEnum(sdk.WarehouseSizeMedium)
+	adaptiveModel := model.WarehouseAdaptiveWithId(id).
+		WithMaxQueryPerformanceLevel(string(sdk.MaxQueryPerformanceLevelLarge))
+
+	standardRef := standardModel.ResourceReference()
+	adaptiveRef := adaptiveModel.ResourceReference()
+
+	migrationConfig := accconfig.FromModels(t, adaptiveModel) + fmt.Sprintf(`
+removed {
+  from = %[1]s
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+import {
+  to = %[2]s
+  id = %[3]q
+}
+`, standardRef, adaptiveRef, id.Name())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			// removed blocks require Terraform 1.7 or later
+			tfversion.RequireAbove(tfversion.Version1_7_0),
+		},
+		CheckDestroy: ComposeCheckDestroy(t, resources.Warehouse, resources.WarehouseAdaptive),
+		Steps: []resource.TestStep{
+			// Start from a standard warehouse managed by snowflake_warehouse.
+			{
+				Config: accconfig.FromModels(t, standardModel),
+				Check: assertThat(
+					t,
+					objectassert.Warehouse(t, id).
+						HasType(sdk.WarehouseTypeStandard).
+						HasSize(sdk.WarehouseSizeMedium),
+				),
+			},
+			// Forget the standard resource, adopt the adaptive one, and change the type - all in one apply.
+			{
+				Config: migrationConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						// an update (not a recreation) means the warehouse and everything depending on it is preserved
+						plancheck.ExpectResourceAction(adaptiveRef, plancheck.ResourceActionUpdate),
+						planchecks.ExpectChange(adaptiveRef, "warehouse_type", tfjson.ActionUpdate, sdk.String(string(sdk.WarehouseTypeStandard)), sdk.String(string(sdk.WarehouseTypeAdaptive))),
+					},
+				},
+				Check: assertThat(
+					t,
+					resourceassert.WarehouseAdaptiveResource(t, adaptiveRef).
+						HasWarehouseTypeString(string(sdk.WarehouseTypeAdaptive)).
+						HasMaxQueryPerformanceLevelString(string(sdk.MaxQueryPerformanceLevelLarge)),
+					resourceshowoutputassert.WarehouseShowOutput(t, adaptiveRef).
+						HasType(sdk.WarehouseTypeAdaptive).
+						HasState(sdk.WarehouseStateEnabled),
+					objectassert.Warehouse(t, id).
+						HasType(sdk.WarehouseTypeAdaptive).
+						HasState(sdk.WarehouseStateEnabled).
+						HasNoSize(),
+				),
+			},
+			// The migration blocks are no longer needed.
+			{
+				Config: accconfig.FromModels(t, adaptiveModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

@@ -40,9 +40,10 @@ var maxQueryPerformanceLevelEnum = g.NewEnum(
 	WithAliases("XXXLARGE", "3X-LARGE").
 	WithAliases("X4LARGE", "4X-LARGE")
 
+// ENABLED is reported for adaptive warehouses, which have no suspend/resume lifecycle.
 var warehouseStateEnum = g.NewEnum(
 	"WarehouseState", "WarehouseStates",
-	"SUSPENDED", "SUSPENDING", "STARTED", "RESIZING", "RESUMING",
+	"SUSPENDED", "SUSPENDING", "STARTED", "RESIZING", "RESUMING", "ENABLED",
 )
 
 var warehousePairs = g.StructPair("warehouseDBRow", "Warehouse").
