@@ -9,3 +9,4 @@ Here's the list of cases we currently cannot reproduce and write acceptance test
 - `authentication_methods`: Some of the authentication methods require manual steps, like confirming MFA or setting more dependencies.
 - `benchmarks`: Performance benchmarks require manually running `terraform` command to imitate the user workflow.
 - `windows`: Test cases for the Windows platform. Potentially, these tests could be incorporated in a platform-specific testing workflows.
+- `warehouse_adaptive_migration`: Migrating an existing `snowflake_warehouse` to `snowflake_warehouse_adaptive` in a single apply. Covered by an acceptance test, but the `removed` and `import` blocks are a user-facing Terraform workflow worth running manually with `terraform` CLI against a local build.
