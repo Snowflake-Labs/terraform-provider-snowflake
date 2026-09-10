@@ -139,8 +139,10 @@ func ImportWarehouseAdaptive(ctx context.Context, d *schema.ResourceData, meta a
 	if err != nil {
 		return nil, err
 	}
-	if w.Type != sdk.WarehouseTypeAdaptive {
-		return nil, fmt.Errorf("warehouse %s is not of type ADAPTIVE, got %s; use snowflake_warehouse instead", id.FullyQualifiedName(), w.Type)
+	// Warehouses of other types can be imported and converted to ADAPTIVE with an in-place ALTER during the next update.
+	// INTERACTIVE is the exception and Snowflake rejects it.
+	if w.Type == sdk.WarehouseTypeInteractive {
+		return nil, fmt.Errorf("warehouse %s is an interactive warehouse and cannot be converted to ADAPTIVE; use snowflake_warehouse_interactive instead", id.FullyQualifiedName())
 	}
 
 	errs := errors.Join(

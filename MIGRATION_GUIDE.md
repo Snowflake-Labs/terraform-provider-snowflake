@@ -107,6 +107,42 @@ The new configuration looks like this:
 
 Please rename these fields in your configuration files. After updating the configuration, `terraform plan` should be empty.
 
+### *(new feature)* Migrating an existing warehouse to `snowflake_warehouse_adaptive` in a single apply
+
+Previously, [`snowflake_warehouse_adaptive`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/warehouse_adaptive) refused to import a warehouse that was not already of type `ADAPTIVE`. Because `import` blocks are resolved during `terraform plan`, this made it impossible to convert an existing warehouse in one step - the type had to be changed outside of the resource first (for example with `snowflake_execute`) in a separate apply.
+
+Importing a `STANDARD` or `SNOWPARK-OPTIMIZED` warehouse into `snowflake_warehouse_adaptive` is now allowed. The resource plans an in-place update that runs `ALTER WAREHOUSE ... SET WAREHOUSE_TYPE = 'ADAPTIVE'`, so the warehouse is never dropped and recreated - grants and objects referencing it are preserved. Combined with a `removed` block, the whole migration is a single `terraform apply`:
+
+```terraform
+removed {
+  from = snowflake_warehouse.example
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+resource "snowflake_warehouse_adaptive" "example" {
+  name                        = "EXAMPLE_WAREHOUSE"
+  max_query_performance_level = "LARGE"
+}
+
+import {
+  to = snowflake_warehouse_adaptive.example
+  id = "EXAMPLE_WAREHOUSE"
+}
+```
+
+See [Migrating an existing warehouse to `snowflake_warehouse_adaptive`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/warehouse_adaptive#migrating-an-existing-warehouse-to-snowflake_warehouse_adaptive) for the full walkthrough and caveats. Addresses [#5201](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5201).
+
+Interactive warehouses are still rejected, because Snowflake does not allow changing `WAREHOUSE_TYPE` on them. Importing one now fails with a more precise message:
+
+```
+warehouse "EXAMPLE_WAREHOUSE" is an interactive warehouse and cannot be converted to ADAPTIVE; use snowflake_warehouse_interactive instead
+```
+
+No changes to existing configurations are required.
+
 ### *(new feature)* Additional object types in grant and tag resources
 
 [`snowflake_grant_privileges_to_account_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_account_role),

@@ -33,3 +33,46 @@ Import is supported using the following syntax:
 
 {{ codefile "shell" (printf "examples/resources/%s/import.sh" .Name)}}
 {{- end }}
+
+## Migrating an existing warehouse to `snowflake_warehouse_adaptive`
+
+Adaptive warehouses are managed by a different resource than standard and Snowpark-optimized ones ([`snowflake_warehouse`](./warehouse)). Converting an existing warehouse therefore means moving it between two resources - but the warehouse itself is **not** dropped and recreated. Snowflake changes its type in place with `ALTER WAREHOUSE ... SET WAREHOUSE_TYPE = 'ADAPTIVE'`, so grants and objects referencing the warehouse (like dynamic tables and tasks) are all preserved.
+
+The migration is done in a single `terraform apply` with three blocks:
+
+1. a [`removed` block](https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources) that makes Terraform forget the warehouse without dropping it (`destroy = false` is essential here),
+2. the new `snowflake_warehouse_adaptive` resource,
+3. an [`import` block](https://developer.hashicorp.com/terraform/language/import) that adopts the existing warehouse into it.
+
+Assuming the warehouse is currently managed as `snowflake_warehouse.example`:
+
+```terraform
+# The warehouse is only removed from the Terraform state; it stays in Snowflake.
+removed {
+  from = snowflake_warehouse.example
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+resource "snowflake_warehouse_adaptive" "example" {
+  name                        = "EXAMPLE_WAREHOUSE"
+  max_query_performance_level = "LARGE"
+}
+
+import {
+  to = snowflake_warehouse_adaptive.example
+  id = "EXAMPLE_WAREHOUSE"
+}
+```
+
+Remove the old `resource "snowflake_warehouse" "example"` block from your configuration at the same time - a `removed` block and a `resource` block cannot both refer to the same address.
+
+`terraform plan` reports an **update** (not a replacement) for `snowflake_warehouse_adaptive.example`, changing `warehouse_type` from `STANDARD` to `ADAPTIVE`. After `terraform apply`, both the `removed` and the `import` block can be deleted from the configuration.
+
+~> **Note** `removed` blocks require Terraform 1.7 or later (`import` blocks require 1.5 or later). On older versions, use [`terraform state rm`](../guides/resource_migration) followed by `terraform import` instead.
+
+-> **Note** Snowflake clears the properties that do not apply to adaptive warehouses (such as `warehouse_size`, `min_cluster_count`, `max_cluster_count`, `scaling_policy`, and `auto_suspend`). Adaptive warehouses also have no suspend/resume lifecycle - `show_output.0.state` reports `ENABLED` instead of `STARTED` or `SUSPENDED`.
+
+~> **Note** Interactive warehouses cannot be converted. Snowflake rejects changing `WAREHOUSE_TYPE` on them, so importing one into `snowflake_warehouse_adaptive` fails with an explicit error. Use [`snowflake_warehouse_interactive`](./warehouse_interactive) for those.

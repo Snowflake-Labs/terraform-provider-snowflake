@@ -173,6 +173,7 @@ func (v *warehouses) AlterWithSuspend(ctx context.Context, request *AlterWarehou
 	if !changesType && !changesSize {
 		return v.Alter(ctx, request)
 	}
+	becomesAdaptive := changesType && *request.Set.WarehouseType == WarehouseTypeAdaptive
 
 	warehouse, err := v.ShowByID(ctx, request.name)
 	if err != nil {
@@ -187,12 +188,15 @@ func (v *warehouses) AlterWithSuspend(ctx context.Context, request *AlterWarehou
 		if err != nil {
 			return err
 		}
-		defer func() {
-			err := v.Alter(ctx, NewAlterWarehouseRequest(request.name).WithResume(true).WithIfSuspended(true))
-			if err != nil {
-				log.Printf("[DEBUG] error occurred during warehouse resumption, err=%v", err)
-			}
-		}()
+		// Adaptive warehouses reject RESUME; the alter leaves them in the ENABLED state and ready to serve queries.
+		if !becomesAdaptive {
+			defer func() {
+				err := v.Alter(ctx, NewAlterWarehouseRequest(request.name).WithResume(true).WithIfSuspended(true))
+				if err != nil {
+					log.Printf("[DEBUG] error occurred during warehouse resumption, err=%v", err)
+				}
+			}()
+		}
 
 		// needed to make sure that warehouse is suspended
 		var warehouseSuspensionErrs []error

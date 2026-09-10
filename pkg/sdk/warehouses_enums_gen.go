@@ -253,6 +253,7 @@ const (
 	WarehouseStateStarted    WarehouseState = "STARTED"
 	WarehouseStateResizing   WarehouseState = "RESIZING"
 	WarehouseStateResuming   WarehouseState = "RESUMING"
+	WarehouseStateEnabled    WarehouseState = "ENABLED"
 )
 
 var AllWarehouseStates = []WarehouseState{
@@ -261,6 +262,7 @@ var AllWarehouseStates = []WarehouseState{
 	WarehouseStateStarted,
 	WarehouseStateResizing,
 	WarehouseStateResuming,
+	WarehouseStateEnabled,
 }
 
 func ToWarehouseState(s string) (WarehouseState, error) {
@@ -276,6 +278,8 @@ func ToWarehouseState(s string) (WarehouseState, error) {
 		return WarehouseStateResizing, nil
 	case string(WarehouseStateResuming):
 		return WarehouseStateResuming, nil
+	case string(WarehouseStateEnabled):
+		return WarehouseStateEnabled, nil
 	default:
 		return "", fmt.Errorf("invalid warehouse state: %s", s)
 	}
