@@ -26,38 +26,6 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 
 ## v2.20.x ➞ v2.21.0
 
-### *(new feature)* Openflow resources and data sources
-
-We have added preview resources and data sources for managing Openflow, covering deployments, runtimes and
-connectors:
-
-- [snowflake_openflow_deployment_snowflake_managed](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_deployment_snowflake_managed)
-- [snowflake_openflow_deployment_byoc](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_deployment_byoc)
-- [snowflake_openflow_runtime](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_runtime)
-- [snowflake_openflow_connector](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_connector)
-- [snowflake_openflow_deployments](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_deployments)
-- [snowflake_openflow_runtimes](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_runtimes)
-- [snowflake_openflow_connectors](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_connectors)
-- [snowflake_openflow_connector_definitions](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_connector_definitions)
-
-Check the [Openflow documentation](https://docs.snowflake.com/en/user-guide/data-integration/openflow/about) to
-know more.
-
-These features will be marked as stable in a future release. Breaking changes are expected, even without
-bumping the major version. To use them, add the relevant names to the `preview_features_enabled` field in the
-provider configuration: `snowflake_openflow_deployment_snowflake_managed_resource`,
-`snowflake_openflow_deployment_byoc_resource`, `snowflake_openflow_runtime_resource`,
-`snowflake_openflow_connector_resource`, `snowflake_openflow_deployments_datasource`,
-`snowflake_openflow_runtimes_datasource`, `snowflake_openflow_connectors_datasource` and
-`snowflake_openflow_connector_definitions_datasource`.
-
-Note that starting, stopping and version management for connectors are operational actions rather than desired
-state, so they are not exposed by the connector resource. A connector created from a definition carries no
-configuration and settles on STOPPED until one is supplied.
-
-No changes are required for existing configurations unless you want to adopt these preview features with
-Terraform.
-
 ### *(breaking change)* Renamed constraint column fields in `snowflake_iceberg_table`
 
 Note: this resource is in preview allowing us to make breaking changes without bumping the major version (following [our docs](https://docs.snowflake.com/en/user-guide/terraform#preview-features)).
@@ -106,6 +74,38 @@ The new configuration looks like this:
 ```
 
 Please rename these fields in your configuration files. After updating the configuration, `terraform plan` should be empty.
+
+### *(new feature)* Openflow resources and data sources
+
+We have added preview resources and data sources for managing Openflow, covering deployments, runtimes and
+connectors:
+
+- [snowflake_openflow_deployment_snowflake_managed](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_deployment_snowflake_managed)
+- [snowflake_openflow_deployment_byoc](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_deployment_byoc)
+- [snowflake_openflow_runtime](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_runtime)
+- [snowflake_openflow_connector](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_connector)
+- [snowflake_openflow_deployments](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_deployments)
+- [snowflake_openflow_runtimes](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_runtimes)
+- [snowflake_openflow_connectors](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_connectors)
+- [snowflake_openflow_connector_definitions](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_connector_definitions)
+
+Check the [Openflow documentation](https://docs.snowflake.com/en/user-guide/data-integration/openflow/about) to
+know more.
+
+These features will be marked as stable in a future release. Breaking changes are expected, even without
+bumping the major version. To use them, add the relevant names to the `preview_features_enabled` field in the
+provider configuration: `snowflake_openflow_deployment_snowflake_managed_resource`,
+`snowflake_openflow_deployment_byoc_resource`, `snowflake_openflow_runtime_resource`,
+`snowflake_openflow_connector_resource`, `snowflake_openflow_deployments_datasource`,
+`snowflake_openflow_runtimes_datasource`, `snowflake_openflow_connectors_datasource` and
+`snowflake_openflow_connector_definitions_datasource`.
+
+Note that starting, stopping and version management for connectors are operational actions rather than desired
+state, so they are not exposed by the connector resource. A connector created from a definition carries no
+configuration and settles on STOPPED until one is supplied.
+
+No changes are required for existing configurations unless you want to adopt these preview features with
+Terraform.
 
 ### *(new feature)* Migrating an existing warehouse to `snowflake_warehouse_adaptive` in a single apply
 
@@ -246,6 +246,14 @@ resource "snowflake_account" "example" {
 Read more about resource timeouts in the [Terraform documentation](https://developer.hashicorp.com/terraform/plugin/framework/resources/timeouts).
 
 References: [#5189](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5189)
+
+### *(bug fix)* `snowflake_grant_privileges_to_database_role` can be destroyed and replaced after an object type mismatch
+
+When `on_schema_object.object_type` is not the object type Snowflake reports for the object, the resource read no privileges back and could then be neither destroyed nor replaced - the revoke was built from the emptied state and failed validation. It is now built from the resource id, so correcting `object_type` works. The provider also emits a warning on plan and apply when no grant matches the configured object type, naming the type Snowflake reported.
+
+This surfaced with the 2026_06 bundle ([GH #5200](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5200)). For the affected object types and the two ways to migrate a configuration, see [SHOW GRANTS reports the specific object type in `granted_on`](./SNOWFLAKE_BCR_MIGRATION_GUIDE.md#show-grants-reports-the-specific-object-type-in-granted_on) in the Snowflake BCR migration guide.
+
+No configuration changes are required unless you are hitting the mismatch, in which case `object_type` has to be corrected.
 
 ### *(bug fix)* Stage directory refresh no longer drifts `directory.auto_refresh`
 

@@ -66,6 +66,88 @@ This bundle (BCR-2371) makes `SHOW GRANTS` output consistent for database roles 
 
 Reference: [BCR-2371](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_06/bcr-2371)
 
+### SHOW GRANTS reports the specific object type in `granted_on`
+
+When this bundle is enabled, the `granted_on` column of `SHOW GRANTS` always reports the **specific** object type of the object the privilege was granted on, instead of a generic one. Most notably, privileges on Iceberg tables are reported as `ICEBERG_TABLE` where they used to be reported as `TABLE`.
+
+The grant resources match the grants returned by Snowflake against the object type stored in their resource id, so a configuration that grants on an Iceberg table through `object_type = "TABLE"` stops matching. This affects [`snowflake_grant_privileges_to_database_role`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/grant_privileges_to_database_role). Check: [#5200](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5200).
+
+Measured behavior for `SHOW GRANTS ON <object type> <name>`, which is the command the provider runs for `on_schema_object.object_name` grants:
+
+| Object        | Bundle disabled | Bundle enabled  |
+|---------------|-----------------|-----------------|
+| Iceberg table | `TABLE`         | `ICEBERG TABLE` |
+| View          | `VIEW`          | `VIEW`          |
+| Dynamic table | `DYNAMIC TABLE` | `DYNAMIC TABLE` |
+
+The reported value does not depend on the object type used in the `GRANT` statement, so only one `object_type` value converges per bundle state: `"TABLE"` while the bundle is disabled, `"ICEBERG TABLE"` once it is enabled. views and dynamic tables were always reported specifically and are unaffected by this bundle - but note that the same mismatch has always existed for them, so `object_type = "TABLE"` on a view has never worked either.
+
+To check what the provider sees for a given object, use the same command form it uses - `SHOW GRANTS ON <object type> <name>` - and read the `granted_on` column. Either object type can be used in the command; the reported value is the same. **Do not diagnose this with `SHOW GRANTS TO DATABASE ROLE`**: this form report the specific object type in both bundle states, so they show `ICEBERG TABLE` even while the bundle is disabled and the provider is still matching on `TABLE`. That difference between command forms is what this bundle removes.
+
+Only the read path is affected. `GRANT` and `REVOKE` still accept the generic object type for these objects in both bundle states, so an existing `REVOKE ... ON TABLE <iceberg_table>` keeps working and no manual cleanup is blocked by this change.
+
+Two symptoms follow from a mismatch:
+
+1. **A permanent diff.** `terraform apply` succeeds, then the refresh that follows finds no matching grant, empties `privileges` in the state, and every subsequent plan wants to grant the same privileges again. Nothing in Snowflake changes; the privilege stays granted.
+2. **A failing replacement.** `object_type` forces a new resource, so correcting it makes Terraform destroy the old resource first. Before provider version 2.21.0 that revoke was built from the emptied state and failed validation before any SQL was sent:
+
+  ```
+  Error: An error occurred when revoking privileges from database role
+  Error: [grants_validations.go:533] exactly one of DatabaseRoleGrantPrivileges fields [DatabasePrivileges SchemaPrivileges SchemaObjectPrivileges AllPrivileges] must be set
+  ```
+
+Starting with 2.21.0 the revoke is built from the resource id instead, so a drifted resource can always be destroyed or replaced. The provider also emits a warning on refresh naming the object type Snowflake reported, so the mismatch is visible without reading `SHOW GRANTS` by hand.
+
+There are two ways to migrate an affected configuration. Both keep the privilege in Snowflake, because `GRANT` is idempotent and re-granting an existing privilege is a no-op.
+
+**Option 1 - correct `object_type` in place (simplest).** Requires provider 2.21.0 or newer, otherwise the replacement fails with the error above.
+
+```terraform
+resource "snowflake_grant_privileges_to_database_role" "example" {
+  database_role_name = "\"MY_DB\".\"MY_ROLE\""
+  privileges         = ["SELECT"]
+
+  on_schema_object {
+    object_type = "ICEBERG TABLE" # was "TABLE"
+    object_name = "\"MY_DB\".\"MY_SCHEMA\".\"MY_ICEBERG_TABLE\""
+  }
+}
+```
+
+Caveats:
+- `object_type` forces a new resource, so Terraform runs `REVOKE ... ON TABLE` and then `GRANT ... ON ICEBERG TABLE`. The privilege is genuinely absent between the two statements. Plan this like any other short-lived privilege change if other workloads depend on it.
+- Do **not** add `lifecycle { create_before_destroy = true }` to work around that window. Both object types refer to the same underlying privilege in Snowflake, so creating first and destroying afterwards would grant a no-op and then revoke the privilege you meant to keep.
+
+**Option 2 - forget the old resource and add a corrected one (no privilege gap).** Requires Terraform 1.7 or newer for the [`removed` block](https://developer.hashicorp.com/terraform/language/state/remove); on older Terraform versions use `terraform state rm` instead.
+
+```terraform
+removed {
+  from = snowflake_grant_privileges_to_database_role.example
+
+  lifecycle {
+    destroy = false # required - with destroy = true Terraform revokes the privilege
+  }
+}
+
+resource "snowflake_grant_privileges_to_database_role" "example_iceberg" {
+  database_role_name = "\"MY_DB\".\"MY_ROLE\""
+  privileges         = ["SELECT"]
+
+  on_schema_object {
+    object_type = "ICEBERG TABLE"
+    object_name = "\"MY_DB\".\"MY_SCHEMA\".\"MY_ICEBERG_TABLE\""
+  }
+}
+```
+
+The new resource has a different address and a different id (the id embeds the object type), so the two never collide. Its `CREATE` re-grants the already-granted privilege, which Snowflake accepts, and the following read matches. Once the apply succeeds, delete the `removed` block.
+
+Caveats:
+- `lifecycle { destroy = false }` is required. With `destroy = true` the `removed` block revokes the privilege for real.
+- A `removed` block cannot target a single instance of a resource that uses `for_each` or `count` - instance keys are rejected in `from`. The whole resource block has to be forgotten and re-added, which for a `for_each` over many objects means one large apply. That is safe here (every grant is re-created idempotently), but review the plan before applying it.
+
+Reference: [BCR-2371](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_06/bcr-2371)
+
 ## [Bundle 2026_04](https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_04_bundle)
 
 ### CREATE FUNCTION and CREATE PROCEDURE: signature size limit reduced

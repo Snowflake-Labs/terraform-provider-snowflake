@@ -1742,3 +1742,64 @@ func TestAcc_GrantPrivileges_ToDatabaseRole_WithEmptyPrivileges(t *testing.T) {
 		},
 	})
 }
+
+// TestAcc_GrantPrivilegesToDatabaseRole_ObjectTypeMismatch_CanBeCorrected covers what happens when
+// on_schema_object.object_type is not the object type Snowflake reports for the object, and proves the
+// configuration can be corrected without state surgery.
+//
+// Snowflake reports the specific object type in the granted_on column of SHOW GRANTS (VIEW here, and
+// ICEBERG TABLE for Iceberg tables once the 2026_06 bundle is enabled - see
+// https://github.com/snowflakedb/terraform-provider-snowflake/issues/5200 and the 2026_06 section of
+// SNOWFLAKE_BCR_MIGRATION_GUIDE.md). The object type from the resource id is compared against it, so a
+// mismatch means Read matches nothing, empties privileges and the plan never converges.
+func TestAcc_GrantPrivilegesToDatabaseRole_ObjectTypeMismatch_CanBeCorrected(t *testing.T) {
+	databaseRole, databaseRoleCleanup := testClient().DatabaseRole.CreateDatabaseRole(t)
+	t.Cleanup(databaseRoleCleanup)
+
+	table, tableCleanup := testClient().Table.Create(t)
+	t.Cleanup(tableCleanup)
+
+	view, viewCleanup := testClient().View.CreateView(t, fmt.Sprintf(`select "ID" from %s`, table.ID().FullyQualifiedName()))
+	t.Cleanup(viewCleanup)
+
+	mismatchedGrantModel := model.GrantPrivilegesToDatabaseRole("test", databaseRole.ID().FullyQualifiedName()).
+		WithSchemaObjectPrivileges(sdk.SchemaObjectPrivilegeSelect).
+		WithOnSchemaObjectObject(sdk.ObjectTypeTable, view.ID().FullyQualifiedName())
+	correctedGrantModel := model.GrantPrivilegesToDatabaseRole("test", databaseRole.ID().FullyQualifiedName()).
+		WithSchemaObjectPrivileges(sdk.SchemaObjectPrivilegeSelect).
+		WithOnSchemaObjectObject(sdk.ObjectTypeView, view.ID().FullyQualifiedName())
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckDatabaseRolePrivilegesRevoked(t),
+		Steps: []resource.TestStep{
+			// The mismatch: the apply succeeds, the refresh that follows empties privileges, and the plan
+			// wants to grant them again. The provider emits a warning naming the object type Snowflake
+			// reported for the object.
+			{
+				Config: accconfig.FromModels(t, mismatchedGrantModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(mismatchedGrantModel.ResourceReference(), plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			// Correcting object_type replaces the resource and converges.
+			{
+				Config: accconfig.FromModels(t, correctedGrantModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(correctedGrantModel.ResourceReference(), "on_schema_object.0.object_type", string(sdk.ObjectTypeView)),
+					resource.TestCheckResourceAttr(correctedGrantModel.ResourceReference(), "privileges.#", "1"),
+					resource.TestCheckResourceAttr(correctedGrantModel.ResourceReference(), "privileges.0", string(sdk.SchemaObjectPrivilegeSelect)),
+				),
+			},
+		},
+	})
+}
