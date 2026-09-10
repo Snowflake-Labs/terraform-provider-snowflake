@@ -51,7 +51,7 @@ var openflowDeploymentsDef = g.NewInterface(
 	"OpenflowDeployment",
 	g.KindOfT[sdkcommons.AccountObjectIdentifier](),
 ).CreateOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#create-openflow-deployment",
+	"https://docs.snowflake.com/en/sql-reference/sql/create-openflow-deployment",
 	g.NewQueryStruct("CreateOpenflowDeployment").
 		Create().
 		SQL("OPENFLOW DEPLOYMENT").
@@ -69,7 +69,7 @@ var openflowDeploymentsDef = g.NewInterface(
 		OptionalQueryStructField("EventTable", openflowDeploymentEventTableDef(), g.ParameterOptions().SQL("EVENT_TABLE")).
 		WithValidation(g.ValidIdentifier, "name"),
 ).AlterOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#alter-openflow-deployment",
+	"https://docs.snowflake.com/en/sql-reference/sql/alter-openflow-deployment",
 	g.NewQueryStruct("AlterOpenflowDeployment").
 		Alter().
 		SQL("OPENFLOW DEPLOYMENT").
@@ -101,7 +101,7 @@ var openflowDeploymentsDef = g.NewInterface(
 		WithValidation(g.ValidIdentifierIfSet, "RenameTo").
 		WithValidation(g.ExactlyOneValueSet, "Upgrade", "Terminate", "RenameTo", "Set", "Unset"),
 ).DropOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#drop-openflow-deployment",
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-openflow-deployment",
 	g.NewQueryStruct("DropOpenflowDeployment").
 		Drop().
 		SQL("OPENFLOW DEPLOYMENT").
@@ -109,7 +109,7 @@ var openflowDeploymentsDef = g.NewInterface(
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperationWithPairedStructs(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#show-openflow-deployments",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-openflow-deployments",
 	g.StructPair("openflowDeploymentRow", "OpenflowDeployment").
 		Text("name").
 		Enum("type", OpenflowDeploymentTypeEnumDef, g.WithDbFieldName("DeploymentType")).
@@ -133,7 +133,7 @@ var openflowDeploymentsDef = g.NewInterface(
 	g.ShowByIDLikeFiltering,
 ).DescribeOperationWithPairedStructs(
 	g.DescriptionMappingKindSingleValue,
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#describe-openflow-deployment",
+	"https://docs.snowflake.com/en/sql-reference/sql/desc-openflow-deployment",
 	g.StructPair("openflowDeploymentDetailsRow", "OpenflowDeploymentDetails").
 		Text("name").
 		Enum("type", OpenflowDeploymentTypeEnumDef, g.WithDbFieldName("DeploymentType")).

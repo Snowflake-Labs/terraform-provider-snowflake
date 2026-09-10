@@ -5,6 +5,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/datasources"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -39,10 +40,7 @@ var openflowConnectorDefinitionsSchema = map[string]*schema.Schema{
 
 func OpenflowConnectorDefinitions() *schema.Resource {
 	return &schema.Resource{
-		// TODO(SNOW-4039167): Add PreviewFeatureReadWrapper when this data source is moved to the production
-		// provider. It is registered only in the acceptance test provider for now, so there is no preview
-		// feature to gate on yet.
-		ReadContext: TrackingReadWrapper(datasources.OpenflowConnectorDefinitions, ReadOpenflowConnectorDefinitions),
+		ReadContext: PreviewFeatureReadWrapper(string(previewfeatures.OpenflowConnectorDefinitionsDatasource), TrackingReadWrapper(datasources.OpenflowConnectorDefinitions, ReadOpenflowConnectorDefinitions)),
 		Schema:      openflowConnectorDefinitionsSchema,
 		Description: "Data source used to get details of filtered Openflow connector definitions, the Snowflake-managed templates a connector can be created from. Filtering is aligned with the current possibilities for [SHOW OPENFLOW CONNECTOR DEFINITIONS](https://docs.snowflake.com/en/sql-reference/sql/show-openflow-connector-definitions). Definitions are read-only, so there is no describe output and no matching resource.",
 	}

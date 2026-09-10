@@ -104,6 +104,14 @@ const (
 	NotebooksDatasource                            feature = "snowflake_notebooks_datasource"
 	NotificationIntegrationResource                feature = "snowflake_notification_integration_resource"
 	ObjectParameterResource                        feature = "snowflake_object_parameter_resource"
+	OpenflowConnectorDefinitionsDatasource         feature = "snowflake_openflow_connector_definitions_datasource"
+	OpenflowConnectorResource                      feature = "snowflake_openflow_connector_resource"
+	OpenflowConnectorsDatasource                   feature = "snowflake_openflow_connectors_datasource"
+	OpenflowDeploymentByocResource                 feature = "snowflake_openflow_deployment_byoc_resource"
+	OpenflowDeploymentSnowflakeManagedResource     feature = "snowflake_openflow_deployment_snowflake_managed_resource"
+	OpenflowDeploymentsDatasource                  feature = "snowflake_openflow_deployments_datasource"
+	OpenflowRuntimeResource                        feature = "snowflake_openflow_runtime_resource"
+	OpenflowRuntimesDatasource                     feature = "snowflake_openflow_runtimes_datasource"
 	PasswordPoliciesDatasource                     feature = "snowflake_password_policies_datasource"
 	PasswordPolicyResource                         feature = "snowflake_password_policy_resource"
 	PipeResource                                   feature = "snowflake_pipe_resource"
@@ -201,6 +209,14 @@ var allPreviewFeatures = []feature{
 	EmailNotificationIntegrationResource,
 	NotificationIntegrationResource,
 	ObjectParameterResource,
+	OpenflowConnectorDefinitionsDatasource,
+	OpenflowConnectorResource,
+	OpenflowConnectorsDatasource,
+	OpenflowDeploymentByocResource,
+	OpenflowDeploymentSnowflakeManagedResource,
+	OpenflowDeploymentsDatasource,
+	OpenflowRuntimeResource,
+	OpenflowRuntimesDatasource,
 	PipeResource,
 	PipesDatasource,
 	// PostgresForkResource,

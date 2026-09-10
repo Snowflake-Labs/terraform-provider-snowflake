@@ -21,7 +21,7 @@ type OpenflowConnectors interface {
 	ShowVersions(ctx context.Context, request *ShowVersionsOpenflowConnectorRequest) ([]OpenflowConnectorVersion, error)
 }
 
-// CreateOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#create-openflow-connector.
+// CreateOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-openflow-connector.
 type CreateOpenflowConnectorOptions struct {
 	create            bool                   `ddl:"static" sql:"CREATE"`
 	openflowConnector bool                   `ddl:"static" sql:"OPENFLOW CONNECTOR"`
@@ -34,7 +34,7 @@ type CreateOpenflowConnectorOptions struct {
 	Comment           *string                `ddl:"parameter,single_quotes" sql:"COMMENT"`
 }
 
-// AlterOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#alter-openflow-connector.
+// AlterOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-openflow-connector.
 type AlterOpenflowConnectorOptions struct {
 	alter             bool                             `ddl:"static" sql:"ALTER"`
 	openflowConnector bool                             `ddl:"static" sql:"OPENFLOW CONNECTOR"`
@@ -95,7 +95,7 @@ type OpenflowConnectorUnset struct {
 	Comment     *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-// DropOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#drop-openflow-connector.
+// DropOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-openflow-connector.
 type DropOpenflowConnectorOptions struct {
 	drop              bool                   `ddl:"static" sql:"DROP"`
 	openflowConnector bool                   `ddl:"static" sql:"OPENFLOW CONNECTOR"`
@@ -103,7 +103,7 @@ type DropOpenflowConnectorOptions struct {
 	name              SchemaObjectIdentifier `ddl:"identifier"`
 }
 
-// ShowOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#show-openflow-connectors.
+// ShowOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-openflow-connectors.
 type ShowOpenflowConnectorOptions struct {
 	show               bool       `ddl:"static" sql:"SHOW"`
 	openflowConnectors bool       `ddl:"static" sql:"OPENFLOW CONNECTORS"`
@@ -163,7 +163,7 @@ func (v *OpenflowConnector) ObjectType() ObjectType {
 	return ObjectTypeOpenflowConnector
 }
 
-// DescribeOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#describe-openflow-connector.
+// DescribeOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-openflow-connector.
 type DescribeOpenflowConnectorOptions struct {
 	describe          bool                   `ddl:"static" sql:"DESCRIBE"`
 	openflowConnector bool                   `ddl:"static" sql:"OPENFLOW CONNECTOR"`
@@ -217,7 +217,7 @@ type OpenflowConnectorDetails struct {
 	ConnectorUrl                    *string
 }
 
-// ExecuteOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#execute-openflow-connector.
+// ExecuteOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/execute-openflow-connector.
 type ExecuteOpenflowConnectorOptions struct {
 	execute               bool                   `ddl:"static" sql:"EXECUTE"`
 	openflowConnector     bool                   `ddl:"static" sql:"OPENFLOW CONNECTOR"`
@@ -227,7 +227,7 @@ type ExecuteOpenflowConnectorOptions struct {
 	Step                  *string                `ddl:"parameter,single_quotes,no_equals" sql:"STEP"`
 }
 
-// ShowVersionsOpenflowConnectorOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector.
+// ShowVersionsOpenflowConnectorOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-versions-in-openflow-connector.
 type ShowVersionsOpenflowConnectorOptions struct {
 	showVersions        bool                   `ddl:"static" sql:"SHOW VERSIONS"`
 	inOpenflowConnector bool                   `ddl:"static" sql:"IN OPENFLOW CONNECTOR"`
