@@ -9,6 +9,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -72,13 +73,13 @@ var openflowRuntimeSchema = map[string]*schema.Schema{
 		Type:             schema.TypeInt,
 		Required:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
-		Description:      "Specifies the minimum number of nodes the runtime scales down to.",
+		Description:      "Specifies the minimum number of nodes the runtime scales down to. For more information, check [CREATE OPENFLOW RUNTIME documentation](https://docs.snowflake.com/en/sql-reference/sql/create-openflow-runtime).",
 	},
 	"max_nodes": {
 		Type:             schema.TypeInt,
 		Required:         true,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(1)),
-		Description:      "Specifies the maximum number of nodes the runtime scales up to.",
+		Description:      "Specifies the maximum number of nodes the runtime scales up to. For more information, check [CREATE OPENFLOW RUNTIME documentation](https://docs.snowflake.com/en/sql-reference/sql/create-openflow-runtime).",
 	},
 	"execute_as_role": {
 		Type:             schema.TypeString,
@@ -91,7 +92,7 @@ var openflowRuntimeSchema = map[string]*schema.Schema{
 		Type:             schema.TypeSet,
 		Optional:         true,
 		MinItems:         1,
-		Description:      "Specifies the names of the external access integrations that allow the runtime to reach external sites.",
+		Description:      "Specifies the names of the external access integrations that allow the runtime egress to external data sources. Supported for Snowflake-managed deployments only.",
 		DiffSuppressFunc: NormalizeAndCompareIdentifiersInSet("external_access_integrations"),
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
@@ -129,13 +130,10 @@ var openflowRuntimeSchema = map[string]*schema.Schema{
 
 func OpenflowRuntime() *schema.Resource {
 	return &schema.Resource{
-		// TODO(SNOW-4039167): Add the PreviewFeature*ContextWrapper calls when this resource is moved to the
-		// production provider. It is registered only in the acceptance test provider for now, so there is no
-		// preview feature to gate on yet.
-		CreateContext: TrackingCreateWrapper(resources.OpenflowRuntime, CreateOpenflowRuntime),
-		ReadContext:   TrackingReadWrapper(resources.OpenflowRuntime, ReadOpenflowRuntime(true)),
-		UpdateContext: TrackingUpdateWrapper(resources.OpenflowRuntime, UpdateOpenflowRuntime),
-		DeleteContext: TrackingDeleteWrapper(resources.OpenflowRuntime, DeleteOpenflowRuntime),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.OpenflowRuntimeResource), TrackingCreateWrapper(resources.OpenflowRuntime, CreateOpenflowRuntime)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.OpenflowRuntimeResource), TrackingReadWrapper(resources.OpenflowRuntime, ReadOpenflowRuntime(true))),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.OpenflowRuntimeResource), TrackingUpdateWrapper(resources.OpenflowRuntime, UpdateOpenflowRuntime)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.OpenflowRuntimeResource), TrackingDeleteWrapper(resources.OpenflowRuntime, DeleteOpenflowRuntime)),
 		Description: joinWithSpace(
 			"Resource used to manage Openflow runtimes, the compute a deployment runs connectors on.",
 			"Every mutating statement is asynchronous, so create and update return once the runtime reaches the ACTIVE state.",
@@ -151,7 +149,7 @@ func OpenflowRuntime() *schema.Resource {
 		Schema:   openflowRuntimeSchema,
 		Timeouts: openflowRuntimeTimeouts,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportOpenflowRuntime,
+			StateContext: TrackingImportWrapper(resources.OpenflowRuntime, ImportOpenflowRuntime),
 		},
 	}
 }

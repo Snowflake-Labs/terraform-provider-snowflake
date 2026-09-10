@@ -10,6 +10,7 @@ import (
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -80,7 +81,7 @@ var openflowConnectorSchema = map[string]*schema.Schema{
 					Optional:     true,
 					ForceNew:     true,
 					ExactlyOneOf: []string{"from.0.definition", "from.0.stage"},
-					Description:  "The Snowflake-managed connector definition to instantiate. A connector created this way carries no configuration, so it cannot be started until one is supplied.",
+					Description:  "Catalog definition ID for the connector type, for example `OPENFLOW_POSTGRES_CDC`. List the available IDs with the `snowflake_openflow_connector_definitions` data source. A connector created this way is a draft: it settles on STOPPED and stays there until a configuration version is committed, which this resource does not do.",
 				},
 				// A configured connector can only be created this way: configuration is not an argument of
 				// CREATE OPENFLOW CONNECTOR, it is a config.json in a bundle Snowflake reads from a stage.
@@ -89,7 +90,7 @@ var openflowConnectorSchema = map[string]*schema.Schema{
 					Optional:         true,
 					ForceNew:         true,
 					ExactlyOneOf:     []string{"from.0.definition", "from.0.stage"},
-					Description:      "Identifier of a stage holding a connector bundle, which is how a connector arrives already configured. A git repository is a stage, so this takes one of those too.",
+					Description:      "Identifier of a stage holding a complete configuration bundle, which is how a connector arrives already configured and able to start without a commit. A git repository stage works here too.",
 					ValidateDiagFunc: IsValidIdentifier[sdk.SchemaObjectIdentifier](),
 					DiffSuppressFunc: suppressIdentifierQuoting,
 				},
@@ -134,13 +135,10 @@ var openflowConnectorSchema = map[string]*schema.Schema{
 
 func OpenflowConnector() *schema.Resource {
 	return &schema.Resource{
-		// TODO(SNOW-4039167): Add the PreviewFeature*ContextWrapper calls when this resource is moved to the
-		// production provider. It is registered only in the acceptance test provider for now, so there is no
-		// preview feature to gate on yet.
-		CreateContext: TrackingCreateWrapper(resources.OpenflowConnector, CreateOpenflowConnector),
-		ReadContext:   TrackingReadWrapper(resources.OpenflowConnector, ReadOpenflowConnector(true)),
-		UpdateContext: TrackingUpdateWrapper(resources.OpenflowConnector, UpdateOpenflowConnector),
-		DeleteContext: TrackingDeleteWrapper(resources.OpenflowConnector, DeleteOpenflowConnector),
+		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.OpenflowConnectorResource), TrackingCreateWrapper(resources.OpenflowConnector, CreateOpenflowConnector)),
+		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.OpenflowConnectorResource), TrackingReadWrapper(resources.OpenflowConnector, ReadOpenflowConnector(true))),
+		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.OpenflowConnectorResource), TrackingUpdateWrapper(resources.OpenflowConnector, UpdateOpenflowConnector)),
+		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.OpenflowConnectorResource), TrackingDeleteWrapper(resources.OpenflowConnector, DeleteOpenflowConnector)),
 		Description: joinWithSpace(
 			"Resource used to manage Openflow connectors, which run inside an Openflow runtime.",
 			"Every mutating statement is asynchronous, so create and update return once the connector settles.",
@@ -157,7 +155,7 @@ func OpenflowConnector() *schema.Resource {
 		Schema:   openflowConnectorSchema,
 		Timeouts: openflowConnectorTimeouts,
 		Importer: &schema.ResourceImporter{
-			StateContext: ImportOpenflowConnector,
+			StateContext: TrackingImportWrapper(resources.OpenflowConnector, ImportOpenflowConnector),
 		},
 	}
 }

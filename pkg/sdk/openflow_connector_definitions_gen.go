@@ -11,7 +11,7 @@ type OpenflowConnectorDefinitions interface {
 	Show(ctx context.Context, request *ShowOpenflowConnectorDefinitionRequest) ([]OpenflowConnectorDefinition, error)
 }
 
-// ShowOpenflowConnectorDefinitionOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#show-openflow-connector-definitions.
+// ShowOpenflowConnectorDefinitionOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-openflow-connector-definitions.
 type ShowOpenflowConnectorDefinitionOptions struct {
 	show                         bool       `ddl:"static" sql:"SHOW"`
 	openflowConnectorDefinitions bool       `ddl:"static" sql:"OPENFLOW CONNECTOR DEFINITIONS"`

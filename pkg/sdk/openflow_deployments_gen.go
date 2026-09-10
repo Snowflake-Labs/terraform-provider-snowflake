@@ -20,7 +20,7 @@ type OpenflowDeployments interface {
 	ShowParameters(ctx context.Context, id AccountObjectIdentifier) ([]*Parameter, error)
 }
 
-// CreateOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#create-openflow-deployment.
+// CreateOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-openflow-deployment.
 type CreateOpenflowDeploymentOptions struct {
 	create                     bool                          `ddl:"static" sql:"CREATE"`
 	openflowDeployment         bool                          `ddl:"static" sql:"OPENFLOW DEPLOYMENT"`
@@ -41,7 +41,7 @@ type OpenflowDeploymentEventTable struct {
 	None       *bool                   `ddl:"keyword" sql:"NONE"`
 }
 
-// AlterOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#alter-openflow-deployment.
+// AlterOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-openflow-deployment.
 type AlterOpenflowDeploymentOptions struct {
 	alter              bool                     `ddl:"static" sql:"ALTER"`
 	openflowDeployment bool                     `ddl:"static" sql:"OPENFLOW DEPLOYMENT"`
@@ -66,7 +66,7 @@ type OpenflowDeploymentUnset struct {
 	EventTable  *bool `ddl:"keyword" sql:"EVENT_TABLE"`
 }
 
-// DropOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#drop-openflow-deployment.
+// DropOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-openflow-deployment.
 type DropOpenflowDeploymentOptions struct {
 	drop               bool                    `ddl:"static" sql:"DROP"`
 	openflowDeployment bool                    `ddl:"static" sql:"OPENFLOW DEPLOYMENT"`
@@ -74,7 +74,7 @@ type DropOpenflowDeploymentOptions struct {
 	name               AccountObjectIdentifier `ddl:"identifier"`
 }
 
-// ShowOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#show-openflow-deployments.
+// ShowOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-openflow-deployments.
 type ShowOpenflowDeploymentOptions struct {
 	show                bool       `ddl:"static" sql:"SHOW"`
 	openflowDeployments bool       `ddl:"static" sql:"OPENFLOW DEPLOYMENTS"`
@@ -123,7 +123,7 @@ func (v *OpenflowDeployment) ObjectType() ObjectType {
 	return ObjectTypeOpenflowDeployment
 }
 
-// DescribeOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-deployment#describe-openflow-deployment.
+// DescribeOpenflowDeploymentOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-openflow-deployment.
 type DescribeOpenflowDeploymentOptions struct {
 	describe           bool                    `ddl:"static" sql:"DESCRIBE"`
 	openflowDeployment bool                    `ddl:"static" sql:"OPENFLOW DEPLOYMENT"`

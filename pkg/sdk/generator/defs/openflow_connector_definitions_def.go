@@ -17,7 +17,7 @@ var openflowConnectorDefinitionsDef = g.NewInterface(
 	"OpenflowConnectorDefinition",
 	g.KindOfT[sdkcommons.AccountObjectIdentifier](),
 ).ShowOperationWithPairedStructs(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#show-openflow-connector-definitions",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-openflow-connector-definitions",
 	g.StructPair("openflowConnectorDefinitionRow", "OpenflowConnectorDefinition").
 		Text("name").
 		Text("provider").

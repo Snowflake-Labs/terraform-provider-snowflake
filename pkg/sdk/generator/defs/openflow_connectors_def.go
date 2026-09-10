@@ -92,7 +92,7 @@ var openflowConnectorsDef = g.NewInterface(
 	"OpenflowConnector",
 	g.KindOfT[sdkcommons.SchemaObjectIdentifier](),
 ).CreateOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#create-openflow-connector",
+	"https://docs.snowflake.com/en/sql-reference/sql/create-openflow-connector",
 	g.NewQueryStruct("CreateOpenflowConnector").
 		Create().
 		SQL("OPENFLOW CONNECTOR").
@@ -107,7 +107,7 @@ var openflowConnectorsDef = g.NewInterface(
 		WithValidation(g.ValidIdentifier, "InRuntime").
 		WithValidation(g.ConflictingFields, "FromDefinition", "From"),
 ).AlterOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#alter-openflow-connector",
+	"https://docs.snowflake.com/en/sql-reference/sql/alter-openflow-connector",
 	g.NewQueryStruct("AlterOpenflowConnector").
 		Alter().
 		SQL("OPENFLOW CONNECTOR").
@@ -159,7 +159,7 @@ var openflowConnectorsDef = g.NewInterface(
 		WithValidation(g.ConflictingFields, "IfExists", "Push").
 		WithValidation(g.ConflictingFields, "IfExists", "Pull"),
 ).DropOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#drop-openflow-connector",
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-openflow-connector",
 	g.NewQueryStruct("DropOpenflowConnector").
 		Drop().
 		SQL("OPENFLOW CONNECTOR").
@@ -167,7 +167,7 @@ var openflowConnectorsDef = g.NewInterface(
 		Name().
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperationWithPairedStructs(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#show-openflow-connectors",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-openflow-connectors",
 	g.StructPair("openflowConnectorRow", "OpenflowConnector").
 		Text("name").
 		Enum("status", OpenflowConnectorStatusEnumDef).
@@ -198,7 +198,7 @@ var openflowConnectorsDef = g.NewInterface(
 	g.ShowByIDInFiltering,
 ).DescribeOperationWithPairedStructs(
 	g.DescriptionMappingKindSingleValue,
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#describe-openflow-connector",
+	"https://docs.snowflake.com/en/sql-reference/sql/desc-openflow-connector",
 	g.StructPair("openflowConnectorDetailsRow", "OpenflowConnectorDetails").
 		// DESCRIBE OPENFLOW CONNECTOR returns neither database_name nor schema_name (unlike SHOW), so the
 		// identifier cannot be rebuilt from the row. Id is populated by the caller, as for NotebookDetails.
@@ -232,9 +232,10 @@ var openflowConnectorsDef = g.NewInterface(
 	// EXECUTE is its own statement rather than an ALTER action, so it needs a custom operation. It
 	// validates a connector's configuration without applying it: against the connector's own current
 	// configuration by default, or against the one at FROM. STEP narrows validation to a single named
-	// step.
+	// step. The doc page for it is not published yet (SNOW-4076826), so this link 404s for now; the
+	// statement itself is supported and the URL follows the same one-page-per-command layout as the rest.
 	"Execute",
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector#execute-openflow-connector",
+	"https://docs.snowflake.com/en/sql-reference/sql/execute-openflow-connector",
 	g.NewQueryStruct("ExecuteOpenflowConnector").
 		SQL("EXECUTE").
 		SQL("OPENFLOW CONNECTOR").
@@ -249,7 +250,7 @@ var openflowConnectorsDef = g.NewInterface(
 	// SHOW GIT BRANCHES and SHOW GIT TAGS use on GitRepositories.
 	"ShowVersions",
 	g.ShowMappingKindSlice,
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-connector",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-versions-in-openflow-connector",
 	// name is optional because a version that has been created but not yet committed has none.
 	g.StructPair("openflowConnectorVersionRow", "OpenflowConnectorVersion").
 		OptionalText("name").

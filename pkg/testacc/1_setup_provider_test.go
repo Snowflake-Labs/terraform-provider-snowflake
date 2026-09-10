@@ -7,7 +7,6 @@ import (
 	internalprovider "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/datasources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/oswrapper"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
@@ -86,16 +85,6 @@ func acceptanceTestsProvider() *schema.Provider {
 	// p.ResourcesMap["snowflake_semantic_view"] = resources.SemanticView()
 	// TODO(next postgres prs): Remove postgres resources from here
 	p.ResourcesMap["snowflake_postgres_fork"] = resources.PostgresFork()
-	// TODO(SNOW-4039167): Move the Openflow resources to the production provider once the whole object
-	// family is in place.
-	p.ResourcesMap["snowflake_openflow_connector"] = resources.OpenflowConnector()
-	p.ResourcesMap["snowflake_openflow_deployment_byoc"] = resources.OpenflowDeploymentByoc()
-	p.ResourcesMap["snowflake_openflow_deployment_snowflake_managed"] = resources.OpenflowDeploymentSnowflakeManaged()
-	p.ResourcesMap["snowflake_openflow_runtime"] = resources.OpenflowRuntime()
-	p.DataSourcesMap["snowflake_openflow_connector_definitions"] = datasources.OpenflowConnectorDefinitions()
-	p.DataSourcesMap["snowflake_openflow_connectors"] = datasources.OpenflowConnectors()
-	p.DataSourcesMap["snowflake_openflow_deployments"] = datasources.OpenflowDeployments()
-	p.DataSourcesMap["snowflake_openflow_runtimes"] = datasources.OpenflowRuntimes()
 	return p
 }
 

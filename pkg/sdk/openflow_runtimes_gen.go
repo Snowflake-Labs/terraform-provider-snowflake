@@ -19,7 +19,7 @@ type OpenflowRuntimes interface {
 	Describe(ctx context.Context, id SchemaObjectIdentifier) (*OpenflowRuntimeDetails, error)
 }
 
-// CreateOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#create-openflow-runtime.
+// CreateOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/create-openflow-runtime.
 type CreateOpenflowRuntimeOptions struct {
 	create                     bool                                       `ddl:"static" sql:"CREATE"`
 	openflowRuntime            bool                                       `ddl:"static" sql:"OPENFLOW RUNTIME"`
@@ -39,7 +39,7 @@ type OpenflowRuntimeExternalAccessIntegrations struct {
 	ExternalAccessIntegrations []AccountObjectIdentifier `ddl:"list,must_parentheses"`
 }
 
-// AlterOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#alter-openflow-runtime.
+// AlterOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/alter-openflow-runtime.
 type AlterOpenflowRuntimeOptions struct {
 	alter                            bool                                       `ddl:"static" sql:"ALTER"`
 	openflowRuntime                  bool                                       `ddl:"static" sql:"OPENFLOW RUNTIME"`
@@ -80,7 +80,7 @@ type OpenflowRuntimeUnset struct {
 	Comment                    *bool `ddl:"keyword" sql:"COMMENT"`
 }
 
-// DropOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#drop-openflow-runtime.
+// DropOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/drop-openflow-runtime.
 type DropOpenflowRuntimeOptions struct {
 	drop            bool                   `ddl:"static" sql:"DROP"`
 	openflowRuntime bool                   `ddl:"static" sql:"OPENFLOW RUNTIME"`
@@ -89,7 +89,7 @@ type DropOpenflowRuntimeOptions struct {
 	Cascade         *bool                  `ddl:"keyword" sql:"CASCADE"`
 }
 
-// ShowOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#show-openflow-runtimes.
+// ShowOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/show-openflow-runtimes.
 type ShowOpenflowRuntimeOptions struct {
 	show             bool       `ddl:"static" sql:"SHOW"`
 	openflowRuntimes bool       `ddl:"static" sql:"OPENFLOW RUNTIMES"`
@@ -147,7 +147,7 @@ func (v *OpenflowRuntime) ObjectType() ObjectType {
 	return ObjectTypeOpenflowRuntime
 }
 
-// DescribeOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#describe-openflow-runtime.
+// DescribeOpenflowRuntimeOptions is based on https://docs.snowflake.com/en/sql-reference/sql/desc-openflow-runtime.
 type DescribeOpenflowRuntimeOptions struct {
 	describe        bool                   `ddl:"static" sql:"DESCRIBE"`
 	openflowRuntime bool                   `ddl:"static" sql:"OPENFLOW RUNTIME"`

@@ -48,7 +48,7 @@ var openflowRuntimesDef = g.NewInterface(
 	"OpenflowRuntime",
 	g.KindOfT[sdkcommons.SchemaObjectIdentifier](),
 ).CreateOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#create-openflow-runtime",
+	"https://docs.snowflake.com/en/sql-reference/sql/create-openflow-runtime",
 	g.NewQueryStruct("CreateOpenflowRuntime").
 		Create().
 		SQL("OPENFLOW RUNTIME").
@@ -69,7 +69,7 @@ var openflowRuntimesDef = g.NewInterface(
 		WithValidation(g.ValidIdentifier, "InDeployment").
 		WithValidation(g.ValidIdentifier, "ExecuteAsRole"),
 ).AlterOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#alter-openflow-runtime",
+	"https://docs.snowflake.com/en/sql-reference/sql/alter-openflow-runtime",
 	g.NewQueryStruct("AlterOpenflowRuntime").
 		Alter().
 		SQL("OPENFLOW RUNTIME").
@@ -116,7 +116,7 @@ var openflowRuntimesDef = g.NewInterface(
 		WithValidation(g.ValidIdentifierIfSet, "RenameTo").
 		WithValidation(g.ExactlyOneValueSet, "Suspend", "Resume", "ResumeRecovery", "Restart", "RestartRecovery", "Terminate", "TerminateCascade", "Upgrade", "RenameTo", "Set", "Unset", "AddExternalAccessIntegrations", "RemoveExternalAccessIntegrations"),
 ).DropOperation(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#drop-openflow-runtime",
+	"https://docs.snowflake.com/en/sql-reference/sql/drop-openflow-runtime",
 	g.NewQueryStruct("DropOpenflowRuntime").
 		Drop().
 		SQL("OPENFLOW RUNTIME").
@@ -125,7 +125,7 @@ var openflowRuntimesDef = g.NewInterface(
 		OptionalSQL("CASCADE").
 		WithValidation(g.ValidIdentifier, "name"),
 ).ShowOperationWithPairedStructs(
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#show-openflow-runtimes",
+	"https://docs.snowflake.com/en/sql-reference/sql/show-openflow-runtimes",
 	g.StructPair("openflowRuntimeRow", "OpenflowRuntime").
 		Text("name").
 		Enum("status", OpenflowRuntimeStatusEnumDef).
@@ -155,7 +155,7 @@ var openflowRuntimesDef = g.NewInterface(
 	g.ShowByIDInFiltering,
 ).DescribeOperationWithPairedStructs(
 	g.DescriptionMappingKindSingleValue,
-	"https://docs.snowflake.com/en/LIMITEDACCESS/openflow-gen2/sql-reference/openflow-runtime#describe-openflow-runtime",
+	"https://docs.snowflake.com/en/sql-reference/sql/desc-openflow-runtime",
 	g.StructPair("openflowRuntimeDetailsRow", "OpenflowRuntimeDetails").
 		// DESCRIBE OPENFLOW RUNTIME returns neither database_name nor schema_name (unlike SHOW), so the
 		// identifier cannot be rebuilt from the row. Id is populated by the caller, as for NotebookDetails.

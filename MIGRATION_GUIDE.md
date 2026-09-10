@@ -26,6 +26,38 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 
 ## v2.20.x ➞ v2.21.0
 
+### *(new feature)* Openflow resources and data sources
+
+We have added preview resources and data sources for managing Openflow, covering deployments, runtimes and
+connectors:
+
+- [snowflake_openflow_deployment_snowflake_managed](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_deployment_snowflake_managed)
+- [snowflake_openflow_deployment_byoc](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_deployment_byoc)
+- [snowflake_openflow_runtime](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_runtime)
+- [snowflake_openflow_connector](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/openflow_connector)
+- [snowflake_openflow_deployments](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_deployments)
+- [snowflake_openflow_runtimes](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_runtimes)
+- [snowflake_openflow_connectors](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_connectors)
+- [snowflake_openflow_connector_definitions](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/data-sources/openflow_connector_definitions)
+
+Check the [Openflow documentation](https://docs.snowflake.com/en/user-guide/data-integration/openflow/about) to
+know more.
+
+These features will be marked as stable in a future release. Breaking changes are expected, even without
+bumping the major version. To use them, add the relevant names to the `preview_features_enabled` field in the
+provider configuration: `snowflake_openflow_deployment_snowflake_managed_resource`,
+`snowflake_openflow_deployment_byoc_resource`, `snowflake_openflow_runtime_resource`,
+`snowflake_openflow_connector_resource`, `snowflake_openflow_deployments_datasource`,
+`snowflake_openflow_runtimes_datasource`, `snowflake_openflow_connectors_datasource` and
+`snowflake_openflow_connector_definitions_datasource`.
+
+Note that starting, stopping and version management for connectors are operational actions rather than desired
+state, so they are not exposed by the connector resource. A connector created from a definition carries no
+configuration and settles on STOPPED until one is supplied.
+
+No changes are required for existing configurations unless you want to adopt these preview features with
+Terraform.
+
 ### *(breaking change)* Renamed constraint column fields in `snowflake_iceberg_table`
 
 Note: this resource is in preview allowing us to make breaking changes without bumping the major version (following [our docs](https://docs.snowflake.com/en/user-guide/terraform#preview-features)).
