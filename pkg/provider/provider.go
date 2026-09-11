@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"slices"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/docs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider/validators"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/snowflakeenvs"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/telemetry"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/experimentalfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -822,7 +824,7 @@ func getDataSources() map[string]*schema.Resource {
 	}
 }
 
-func ConfigureProvider(_ context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
+func ConfigureProvider(ctx context.Context, s *schema.ResourceData) (any, diag.Diagnostics) {
 	var enabledExperiments []string
 	if v, ok := s.GetOk("experimental_features_enabled"); ok {
 		enabledExperiments = expandStringList(v.(*schema.Set).List())
@@ -896,6 +898,14 @@ func ConfigureProvider(_ context.Context, s *schema.ResourceData) (any, diag.Dia
 	}
 
 	providerCtx.EnabledExperiments = enabledExperiments
+
+	spanID, err := telemetry.NewSpanID()
+	if err != nil {
+		log.Printf("[WARN] failed to generate telemetry span_id: %v", err)
+	} else {
+		providerCtx.SpanID = spanID
+		telemetry.EmitProviderInit(ctx, providerCtx)
+	}
 
 	return providerCtx, diags
 }
