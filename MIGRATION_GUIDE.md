@@ -24,6 +24,17 @@ for changes required after enabling given [Snowflake BCR Bundle](https://docs.sn
 > [!TIP]
 > If you're still using the `Snowflake-Labs/snowflake` source, see [Upgrading from Snowflake-Labs Provider](./SNOWFLAKEDB_MIGRATION.md) to upgrade to the snowflakedb namespace.
 
+## v2.21.x ➞ v2.22.0
+
+### *(new feature)* New `service_caller_token_validity_secs` field in `snowflake_service`
+
+A new field has been added to the [`snowflake_service`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/service) resource:
+- `service_caller_token_validity_secs` — sets [SERVICE_CALLER_TOKEN_VALIDITY_SECS](https://docs.snowflake.com/en/sql-reference/parameters#service-caller-token-validity-secs)
+
+The current value is also exposed in the new `parameters` output block (result of `SHOW PARAMETERS IN SERVICE`).
+
+No action is required; this is a non-breaking addition.
+
 ## v2.20.x ➞ v2.21.0
 
 ### *(breaking change)* Renamed constraint column fields in `snowflake_iceberg_table`
