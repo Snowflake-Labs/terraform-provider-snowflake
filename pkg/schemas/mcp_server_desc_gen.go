@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DescribeMcpServerDetailsSchema represents output of DESCRIBE query for the single McpServer.
+// DescribeMcpServerDetailsSchema represents output of DESCRIBE query for the single McpServerDetails.
 var DescribeMcpServerDetailsSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,

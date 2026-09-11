@@ -33,26 +33,6 @@ var ShowCortexAgentSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Computed: true,
 	},
-	"profile": {
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"display_name": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"avatar": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"color": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-			},
-		},
-	},
 }
 
 var _ = ShowCortexAgentSchema
@@ -65,13 +45,6 @@ func CortexAgentToSchema(cortexAgent *sdk.CortexAgent) map[string]any {
 	cortexAgentSchema["schema_name"] = cortexAgent.SchemaName
 	cortexAgentSchema["owner"] = cortexAgent.Owner
 	cortexAgentSchema["comment"] = cortexAgent.Comment
-	cortexAgentSchema["profile"] = []map[string]any{
-		{
-			"display_name": cortexAgent.Profile.DisplayName,
-			"avatar":       cortexAgent.Profile.Avatar,
-			"color":        cortexAgent.Profile.Color,
-		},
-	}
 	return cortexAgentSchema
 }
 
