@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// DescribeCortexAgentDetailsSchema represents output of DESCRIBE query for the single Cortex agent.
+// DescribeCortexAgentDetailsSchema represents output of DESCRIBE query for the single CortexAgentDetails.
 var DescribeCortexAgentDetailsSchema = map[string]*schema.Schema{
 	"name": {
 		Type:     schema.TypeString,
@@ -28,26 +28,6 @@ var DescribeCortexAgentDetailsSchema = map[string]*schema.Schema{
 	"comment": {
 		Type:     schema.TypeString,
 		Computed: true,
-	},
-	"profile": {
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"display_name": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"avatar": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"color": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-			},
-		},
 	},
 	"agent_spec": {
 		Type:     schema.TypeString,
@@ -80,13 +60,6 @@ func CortexAgentDetailsToSchema(cortexAgentDetails *sdk.CortexAgentDetails) map[
 	cortexAgentDetailsSchema["schema_name"] = cortexAgentDetails.SchemaName
 	cortexAgentDetailsSchema["owner"] = cortexAgentDetails.Owner
 	cortexAgentDetailsSchema["comment"] = cortexAgentDetails.Comment
-	cortexAgentDetailsSchema["profile"] = []map[string]any{
-		{
-			"display_name": cortexAgentDetails.Profile.DisplayName,
-			"avatar":       cortexAgentDetails.Profile.Avatar,
-			"color":        cortexAgentDetails.Profile.Color,
-		},
-	}
 	cortexAgentDetailsSchema["agent_spec"] = cortexAgentDetails.AgentSpec
 	cortexAgentDetailsSchema["created_on"] = cortexAgentDetails.CreatedOn.String()
 	if cortexAgentDetails.DefaultVersionName != nil {

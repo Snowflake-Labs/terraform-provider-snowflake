@@ -5,26 +5,37 @@ easier to just generate all the needed schemas and mappers.
 
 ### Description
 
-File [generate.go](../generate.go) invokes the generation logic from [main.go](./main/main.go). By default, all SDK show
-output struct are used (listed in [sdk_show_result_structs.go](./sdk_show_result_structs.go)). After successful
+File [generate.go](../generate.go) invokes the generation logic from [main.go](./main/main.go). By default, all
+definitions in `SdkShowResultStructs` ([sdk_show_result_structs.go](./sdk_show_result_structs.go)) are used — SHOW
+structs plus struct DESCRIBE (`IsDescribe`) and property-row list entries (`UsedAsListEntry`). After successful
 generation all SDK objects will have:
 
-- show output schema that can be used in the resource/datasource (e.g. [warehouse_gen](../warehouse_gen.go#L11))
-- mapper from the SDK object to the generated schema (e.g. [warehouse_gen](../warehouse_gen.go#L124))
+- show output schema that can be used in the resource/datasource (e.g. [user_gen](../user_gen.go))
+- describe output schema when `IsDescribe` is set (`DescribeXSchema` in `{snake}_desc_gen.go`, `_details` suffix trimmed)
+- mapper from the SDK object to the generated schema (e.g. [user_gen](../user_gen.go))
+
+Unscoped generate and `generate-show-output-schemas-check` skip objects in `SHOW_OUTPUT_SCHEMAS_EXCLUDE` (Makefile). This generator is **Converging**. Customizations belong in `*_ext.go` (use `SkipFields` on the definition when the generated field must be omitted).
 
 ### How it works
 
 ##### Invoking the generation
 
-To generate all show outputs (with a cleanup first) run:
+To regenerate show outputs (skips `SHOW_OUTPUT_SCHEMAS_EXCLUDE`):
 
 ```shell
-make clean-show-output-schemas generate-show-output-schemas
+make generate-show-output-schemas
 ```
 
-To generate only chosen subset of all objects run:
+`make generate-show-output-schemas` / `generate-show-output-schemas-check` run in `pre-push` / `pre-push-check` with that exclude list. `make clean-show-output-schemas` deletes every `pkg/schemas/*_gen.go` file.
+
+To generate only a chosen subset:
 ```shell
-make clean-show-output-schemas generate-show-output-schemas SF_TF_GENERATOR_ARGS="--filter-object-names=sdk.Warehouse,sdk.User"
+make generate-show-output-schemas SF_TF_GENERATOR_ARGS="--filter-object-names=sdk.User"
+```
+
+To generate an object that is in `SHOW_OUTPUT_SCHEMAS_EXCLUDE`:
+```shell
+make generate-show-output-schemas SHOW_OUTPUT_SCHEMAS_EXCLUDE= SF_TF_GENERATOR_ARGS='--filter-object-names=sdk.Warehouse'
 ```
 
 ```shell
@@ -67,7 +78,11 @@ If you change the show output struct in the SDK:
 
 ##### Adding a new object to the SDK
 
-1. Add the new show output struct to [sdk_show_result_structs.go](./sdk_show_result_structs.go).
+1. Add a `ShowResultSchemaDef` to `SdkShowResultStructs` in [sdk_show_result_structs.go](./sdk_show_result_structs.go):
+   - SHOW: `{ObjectStruct: sdk.<Singular>{}}` → `Show<Singular>Schema` in `<singular>_gen.go`
+   - struct DESCRIBE: `{ObjectStruct: sdk.<Singular>Details{}, IsDescribe: true}` → `Describe<Singular>DetailsSchema` in `<singular>_desc_gen.go`
+   - property-row list entry: `{ObjectStruct: sdk.<Type>{}, UsedAsListEntry: true}` → `<Type>Schema` in `<type>_gen.go`
+   - `SkipFields: []string{"snake_case_key"}` omits that key from the schema map and `ToSchema` (use when `*_ext.go` owns the field, or the field should stay omitted)
 2. Check if you don't introduce a type that is unsupported (check [supported types](#supported-types)
    and [known limitations](#known-limitations)).
 3. Run generation according to [instructions](#invoking-the-generation).
@@ -91,7 +106,6 @@ Functional improvements:
   - handle nested structs with identifiers / slices of identifiers
 - parametrize the generation, e.g.:
   - (optional) parametrize the output directory - currently, it's always written to `schemas` package
-- discover a change and generate as part of a `make pre-push`
 
 Implementation improvements:
 - (optional) consider different implementations of `Mapper` (e.g. TODO in [schema_field_mapper_test.go](./schema_field_mapper_test.go): `ugly comparison of functions with the current implementation of mapper` and not ideal implementation in the [to_schema_mapper.tmpl](./templates/to_schema_mapper.tmpl): `runMapper .Mapper $nameLowerCase "." .OriginalName`)
