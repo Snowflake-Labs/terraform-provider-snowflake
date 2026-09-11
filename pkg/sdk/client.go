@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/internal/tracking"
 	"github.com/jmoiron/sqlx"
@@ -262,6 +263,31 @@ func (c *Client) Close() error {
 		return c.db.Close()
 	}
 	return nil
+}
+
+// AddTelemetry queues a custom in-band driver telemetry event.
+func (c *Client) AddTelemetry(ctx context.Context, data map[string]string) error {
+	if c == nil || c.db == nil {
+		return fmt.Errorf("client is not connected")
+	}
+	conn, err := c.db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	// Always go through conn.Raw: database/sql forbids using the driver conn
+	// outside Raw, so we do not cache SnowflakeConnection on Client.
+	addErr := conn.Raw(func(driverConn any) error {
+		sc, ok := driverConn.(gosnowflake.SnowflakeConnection)
+		if !ok {
+			return fmt.Errorf("driver connection is %T, not gosnowflake.SnowflakeConnection", driverConn)
+		}
+		return sc.AddTelemetryData(ctx, time.Now(), data)
+	})
+	closeErr := conn.Close()
+	if addErr != nil {
+		return addErr
+	}
+	return closeErr
 }
 
 type accountLocatorContextKey struct{}
