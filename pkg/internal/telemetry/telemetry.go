@@ -18,6 +18,7 @@ type eventType string
 
 const (
 	typeProviderInit eventType = "provider_init"
+	typeDatasourceOp eventType = "datasource_op"
 )
 
 // NewSpanID returns a UUID used to correlate events for one provider configure/run.
