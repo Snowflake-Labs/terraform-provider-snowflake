@@ -577,4 +577,8 @@ var allResourceSchemaDefs = []ResourceSchemaDef{
 		name:   "ExternalAccessIntegration",
 		schema: resources.ExternalAccessIntegration().Schema,
 	},
+	{
+		name:   "CatalogLinkedDatabase",
+		schema: resources.CatalogLinkedDatabase().Schema,
+	},
 }
