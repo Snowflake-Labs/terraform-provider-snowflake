@@ -57,7 +57,8 @@ var tableColumnProjectionPolicy = g.NewQueryStruct("TableColumnProjectionPolicy"
 var tableDropColumnAction = g.NewQueryStruct("TableDropColumnAction").
 	SQL("DROP COLUMN").
 	OptionalSQL("IF EXISTS").
-	PredefinedQueryStructField("Columns", "[]Column", g.KeywordOptions().Required())
+	PredefinedQueryStructField("Columns", "[]Column", g.KeywordOptions().Required()).
+	WithSharedToOpts()
 
 var tableRenameColumnAction = g.NewQueryStruct("TableRenameColumnAction").
 	SQL("RENAME COLUMN").
@@ -227,14 +228,13 @@ func legacyTableColumnMaskingPolicy() *g.QueryStruct {
 		WithValidation(g.ValidIdentifier, "Name")
 }
 
-// legacyTableOutOfLineConstraint duplicates tableOutOfLineConstraint: legacy does not double-quote the constraint name
-// and takes columns as []string rather than []Column.
+// legacyTableOutOfLineConstraint duplicates tableOutOfLineConstraint: legacy does not double-quote the constraint name.
 // TODO[SNOW-1007542]: reuse tableOutOfLineConstraint
 func legacyTableOutOfLineConstraint() *g.QueryStruct {
 	return g.NewQueryStruct("OutOfLineConstraint").
 		OptionalAssignmentWithFieldName("CONSTRAINT", "*string", g.ParameterOptions().NoEquals(), "Name").
 		WithField(g.EnumLegacy[sdkcommons.ColumnConstraintType]("ConstraintType", g.KeywordOptions().Required())).
-		PredefinedQueryStructField("Columns", "[]string", g.KeywordOptions().Parentheses()).
+		PredefinedQueryStructField("Columns", "[]Column", g.KeywordOptions().Parentheses()).
 		OptionalQueryStructField("ForeignKey", tableOutOfLineForeignKey(), g.KeywordOptions()).
 		OptionalSQL("ENFORCED").
 		OptionalSQL("NOT ENFORCED").
@@ -261,7 +261,7 @@ func tableOutOfLineForeignKey() *g.QueryStruct {
 	return g.NewQueryStruct("OutOfLineForeignKey").
 		SQL("REFERENCES").
 		Identifier("TableName", g.KindOfT[sdkcommons.SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
-		PredefinedQueryStructField("ColumnNames", "[]string", g.ParameterOptions().NoEquals().Parentheses()).
+		PredefinedQueryStructField("ColumnNames", "[]Column", g.ParameterOptions().NoEquals().Parentheses()).
 		OptionalEnum("Match", MatchTypeEnumDef, g.ParameterOptions().NoEquals().SQL("MATCH")).
 		PredefinedQueryStructField("On", g.KindOfTPointer[sdkcommons.ForeignKeyOnAction](), g.KeywordOptions())
 }
@@ -336,7 +336,7 @@ func tableColumnAction() *g.QueryStruct {
 		OptionalQueryStructField("UnsetMaskingPolicy", legacyTableColumnAlterUnsetMaskingPolicyAction(), g.KeywordOptions()).
 		OptionalQueryStructField("SetTags", legacyTableColumnAlterSetTagsAction(), g.KeywordOptions()).
 		OptionalQueryStructField("UnsetTags", legacyTableColumnAlterUnsetTagsAction(), g.KeywordOptions()).
-		OptionalQueryStructField("DropColumns", legacyTableColumnAlterDropColumns(), g.KeywordOptions()).
+		OptionalSharedQueryStructField("DropColumns", tableDropColumnAction, g.KeywordOptions()).
 		WithValidation(g.ExactlyOneValueSet, "Add", "Rename", "Alter", "SetMaskingPolicy", "UnsetMaskingPolicy", "SetTags", "UnsetTags", "DropColumns")
 }
 
@@ -441,16 +441,6 @@ func legacyTableColumnAlterUnsetTagsAction() *g.QueryStruct {
 		SQL("ALTER COLUMN").
 		Text("ColumnName", g.KeywordOptions().Required()).
 		UnsetTags()
-}
-
-// legacyTableColumnAlterDropColumns duplicates tableDropColumnAction: legacy takes the columns as
-// []string rather than []Column, so their names are not double-quoted.
-// TODO[SNOW-1007542]: reuse tableDropColumnAction
-func legacyTableColumnAlterDropColumns() *g.QueryStruct {
-	return g.NewQueryStruct("TableColumnAlterDropColumns").
-		SQL("DROP COLUMN").
-		IfExists().
-		PredefinedQueryStructField("Columns", "[]string", g.KeywordOptions().Required())
 }
 
 func tableConstraintAction() *g.QueryStruct {

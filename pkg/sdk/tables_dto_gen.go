@@ -77,7 +77,7 @@ type ColumnMaskingPolicyRequest struct {
 type OutOfLineConstraintRequest struct {
 	Name               *string
 	ConstraintType     ColumnConstraintType // required
-	Columns            []string
+	Columns            []Column
 	ForeignKey         *OutOfLineForeignKeyRequest
 	Enforced           *bool
 	NotEnforced        *bool
@@ -95,7 +95,7 @@ type OutOfLineConstraintRequest struct {
 
 type OutOfLineForeignKeyRequest struct {
 	TableName   SchemaObjectIdentifier // required
-	ColumnNames []string
+	ColumnNames []Column
 	Match       *MatchType
 	On          *ForeignKeyOnAction
 }
@@ -213,7 +213,7 @@ type TableColumnActionRequest struct {
 	UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyActionRequest
 	SetTags            *TableColumnAlterSetTagsActionRequest
 	UnsetTags          *TableColumnAlterUnsetTagsActionRequest
-	DropColumns        *TableColumnAlterDropColumnsRequest
+	DropColumns        *TableDropColumnActionRequest
 }
 
 type TableColumnAddActionRequest struct {
@@ -280,11 +280,6 @@ type TableColumnAlterSetTagsActionRequest struct {
 type TableColumnAlterUnsetTagsActionRequest struct {
 	ColumnName string             // required
 	UnsetTags  []ObjectIdentifier // required
-}
-
-type TableColumnAlterDropColumnsRequest struct {
-	IfExists *bool
-	Columns  []string // required
 }
 
 type TableConstraintActionRequest struct {

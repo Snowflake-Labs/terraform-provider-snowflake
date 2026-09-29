@@ -218,7 +218,7 @@ func (s *OutOfLineConstraintRequest) WithName(name string) *OutOfLineConstraintR
 	return s
 }
 
-func (s *OutOfLineConstraintRequest) WithColumns(columns []string) *OutOfLineConstraintRequest {
+func (s *OutOfLineConstraintRequest) WithColumns(columns []Column) *OutOfLineConstraintRequest {
 	s.Columns = columns
 	return s
 }
@@ -296,7 +296,7 @@ func NewOutOfLineForeignKeyRequest(
 	return &s
 }
 
-func (s *OutOfLineForeignKeyRequest) WithColumnNames(columnNames []string) *OutOfLineForeignKeyRequest {
+func (s *OutOfLineForeignKeyRequest) WithColumnNames(columnNames []Column) *OutOfLineForeignKeyRequest {
 	s.ColumnNames = columnNames
 	return s
 }
@@ -717,7 +717,7 @@ func (s *TableColumnActionRequest) WithUnsetTags(unsetTags TableColumnAlterUnset
 	return s
 }
 
-func (s *TableColumnActionRequest) WithDropColumns(dropColumns TableColumnAlterDropColumnsRequest) *TableColumnActionRequest {
+func (s *TableColumnActionRequest) WithDropColumns(dropColumns TableDropColumnActionRequest) *TableColumnActionRequest {
 	s.DropColumns = &dropColumns
 	return s
 }
@@ -914,19 +914,6 @@ func NewTableColumnAlterUnsetTagsActionRequest(
 	s.ColumnName = columnName
 	s.UnsetTags = unsetTags
 	return &s
-}
-
-func NewTableColumnAlterDropColumnsRequest(
-	columns []string,
-) *TableColumnAlterDropColumnsRequest {
-	s := TableColumnAlterDropColumnsRequest{}
-	s.Columns = columns
-	return &s
-}
-
-func (s *TableColumnAlterDropColumnsRequest) WithIfExists(ifExists bool) *TableColumnAlterDropColumnsRequest {
-	s.IfExists = &ifExists
-	return s
 }
 
 func NewTableConstraintActionRequest() *TableConstraintActionRequest {

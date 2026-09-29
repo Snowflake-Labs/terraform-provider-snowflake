@@ -12,6 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func toColumns(columns []string) []sdk.Column {
+	return collections.Map(columns, func(column string) sdk.Column {
+		return sdk.Column{Value: column}
+	})
+}
+
 // constraintEnforcementSchemaFields builds the enforcement-related fields shared by the UNIQUE/PRIMARY KEY
 // and FOREIGN KEY out-of-line constraint schemas. Each field squashes a pair of mutually exclusive SQL
 // keywords (e.g. ENFORCED / NOT ENFORCED) into a single tri-state boolean string field.

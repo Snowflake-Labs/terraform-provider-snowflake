@@ -148,8 +148,8 @@ func TestInt_Table(t *testing.T) {
 		}
 		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).
 			WithName("OUT_OF_LINE_CONSTRAINT").
-			WithColumns([]string{"COLUMN_1"}).
-			WithForeignKey(*sdk.NewOutOfLineForeignKeyRequest(table2.ID()).WithColumnNames([]string{"id"}).
+			WithColumns([]sdk.Column{{Value: "COLUMN_1"}}).
+			WithForeignKey(*sdk.NewOutOfLineForeignKeyRequest(table2.ID()).WithColumnNames([]sdk.Column{{Value: "id"}}).
 				WithMatch(sdk.MatchTypeFull).
 				WithOn(*sdk.NewForeignKeyOnAction().
 					WithOnDelete(sdk.Pointer(sdk.ForeignKeySetNullAction)).WithOnUpdate(sdk.Pointer(sdk.ForeignKeyRestrictAction))))
@@ -640,7 +640,7 @@ func TestInt_Table(t *testing.T) {
 		t.Cleanup(cleanupTableProvider(id))
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithColumnAction(*sdk.NewTableColumnActionRequest().WithDropColumns(*sdk.NewTableColumnAlterDropColumnsRequest([]string{"COLUMN_1"})))
+			WithColumnAction(*sdk.NewTableColumnActionRequest().WithDropColumns(*sdk.NewTableDropColumnActionRequest([]sdk.Column{{Value: "COLUMN_1"}})))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 
@@ -679,8 +679,8 @@ func TestInt_Table(t *testing.T) {
 
 		alterRequest := sdk.NewAlterTableRequest(id).
 			WithConstraintAction(*sdk.NewTableConstraintActionRequest().
-				WithAdd(*sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).WithName("OUT_OF_LINE_CONSTRAINT").WithColumns([]string{"COLUMN_1"}).
-					WithForeignKey(*sdk.NewOutOfLineForeignKeyRequest(secondTableId).WithColumnNames([]string{"COLUMN_3"}))))
+				WithAdd(*sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypeForeignKey).WithName("OUT_OF_LINE_CONSTRAINT").WithColumns([]sdk.Column{{Value: "COLUMN_1"}}).
+					WithForeignKey(*sdk.NewOutOfLineForeignKeyRequest(secondTableId).WithColumnNames([]sdk.Column{{Value: "COLUMN_3"}}))))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 	})
@@ -712,7 +712,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		oldConstraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(oldConstraintName).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(oldConstraintName).WithColumns([]sdk.Column{{Value: "COLUMN_1"}})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, *sdk.NewCreateTableColumnsAndConstraintsRequest().WithColumns(columns).WithOutOfLineConstraint([]sdk.OutOfLineConstraintRequest{*outOfLineConstraint})))
 		require.NoError(t, err)
@@ -734,7 +734,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(constraintName).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(constraintName).WithColumns([]sdk.Column{{Value: "COLUMN_1"}})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, *sdk.NewCreateTableColumnsAndConstraintsRequest().WithColumns(columns).WithOutOfLineConstraint([]sdk.OutOfLineConstraintRequest{*outOfLineConstraint})))
 		require.NoError(t, err)
@@ -754,7 +754,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 		constraintName := "OUT_OF_LINE_CONSTRAINT"
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(constraintName).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithName(constraintName).WithColumns([]sdk.Column{{Value: "COLUMN_1"}})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, *sdk.NewCreateTableColumnsAndConstraintsRequest().WithColumns(columns).WithOutOfLineConstraint([]sdk.OutOfLineConstraintRequest{*outOfLineConstraint})))
 		require.NoError(t, err)
@@ -771,7 +771,7 @@ func TestInt_Table(t *testing.T) {
 		columns := []sdk.TableColumnRequest{
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR),
 		}
-		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns([]string{"COLUMN_1"})
+		outOfLineConstraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns([]sdk.Column{{Value: "COLUMN_1"}})
 
 		err := client.Tables.Create(ctx, sdk.NewCreateTableRequest(id, *sdk.NewCreateTableColumnsAndConstraintsRequest().WithColumns(columns).WithOutOfLineConstraint([]sdk.OutOfLineConstraintRequest{*outOfLineConstraint})))
 		require.NoError(t, err)

@@ -179,21 +179,21 @@ func init() {
 		withAdditionalValidationCase(
 			"validation_Create_outOfLineConstraint_emptyType",
 			func(opts *CreateTableOptions) {
-				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{Name: new("OUT_OF_LINE_CONSTRAINT"), Columns: []string{"COLUMN_1"}}}
+				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{Name: new("OUT_OF_LINE_CONSTRAINT"), Columns: []Column{{Value: "COLUMN_1"}}}}
 			},
 			errInvalidValue("OutOfLineConstraint", "ConstraintType", ""),
 		).
 		withAdditionalValidationCase(
 			"validation_Create_outOfLineConstraint_invalidType",
 			func(opts *CreateTableOptions) {
-				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{ConstraintType: "not existing type", Columns: []string{"COLUMN_1"}}}
+				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{ConstraintType: "not existing type", Columns: []Column{{Value: "COLUMN_1"}}}}
 			},
 			errInvalidValue("OutOfLineConstraint", "ConstraintType", "not existing type"),
 		).
 		withAdditionalValidationCase(
 			"validation_Create_outOfLineConstraint_foreignKeyNotSet",
 			func(opts *CreateTableOptions) {
-				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{ConstraintType: ColumnConstraintTypeForeignKey, Columns: []string{"COLUMN_1"}}}
+				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{ConstraintType: ColumnConstraintTypeForeignKey, Columns: []Column{{Value: "COLUMN_1"}}}}
 			},
 			errNotSet("OutOfLineConstraint", "ForeignKey"),
 		).
@@ -202,7 +202,7 @@ func init() {
 			func(opts *CreateTableOptions) {
 				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{
 					ConstraintType: ColumnConstraintTypeForeignKey,
-					Columns:        []string{"COLUMN_1"},
+					Columns:        []Column{{Value: "COLUMN_1"}},
 					ForeignKey:     &OutOfLineForeignKey{},
 				}}
 			},
@@ -213,7 +213,7 @@ func init() {
 			func(opts *CreateTableOptions) {
 				opts.ColumnsAndConstraints.OutOfLineConstraint = []OutOfLineConstraint{{
 					ConstraintType: ColumnConstraintTypeUnique,
-					Columns:        []string{"COLUMN_1"},
+					Columns:        []Column{{Value: "COLUMN_1"}},
 					ForeignKey:     &OutOfLineForeignKey{TableName: fkRefId},
 				}}
 			},
@@ -251,10 +251,10 @@ func init() {
 						{
 							Name:           new("OUT_OF_LINE_CONSTRAINT"),
 							ConstraintType: ColumnConstraintTypeForeignKey,
-							Columns:        []string{"COLUMN_1", "COLUMN_2"},
+							Columns:        []Column{{Value: "COLUMN_1"}, {Value: "COLUMN_2"}},
 							ForeignKey: &OutOfLineForeignKey{
 								TableName:   fkRefId,
-								ColumnNames: []string{"COLUMN_3", "COLUMN_4"},
+								ColumnNames: []Column{{Value: "COLUMN_3"}, {Value: "COLUMN_4"}},
 								Match:       new(MatchTypeFull),
 								On: &ForeignKeyOnAction{
 									OnUpdate: new(ForeignKeySetNullAction),
@@ -264,7 +264,7 @@ func init() {
 						},
 						{
 							ConstraintType:    ColumnConstraintTypeUnique,
-							Columns:           []string{"COLUMN_1"},
+							Columns:           []Column{{Value: "COLUMN_1"}},
 							Enforced:          new(true),
 							Deferrable:        new(true),
 							InitiallyDeferred: new(true),
@@ -291,7 +291,7 @@ func init() {
 				}
 				opts.Comment = &tableComment
 			},
-			`CREATE TABLE IF NOT EXISTS %s (FIRST_COLUMN VARCHAR CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG (%s = 'v1', %s = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE (COLUMN_1) ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG (%s = 'v1', %s = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE IF NOT EXISTS %s (FIRST_COLUMN VARCHAR CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG (%s = 'v1', %s = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY ("COLUMN_1", "COLUMN_2") REFERENCES %s ("COLUMN_3", "COLUMN_4") MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE ("COLUMN_1") ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG (%s = 'v1', %s = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			maskingPolicyId.FullyQualifiedName(),
 			columnTagId1.FullyQualifiedName(),
@@ -609,9 +609,9 @@ func init() {
 		withAdditionalSqlCasef(
 			"sql_Alter_dropColumns",
 			func(opts *AlterTableOptions) {
-				opts.ColumnAction = &TableColumnAction{DropColumns: &TableColumnAlterDropColumns{IfExists: new(true), Columns: []string{"COLUMN_1", "COLUMN_2"}}}
+				opts.ColumnAction = &TableColumnAction{DropColumns: &TableDropColumnAction{IfExists: new(true), Columns: []Column{{Value: "COLUMN_1"}, {Value: "COLUMN_2"}}}}
 			},
-			`ALTER TABLE %s DROP COLUMN IF EXISTS COLUMN_1, COLUMN_2`, id.FullyQualifiedName(),
+			`ALTER TABLE %s DROP COLUMN IF EXISTS "COLUMN_1", "COLUMN_2"`, id.FullyQualifiedName(),
 		).
 		withModifyAndExpectedSqlf(
 			case_Tables_sql_Alter_ConstraintAction,
@@ -619,10 +619,10 @@ func init() {
 				opts.ConstraintAction = &TableConstraintAction{Add: &OutOfLineConstraint{
 					Name:           new("OUT_OF_LINE_CONSTRAINT"),
 					ConstraintType: ColumnConstraintTypeForeignKey,
-					Columns:        []string{"COLUMN_1", "COLUMN_2"},
+					Columns:        []Column{{Value: "COLUMN_1"}, {Value: "COLUMN_2"}},
 					ForeignKey: &OutOfLineForeignKey{
 						TableName:   fkRefId,
-						ColumnNames: []string{"COLUMN_3", "COLUMN_4"},
+						ColumnNames: []Column{{Value: "COLUMN_3"}, {Value: "COLUMN_4"}},
 						Match:       new(MatchTypeFull),
 						On: &ForeignKeyOnAction{
 							OnUpdate: new(ForeignKeySetNullAction),
@@ -631,7 +631,7 @@ func init() {
 					},
 				}}
 			},
-			`ALTER TABLE %s ADD CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY (COLUMN_1, COLUMN_2) REFERENCES %s (COLUMN_3, COLUMN_4) MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT`,
+			`ALTER TABLE %s ADD CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY ("COLUMN_1", "COLUMN_2") REFERENCES %s ("COLUMN_3", "COLUMN_4") MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT`,
 			id.FullyQualifiedName(), fkRefId.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
