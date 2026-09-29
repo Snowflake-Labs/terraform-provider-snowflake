@@ -12,7 +12,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/snowflake"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -257,7 +256,7 @@ func CreateTableConstraint(ctx context.Context, d *schema.ResourceData, meta any
 	for _, c := range cc {
 		columns = append(columns, c.(string))
 	}
-	constraintRequest.WithColumns(snowflake.QuoteStringList(columns))
+	constraintRequest.WithColumns(toColumns(columns))
 
 	if v, ok := d.GetOk("enforced"); ok {
 		constraintRequest.WithEnforced(v.(bool))
@@ -306,7 +305,7 @@ func CreateTableConstraint(ctx context.Context, d *schema.ResourceData, meta any
 		for _, c := range cols {
 			fkColumns = append(fkColumns, c.(string))
 		}
-		foreignKeyRequest := sdk.NewOutOfLineForeignKeyRequest(referencedTableIdentifier).WithColumnNames(snowflake.QuoteStringList(fkColumns))
+		foreignKeyRequest := sdk.NewOutOfLineForeignKeyRequest(referencedTableIdentifier).WithColumnNames(toColumns(fkColumns))
 
 		matchType, err := sdk.ToMatchType(foreignKeyProperties["match"].(string))
 		if err != nil {

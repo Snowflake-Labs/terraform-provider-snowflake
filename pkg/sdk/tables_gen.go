@@ -92,7 +92,7 @@ type ColumnMaskingPolicy struct {
 type OutOfLineConstraint struct {
 	Name               *string              `ddl:"parameter,no_equals" sql:"CONSTRAINT"`
 	ConstraintType     ColumnConstraintType `ddl:"keyword"`
-	Columns            []string             `ddl:"keyword,parentheses"`
+	Columns            []Column             `ddl:"keyword,parentheses"`
 	ForeignKey         *OutOfLineForeignKey `ddl:"keyword"`
 	Enforced           *bool                `ddl:"keyword" sql:"ENFORCED"`
 	NotEnforced        *bool                `ddl:"keyword" sql:"NOT ENFORCED"`
@@ -111,7 +111,7 @@ type OutOfLineConstraint struct {
 type OutOfLineForeignKey struct {
 	references  bool                   `ddl:"static" sql:"REFERENCES"`
 	TableName   SchemaObjectIdentifier `ddl:"identifier"`
-	ColumnNames []string               `ddl:"parameter,parentheses,no_equals"`
+	ColumnNames []Column               `ddl:"parameter,parentheses,no_equals"`
 	Match       *MatchType             `ddl:"parameter,no_equals" sql:"MATCH"`
 	On          *ForeignKeyOnAction    `ddl:"keyword"`
 }
@@ -245,7 +245,7 @@ type TableColumnAction struct {
 	UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyAction `ddl:"keyword"`
 	SetTags            *TableColumnAlterSetTagsAction            `ddl:"keyword"`
 	UnsetTags          *TableColumnAlterUnsetTagsAction          `ddl:"keyword"`
-	DropColumns        *TableColumnAlterDropColumns              `ddl:"keyword"`
+	DropColumns        *TableDropColumnAction                    `ddl:"keyword"`
 }
 
 type TableColumnAddAction struct {
@@ -320,12 +320,6 @@ type TableColumnAlterUnsetTagsAction struct {
 	alterColumn bool               `ddl:"static" sql:"ALTER COLUMN"`
 	ColumnName  string             `ddl:"keyword"`
 	UnsetTags   []ObjectIdentifier `ddl:"keyword" sql:"UNSET TAG"`
-}
-
-type TableColumnAlterDropColumns struct {
-	dropColumn bool     `ddl:"static" sql:"DROP COLUMN"`
-	IfExists   *bool    `ddl:"keyword" sql:"IF EXISTS"`
-	Columns    []string `ddl:"keyword"`
 }
 
 type TableConstraintAction struct {

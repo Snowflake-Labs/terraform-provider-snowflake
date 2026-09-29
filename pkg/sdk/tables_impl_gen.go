@@ -431,10 +431,7 @@ func (r *AlterTableRequest) toOpts() *AlterTableOptions {
 			}
 		}
 		if r.ColumnAction.DropColumns != nil {
-			opts.ColumnAction.DropColumns = &TableColumnAlterDropColumns{
-				IfExists: r.ColumnAction.DropColumns.IfExists,
-				Columns:  r.ColumnAction.DropColumns.Columns,
-			}
+			opts.ColumnAction.DropColumns = r.ColumnAction.DropColumns.toOpts()
 		}
 	}
 	if r.ConstraintAction != nil {

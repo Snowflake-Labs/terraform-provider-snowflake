@@ -476,10 +476,7 @@ func (r *AlterIcebergTableRequest) toOpts() *AlterIcebergTableOptions {
 		}
 	}
 	if r.DropColumnAction != nil {
-		opts.DropColumnAction = &TableDropColumnAction{
-			IfExists: r.DropColumnAction.IfExists,
-			Columns:  r.DropColumnAction.Columns,
-		}
+		opts.DropColumnAction = r.DropColumnAction.toOpts()
 	}
 	if r.RenameColumnAction != nil {
 		opts.RenameColumnAction = &TableRenameColumnAction{
@@ -737,6 +734,14 @@ func (r icebergTableDetailsRow) convert() (*IcebergTableDetails, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (r *TableDropColumnActionRequest) toOpts() *TableDropColumnAction {
+	opts := &TableDropColumnAction{
+		IfExists: r.IfExists,
+		Columns:  r.Columns,
+	}
+	return opts
 }
 
 func (r *TableDropSearchOptimizationRequest) toOpts() *TableDropSearchOptimization {

@@ -619,7 +619,7 @@ func CreateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		if len(keysList) > 0 {
 			keys := expandStringList(keysList[0].(map[string]any)["keys"].([]any))
 			// TODO [SNOW-1007542]: constraintRequest is never attached to createRequest (missing WithOutOfLineConstraint); primary_key is only applied on Update via Alter
-			constraintRequest := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(keys))
+			constraintRequest := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(toColumns(keys))
 
 			keyName, isPresent := keysList[0].(map[string]any)["name"]
 			if isPresent && keyName != "" {
@@ -822,7 +822,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 			for i, r := range removed {
 				removedColumnNames[i] = r.name
 			}
-			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*sdk.NewTableColumnActionRequest().WithDropColumns(*sdk.NewTableColumnAlterDropColumnsRequest(snowflake.QuoteStringList(removedColumnNames)))))
+			err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*sdk.NewTableColumnActionRequest().WithDropColumns(*sdk.NewTableDropColumnActionRequest(toColumns(removedColumnNames)))))
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error updating table: %w", err))
 			}
@@ -941,7 +941,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		}
 
 		if len(newKey.keys) > 0 {
-			constraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(snowflake.QuoteStringList(newKey.keys))
+			constraint := sdk.NewOutOfLineConstraintRequest(sdk.ColumnConstraintTypePrimaryKey).WithColumns(toColumns(newKey.keys))
 			if newKey.name != "" {
 				constraint.WithName(newKey.name)
 			}

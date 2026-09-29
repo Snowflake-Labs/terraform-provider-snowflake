@@ -45,7 +45,7 @@ func TestAcc_Experimental_TagAssociation_SafeDestroy(t *testing.T) {
 				return tagAssociationModel, func() {
 					testClient().Table.AlterWithRequest(t, sdk.NewAlterTableRequest(table.ID()).
 						WithColumnAction(*sdk.NewTableColumnActionRequest().
-							WithDropColumns(*sdk.NewTableColumnAlterDropColumnsRequest([]string{columnId.Name()}))))
+							WithDropColumns(*sdk.NewTableDropColumnActionRequest([]sdk.Column{{Value: columnId.Name()}}))))
 				}
 			},
 		},

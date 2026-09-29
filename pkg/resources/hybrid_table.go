@@ -722,12 +722,6 @@ func buildHybridColumnDefaultValue(defMap map[string]any, dataType datatypes.Dat
 	return nil, fmt.Errorf("unreachable: default block passed validation but no type matched")
 }
 
-func toColumns(columns []string) []sdk.Column {
-	return collections.Map(columns, func(column string) sdk.Column {
-		return sdk.Column{Value: column}
-	})
-}
-
 func buildOutOfLineConstraints(d *schema.ResourceData) ([]sdk.HybridTableOutOfLineConstraintRequest, error) {
 	constraints := make([]sdk.HybridTableOutOfLineConstraintRequest, 0)
 
