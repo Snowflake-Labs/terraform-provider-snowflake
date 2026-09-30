@@ -418,19 +418,6 @@ func (s *TableColumnInlineCHRequest) WithEnableNovalidate(enableNovalidate bool)
 	return s
 }
 
-func NewTableColumnMaskingPolicyRequest(
-	maskingPolicy SchemaObjectIdentifier,
-) *TableColumnMaskingPolicyRequest {
-	s := TableColumnMaskingPolicyRequest{}
-	s.MaskingPolicy = maskingPolicy
-	return &s
-}
-
-func (s *TableColumnMaskingPolicyRequest) WithUsing(using []Column) *TableColumnMaskingPolicyRequest {
-	s.Using = using
-	return s
-}
-
 func NewTableColumnProjectionPolicyRequest(
 	projectionPolicy SchemaObjectIdentifier,
 ) *TableColumnProjectionPolicyRequest {
@@ -1241,6 +1228,19 @@ func (s *IcebergTableAddColumnActionRequest) WithProjectionPolicy(projectionPoli
 
 func (s *IcebergTableAddColumnActionRequest) WithTag(tag []TagAssociation) *IcebergTableAddColumnActionRequest {
 	s.Tag = tag
+	return s
+}
+
+func NewTableColumnMaskingPolicyRequest(
+	maskingPolicy SchemaObjectIdentifier,
+) *TableColumnMaskingPolicyRequest {
+	s := TableColumnMaskingPolicyRequest{}
+	s.MaskingPolicy = maskingPolicy
+	return &s
+}
+
+func (s *TableColumnMaskingPolicyRequest) WithUsing(using []Column) *TableColumnMaskingPolicyRequest {
+	s.Using = using
 	return s
 }
 

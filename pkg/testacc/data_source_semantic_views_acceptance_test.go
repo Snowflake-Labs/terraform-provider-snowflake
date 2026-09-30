@@ -23,10 +23,10 @@ func TestAcc_SemanticViews_Basic(t *testing.T) {
 	id := testClient().Ids.RandomSchemaObjectIdentifier()
 	comment := random.Comment()
 	table1, table1Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a3"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a4"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a3", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a4", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table1Cleanup)
 
@@ -87,20 +87,20 @@ func TestAcc_SemanticViews_Basic(t *testing.T) {
 
 func TestAcc_SemanticViews_Filtering(t *testing.T) {
 	table1, table1Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table1Cleanup)
 
 	table2, table2Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table2Cleanup)
 
 	table3, table3Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table3Cleanup)
 

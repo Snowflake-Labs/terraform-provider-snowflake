@@ -89,6 +89,11 @@ func (opts *CreateIcebergTableOptions) validate() error {
 						}
 					}
 				}
+				if valueSet(column.MaskingPolicy) {
+					if !ValidObjectIdentifier(column.MaskingPolicy.MaskingPolicy) {
+						errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateIcebergTableOptions.ColumnsAndConstraints.Columns[%d].MaskingPolicy", columnIdx), "MaskingPolicy"))
+					}
+				}
 				if valueSet(column.Tag) {
 					for tagIdx, tag := range column.Tag {
 						if !ValidObjectIdentifier(tag.Name) {
@@ -334,6 +339,11 @@ func (opts *AlterIcebergTableOptions) validate() error {
 				if everyValueSet(opts.AddColumnAction.InlineConstraint.CH.EnableValidate, opts.AddColumnAction.InlineConstraint.CH.EnableNovalidate) {
 					errs = append(errs, errOneOf("AlterIcebergTableOptions.AddColumnAction.InlineConstraint.CH", "EnableValidate", "EnableNovalidate"))
 				}
+			}
+		}
+		if valueSet(opts.AddColumnAction.MaskingPolicy) {
+			if !ValidObjectIdentifier(opts.AddColumnAction.MaskingPolicy.MaskingPolicy) {
+				errs = append(errs, errInvalidIdentifier("AlterIcebergTableOptions.AddColumnAction.MaskingPolicy", "MaskingPolicy"))
 			}
 		}
 		if valueSet(opts.AddColumnAction.Tag) {

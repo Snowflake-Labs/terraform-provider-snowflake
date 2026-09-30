@@ -177,11 +177,7 @@ func (r *CreateTableRequest) toOpts() *CreateTableOptions {
 				}
 			}
 			if v.MaskingPolicy != nil {
-				columns[i].MaskingPolicy = &ColumnMaskingPolicy{
-					With:  v.MaskingPolicy.With,
-					Name:  v.MaskingPolicy.Name,
-					Using: v.MaskingPolicy.Using,
-				}
+				columns[i].MaskingPolicy = v.MaskingPolicy.toOpts()
 			}
 		}
 		opts.ColumnsAndConstraints.Columns = columns
@@ -371,11 +367,7 @@ func (r *AlterTableRequest) toOpts() *AlterTableOptions {
 				}
 			}
 			if r.ColumnAction.Add.MaskingPolicy != nil {
-				opts.ColumnAction.Add.MaskingPolicy = &ColumnMaskingPolicy{
-					With:  r.ColumnAction.Add.MaskingPolicy.With,
-					Name:  r.ColumnAction.Add.MaskingPolicy.Name,
-					Using: r.ColumnAction.Add.MaskingPolicy.Using,
-				}
+				opts.ColumnAction.Add.MaskingPolicy = r.ColumnAction.Add.MaskingPolicy.toOpts()
 			}
 		}
 		if r.ColumnAction.Rename != nil {
@@ -406,17 +398,10 @@ func (r *AlterTableRequest) toOpts() *AlterTableOptions {
 			opts.ColumnAction.Alter = alter
 		}
 		if r.ColumnAction.SetMaskingPolicy != nil {
-			opts.ColumnAction.SetMaskingPolicy = &TableColumnAlterSetMaskingPolicyAction{
-				ColumnName:        r.ColumnAction.SetMaskingPolicy.ColumnName,
-				MaskingPolicyName: r.ColumnAction.SetMaskingPolicy.MaskingPolicyName,
-				Using:             r.ColumnAction.SetMaskingPolicy.Using,
-				Force:             r.ColumnAction.SetMaskingPolicy.Force,
-			}
+			opts.ColumnAction.SetMaskingPolicy = r.ColumnAction.SetMaskingPolicy.toOpts()
 		}
 		if r.ColumnAction.UnsetMaskingPolicy != nil {
-			opts.ColumnAction.UnsetMaskingPolicy = &TableColumnAlterUnsetMaskingPolicyAction{
-				ColumnName: r.ColumnAction.UnsetMaskingPolicy.ColumnName,
-			}
+			opts.ColumnAction.UnsetMaskingPolicy = r.ColumnAction.UnsetMaskingPolicy.toOpts()
 		}
 		if r.ColumnAction.SetTags != nil {
 			opts.ColumnAction.SetTags = &TableColumnAlterSetTagsAction{

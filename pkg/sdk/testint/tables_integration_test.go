@@ -46,7 +46,7 @@ func TestInt_Table(t *testing.T) {
 
 		require.Len(t, createdColumns, len(expectedColumns))
 		for i, expectedColumn := range expectedColumns {
-			assert.Equal(t, strings.ToUpper(expectedColumn.Name), createdColumns[i].ColumnName)
+			assert.Equal(t, expectedColumn.Name, createdColumns[i].ColumnName)
 			createdColumnDataType, err := datatypes.ParseDataType(createdColumns[i].DataType)
 			assert.NoError(t, err)
 			assert.Equal(t, expectedColumn.Type, sdk.LegacyDataTypeFrom(createdColumnDataType))
@@ -141,7 +141,7 @@ func TestInt_Table(t *testing.T) {
 			*sdk.NewTableColumnRequest("COLUMN_3", sdk.DataTypeVARCHAR),
 			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).
 				WithDefaultValue(*sdk.NewColumnDefaultValueRequest().WithExpression("'default'")).
-				WithMaskingPolicy(*sdk.NewColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]string{"COLUMN_1", "COLUMN_3"})).
+				WithMaskingPolicy(*sdk.NewTableColumnMaskingPolicyRequest(maskingPolicy.ID()).WithUsing([]sdk.Column{{Value: "COLUMN_1"}, {Value: "COLUMN_3"}})).
 				WithTag(columnTags).
 				WithNotNull(true),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeNumber).WithDefaultValue(*sdk.NewColumnDefaultValueRequest().WithIdentity(*sdk.NewColumnIdentityRequest(1, 1))),
@@ -557,7 +557,7 @@ func TestInt_Table(t *testing.T) {
 
 		id := testClientHelper().Ids.RandomSchemaObjectIdentifier()
 		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).WithMaskingPolicy(*sdk.NewColumnMaskingPolicyRequest(maskingPolicy.ID())),
+			*sdk.NewTableColumnRequest("COLUMN_1", sdk.DataTypeVARCHAR).WithMaskingPolicy(*sdk.NewTableColumnMaskingPolicyRequest(maskingPolicy.ID())),
 			*sdk.NewTableColumnRequest("COLUMN_2", sdk.DataTypeVARCHAR),
 		}
 
@@ -573,7 +573,7 @@ func TestInt_Table(t *testing.T) {
 		assert.Equal(t, maskingPolicy.ID().FullyQualifiedName(), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(*tableDetails[0].PolicyName).FullyQualifiedName())
 
 		alterRequest := sdk.NewAlterTableRequest(id).
-			WithColumnAction(*sdk.NewTableColumnActionRequest().WithUnsetMaskingPolicy(*sdk.NewTableColumnAlterUnsetMaskingPolicyActionRequest("COLUMN_1")))
+			WithColumnAction(*sdk.NewTableColumnActionRequest().WithUnsetMaskingPolicy(*sdk.NewTableUnsetColumnMaskingPolicyRequest("COLUMN_1")))
 		err = client.Tables.Alter(ctx, alterRequest)
 		require.NoError(t, err)
 

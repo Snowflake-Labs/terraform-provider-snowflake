@@ -115,11 +115,6 @@ type TableColumnInlineCHRequest struct {
 	EnableNovalidate *bool
 }
 
-type TableColumnMaskingPolicyRequest struct {
-	MaskingPolicy SchemaObjectIdentifier // required
-	Using         []Column
-}
-
 type TableColumnProjectionPolicyRequest struct {
 	ProjectionPolicy SchemaObjectIdentifier // required
 }
@@ -337,6 +332,11 @@ type IcebergTableAddColumnActionRequest struct {
 	MaskingPolicy    *TableColumnMaskingPolicyRequest
 	ProjectionPolicy *TableColumnProjectionPolicyRequest
 	Tag              []TagAssociation
+}
+
+type TableColumnMaskingPolicyRequest struct {
+	MaskingPolicy SchemaObjectIdentifier // required
+	Using         []Column
 }
 
 type TableDropColumnActionRequest struct {

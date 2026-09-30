@@ -410,8 +410,7 @@ func getTableColumnRequest(from any) (*sdk.TableColumnRequest, error) {
 		return nil, err
 	}
 
-	nameInQuotes := fmt.Sprintf(`"%v"`, snowflake.EscapeString(c["name"].(string)))
-	request := sdk.NewTableColumnRequest(nameInQuotes, sdk.DataType(_type))
+	request := sdk.NewTableColumnRequest(c["name"].(string), sdk.DataType(_type))
 
 	_default := c["default"].([]any)
 	var expression string
@@ -450,7 +449,7 @@ func getTableColumnRequest(from any) (*sdk.TableColumnRequest, error) {
 
 	maskingPolicy := c["masking_policy"].(string)
 	if maskingPolicy != "" {
-		request.WithMaskingPolicy(*sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
+		request.WithMaskingPolicy(*sdk.NewTableColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(maskingPolicy)))
 	}
 
 	if datatypes.IsTextDataType(dataType) {
@@ -829,7 +828,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		}
 
 		for _, cA := range added {
-			addRequest := sdk.NewTableColumnAddActionRequest(fmt.Sprintf("\"%s\"", cA.name), sdk.DataType(cA.dataType)).
+			addRequest := sdk.NewTableColumnAddActionRequest(cA.name, sdk.DataType(cA.dataType)).
 				WithInlineConstraint(*sdk.NewTableColumnAddInlineConstraintRequest("").WithNotNull(!cA.nullable))
 
 			if cA._default != nil {
@@ -850,7 +849,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 			}
 
 			if cA.maskingPolicy != "" {
-				addRequest.WithMaskingPolicy(*sdk.NewColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.maskingPolicy)))
+				addRequest.WithMaskingPolicy(*sdk.NewTableColumnMaskingPolicyRequest(sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.maskingPolicy)))
 			}
 
 			if cA.comment != "" {
@@ -868,7 +867,7 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 		}
 		for _, cA := range changed {
 			if cA.changedDataType || cA.changedCollate {
-				columnAlterActionRequest := sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDataType(sdk.DataType(cA.newColumn.dataType))
+				columnAlterActionRequest := sdk.NewTableColumnAlterActionRequest(cA.newColumn.name).WithDataType(sdk.DataType(cA.newColumn.dataType))
 				if sdk.IsStringType(cA.newColumn.dataType) && cA.newColumn.collate != "" {
 					columnAlterActionRequest.WithCollate(cA.newColumn.collate)
 				}
@@ -884,19 +883,19 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 				} else {
 					nullabilityRequest.WithDrop(true)
 				}
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithNotNullConstraint(*nullabilityRequest)})))
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(cA.newColumn.name).WithNotNullConstraint(*nullabilityRequest)})))
 				if err != nil {
 					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 			if cA.droppedDefault {
-				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)).WithDropDefault(true)})))
+				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*sdk.NewTableColumnActionRequest().WithAlter([]sdk.TableColumnAlterActionRequest{*sdk.NewTableColumnAlterActionRequest(cA.newColumn.name).WithDropDefault(true)})))
 				if err != nil {
 					return diag.FromErr(fmt.Errorf("error changing property on %v: err %w", d.Id(), err))
 				}
 			}
 			if cA.changedComment {
-				columnAlterActionRequest := sdk.NewTableColumnAlterActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name))
+				columnAlterActionRequest := sdk.NewTableColumnAlterActionRequest(cA.newColumn.name)
 				if cA.newColumn.comment == "" {
 					columnAlterActionRequest.WithUnsetComment(true)
 				} else {
@@ -911,9 +910,9 @@ func UpdateTable(ctx context.Context, d *schema.ResourceData, meta any) diag.Dia
 			if cA.changedMaskingPolicy {
 				columnAction := sdk.NewTableColumnActionRequest()
 				if strings.TrimSpace(cA.newColumn.maskingPolicy) == "" {
-					columnAction.WithUnsetMaskingPolicy(*sdk.NewTableColumnAlterUnsetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name)))
+					columnAction.WithUnsetMaskingPolicy(*sdk.NewTableUnsetColumnMaskingPolicyRequest(cA.newColumn.name))
 				} else {
-					columnAction.WithSetMaskingPolicy(*sdk.NewTableColumnAlterSetMaskingPolicyActionRequest(fmt.Sprintf("\"%s\"", cA.newColumn.name), sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.newColumn.maskingPolicy)).WithForce(true))
+					columnAction.WithSetMaskingPolicy(*sdk.NewTableSetColumnMaskingPolicyRequest(cA.newColumn.name, sdk.NewSchemaObjectIdentifierFromFullyQualifiedName(cA.newColumn.maskingPolicy)).WithForce(true))
 				}
 				err := client.Tables.Alter(ctx, sdk.NewAlterTableRequest(id).WithColumnAction(*columnAction))
 				if err != nil {

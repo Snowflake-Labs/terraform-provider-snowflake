@@ -51,7 +51,7 @@ var icebergTableColumn = g.NewQueryStruct("IcebergTableColumn").
 	PredefinedQueryStructField("DefaultValue", g.KindOfTPointer[sdkcommons.ColumnDefaultValue](), g.KeywordOptions()).
 	OptionalSQL("NOT NULL").
 	OptionalQueryStructField("InlineConstraint", tableColumnInlineConstraint(), g.KeywordOptions()).
-	OptionalQueryStructField("MaskingPolicy", tableColumnMaskingPolicy, g.KeywordOptions()).
+	OptionalSharedQueryStructField("MaskingPolicy", tableColumnMaskingPolicy, g.KeywordOptions()).
 	OptionalQueryStructField("ProjectionPolicy", tableColumnProjectionPolicy, g.KeywordOptions()).
 	OptionalTags().
 	OptionalTextAssignment("COMMENT", g.ParameterOptions().NoEquals().SingleQuotes())

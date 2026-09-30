@@ -23,7 +23,7 @@ func TestInt_TagReferences(t *testing.T) {
 
 		tagValue := "production"
 		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+			*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
 		}
 		table, tableCleanup := testClientHelper().Table.CreateWithRequest(
 			t,
@@ -66,7 +66,7 @@ func TestInt_TagReferences(t *testing.T) {
 		t.Cleanup(tag2Cleanup)
 
 		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+			*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
 		}
 		table, tableCleanup := testClientHelper().Table.CreateWithRequest(
 			t,
@@ -124,7 +124,7 @@ func TestInt_TagReferences(t *testing.T) {
 		t.Cleanup(tagCleanup)
 
 		columns := []sdk.TableColumnRequest{
-			*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+			*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
 		}
 		table, tableCleanup := testClientHelper().Table.CreateWithRequest(
 			t,

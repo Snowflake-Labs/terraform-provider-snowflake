@@ -153,11 +153,6 @@ type TableColumnInlineCH struct {
 	EnableNovalidate *bool   `ddl:"keyword" sql:"ENABLE NOVALIDATE"`
 }
 
-type TableColumnMaskingPolicy struct {
-	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
-	Using         []Column               `ddl:"parameter,parentheses,no_equals" sql:"USING"`
-}
-
 type TableColumnProjectionPolicy struct {
 	ProjectionPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"PROJECTION POLICY"`
 }
@@ -401,6 +396,11 @@ type IcebergTableAddColumnAction struct {
 	MaskingPolicy    *TableColumnMaskingPolicy    `ddl:"keyword"`
 	ProjectionPolicy *TableColumnProjectionPolicy `ddl:"keyword"`
 	Tag              []TagAssociation             `ddl:"keyword,parentheses" sql:"TAG"`
+}
+
+type TableColumnMaskingPolicy struct {
+	MaskingPolicy SchemaObjectIdentifier `ddl:"identifier" sql:"MASKING POLICY"`
+	Using         []Column               `ddl:"parameter,parentheses,no_equals" sql:"USING"`
 }
 
 type TableDropColumnAction struct {

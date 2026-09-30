@@ -22,7 +22,7 @@ const (
 	case_Tables_validation_Create_opts_ColumnsAndConstraints_Columns_DefaultValue_ExactlyOneValueSet_NoneSet                                        testCaseName = "validation_Create_opts_ColumnsAndConstraints_Columns_DefaultValue_ExactlyOneValueSet_NoneSet"
 	case_Tables_validation_Create_opts_ColumnsAndConstraints_Columns_DefaultValue_ExactlyOneValueSet_MoreThanOneSet                                 testCaseName = "validation_Create_opts_ColumnsAndConstraints_Columns_DefaultValue_ExactlyOneValueSet_MoreThanOneSet"
 	case_Tables_validation_Create_opts_ColumnsAndConstraints_Columns_DefaultValue_Identity_ConflictingFields                                        testCaseName = "validation_Create_opts_ColumnsAndConstraints_Columns_DefaultValue_Identity_ConflictingFields"
-	case_Tables_validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_Name_ValidIdentifier                                                  testCaseName = "validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_Name_ValidIdentifier"
+	case_Tables_validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_MaskingPolicy_ValidIdentifier                                         testCaseName = "validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_MaskingPolicy_ValidIdentifier"
 	case_Tables_validation_Create_ColumnsAndConstraints_Columns_Tag_ValidIdentifier                                                                 testCaseName = "validation_Create_ColumnsAndConstraints_Columns_Tag_ValidIdentifier"
 	case_Tables_validation_Create_ColumnsAndConstraints_OutOfLineConstraint_Columns_ValidateValueSet                                                testCaseName = "validation_Create_ColumnsAndConstraints_OutOfLineConstraint_Columns_ValidateValueSet"
 	case_Tables_validation_Create_opts_ColumnsAndConstraints_OutOfLineConstraint_ConflictingFields_Enforced_NotEnforced                             testCaseName = "validation_Create_opts_ColumnsAndConstraints_OutOfLineConstraint_ConflictingFields_Enforced_NotEnforced"
@@ -70,7 +70,7 @@ const (
 	case_Tables_validation_Alter_opts_ColumnAction_Add_DefaultValue_ExactlyOneValueSet_NoneSet                                                      testCaseName = "validation_Alter_opts_ColumnAction_Add_DefaultValue_ExactlyOneValueSet_NoneSet"
 	case_Tables_validation_Alter_opts_ColumnAction_Add_DefaultValue_ExactlyOneValueSet_MoreThanOneSet                                               testCaseName = "validation_Alter_opts_ColumnAction_Add_DefaultValue_ExactlyOneValueSet_MoreThanOneSet"
 	case_Tables_validation_Alter_opts_ColumnAction_Add_DefaultValue_Identity_ConflictingFields                                                      testCaseName = "validation_Alter_opts_ColumnAction_Add_DefaultValue_Identity_ConflictingFields"
-	case_Tables_validation_Alter_ColumnAction_Add_MaskingPolicy_Name_ValidIdentifier                                                                testCaseName = "validation_Alter_ColumnAction_Add_MaskingPolicy_Name_ValidIdentifier"
+	case_Tables_validation_Alter_ColumnAction_Add_MaskingPolicy_MaskingPolicy_ValidIdentifier                                                       testCaseName = "validation_Alter_ColumnAction_Add_MaskingPolicy_MaskingPolicy_ValidIdentifier"
 	case_Tables_validation_Alter_ColumnAction_Add_Tag_ValidIdentifier                                                                               testCaseName = "validation_Alter_ColumnAction_Add_Tag_ValidIdentifier"
 	case_Tables_validation_Alter_opts_ColumnAction_Alter_ExactlyOneValueSet_NoneSet                                                                 testCaseName = "validation_Alter_opts_ColumnAction_Alter_ExactlyOneValueSet_NoneSet"
 	case_Tables_validation_Alter_opts_ColumnAction_Alter_ExactlyOneValueSet_MoreThanOneSet                                                          testCaseName = "validation_Alter_opts_ColumnAction_Alter_ExactlyOneValueSet_MoreThanOneSet"
@@ -208,12 +208,12 @@ var tablesTests = TablesTestsContext{
 				},
 			},
 			validationCase[*CreateTableOptions]{
-				Name:        case_Tables_validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_Name_ValidIdentifier,
-				ExpectedErr: errInvalidIdentifier("CreateTableOptions.ColumnsAndConstraints.Columns[0].MaskingPolicy", "Name"),
+				Name:        case_Tables_validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_MaskingPolicy_ValidIdentifier,
+				ExpectedErr: errInvalidIdentifier("CreateTableOptions.ColumnsAndConstraints.Columns[0].MaskingPolicy", "MaskingPolicy"),
 				DefaultModify: func(opts *CreateTableOptions) {
 					opts.ColumnsAndConstraints.Columns = []TableColumn{{}}
-					opts.ColumnsAndConstraints.Columns[0].MaskingPolicy = &ColumnMaskingPolicy{}
-					opts.ColumnsAndConstraints.Columns[0].MaskingPolicy.Name = emptySchemaObjectIdentifier
+					opts.ColumnsAndConstraints.Columns[0].MaskingPolicy = &TableColumnMaskingPolicy{}
+					opts.ColumnsAndConstraints.Columns[0].MaskingPolicy.MaskingPolicy = emptySchemaObjectIdentifier
 				},
 			},
 			validationCase[*CreateTableOptions]{
@@ -667,13 +667,13 @@ var tablesTests = TablesTestsContext{
 				},
 			},
 			validationCase[*AlterTableOptions]{
-				Name:        case_Tables_validation_Alter_ColumnAction_Add_MaskingPolicy_Name_ValidIdentifier,
-				ExpectedErr: errInvalidIdentifier("AlterTableOptions.ColumnAction.Add.MaskingPolicy", "Name"),
+				Name:        case_Tables_validation_Alter_ColumnAction_Add_MaskingPolicy_MaskingPolicy_ValidIdentifier,
+				ExpectedErr: errInvalidIdentifier("AlterTableOptions.ColumnAction.Add.MaskingPolicy", "MaskingPolicy"),
 				DefaultModify: func(opts *AlterTableOptions) {
 					opts.ColumnAction = &TableColumnAction{}
 					opts.ColumnAction.Add = &TableColumnAddAction{}
-					opts.ColumnAction.Add.MaskingPolicy = &ColumnMaskingPolicy{}
-					opts.ColumnAction.Add.MaskingPolicy.Name = emptySchemaObjectIdentifier
+					opts.ColumnAction.Add.MaskingPolicy = &TableColumnMaskingPolicy{}
+					opts.ColumnAction.Add.MaskingPolicy.MaskingPolicy = emptySchemaObjectIdentifier
 				},
 			},
 			validationCase[*AlterTableOptions]{

@@ -41,6 +41,7 @@ const (
 	case_IcebergTables_validation_Create_opts_ColumnsAndConstraints_Columns_InlineConstraint_FK_ConflictingFields_Validate_Novalidate                        testCaseName = "validation_Create_opts_ColumnsAndConstraints_Columns_InlineConstraint_FK_ConflictingFields_Validate_Novalidate"
 	case_IcebergTables_validation_Create_opts_ColumnsAndConstraints_Columns_InlineConstraint_FK_ConflictingFields_Rely_Norely                                testCaseName = "validation_Create_opts_ColumnsAndConstraints_Columns_InlineConstraint_FK_ConflictingFields_Rely_Norely"
 	case_IcebergTables_validation_Create_opts_ColumnsAndConstraints_Columns_InlineConstraint_CH_ConflictingFields                                            testCaseName = "validation_Create_opts_ColumnsAndConstraints_Columns_InlineConstraint_CH_ConflictingFields"
+	case_IcebergTables_validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_MaskingPolicy_ValidIdentifier                                           testCaseName = "validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_MaskingPolicy_ValidIdentifier"
 	case_IcebergTables_validation_Create_ColumnsAndConstraints_Columns_Tag_ValidIdentifier                                                                   testCaseName = "validation_Create_ColumnsAndConstraints_Columns_Tag_ValidIdentifier"
 	case_IcebergTables_validation_Create_opts_ColumnsAndConstraints_OutOfLineConstraint_ExactlyOneValueSet_NoneSet                                           testCaseName = "validation_Create_opts_ColumnsAndConstraints_OutOfLineConstraint_ExactlyOneValueSet_NoneSet"
 	case_IcebergTables_validation_Create_opts_ColumnsAndConstraints_OutOfLineConstraint_ExactlyOneValueSet_MoreThanOneSet                                    testCaseName = "validation_Create_opts_ColumnsAndConstraints_OutOfLineConstraint_ExactlyOneValueSet_MoreThanOneSet"
@@ -112,6 +113,7 @@ const (
 	case_IcebergTables_validation_Alter_opts_AddColumnAction_InlineConstraint_FK_ConflictingFields_Validate_Novalidate                                       testCaseName = "validation_Alter_opts_AddColumnAction_InlineConstraint_FK_ConflictingFields_Validate_Novalidate"
 	case_IcebergTables_validation_Alter_opts_AddColumnAction_InlineConstraint_FK_ConflictingFields_Rely_Norely                                               testCaseName = "validation_Alter_opts_AddColumnAction_InlineConstraint_FK_ConflictingFields_Rely_Norely"
 	case_IcebergTables_validation_Alter_opts_AddColumnAction_InlineConstraint_CH_ConflictingFields                                                           testCaseName = "validation_Alter_opts_AddColumnAction_InlineConstraint_CH_ConflictingFields"
+	case_IcebergTables_validation_Alter_AddColumnAction_MaskingPolicy_MaskingPolicy_ValidIdentifier                                                          testCaseName = "validation_Alter_AddColumnAction_MaskingPolicy_MaskingPolicy_ValidIdentifier"
 	case_IcebergTables_validation_Alter_AddColumnAction_Tag_ValidIdentifier                                                                                  testCaseName = "validation_Alter_AddColumnAction_Tag_ValidIdentifier"
 	case_IcebergTables_validation_Alter_opts_AlterColumnAction_ExactlyOneValueSet_NoneSet                                                                    testCaseName = "validation_Alter_opts_AlterColumnAction_ExactlyOneValueSet_NoneSet"
 	case_IcebergTables_validation_Alter_opts_AlterColumnAction_ExactlyOneValueSet_MoreThanOneSet                                                             testCaseName = "validation_Alter_opts_AlterColumnAction_ExactlyOneValueSet_MoreThanOneSet"
@@ -412,6 +414,15 @@ var icebergTablesTests = IcebergTablesTestsContext{
 					opts.ColumnsAndConstraints.Columns[0].InlineConstraint.CH = &TableColumnInlineCH{}
 					opts.ColumnsAndConstraints.Columns[0].InlineConstraint.CH.EnableValidate = new(true)
 					opts.ColumnsAndConstraints.Columns[0].InlineConstraint.CH.EnableNovalidate = new(true)
+				},
+			},
+			validationCase[*CreateIcebergTableOptions]{
+				Name:        case_IcebergTables_validation_Create_ColumnsAndConstraints_Columns_MaskingPolicy_MaskingPolicy_ValidIdentifier,
+				ExpectedErr: errInvalidIdentifier("CreateIcebergTableOptions.ColumnsAndConstraints.Columns[0].MaskingPolicy", "MaskingPolicy"),
+				DefaultModify: func(opts *CreateIcebergTableOptions) {
+					opts.ColumnsAndConstraints.Columns = []IcebergTableColumn{{}}
+					opts.ColumnsAndConstraints.Columns[0].MaskingPolicy = &TableColumnMaskingPolicy{}
+					opts.ColumnsAndConstraints.Columns[0].MaskingPolicy.MaskingPolicy = emptySchemaObjectIdentifier
 				},
 			},
 			validationCase[*CreateIcebergTableOptions]{
@@ -1076,6 +1087,15 @@ var icebergTablesTests = IcebergTablesTestsContext{
 					opts.AddColumnAction.InlineConstraint.CH = &TableColumnInlineCH{}
 					opts.AddColumnAction.InlineConstraint.CH.EnableValidate = new(true)
 					opts.AddColumnAction.InlineConstraint.CH.EnableNovalidate = new(true)
+				},
+			},
+			validationCase[*AlterIcebergTableOptions]{
+				Name:        case_IcebergTables_validation_Alter_AddColumnAction_MaskingPolicy_MaskingPolicy_ValidIdentifier,
+				ExpectedErr: errInvalidIdentifier("AlterIcebergTableOptions.AddColumnAction.MaskingPolicy", "MaskingPolicy"),
+				DefaultModify: func(opts *AlterIcebergTableOptions) {
+					opts.AddColumnAction = &IcebergTableAddColumnAction{}
+					opts.AddColumnAction.MaskingPolicy = &TableColumnMaskingPolicy{}
+					opts.AddColumnAction.MaskingPolicy.MaskingPolicy = emptySchemaObjectIdentifier
 				},
 			},
 			validationCase[*AlterIcebergTableOptions]{

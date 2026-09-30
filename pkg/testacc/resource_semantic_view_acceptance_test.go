@@ -25,15 +25,15 @@ func TestAcc_SemanticView_basic(t *testing.T) {
 	id := testClient().Ids.RandomSchemaObjectIdentifier()
 	comment, changedComment := "comment 1", "comment 2"
 	table1, table1Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a3"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a4"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a3", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a4", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table1Cleanup)
 	table2, table2Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table2Cleanup)
 
@@ -516,8 +516,8 @@ func TestAcc_SemanticView_Rename(t *testing.T) {
 	newIdInDifferentDatabase := testClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaInSecondDatabase.ID())
 
 	table1, table1Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest(`"a1"`, sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"a2"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a1", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("a2", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table1Cleanup)
 

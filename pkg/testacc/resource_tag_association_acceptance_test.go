@@ -340,7 +340,7 @@ func TestAcc_TagAssociation_CompleteUseCase_Column(t *testing.T) {
 	t.Cleanup(tagCleanup)
 
 	table, tableCleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
 		*sdk.NewTableColumnRequest("TEST_COLUMN", sdk.DataTypeNumber),
 	})
 	t.Cleanup(tableCleanup)
@@ -497,14 +497,14 @@ func TestAcc_TagAssociationIssue1909(t *testing.T) {
 	t.Cleanup(tagCleanup)
 
 	table, tableCleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"test.column"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("test.column", sdk.DataTypeNumber),
 	})
 	t.Cleanup(tableCleanup)
 
 	table2, table2Cleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest(`"test.column"`, sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("test.column", sdk.DataTypeNumber),
 	})
 	t.Cleanup(table2Cleanup)
 

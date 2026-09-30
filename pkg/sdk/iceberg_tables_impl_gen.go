@@ -187,10 +187,7 @@ func (r *CreateIcebergTableRequest) toOpts() *CreateIcebergTableOptions {
 				}
 			}
 			if v.MaskingPolicy != nil {
-				columns[i].MaskingPolicy = &TableColumnMaskingPolicy{
-					MaskingPolicy: v.MaskingPolicy.MaskingPolicy,
-					Using:         v.MaskingPolicy.Using,
-				}
+				columns[i].MaskingPolicy = v.MaskingPolicy.toOpts()
 			}
 			if v.ProjectionPolicy != nil {
 				columns[i].ProjectionPolicy = &TableColumnProjectionPolicy{
@@ -464,10 +461,7 @@ func (r *AlterIcebergTableRequest) toOpts() *AlterIcebergTableOptions {
 			}
 		}
 		if r.AddColumnAction.MaskingPolicy != nil {
-			opts.AddColumnAction.MaskingPolicy = &TableColumnMaskingPolicy{
-				MaskingPolicy: r.AddColumnAction.MaskingPolicy.MaskingPolicy,
-				Using:         r.AddColumnAction.MaskingPolicy.Using,
-			}
+			opts.AddColumnAction.MaskingPolicy = r.AddColumnAction.MaskingPolicy.toOpts()
 		}
 		if r.AddColumnAction.ProjectionPolicy != nil {
 			opts.AddColumnAction.ProjectionPolicy = &TableColumnProjectionPolicy{
@@ -501,17 +495,10 @@ func (r *AlterIcebergTableRequest) toOpts() *AlterIcebergTableOptions {
 		opts.AlterColumnAction = alterColumnAction
 	}
 	if r.SetMaskingPolicyOnColumn != nil {
-		opts.SetMaskingPolicyOnColumn = &TableSetColumnMaskingPolicy{
-			Name:          r.SetMaskingPolicyOnColumn.Name,
-			MaskingPolicy: r.SetMaskingPolicyOnColumn.MaskingPolicy,
-			Using:         r.SetMaskingPolicyOnColumn.Using,
-			Force:         r.SetMaskingPolicyOnColumn.Force,
-		}
+		opts.SetMaskingPolicyOnColumn = r.SetMaskingPolicyOnColumn.toOpts()
 	}
 	if r.UnsetMaskingPolicyOnColumn != nil {
-		opts.UnsetMaskingPolicyOnColumn = &TableUnsetColumnMaskingPolicy{
-			Name: r.UnsetMaskingPolicyOnColumn.Name,
-		}
+		opts.UnsetMaskingPolicyOnColumn = r.UnsetMaskingPolicyOnColumn.toOpts()
 	}
 	if r.SetProjectionPolicyOnColumn != nil {
 		opts.SetProjectionPolicyOnColumn = &TableSetColumnProjectionPolicy{
@@ -736,10 +723,35 @@ func (r icebergTableDetailsRow) convert() (*IcebergTableDetails, error) {
 	return result, nil
 }
 
+func (r *TableColumnMaskingPolicyRequest) toOpts() *TableColumnMaskingPolicy {
+	opts := &TableColumnMaskingPolicy{
+		MaskingPolicy: r.MaskingPolicy,
+		Using:         r.Using,
+	}
+	return opts
+}
+
 func (r *TableDropColumnActionRequest) toOpts() *TableDropColumnAction {
 	opts := &TableDropColumnAction{
 		IfExists: r.IfExists,
 		Columns:  r.Columns,
+	}
+	return opts
+}
+
+func (r *TableSetColumnMaskingPolicyRequest) toOpts() *TableSetColumnMaskingPolicy {
+	opts := &TableSetColumnMaskingPolicy{
+		Name:          r.Name,
+		MaskingPolicy: r.MaskingPolicy,
+		Using:         r.Using,
+		Force:         r.Force,
+	}
+	return opts
+}
+
+func (r *TableUnsetColumnMaskingPolicyRequest) toOpts() *TableUnsetColumnMaskingPolicy {
+	opts := &TableUnsetColumnMaskingPolicy{
+		Name: r.Name,
 	}
 	return opts
 }
