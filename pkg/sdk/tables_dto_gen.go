@@ -51,7 +51,7 @@ type TableColumnRequest struct {
 	NotNull          *bool
 	Collate          *string
 	DefaultValue     *ColumnDefaultValueRequest
-	MaskingPolicy    *ColumnMaskingPolicyRequest
+	MaskingPolicy    *TableColumnMaskingPolicyRequest
 	Tag              []TagAssociation
 	Comment          *string
 }
@@ -66,12 +66,6 @@ type ColumnIdentityRequest struct {
 	Increment int // required
 	Order     *bool
 	Noorder   *bool
-}
-
-type ColumnMaskingPolicyRequest struct {
-	With  *bool
-	Name  SchemaObjectIdentifier // required
-	Using []string
 }
 
 type OutOfLineConstraintRequest struct {
@@ -209,8 +203,8 @@ type TableColumnActionRequest struct {
 	Add                *TableColumnAddActionRequest
 	Rename             *TableColumnRenameActionRequest
 	Alter              []TableColumnAlterActionRequest
-	SetMaskingPolicy   *TableColumnAlterSetMaskingPolicyActionRequest
-	UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyActionRequest
+	SetMaskingPolicy   *TableSetColumnMaskingPolicyRequest
+	UnsetMaskingPolicy *TableUnsetColumnMaskingPolicyRequest
 	SetTags            *TableColumnAlterSetTagsActionRequest
 	UnsetTags          *TableColumnAlterUnsetTagsActionRequest
 	DropColumns        *TableDropColumnActionRequest
@@ -223,7 +217,7 @@ type TableColumnAddActionRequest struct {
 	Collate          *string
 	DefaultValue     *ColumnDefaultValueRequest
 	InlineConstraint *TableColumnAddInlineConstraintRequest
-	MaskingPolicy    *ColumnMaskingPolicyRequest
+	MaskingPolicy    *TableColumnMaskingPolicyRequest
 	Tag              []TagAssociation
 	Comment          *string
 }
@@ -259,17 +253,6 @@ type TableColumnAlterActionRequest struct {
 type TableColumnNotNullConstraintRequest struct {
 	Set  *bool
 	Drop *bool
-}
-
-type TableColumnAlterSetMaskingPolicyActionRequest struct {
-	ColumnName        string                 // required
-	MaskingPolicyName SchemaObjectIdentifier // required
-	Using             []string
-	Force             *bool
-}
-
-type TableColumnAlterUnsetMaskingPolicyActionRequest struct {
-	ColumnName string // required
 }
 
 type TableColumnAlterSetTagsActionRequest struct {

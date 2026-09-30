@@ -221,7 +221,7 @@ func init() {
 		).
 		withExpectedSqlf(
 			case_Tables_sql_Create_basic,
-			`CREATE TABLE %s (FIRST_COLUMN VARCHAR)`, id.FullyQualifiedName(),
+			`CREATE TABLE %s ("FIRST_COLUMN" VARCHAR)`, id.FullyQualifiedName(),
 		).
 		withModifyAndExpectedSqlf(
 			case_Tables_sql_Create_all,
@@ -237,9 +237,9 @@ func init() {
 							Identity: &ColumnIdentity{Start: 10, Increment: 1, Order: new(true)},
 						},
 						NotNull: new(true),
-						MaskingPolicy: &ColumnMaskingPolicy{
-							Name:  maskingPolicyId,
-							Using: []string{"FOO", "BAR"},
+						MaskingPolicy: &TableColumnMaskingPolicy{
+							MaskingPolicy: maskingPolicyId,
+							Using:         []Column{{Value: "FOO"}, {Value: "BAR"}},
 						},
 						Tag: []TagAssociation{
 							{Name: columnTagId1, Value: "v1"},
@@ -291,7 +291,7 @@ func init() {
 				}
 				opts.Comment = &tableComment
 			},
-			`CREATE TABLE IF NOT EXISTS %s (FIRST_COLUMN VARCHAR CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING (FOO, BAR) TAG (%s = 'v1', %s = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY ("COLUMN_1", "COLUMN_2") REFERENCES %s ("COLUMN_3", "COLUMN_4") MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE ("COLUMN_1") ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG (%s = 'v1', %s = 'v2') COMMENT = '%s'`,
+			`CREATE TABLE IF NOT EXISTS %s ("FIRST_COLUMN" VARCHAR CONSTRAINT INLINE_CONSTRAINT PRIMARY KEY NOT NULL COLLATE 'de' IDENTITY START 10 INCREMENT 1 ORDER MASKING POLICY %s USING ("FOO", "BAR") TAG (%s = 'v1', %s = 'v2') COMMENT '%s', CONSTRAINT OUT_OF_LINE_CONSTRAINT FOREIGN KEY ("COLUMN_1", "COLUMN_2") REFERENCES %s ("COLUMN_3", "COLUMN_4") MATCH FULL ON UPDATE SET NULL ON DELETE RESTRICT, UNIQUE ("COLUMN_1") ENFORCED DEFERRABLE INITIALLY DEFERRED ENABLE RELY) CLUSTER BY (COLUMN_1, COLUMN_2) ENABLE_SCHEMA_EVOLUTION = true STAGE_FILE_FORMAT = (TYPE = CSV COMPRESSION = AUTO) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE) DATA_RETENTION_TIME_IN_DAYS = 10 MAX_DATA_EXTENSION_TIME_IN_DAYS = 100 CHANGE_TRACKING = true DEFAULT_DDL_COLLATION = 'en' ROW ACCESS POLICY %s ON (COLUMN_1, COLUMN_2) TAG (%s = 'v1', %s = 'v2') COMMENT = '%s'`,
 			id.FullyQualifiedName(),
 			maskingPolicyId.FullyQualifiedName(),
 			columnTagId1.FullyQualifiedName(),
@@ -309,7 +309,7 @@ func init() {
 				opts.OrReplace = new(true)
 				opts.CopyGrants = new(true)
 			},
-			`CREATE OR REPLACE TABLE %s (FIRST_COLUMN VARCHAR) COPY GRANTS`,
+			`CREATE OR REPLACE TABLE %s ("FIRST_COLUMN" VARCHAR) COPY GRANTS`,
 			id.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
@@ -317,7 +317,7 @@ func init() {
 			func(opts *CreateTableOptions) {
 				opts.StageCopyOptions = &LegacyTableCopyOptions{OnError: &LegacyTableCopyOnErrorOptions{SkipFile: new(fmt.Sprintf("SKIP_FILE_%d", 5))}}
 			},
-			`CREATE TABLE %s (FIRST_COLUMN VARCHAR) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_5)`,
+			`CREATE TABLE %s ("FIRST_COLUMN" VARCHAR) STAGE_COPY_OPTIONS = (ON_ERROR = SKIP_FILE_5)`,
 			id.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
@@ -325,7 +325,7 @@ func init() {
 			func(opts *CreateTableOptions) {
 				opts.StageCopyOptions = &LegacyTableCopyOptions{OnError: &LegacyTableCopyOnErrorOptions{SkipFile: new(fmt.Sprintf("'SKIP_FILE_%d%%'", 10))}}
 			},
-			`CREATE TABLE %s (FIRST_COLUMN VARCHAR) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`,
+			`CREATE TABLE %s ("FIRST_COLUMN" VARCHAR) STAGE_COPY_OPTIONS = (ON_ERROR = 'SKIP_FILE_10%%')`,
 			id.FullyQualifiedName(),
 		)
 
@@ -509,7 +509,7 @@ func init() {
 					},
 				}}
 			},
-			`ALTER TABLE %s ADD COLUMN IF NOT EXISTS NEXT_COLUMN VARCHAR COLLATE 'utf8' IDENTITY START 10 INCREMENT 1`, id.FullyQualifiedName(),
+			`ALTER TABLE %s ADD COLUMN IF NOT EXISTS "NEXT_COLUMN" VARCHAR COLLATE 'utf8' IDENTITY START 10 INCREMENT 1`, id.FullyQualifiedName(),
 		).
 		// https://github.com/snowflakedb/terraform-provider-snowflake/issues/4730
 		// Adding a column with a non-identity default used to panic in TableColumnActionRequest.toOpts.
@@ -523,7 +523,7 @@ func init() {
 					),
 				).toOpts()
 			},
-			`ALTER TABLE %s ADD COLUMN NEW_BOOLEAN_COLUMN BOOLEAN DEFAULT FALSE`, id.FullyQualifiedName(),
+			`ALTER TABLE %s ADD COLUMN "NEW_BOOLEAN_COLUMN" BOOLEAN DEFAULT FALSE`, id.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
 			"sql_Alter_addColumn_identityDefault",
@@ -535,7 +535,7 @@ func init() {
 					),
 				).toOpts()
 			},
-			`ALTER TABLE %s ADD COLUMN NEXT_COLUMN VARCHAR IDENTITY START 10 INCREMENT 1`, id.FullyQualifiedName(),
+			`ALTER TABLE %s ADD COLUMN "NEXT_COLUMN" VARCHAR IDENTITY START 10 INCREMENT 1`, id.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
 			"sql_Alter_renameColumn",
@@ -558,28 +558,28 @@ func init() {
 					{Name: "COLUMN_2", NotNullConstraint: &TableColumnNotNullConstraint{Drop: new(true)}},
 				}}
 			},
-			`ALTER TABLE %s ALTER COLUMN COLUMN_1 DROP DEFAULT, COLUMN COLUMN_1 SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN COLUMN_1 UNSET COMMENT, COLUMN COLUMN_2 DROP DEFAULT, COLUMN COLUMN_2 SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN COLUMN_2 COMMENT 'comment', COLUMN COLUMN_2 SET DATA TYPE VARCHAR COLLATE 'utf8', COLUMN COLUMN_2 DROP NOT NULL`,
+			`ALTER TABLE %s ALTER COLUMN "COLUMN_1" DROP DEFAULT, COLUMN "COLUMN_1" SET DEFAULT SEQUENCE_1.NEXTVAL, COLUMN "COLUMN_1" UNSET COMMENT, COLUMN "COLUMN_2" DROP DEFAULT, COLUMN "COLUMN_2" SET DEFAULT SEQUENCE_2.NEXTVAL, COLUMN "COLUMN_2" COMMENT 'comment', COLUMN "COLUMN_2" SET DATA TYPE VARCHAR COLLATE 'utf8', COLUMN "COLUMN_2" DROP NOT NULL`,
 			id.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
 			"sql_Alter_setMaskingPolicyOnColumn",
 			func(opts *AlterTableOptions) {
-				opts.ColumnAction = &TableColumnAction{SetMaskingPolicy: &TableColumnAlterSetMaskingPolicyAction{
-					ColumnName:        "COLUMN_1",
-					MaskingPolicyName: maskingPolicyId,
-					Using:             []string{"FOO", "BAR"},
-					Force:             new(true),
+				opts.ColumnAction = &TableColumnAction{SetMaskingPolicy: &TableSetColumnMaskingPolicy{
+					Name:          "COLUMN_1",
+					MaskingPolicy: maskingPolicyId,
+					Using:         []Column{{Value: "FOO"}, {Value: "BAR"}},
+					Force:         new(true),
 				}}
 			},
-			`ALTER TABLE %s ALTER COLUMN COLUMN_1 SET MASKING POLICY %s USING (FOO, BAR) FORCE`,
+			`ALTER TABLE %s ALTER COLUMN "COLUMN_1" SET MASKING POLICY %s USING ("FOO", "BAR") FORCE`,
 			id.FullyQualifiedName(), maskingPolicyId.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
 			"sql_Alter_unsetMaskingPolicyOnColumn",
 			func(opts *AlterTableOptions) {
-				opts.ColumnAction = &TableColumnAction{UnsetMaskingPolicy: &TableColumnAlterUnsetMaskingPolicyAction{ColumnName: "COLUMN_1"}}
+				opts.ColumnAction = &TableColumnAction{UnsetMaskingPolicy: &TableUnsetColumnMaskingPolicy{Name: "COLUMN_1"}}
 			},
-			`ALTER TABLE %s ALTER COLUMN COLUMN_1 UNSET MASKING POLICY`, id.FullyQualifiedName(),
+			`ALTER TABLE %s ALTER COLUMN "COLUMN_1" UNSET MASKING POLICY`, id.FullyQualifiedName(),
 		).
 		withAdditionalSqlCasef(
 			"sql_Alter_setTagsOnColumn",

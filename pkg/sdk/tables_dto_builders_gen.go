@@ -137,7 +137,7 @@ func (s *TableColumnRequest) WithDefaultValue(defaultValue ColumnDefaultValueReq
 	return s
 }
 
-func (s *TableColumnRequest) WithMaskingPolicy(maskingPolicy ColumnMaskingPolicyRequest) *TableColumnRequest {
+func (s *TableColumnRequest) WithMaskingPolicy(maskingPolicy TableColumnMaskingPolicyRequest) *TableColumnRequest {
 	s.MaskingPolicy = &maskingPolicy
 	return s
 }
@@ -184,24 +184,6 @@ func (s *ColumnIdentityRequest) WithOrder(order bool) *ColumnIdentityRequest {
 
 func (s *ColumnIdentityRequest) WithNoorder(noorder bool) *ColumnIdentityRequest {
 	s.Noorder = &noorder
-	return s
-}
-
-func NewColumnMaskingPolicyRequest(
-	name SchemaObjectIdentifier,
-) *ColumnMaskingPolicyRequest {
-	s := ColumnMaskingPolicyRequest{}
-	s.Name = name
-	return &s
-}
-
-func (s *ColumnMaskingPolicyRequest) WithWith(with bool) *ColumnMaskingPolicyRequest {
-	s.With = &with
-	return s
-}
-
-func (s *ColumnMaskingPolicyRequest) WithUsing(using []string) *ColumnMaskingPolicyRequest {
-	s.Using = using
 	return s
 }
 
@@ -697,12 +679,12 @@ func (s *TableColumnActionRequest) WithAlter(alter []TableColumnAlterActionReque
 	return s
 }
 
-func (s *TableColumnActionRequest) WithSetMaskingPolicy(setMaskingPolicy TableColumnAlterSetMaskingPolicyActionRequest) *TableColumnActionRequest {
+func (s *TableColumnActionRequest) WithSetMaskingPolicy(setMaskingPolicy TableSetColumnMaskingPolicyRequest) *TableColumnActionRequest {
 	s.SetMaskingPolicy = &setMaskingPolicy
 	return s
 }
 
-func (s *TableColumnActionRequest) WithUnsetMaskingPolicy(unsetMaskingPolicy TableColumnAlterUnsetMaskingPolicyActionRequest) *TableColumnActionRequest {
+func (s *TableColumnActionRequest) WithUnsetMaskingPolicy(unsetMaskingPolicy TableUnsetColumnMaskingPolicyRequest) *TableColumnActionRequest {
 	s.UnsetMaskingPolicy = &unsetMaskingPolicy
 	return s
 }
@@ -752,7 +734,7 @@ func (s *TableColumnAddActionRequest) WithInlineConstraint(inlineConstraint Tabl
 	return s
 }
 
-func (s *TableColumnAddActionRequest) WithMaskingPolicy(maskingPolicy ColumnMaskingPolicyRequest) *TableColumnAddActionRequest {
+func (s *TableColumnAddActionRequest) WithMaskingPolicy(maskingPolicy TableColumnMaskingPolicyRequest) *TableColumnAddActionRequest {
 	s.MaskingPolicy = &maskingPolicy
 	return s
 }
@@ -866,34 +848,6 @@ func (s *TableColumnNotNullConstraintRequest) WithSet(set bool) *TableColumnNotN
 func (s *TableColumnNotNullConstraintRequest) WithDrop(drop bool) *TableColumnNotNullConstraintRequest {
 	s.Drop = &drop
 	return s
-}
-
-func NewTableColumnAlterSetMaskingPolicyActionRequest(
-	columnName string,
-	maskingPolicyName SchemaObjectIdentifier,
-) *TableColumnAlterSetMaskingPolicyActionRequest {
-	s := TableColumnAlterSetMaskingPolicyActionRequest{}
-	s.ColumnName = columnName
-	s.MaskingPolicyName = maskingPolicyName
-	return &s
-}
-
-func (s *TableColumnAlterSetMaskingPolicyActionRequest) WithUsing(using []string) *TableColumnAlterSetMaskingPolicyActionRequest {
-	s.Using = using
-	return s
-}
-
-func (s *TableColumnAlterSetMaskingPolicyActionRequest) WithForce(force bool) *TableColumnAlterSetMaskingPolicyActionRequest {
-	s.Force = &force
-	return s
-}
-
-func NewTableColumnAlterUnsetMaskingPolicyActionRequest(
-	columnName string,
-) *TableColumnAlterUnsetMaskingPolicyActionRequest {
-	s := TableColumnAlterUnsetMaskingPolicyActionRequest{}
-	s.ColumnName = columnName
-	return &s
 }
 
 func NewTableColumnAlterSetTagsActionRequest(

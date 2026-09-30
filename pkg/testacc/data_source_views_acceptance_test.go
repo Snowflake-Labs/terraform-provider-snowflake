@@ -20,8 +20,8 @@ import (
 
 func TestAcc_Views_CompleteUseCase(t *testing.T) {
 	table, tableCleanup := testClient().Table.CreateWithColumns(t, []sdk.TableColumnRequest{
-		*sdk.NewTableColumnRequest("id", sdk.DataTypeNumber),
-		*sdk.NewTableColumnRequest("foo", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("ID", sdk.DataTypeNumber),
+		*sdk.NewTableColumnRequest("FOO", sdk.DataTypeNumber),
 	})
 	t.Cleanup(tableCleanup)
 

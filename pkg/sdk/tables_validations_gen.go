@@ -43,8 +43,8 @@ func (opts *CreateTableOptions) validate() error {
 					}
 				}
 				if valueSet(column.MaskingPolicy) {
-					if !ValidObjectIdentifier(column.MaskingPolicy.Name) {
-						errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateTableOptions.ColumnsAndConstraints.Columns[%d].MaskingPolicy", columnIdx), "Name"))
+					if !ValidObjectIdentifier(column.MaskingPolicy.MaskingPolicy) {
+						errs = append(errs, errInvalidIdentifier(fmt.Sprintf("CreateTableOptions.ColumnsAndConstraints.Columns[%d].MaskingPolicy", columnIdx), "MaskingPolicy"))
 					}
 				}
 				if valueSet(column.Tag) {
@@ -192,8 +192,8 @@ func (opts *AlterTableOptions) validate() error {
 				}
 			}
 			if valueSet(opts.ColumnAction.Add.MaskingPolicy) {
-				if !ValidObjectIdentifier(opts.ColumnAction.Add.MaskingPolicy.Name) {
-					errs = append(errs, errInvalidIdentifier("AlterTableOptions.ColumnAction.Add.MaskingPolicy", "Name"))
+				if !ValidObjectIdentifier(opts.ColumnAction.Add.MaskingPolicy.MaskingPolicy) {
+					errs = append(errs, errInvalidIdentifier("AlterTableOptions.ColumnAction.Add.MaskingPolicy", "MaskingPolicy"))
 				}
 			}
 			if valueSet(opts.ColumnAction.Add.Tag) {

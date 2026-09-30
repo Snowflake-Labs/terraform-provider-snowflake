@@ -11,13 +11,15 @@ var tableSetColumnMaskingPolicy = g.NewQueryStruct("TableSetColumnMaskingPolicy"
 	SQL("SET").
 	Identifier("MaskingPolicy", g.KindOfT[sdkcommons.SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
 	ListAssignment("USING", "Column", g.ParameterOptions().NoEquals().Parentheses()).
-	OptionalSQL("FORCE")
+	OptionalSQL("FORCE").
+	WithSharedToOpts()
 
 var tableUnsetColumnMaskingPolicy = g.NewQueryStruct("TableUnsetColumnMaskingPolicy").
 	SQL("ALTER COLUMN").
 	Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 	SQL("UNSET").
-	SQL("MASKING POLICY")
+	SQL("MASKING POLICY").
+	WithSharedToOpts()
 
 var tableSetColumnProjectionPolicy = g.NewQueryStruct("TableSetColumnProjectionPolicy").
 	SQL("ALTER COLUMN").
@@ -49,7 +51,9 @@ var TableSearchMethodEnumDef = g.NewEnum(
 
 var tableColumnMaskingPolicy = g.NewQueryStruct("TableColumnMaskingPolicy").
 	Identifier("MaskingPolicy", g.KindOfT[sdkcommons.SchemaObjectIdentifier](), g.IdentifierOptions().SQL("MASKING POLICY").Required()).
-	ListAssignment("USING", "Column", g.ParameterOptions().NoEquals().Parentheses())
+	ListAssignment("USING", "Column", g.ParameterOptions().NoEquals().Parentheses()).
+	WithValidation(g.ValidIdentifier, "MaskingPolicy").
+	WithSharedToOpts()
 
 var tableColumnProjectionPolicy = g.NewQueryStruct("TableColumnProjectionPolicy").
 	Identifier("ProjectionPolicy", g.KindOfT[sdkcommons.SchemaObjectIdentifier](), g.IdentifierOptions().SQL("PROJECTION POLICY").Required())
@@ -189,13 +193,13 @@ func tableColumnsAndConstraints() *g.QueryStruct {
 
 func tableColumn() *g.QueryStruct {
 	return g.NewQueryStruct("TableColumn").
-		Text("Name", g.KeywordOptions().Required()).
+		Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 		PredefinedQueryStructField("ColumnType", g.KindOfT[sdkcommons.DataType](), g.KeywordOptions().Required()).
 		PredefinedQueryStructField("InlineConstraint", g.KindOfTPointer[sdkcommons.ColumnInlineConstraint](), g.KeywordOptions()).
 		OptionalSQL("NOT NULL").
 		OptionalTextAssignment("COLLATE", g.ParameterOptions().NoEquals().SingleQuotes()).
 		OptionalQueryStructField("DefaultValue", tableColumnDefaultValue(), g.KeywordOptions()).
-		OptionalQueryStructField("MaskingPolicy", legacyTableColumnMaskingPolicy(), g.KeywordOptions()).
+		OptionalSharedQueryStructField("MaskingPolicy", tableColumnMaskingPolicy, g.KeywordOptions()).
 		OptionalTags().
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().NoEquals().SingleQuotes())
 }
@@ -214,18 +218,6 @@ func tableColumnIdentity() *g.QueryStruct {
 		OptionalSQL("ORDER").
 		OptionalSQL("NOORDER").
 		WithValidation(g.ConflictingFields, "Order", "Noorder")
-}
-
-// legacyTableColumnMaskingPolicy duplicates tableColumnMaskingPolicy: legacy uses []string rather than []Column
-// (so column names are not double-quoted).
-// TODO[SNOW-1007542]: reuse tableColumnMaskingPolicy
-func legacyTableColumnMaskingPolicy() *g.QueryStruct {
-	return g.NewQueryStruct("ColumnMaskingPolicy").
-		OptionalSQL("WITH").
-		SQL("MASKING POLICY").
-		Identifier("Name", g.KindOfT[sdkcommons.SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
-		PredefinedQueryStructField("Using", "[]string", g.KeywordOptions().Parentheses().SQL("USING")).
-		WithValidation(g.ValidIdentifier, "Name")
 }
 
 // legacyTableOutOfLineConstraint duplicates tableOutOfLineConstraint: legacy does not double-quote the constraint name.
@@ -332,8 +324,8 @@ func tableColumnAction() *g.QueryStruct {
 		OptionalQueryStructField("Add", tableColumnAddAction(), g.KeywordOptions().SQL("ADD")).
 		OptionalQueryStructField("Rename", legacyTableColumnRenameAction(), g.KeywordOptions()).
 		ListQueryStructField("Alter", tableColumnAlterAction(), g.KeywordOptions().SQL("ALTER")).
-		OptionalQueryStructField("SetMaskingPolicy", legacyTableColumnAlterSetMaskingPolicyAction(), g.KeywordOptions()).
-		OptionalQueryStructField("UnsetMaskingPolicy", legacyTableColumnAlterUnsetMaskingPolicyAction(), g.KeywordOptions()).
+		OptionalSharedQueryStructField("SetMaskingPolicy", tableSetColumnMaskingPolicy, g.KeywordOptions()).
+		OptionalSharedQueryStructField("UnsetMaskingPolicy", tableUnsetColumnMaskingPolicy, g.KeywordOptions()).
 		OptionalQueryStructField("SetTags", legacyTableColumnAlterSetTagsAction(), g.KeywordOptions()).
 		OptionalQueryStructField("UnsetTags", legacyTableColumnAlterUnsetTagsAction(), g.KeywordOptions()).
 		OptionalSharedQueryStructField("DropColumns", tableDropColumnAction, g.KeywordOptions()).
@@ -344,12 +336,12 @@ func tableColumnAddAction() *g.QueryStruct {
 	return g.NewQueryStruct("TableColumnAddAction").
 		SQL("COLUMN").
 		IfNotExists().
-		Text("Name", g.KeywordOptions().Required()).
+		Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 		PredefinedQueryStructField("ColumnType", g.KindOfT[sdkcommons.DataType](), g.KeywordOptions().Required()).
 		OptionalTextAssignment("COLLATE", g.ParameterOptions().NoEquals().SingleQuotes()).
 		OptionalQueryStructField("DefaultValue", tableColumnDefaultValue(), g.KeywordOptions()).
 		OptionalQueryStructField("InlineConstraint", legacyTableColumnAddInlineConstraint(), g.KeywordOptions()).
-		OptionalQueryStructField("MaskingPolicy", legacyTableColumnMaskingPolicy(), g.KeywordOptions()).
+		OptionalSharedQueryStructField("MaskingPolicy", tableColumnMaskingPolicy, g.KeywordOptions()).
 		OptionalTags().
 		OptionalTextAssignment("COMMENT", g.ParameterOptions().NoEquals().SingleQuotes())
 }
@@ -383,7 +375,7 @@ func legacyTableColumnRenameAction() *g.QueryStruct {
 func tableColumnAlterAction() *g.QueryStruct {
 	return g.NewQueryStruct("TableColumnAlterAction").
 		SQL("COLUMN").
-		Text("Name", g.KeywordOptions().Required()).
+		Text("Name", g.KeywordOptions().Required().DoubleQuotes()).
 		OptionalSQL("DROP DEFAULT").
 		WithField(g.OptionalEnumLegacy[sdkcommons.SequenceName]("SetDefault", g.ParameterOptions().NoEquals().SQL("SET DEFAULT"))).
 		OptionalInlineQueryStructField("NotNullConstraint", tableColumnNotNullConstraint()).
@@ -398,29 +390,6 @@ func tableColumnNotNullConstraint() *g.QueryStruct {
 	return g.NewQueryStruct("TableColumnNotNullConstraint").
 		OptionalSQLWithCustomFieldName("Set", "SET NOT NULL").
 		OptionalSQLWithCustomFieldName("Drop", "DROP NOT NULL")
-}
-
-// legacyTableColumnAlterSetMaskingPolicyAction duplicates tableSetColumnMaskingPolicy: legacy does
-// not double-quote the column name, and takes Using as []string rather than []Column.
-// TODO[SNOW-1007542]: reuse tableSetColumnMaskingPolicy
-func legacyTableColumnAlterSetMaskingPolicyAction() *g.QueryStruct {
-	return g.NewQueryStruct("TableColumnAlterSetMaskingPolicyAction").
-		SQL("ALTER COLUMN").
-		Text("ColumnName", g.KeywordOptions().Required()).
-		SQL("SET MASKING POLICY").
-		Identifier("MaskingPolicyName", g.KindOfT[sdkcommons.SchemaObjectIdentifier](), g.IdentifierOptions().Required()).
-		PredefinedQueryStructField("Using", "[]string", g.KeywordOptions().Parentheses().SQL("USING")).
-		OptionalSQL("FORCE")
-}
-
-// legacyTableColumnAlterUnsetMaskingPolicyAction duplicates tableUnsetColumnMaskingPolicy: legacy
-// does not double-quote the column name.
-// TODO[SNOW-1007542]: reuse tableUnsetColumnMaskingPolicy
-func legacyTableColumnAlterUnsetMaskingPolicyAction() *g.QueryStruct {
-	return g.NewQueryStruct("TableColumnAlterUnsetMaskingPolicyAction").
-		SQL("ALTER COLUMN").
-		Text("ColumnName", g.KeywordOptions().Required()).
-		SQL("UNSET MASKING POLICY")
 }
 
 // legacyTableColumnAlterSetTagsAction duplicates tableSetColumnTags: legacy does not double-quote

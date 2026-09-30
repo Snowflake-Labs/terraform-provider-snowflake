@@ -59,15 +59,15 @@ type CreateTableColumnsAndConstraints struct {
 }
 
 type TableColumn struct {
-	Name             string                  `ddl:"keyword"`
-	ColumnType       DataType                `ddl:"keyword"`
-	InlineConstraint *ColumnInlineConstraint `ddl:"keyword"`
-	NotNull          *bool                   `ddl:"keyword" sql:"NOT NULL"`
-	Collate          *string                 `ddl:"parameter,single_quotes,no_equals" sql:"COLLATE"`
-	DefaultValue     *ColumnDefaultValue     `ddl:"keyword"`
-	MaskingPolicy    *ColumnMaskingPolicy    `ddl:"keyword"`
-	Tag              []TagAssociation        `ddl:"keyword,parentheses" sql:"TAG"`
-	Comment          *string                 `ddl:"parameter,single_quotes,no_equals" sql:"COMMENT"`
+	Name             string                    `ddl:"keyword,double_quotes"`
+	ColumnType       DataType                  `ddl:"keyword"`
+	InlineConstraint *ColumnInlineConstraint   `ddl:"keyword"`
+	NotNull          *bool                     `ddl:"keyword" sql:"NOT NULL"`
+	Collate          *string                   `ddl:"parameter,single_quotes,no_equals" sql:"COLLATE"`
+	DefaultValue     *ColumnDefaultValue       `ddl:"keyword"`
+	MaskingPolicy    *TableColumnMaskingPolicy `ddl:"keyword"`
+	Tag              []TagAssociation          `ddl:"keyword,parentheses" sql:"TAG"`
+	Comment          *string                   `ddl:"parameter,single_quotes,no_equals" sql:"COMMENT"`
 }
 
 type ColumnDefaultValue struct {
@@ -80,13 +80,6 @@ type ColumnIdentity struct {
 	Increment int   `ddl:"parameter,no_quotes,no_equals" sql:"INCREMENT"`
 	Order     *bool `ddl:"keyword" sql:"ORDER"`
 	Noorder   *bool `ddl:"keyword" sql:"NOORDER"`
-}
-
-type ColumnMaskingPolicy struct {
-	With          *bool                  `ddl:"keyword" sql:"WITH"`
-	maskingPolicy bool                   `ddl:"static" sql:"MASKING POLICY"`
-	Name          SchemaObjectIdentifier `ddl:"identifier"`
-	Using         []string               `ddl:"keyword,parentheses" sql:"USING"`
 }
 
 type OutOfLineConstraint struct {
@@ -238,25 +231,25 @@ type TableReclusterChangeState struct {
 }
 
 type TableColumnAction struct {
-	Add                *TableColumnAddAction                     `ddl:"keyword" sql:"ADD"`
-	Rename             *TableColumnRenameAction                  `ddl:"keyword"`
-	Alter              []TableColumnAlterAction                  `ddl:"keyword" sql:"ALTER"`
-	SetMaskingPolicy   *TableColumnAlterSetMaskingPolicyAction   `ddl:"keyword"`
-	UnsetMaskingPolicy *TableColumnAlterUnsetMaskingPolicyAction `ddl:"keyword"`
-	SetTags            *TableColumnAlterSetTagsAction            `ddl:"keyword"`
-	UnsetTags          *TableColumnAlterUnsetTagsAction          `ddl:"keyword"`
-	DropColumns        *TableDropColumnAction                    `ddl:"keyword"`
+	Add                *TableColumnAddAction            `ddl:"keyword" sql:"ADD"`
+	Rename             *TableColumnRenameAction         `ddl:"keyword"`
+	Alter              []TableColumnAlterAction         `ddl:"keyword" sql:"ALTER"`
+	SetMaskingPolicy   *TableSetColumnMaskingPolicy     `ddl:"keyword"`
+	UnsetMaskingPolicy *TableUnsetColumnMaskingPolicy   `ddl:"keyword"`
+	SetTags            *TableColumnAlterSetTagsAction   `ddl:"keyword"`
+	UnsetTags          *TableColumnAlterUnsetTagsAction `ddl:"keyword"`
+	DropColumns        *TableDropColumnAction           `ddl:"keyword"`
 }
 
 type TableColumnAddAction struct {
 	column           bool                            `ddl:"static" sql:"COLUMN"`
 	IfNotExists      *bool                           `ddl:"keyword" sql:"IF NOT EXISTS"`
-	Name             string                          `ddl:"keyword"`
+	Name             string                          `ddl:"keyword,double_quotes"`
 	ColumnType       DataType                        `ddl:"keyword"`
 	Collate          *string                         `ddl:"parameter,single_quotes,no_equals" sql:"COLLATE"`
 	DefaultValue     *ColumnDefaultValue             `ddl:"keyword"`
 	InlineConstraint *TableColumnAddInlineConstraint `ddl:"keyword"`
-	MaskingPolicy    *ColumnMaskingPolicy            `ddl:"keyword"`
+	MaskingPolicy    *TableColumnMaskingPolicy       `ddl:"keyword"`
 	Tag              []TagAssociation                `ddl:"keyword,parentheses" sql:"TAG"`
 	Comment          *string                         `ddl:"parameter,single_quotes,no_equals" sql:"COMMENT"`
 }
@@ -280,7 +273,7 @@ type TableColumnRenameAction struct {
 
 type TableColumnAlterAction struct {
 	column            bool                          `ddl:"static" sql:"COLUMN"`
-	Name              string                        `ddl:"keyword"`
+	Name              string                        `ddl:"keyword,double_quotes"`
 	DropDefault       *bool                         `ddl:"keyword" sql:"DROP DEFAULT"`
 	SetDefault        *SequenceName                 `ddl:"parameter,no_equals" sql:"SET DEFAULT"`
 	NotNullConstraint *TableColumnNotNullConstraint `ddl:"-"`
@@ -293,21 +286,6 @@ type TableColumnAlterAction struct {
 type TableColumnNotNullConstraint struct {
 	Set  *bool `ddl:"keyword" sql:"SET NOT NULL"`
 	Drop *bool `ddl:"keyword" sql:"DROP NOT NULL"`
-}
-
-type TableColumnAlterSetMaskingPolicyAction struct {
-	alterColumn       bool                   `ddl:"static" sql:"ALTER COLUMN"`
-	ColumnName        string                 `ddl:"keyword"`
-	setMaskingPolicy  bool                   `ddl:"static" sql:"SET MASKING POLICY"`
-	MaskingPolicyName SchemaObjectIdentifier `ddl:"identifier"`
-	Using             []string               `ddl:"keyword,parentheses" sql:"USING"`
-	Force             *bool                  `ddl:"keyword" sql:"FORCE"`
-}
-
-type TableColumnAlterUnsetMaskingPolicyAction struct {
-	alterColumn        bool   `ddl:"static" sql:"ALTER COLUMN"`
-	ColumnName         string `ddl:"keyword"`
-	unsetMaskingPolicy bool   `ddl:"static" sql:"UNSET MASKING POLICY"`
 }
 
 type TableColumnAlterSetTagsAction struct {
