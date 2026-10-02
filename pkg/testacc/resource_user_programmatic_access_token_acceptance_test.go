@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -540,12 +541,12 @@ func TestAcc_UserProgrammaticAccessToken_CompleteUseCase_Rotating(t *testing.T) 
 					assertTokenNotRotated,
 				),
 			},
-			// do not rotate (and do not plan an update) when only expire_rotated_token_after_hours is changed
+			// do not rotate when only expire_rotated_token_after_hours is changed
 			{
 				Config: accconfig.FromModels(t, modelWithExpireRotatedTokenAfterHours),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(modelWithExpireRotatedTokenAfterHours.ResourceReference(), plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(modelWithExpireRotatedTokenAfterHours.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectComputed(modelWithExpireRotatedTokenAfterHours.ResourceReference(), "token", false),
 						planchecks.ExpectComputed(modelWithExpireRotatedTokenAfterHours.ResourceReference(), "rotated_token_name", false),
 					},
@@ -693,13 +694,14 @@ func TestAcc_UserProgrammaticAccessToken_RotatingWithExpireRotatedTokenAfterHour
 					return nil
 				}),
 			},
-			// 168 hours exceeds the remaining lifetime of the token (< 24 hours), so the provider must clamp it
+			// 168 hours exceeds the remaining lifetime of the token (< 24 hours), so the provider must omit it
 			{
 				Config: accconfig.FromModels(t, modelRotated),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(modelRotated.ResourceReference(), plancheck.ResourceActionUpdate),
 						planchecks.ExpectComputed(modelRotated.ResourceReference(), "token", true),
+						planchecks.ExpectComputed(modelRotated.ResourceReference(), "rotated_token_name", true),
 					},
 				},
 				Check: assertThat(
@@ -709,6 +711,20 @@ func TestAcc_UserProgrammaticAccessToken_RotatingWithExpireRotatedTokenAfterHour
 					assert.Check(resource.TestCheckResourceAttrWith(modelRotated.ResourceReference(), "token", func(value string) error {
 						if value == "" || value == token {
 							return fmt.Errorf("token was not rotated")
+						}
+						return nil
+					})),
+					// the old secret must stay valid until (about) the end of its lifetime, not be revoked
+					assert.Check(resource.TestCheckResourceAttrWith(modelRotated.ResourceReference(), "rotated_token_name", func(value string) error {
+						if value == "" {
+							return fmt.Errorf("rotated_token_name is empty")
+						}
+						rotated := testClient().User.ShowProgrammaticAccessToken(t, user.ID(), sdk.NewAccountObjectIdentifier(value))
+						if rotated.Status != sdk.ProgrammaticAccessTokenStatusActive {
+							return fmt.Errorf("the rotated token is not active, status: %s", rotated.Status)
+						}
+						if !rotated.ExpiresAt.After(time.Now()) {
+							return fmt.Errorf("the rotated token is already expired: %s", rotated.ExpiresAt)
 						}
 						return nil
 					})),
