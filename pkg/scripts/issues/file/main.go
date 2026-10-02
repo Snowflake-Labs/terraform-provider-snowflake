@@ -47,7 +47,7 @@ func processIssues(issues []i.Issue) []ProcessedIssue {
 			ID:                   issue.Number,
 			URL:                  issue.HtmlUrl,
 			NamedURL:             fmt.Sprintf(`=HYPERLINK("%s","#%d")`, issue.HtmlUrl, issue.Number),
-			Title:                issue.Title,
+			Title:                sanitizeIssueTitle(issue.Title),
 			ProviderVersion:      providerVersion,
 			ProviderVersionMinor: providerVersionMinor,
 			TerraformVersion:     terraformVersion,
@@ -61,6 +61,10 @@ func processIssues(issues []i.Issue) []ProcessedIssue {
 		processedIssues = append(processedIssues, processed)
 	}
 	return processedIssues
+}
+
+func sanitizeIssueTitle(title string) string {
+	return strings.TrimLeft(title, "=+-@\t\r\n")
 }
 
 /*
