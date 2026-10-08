@@ -361,7 +361,7 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "data_retention_time_in_days", "1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "change_tracking", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "comment", "Terraform acceptance test"),
-					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.#", "4"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.name", "COL1"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.nullable", "true"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.0.comment", "other comment"),
@@ -373,6 +373,10 @@ func TestAcc_Table(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.2.type", "NUMBER(38,0)"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.2.nullable", "false"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.2.comment", "extra"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.3.name", "col4"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.3.type", "NUMBER(38,0)"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.3.nullable", "false"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table2", "column.3.comment", "extra"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "cluster_by.0"),
 					resource.TestCheckNoResourceAttr("snowflake_table.test_table2", "primary_key.0"),
 				),
@@ -794,6 +798,12 @@ resource "snowflake_table" "test_table2" {
 	}
 	column {
 		name     = "COL3"
+		type     = "NUMBER(38,0)"
+		nullable = false
+		comment  = "extra"
+	}
+	column {
+		name     = "col4"
 		type     = "NUMBER(38,0)"
 		nullable = false
 		comment  = "extra"
@@ -1445,6 +1455,13 @@ func TestAcc_Table_MaskingPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", maskingPolicy2.ID().FullyQualifiedName()),
 				),
 			},
+			{
+				Config: tableWithoutMaskingPolicy(tableId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.0.masking_policy", ""),
+				),
+			},
 		},
 	})
 }
@@ -1464,6 +1481,23 @@ resource "snowflake_table" "test_table" {
 	}
 }
 `, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name(), maskingPolicyId.DatabaseName(), maskingPolicyId.SchemaName(), maskingPolicyId.Name())
+}
+
+func tableWithoutMaskingPolicy(tableId sdk.SchemaObjectIdentifier) string {
+	return fmt.Sprintf(`
+resource "snowflake_table" "test_table" {
+	database = "%[1]s"
+	schema   = "%[2]s"
+	name     = "%[3]s"
+	comment  = "Terraform acceptance test"
+
+	column {
+		name           = "column1"
+		type           = "VARCHAR(16)"
+		masking_policy = ""
+	}
+}
+`, tableId.DatabaseName(), tableId.SchemaName(), tableId.Name())
 }
 
 // proves https://github.com/Snowflake-Labs/terraform-provider-snowflake/issues/2356 issue is fixed.
@@ -2292,9 +2326,11 @@ func TestAcc_Table_AddColumnWithConstantDefault_issue4730(t *testing.T) {
 				Config: tableConfigIssue4730AddColumnWithConstantDefault(tableId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "name", tableId.Name()),
-					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "2"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.#", "3"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.name", "COLUMN_2"),
 					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.1.default.0.constant", "FALSE"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.name", "column_3"),
+					resource.TestCheckResourceAttr("snowflake_table.test_table", "column.2.default.0.constant", "FALSE"),
 				),
 			},
 		},
@@ -2329,6 +2365,13 @@ resource "snowflake_table" "test_table" {
 	}
 	column {
 		name = "COLUMN_2"
+		type = "BOOLEAN"
+		default {
+			constant = "FALSE"
+		}
+	}
+	column {
+		name = "column_3"
 		type = "BOOLEAN"
 		default {
 			constant = "FALSE"
