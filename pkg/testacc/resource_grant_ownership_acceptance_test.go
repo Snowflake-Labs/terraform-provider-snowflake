@@ -378,6 +378,20 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t 
 		WithOnObject(sdk.ObjectTypeProcedure, procedureId.FullyQualifiedName()).
 		WithDependsOn(databaseRoleModel.ResourceReference(), procedureModel.ResourceReference())
 
+	// TODO(SNOW-4275685): Update this once the issue is fixed.
+	// GRANT OWNERSHIP moves OWNERSHIP off the current role and leaves it with no
+	// privilege on the procedure. The procedure resource refresh runs DESCRIBE
+	// PROCEDURE, which requires at least one privilege on that procedure
+	// (003001). Grant USAGE back so the refresh can describe it. No behavior-change
+	// bundle was found for this requirement.
+	// https://docs.snowflake.com/en/sql-reference/sql/grant-ownership
+	// https://docs.snowflake.com/en/user-guide/security-access-control-privileges#stored-procedure-privileges
+	currentRole := testClient().Context.CurrentRole(t)
+	usageGrantModel := model.GrantPrivilegesToAccountRole("usage", currentRole.Name()).
+		WithSchemaObjectPrivileges(sdk.SchemaObjectPrivilegeUsage).
+		WithOnSchemaObjectObject(sdk.ObjectTypeProcedure, procedureId.FullyQualifiedName()).
+		WithDependsOn(grantModel.ResourceReference())
+
 	resourceName := "snowflake_grant_ownership.test"
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -386,7 +400,7 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t 
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: accconfig.FromModels(t, databaseRoleModel, schemaModel, procedureModel, grantModel),
+				Config: accconfig.FromModels(t, databaseRoleModel, schemaModel, procedureModel, grantModel, usageGrantModel),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "database_role_name", databaseRoleId.FullyQualifiedName()),
 					resource.TestCheckResourceAttr(resourceName, "on.0.object_type", string(sdk.ObjectTypeProcedure)),
@@ -396,7 +410,7 @@ func TestAcc_GrantOwnership_OnObject_ProcedureWithoutArguments_ToDatabaseRole(t 
 				),
 			},
 			{
-				Config:            accconfig.FromModels(t, databaseRoleModel, schemaModel, procedureModel, grantModel),
+				Config:            accconfig.FromModels(t, databaseRoleModel, schemaModel, procedureModel, grantModel, usageGrantModel),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
