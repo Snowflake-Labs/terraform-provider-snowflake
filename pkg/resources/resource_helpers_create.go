@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -190,6 +191,19 @@ func attributeMappedValueCreateBuilderNested[MappedType any, RequestBuilder any]
 			return err
 		}
 		setValue(value)
+	}
+	return nil
+}
+
+// setMappedValueCreateBuilder maps each element of a schema.Set attribute and passes the mapped
+// slice to setValue when the attribute is set. An absent or empty set leaves the request unchanged.
+func setMappedValueCreateBuilder[T any, RequestBuilder any](d *schema.ResourceData, key string, setValue func([]T) RequestBuilder, mapper func(any) (T, error)) error {
+	if v, ok := d.GetOk(key); ok {
+		mappedValue, err := collections.MapErr(v.(*schema.Set).List(), mapper)
+		if err != nil {
+			return err
+		}
+		setValue(mappedValue)
 	}
 	return nil
 }
