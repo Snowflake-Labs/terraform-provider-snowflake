@@ -362,8 +362,7 @@ func TestPrepareShowGrantsRequestForGrantOwnership(t *testing.T) {
 				ObjectType: sdk.ObjectTypeDatabaseRole,
 				Name:       sdk.NewDatabaseObjectIdentifier("test_database", "test_database_role"),
 			})),
-			// Before BCR-2371 (2026_06 bundle) SHOW GRANTS ON DATABASE ROLE reports granted_on = ROLE, after it reports DATABASE_ROLE; both must match.
-			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeRole, sdk.ObjectTypeDatabaseRole},
+			ExpectedGrantedOn: []sdk.ObjectType{sdk.ObjectTypeDatabaseRole},
 		},
 		{
 			Name: "show for all in database",

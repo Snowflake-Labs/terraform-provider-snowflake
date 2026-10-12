@@ -619,14 +619,7 @@ func prepareShowGrantsRequestForGrantOwnership(id *GrantOwnershipId) (*sdk.ShowG
 	switch id.Kind {
 	case OnObjectGrantOwnershipKind:
 		data := id.Data.(*OnObjectGrantOwnershipData)
-		switch data.ObjectType {
-		case sdk.ObjectTypeDatabaseRole:
-			// SHOW GRANTS ON DATABASE ROLE reports granted_on = ROLE before the 2026_06 bundle (BCR-2371) and DATABASE_ROLE after; accept both.
-			// TODO(SNOW-4075337): drop sdk.ObjectTypeRole once the 2026_06 bundle is GA and can no longer be disabled.
-			expectedGrantedOn = []sdk.ObjectType{sdk.ObjectTypeRole, sdk.ObjectTypeDatabaseRole}
-		default:
-			expectedGrantedOn = []sdk.ObjectType{data.ObjectType}
-		}
+		expectedGrantedOn = []sdk.ObjectType{data.ObjectType}
 		opts.WithOn(*sdk.NewShowGrantsOnRequest().WithObject(sdk.Object{
 			ObjectType: data.ObjectType,
 			Name:       data.ObjectName,

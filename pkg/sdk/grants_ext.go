@@ -531,7 +531,7 @@ func (v *grants) Show(ctx context.Context, request *ShowGrantsRequest) ([]Grant,
 		return nil, err
 	}
 	for i, grant := range resultList {
-		// SHOW GRANTS of DATABASE ROLE requires a special handling:
+		// SHOW GRANTS OF DATABASE ROLE requires a special handling:
 		// - it returns no account name, so for other SHOW GRANTS types it needs to be skipped
 		// - it returns fully qualified name for database objects
 		granteeNameRaw := dbRows[i].GranteeName
@@ -542,16 +542,12 @@ func (v *grants) Show(ctx context.Context, request *ShowGrantsRequest) ([]Grant,
 			}
 			resultList[i].GranteeName = NewAccountObjectIdentifier(granteeName)
 		} else if !slices.Contains([]ObjectType{ObjectTypeRole, ObjectTypeShare, ObjectTypeUser, ObjectTypeApplication}, grant.GrantedTo) {
-			// TODO(SNOW-3954332): cleanup when 2026_06 bundle is GA (enforced and can no longer be disabled).
-			// Before BCR-2371 the grantee (another database role) is fully qualified (<database>.<database_role>); after, only <database_role>.
-			// A database role can only be granted within the same database, so reconstruct the missing prefix from the queried role.
-			if id, err := ParseDatabaseObjectIdentifier(granteeNameRaw); err == nil {
-				resultList[i].GranteeName = id
-			} else if id, err := ParseAccountObjectIdentifier(granteeNameRaw); err == nil {
-				resultList[i].GranteeName = NewDatabaseObjectIdentifier(opts.Of.DatabaseRole.DatabaseName(), id.Name())
-			} else {
+			// A database role can only be granted within the same database, so the missing prefix comes from the queried role.
+			id, err := ParseAccountObjectIdentifier(granteeNameRaw)
+			if err != nil {
 				return nil, err
 			}
+			resultList[i].GranteeName = NewDatabaseObjectIdentifier(opts.Of.DatabaseRole.DatabaseName(), id.Name())
 		} else if grant.GrantedTo == ObjectTypeShare {
 			resultList[i].GranteeName = NewAccountObjectIdentifier(normalizeShareGranteeName(granteeNameRaw, v.client.GetAccountLocator()))
 		} else if grant.GrantedTo == ObjectTypeUser {

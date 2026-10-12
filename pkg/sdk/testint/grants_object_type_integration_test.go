@@ -1,4 +1,4 @@
-//go:build account_level_tests
+//go:build non_account_level_tests
 
 package testint
 
@@ -16,20 +16,17 @@ import (
 )
 
 // The tests below pin down what SHOW GRANTS reports for objects whose specific object type differs from the
-// generic one users put in their configuration, with the 2026_06 bundle (BCR-2371) disabled and enabled.
+// generic one users put in their configuration (BCR-2371).
 // Background: https://github.com/snowflakedb/terraform-provider-snowflake/issues/5200 and
 // https://docs.snowflake.com/en/release-notes/bcr-bundles/2026_06/bcr-2371.
 //
 // The provider consequence - a permadiff that surfaces on refresh - is covered by the acceptance tests in
-// pkg/testacc/resource_grant_privileges_to_database_role_bcr_202606_account_level_acceptance_test.go.
-//
-// Toggling a behavior change bundle is account-wide, so these run against the secondary account.
+// pkg/testacc/resource_grant_privileges_to_database_role_acceptance_test.go.
 
 type grantedOnTestTarget struct {
-	specificType                sdk.ObjectType
-	genericType                 sdk.ObjectType
-	grantedOnWhenBundleDisabled sdk.ObjectType
-	id                          sdk.SchemaObjectIdentifier
+	specificType sdk.ObjectType
+	genericType  sdk.ObjectType
+	id           sdk.SchemaObjectIdentifier
 }
 
 type grantObservation struct {
@@ -140,7 +137,7 @@ func observeShowGrantsOnObject(
 func observeShowGrantsToDatabaseRole(t *testing.T, target grantedOnTestTarget, databaseRoleId sdk.DatabaseObjectIdentifier) grantObservation {
 	t.Helper()
 
-	grants, err := secondaryTestClientHelper().Grant.ShowGrantsToDatabaseRole(t, databaseRoleId)
+	grants, err := testClientHelper().Grant.ShowGrantsToDatabaseRole(t, databaseRoleId)
 	if err != nil {
 		return grantObservation{err: err}
 	}
@@ -159,38 +156,7 @@ func observeShowGrantsToDatabaseRole(t *testing.T, target grantedOnTestTarget, d
 	return grantObservation{}
 }
 
-func assertGrantedOnBundleDisabled(
-	t *testing.T,
-	ctx context.Context,
-	client *sdk.Client,
-	databaseRoleId sdk.DatabaseObjectIdentifier,
-	target grantedOnTestTarget,
-) {
-	t.Helper()
-
-	t.Run("granted with the generic object type", func(t *testing.T) {
-		observations, revokeErr := observeGrant(t, ctx, client, databaseRoleId, target, target.genericType, target.genericType)
-		assert.NoError(t, revokeErr)
-
-		assert.NoError(t, observations.onGeneric.err)
-		assert.True(t, observations.onGeneric.found)
-		assert.Equal(t, target.grantedOnWhenBundleDisabled, observations.onGeneric.grantedOn)
-		assert.NotEmpty(t, observations.onGeneric.grantedBy)
-		assert.Equal(t, target.specificType, observations.toDatabaseRole.grantedOn)
-	})
-
-	t.Run("granted with the specific object type", func(t *testing.T) {
-		observations, revokeErr := observeGrant(t, ctx, client, databaseRoleId, target, target.specificType, target.specificType)
-		assert.NoError(t, revokeErr)
-
-		assert.NoError(t, observations.onSpecific.err)
-		assert.True(t, observations.onSpecific.found)
-		assert.Equal(t, target.grantedOnWhenBundleDisabled, observations.onSpecific.grantedOn)
-		assert.Equal(t, target.specificType, observations.toDatabaseRole.grantedOn)
-	})
-}
-
-func assertGrantedOnBundleEnabled(
+func assertGrantedOnSpecificObjectType(
 	t *testing.T,
 	ctx context.Context,
 	client *sdk.Client,
@@ -221,74 +187,60 @@ func assertGrantedOnBundleEnabled(
 	})
 }
 
-func TestInt_ShowGrants_bcr2026_06_grantedOnSpecificObjectType(t *testing.T) {
-	client := testSecondaryClient(t)
-	ctx := context.Background()
+func TestInt_ShowGrants_grantedOnSpecificObjectType(t *testing.T) {
+	client := testClient(t)
+	ctx := testContext(t)
 
-	databaseRole, databaseRoleCleanup := secondaryTestClientHelper().DatabaseRole.CreateDatabaseRole(t)
+	databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRole(t)
 	t.Cleanup(databaseRoleCleanup)
 
-	table, tableCleanup := secondaryTestClientHelper().Table.Create(t)
+	table, tableCleanup := testClientHelper().Table.Create(t)
 	t.Cleanup(tableCleanup)
 
-	view, viewCleanup := secondaryTestClientHelper().View.CreateView(t, fmt.Sprintf(`select "ID" from %s`, table.ID().FullyQualifiedName()))
+	view, viewCleanup := testClientHelper().View.CreateView(t, fmt.Sprintf(`select "ID" from %s`, table.ID().FullyQualifiedName()))
 	t.Cleanup(viewCleanup)
 
-	dynamicTable, dynamicTableCleanup := secondaryTestClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
+	dynamicTable, dynamicTableCleanup := testClientHelper().DynamicTable.CreateDynamicTable(t, table.ID())
 	t.Cleanup(dynamicTableCleanup)
 
 	targets := []grantedOnTestTarget{
-		{specificType: sdk.ObjectTypeView, genericType: sdk.ObjectTypeTable, grantedOnWhenBundleDisabled: sdk.ObjectTypeView, id: view.ID()},
-		{specificType: sdk.ObjectTypeDynamicTable, genericType: sdk.ObjectTypeTable, grantedOnWhenBundleDisabled: sdk.ObjectTypeDynamicTable, id: dynamicTable.ID()},
+		{specificType: sdk.ObjectTypeView, genericType: sdk.ObjectTypeTable, id: view.ID()},
+		{specificType: sdk.ObjectTypeDynamicTable, genericType: sdk.ObjectTypeTable, id: dynamicTable.ID()},
 	}
 
-	t.Run("bundle disabled", func(t *testing.T) {
-		secondaryTestClientHelper().BcrBundles.DisableBcrBundle(t, "2026_06")
-
-		for _, target := range targets {
-			t.Run(target.specificType.String(), func(t *testing.T) {
-				assertGrantedOnBundleDisabled(t, ctx, client, databaseRole.ID(), target)
-			})
-		}
-	})
-
-	t.Run("bundle enabled", func(t *testing.T) {
-		secondaryTestClientHelper().BcrBundles.EnableBcrBundle(t, "2026_06")
-
-		for _, target := range targets {
-			t.Run(target.specificType.String(), func(t *testing.T) {
-				assertGrantedOnBundleEnabled(t, ctx, client, databaseRole.ID(), target)
-			})
-		}
-	})
+	for _, target := range targets {
+		t.Run(target.specificType.String(), func(t *testing.T) {
+			assertGrantedOnSpecificObjectType(t, ctx, client, databaseRole.ID(), target)
+		})
+	}
 }
 
-// TestInt_ShowGrants_bcr2026_06_grantedOnIcebergTable is the Iceberg-table variant, matching the object type from the reported issue.
-func TestInt_ShowGrants_bcr2026_06_grantedOnIcebergTable(t *testing.T) {
+// TestInt_ShowGrants_grantedOnIcebergTable is the Iceberg-table variant, matching the object type from the reported issue.
+func TestInt_ShowGrants_grantedOnIcebergTable(t *testing.T) {
 	awsBaseUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
 	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
 	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
 
-	client := testSecondaryClient(t)
-	ctx := context.Background()
+	client := testClient(t)
+	ctx := testContext(t)
 
 	s3CompatBaseUrl := strings.Replace(awsBaseUrl, "s3://", "s3compat://", 1)
 	s3CompatEndpoint := "s3.us-west-2.amazonaws.com"
 
-	externalVolumeId, externalVolumeCleanup := secondaryTestClientHelper().ExternalVolume.CreateS3Compat(t, s3CompatBaseUrl, s3CompatEndpoint, awsKeyId, awsSecretKey)
+	externalVolumeId, externalVolumeCleanup := testClientHelper().ExternalVolume.CreateS3Compat(t, s3CompatBaseUrl, s3CompatEndpoint, awsKeyId, awsSecretKey)
 	t.Cleanup(externalVolumeCleanup)
 
 	// The external volume is set at the database level so the Iceberg table does not have to repeat it.
-	db, dbCleanup := secondaryTestClientHelper().Database.CreateDatabaseWithRequest(t,
-		secondaryTestClientHelper().Database.TestParametersSet(secondaryTestClientHelper().Ids.RandomAccountObjectIdentifier()).WithExternalVolume(externalVolumeId))
+	db, dbCleanup := testClientHelper().Database.CreateDatabaseWithRequest(t,
+		testClientHelper().Database.TestParametersSet(testClientHelper().Ids.RandomAccountObjectIdentifier()).WithExternalVolume(externalVolumeId))
 	t.Cleanup(dbCleanup)
 	schemaId := sdk.NewDatabaseObjectIdentifier(db.ID().Name(), "PUBLIC")
 
-	databaseRole, databaseRoleCleanup := secondaryTestClientHelper().DatabaseRole.CreateDatabaseRoleInDatabase(t, db.ID())
+	databaseRole, databaseRoleCleanup := testClientHelper().DatabaseRole.CreateDatabaseRoleInDatabase(t, db.ID())
 	t.Cleanup(databaseRoleCleanup)
 
-	icebergTableId := secondaryTestClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
-	_, icebergTableCleanup := secondaryTestClientHelper().IcebergTable.CreateWithRequest(t,
+	icebergTableId := testClientHelper().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	_, icebergTableCleanup := testClientHelper().IcebergTable.CreateWithRequest(t,
 		sdk.NewCreateIcebergTableRequest(icebergTableId, sdk.IcebergTableColumnsAndConstraintsRequest{
 			Columns: []sdk.IcebergTableColumnRequest{{Name: "ID", ColumnType: testdatatypes.DataTypeNumber}},
 		}).
@@ -298,21 +250,10 @@ func TestInt_ShowGrants_bcr2026_06_grantedOnIcebergTable(t *testing.T) {
 	t.Cleanup(icebergTableCleanup)
 
 	target := grantedOnTestTarget{
-		specificType:                sdk.ObjectTypeIcebergTable,
-		genericType:                 sdk.ObjectTypeTable,
-		grantedOnWhenBundleDisabled: sdk.ObjectTypeTable,
-		id:                          icebergTableId,
+		specificType: sdk.ObjectTypeIcebergTable,
+		genericType:  sdk.ObjectTypeTable,
+		id:           icebergTableId,
 	}
 
-	t.Run("bundle disabled", func(t *testing.T) {
-		secondaryTestClientHelper().BcrBundles.DisableBcrBundle(t, "2026_06")
-
-		assertGrantedOnBundleDisabled(t, ctx, client, databaseRole.ID(), target)
-	})
-
-	t.Run("bundle enabled", func(t *testing.T) {
-		secondaryTestClientHelper().BcrBundles.EnableBcrBundle(t, "2026_06")
-
-		assertGrantedOnBundleEnabled(t, ctx, client, databaseRole.ID(), target)
-	})
+	assertGrantedOnSpecificObjectType(t, ctx, client, databaseRole.ID(), target)
 }
