@@ -256,7 +256,7 @@ var allObjectsParameters = []SnowflakeObjectParameters{
 			{ParameterName: string(sdk.AccountParameterTraceLevel), ParameterType: "sdk.TraceLevel", DefaultValue: "sdk.TraceLevelOff", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.AccountParameterTransactionDefaultIsolationLevel), ParameterType: "string", DefaultValue: "READ COMMITTED", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.AccountParameterUnsupportedDdlAction), ParameterType: "string", DefaultValue: "ignore", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
-			{ParameterName: string(sdk.AccountParameterUserTaskManagedInitialWarehouseSize), ParameterType: "sdk.WarehouseSize", DefaultValue: "sdk.WarehouseSizeMedium", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
+			{ParameterName: string(sdk.AccountParameterUserTaskManagedInitialWarehouseSize), ParameterType: "sdk.WarehouseSize", DefaultValue: `sdk.WarehouseSize("Medium")`, DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 			{ParameterName: string(sdk.AccountParameterUseWorkspacesForSql), ParameterType: "string", DefaultValue: "unset", DefaultLevel: "sdk.ParameterTypeSnowflakeDefault"},
 		},
 	},

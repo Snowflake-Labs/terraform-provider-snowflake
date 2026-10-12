@@ -2845,7 +2845,7 @@ func (a *AccountParametersAssert) HasDefaultUnsupportedDdlActionValueExplicit() 
 }
 
 func (a *AccountParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit() *AccountParametersAssert {
-	return a.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeMedium)
+	return a.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSize("Medium"))
 }
 
 func (a *AccountParametersAssert) HasDefaultUseWorkspacesForSqlValueExplicit() *AccountParametersAssert {
