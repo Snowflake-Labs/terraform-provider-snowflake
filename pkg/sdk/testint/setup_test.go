@@ -228,8 +228,10 @@ func (itc *integrationTestContext) initialize() error {
 		err = errors.Join(
 			testClientHelper().EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.ctx),
 			testClientHelper().EnsureEnableIdentifierFirstLoginIsSetToTrue(itc.ctx),
+			testClientHelper().EnsureTestUserProperties(itc.ctx),
 			secondaryTestClientHelper().EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(itc.secondaryCtx),
 			secondaryTestClientHelper().EnsureEnableIdentifierFirstLoginIsSetToTrue(itc.secondaryCtx),
+			secondaryTestClientHelper().EnsureTestUserProperties(itc.secondaryCtx),
 		)
 		if err != nil {
 			return err

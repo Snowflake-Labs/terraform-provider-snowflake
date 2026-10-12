@@ -36,6 +36,27 @@ func (c *TestClient) EnsureEnableIdentifierFirstLoginIsSetToTrue(ctx context.Con
 	return nil
 }
 
+// EnsureTestUserProperties checks properties of the user running the tests. Further user checks belong here.
+func (c *TestClient) EnsureTestUserProperties(ctx context.Context) error {
+	log.Printf("[DEBUG] Making sure the test user properties are set correctly")
+	currentUser, err := c.context.client.ContextFunctions.CurrentUser(ctx)
+	if err != nil {
+		return fmt.Errorf("checking test user properties resulted in error: %w", err)
+	}
+	user, err := c.context.client.Users.ShowByID(ctx, currentUser.Value)
+	if err != nil {
+		return fmt.Errorf("checking test user resulted in error: %w", err)
+	}
+	expectedDefaultWarehouse := c.Ids.SnowflakeWarehouseId().Name()
+	if user.DefaultWarehouse != expectedDefaultWarehouse {
+		return fmt.Errorf("test user has DEFAULT_WAREHOUSE %q, expected: %s", user.DefaultWarehouse, expectedDefaultWarehouse)
+	}
+	if user.GetSecondaryRolesOption() != sdk.SecondaryRolesOptionNone {
+		return fmt.Errorf("test user has DEFAULT_SECONDARY_ROLES %q, expected: []", user.DefaultSecondaryRoles)
+	}
+	return nil
+}
+
 func (c *TestClient) EnsureEssentialRolesExist(ctx context.Context) error {
 	log.Printf("[DEBUG] Making sure essential roles exist")
 	type RoleGrant struct {
