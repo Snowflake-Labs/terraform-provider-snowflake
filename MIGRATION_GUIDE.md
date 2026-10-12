@@ -332,6 +332,17 @@ No action is required; this is a non-breaking addition.
 
 Reference: [#5212](https://github.com/snowflakedb/terraform-provider-snowflake/issues/5212).
 
+### *(improvement)* `snowflake_warehouse_interactive` promoted to stable
+
+`snowflake_warehouse_interactive` (`snowflake_warehouse_interactive_resource`) is now stable and no longer requires the `preview_features_enabled` flag to be used. Please remove `snowflake_warehouse_interactive_resource` from the `preview_features_enabled` list in your provider configuration if present.
+
+`snowflake_warehouses` is already stable and is unchanged.
+
+Provider will issue a warning if a stable feature is still present in the `preview_features_enabled` list. These values will be removed in the next major version.
+
+Read more about preview and stable features in
+our [documentation](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs#support).
+
 ### *(bugfix)* Fixed permadiff issue with the `unsupported_ddl_action` attribute
 
 Using a lowercase value for `unsupported_ddl_action` (for example `"ignore"` or `"fail"`) could result in a permadiff (like ` ~ unsupported_ddl_action = "IGNORE" -> "ignore"`).

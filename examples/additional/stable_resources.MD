@@ -97,3 +97,4 @@
 - [snowflake_view](./docs/resources/view)
 - [snowflake_warehouse](./docs/resources/warehouse)
 - [snowflake_warehouse_adaptive](./docs/resources/warehouse_adaptive)
+- [snowflake_warehouse_interactive](./docs/resources/warehouse_interactive)

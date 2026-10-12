@@ -9,7 +9,6 @@ import (
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/previewfeatures"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/provider/resources"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -130,10 +129,10 @@ func WarehouseInteractive() *schema.Resource {
 	)
 
 	return &schema.Resource{
-		CreateContext: PreviewFeatureCreateContextWrapper(string(previewfeatures.WarehouseInteractiveResource), TrackingCreateWrapper(resources.WarehouseInteractive, CreateWarehouseInteractive)),
-		ReadContext:   PreviewFeatureReadContextWrapper(string(previewfeatures.WarehouseInteractiveResource), TrackingReadWrapper(resources.WarehouseInteractive, ReadWarehouseInteractiveFunc(true))),
-		UpdateContext: PreviewFeatureUpdateContextWrapper(string(previewfeatures.WarehouseInteractiveResource), TrackingUpdateWrapper(resources.WarehouseInteractive, UpdateWarehouseInteractive)),
-		DeleteContext: PreviewFeatureDeleteContextWrapper(string(previewfeatures.WarehouseInteractiveResource), TrackingDeleteWrapper(resources.WarehouseInteractive, deleteFunc)),
+		CreateContext: TrackingCreateWrapper(resources.WarehouseInteractive, CreateWarehouseInteractive),
+		ReadContext:   TrackingReadWrapper(resources.WarehouseInteractive, ReadWarehouseInteractiveFunc(true)),
+		UpdateContext: TrackingUpdateWrapper(resources.WarehouseInteractive, UpdateWarehouseInteractive),
+		DeleteContext: TrackingDeleteWrapper(resources.WarehouseInteractive, deleteFunc),
 		Description:   "Resource used to manage interactive warehouse objects. Interactive warehouses are optimized for low-latency, high-concurrency queries against a defined set of tables. For more information, check [interactive warehouse documentation](https://docs.snowflake.com/en/user-guide/warehouses-interactive).",
 
 		Schema: collections.MergeMaps(warehouseInteractiveSchema, warehouseInteractiveParametersSchema),
