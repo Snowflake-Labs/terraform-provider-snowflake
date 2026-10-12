@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
-	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/ssot"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/genhelpers"
 )
 
 const (
@@ -19,23 +19,24 @@ const (
 	RuleCollectionOfEnumNormalizes             = "collection_of_enum_normalizes"
 )
 
-// resourceAttributeRuleContext distinguishes a top-level attribute from a collection
+// attributeRuleContext distinguishes a top-level attribute from a collection
 // elem (list or set) so rules that only apply to fields (enum DiffSuppress,
 // descriptions) can skip elems.
-type resourceAttributeRuleContext struct {
+type attributeRuleContext struct {
 	AsCollectionElem bool
+	ResourceName     string
 }
 
-type resourceAttributeRule struct {
+type attributeRule struct {
 	Name        string
 	Description string
-	When        func(ssot.Attribute, resourceAttributeRuleContext) bool
-	Then        func(ssot.Attribute, resourceAttributeRuleContext, *ResourceAttribute)
+	When        func(Attribute, attributeRuleContext) bool
+	Then        func(Attribute, attributeRuleContext, *ResolvedAttribute)
 }
 
-// resourceAttributeRules is the ordered policy applied by applyResourceAttributeRules.
+// attributeRules is the ordered policy applied by applyAttributeRules.
 // When two rules could touch the same field they are disjoint in When.
-var resourceAttributeRules = []resourceAttributeRule{
+var attributeRules = []attributeRule{
 	{
 		// That is not always true, there are at least two groups of optional bool attributes that don't use this pattern:
 		// - Create-time-only flags, e.g. snowflake_warehouse.initially_suspended
@@ -43,10 +44,10 @@ var resourceAttributeRules = []resourceAttributeRule{
 		// TODO [next PRs]: adjust the logic if needed with next objects migrations
 		Name:        RuleOptionalBoolIsBooleanString,
 		Description: "Optional bools use boolean-string chrome because TF TypeBool cannot distinguish unset from false.",
-		When: func(in ssot.Attribute, _ resourceAttributeRuleContext) bool {
-			return in.Type == ssot.AttrBool && !in.Required
+		When: func(in Attribute, _ attributeRuleContext) bool {
+			return in.Type == AttrBool && !in.Required
 		},
-		Then: func(in ssot.Attribute, _ resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(in Attribute, _ attributeRuleContext, out *ResolvedAttribute) {
 			out.TfType = SchemaTypeString
 			out.DefaultExpr = "BooleanDefault"
 			out.ValidateDiagExpr = "validateBooleanString"
@@ -58,53 +59,53 @@ var resourceAttributeRules = []resourceAttributeRule{
 	{
 		Name:        RuleRequiredBoolIsNative,
 		Description: "Required bools use native TF TypeBool; the user must set them, so no sentinel default is needed.",
-		When: func(in ssot.Attribute, _ resourceAttributeRuleContext) bool {
-			return in.Type == ssot.AttrBool && in.Required
+		When: func(in Attribute, _ attributeRuleContext) bool {
+			return in.Type == AttrBool && in.Required
 		},
-		Then: func(_ ssot.Attribute, _ resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(_ Attribute, _ attributeRuleContext, out *ResolvedAttribute) {
 			out.TfType = SchemaTypeBool
 		},
 	},
 	{
 		Name:        RuleOptionalIntMinAllowsZeroUsesIntDefault,
 		Description: "Optional ints use IntDefault only when Min shows 0 is an acceptable value (otherwise 0 already means unset).",
-		When: func(in ssot.Attribute, _ resourceAttributeRuleContext) bool {
-			return in.Type == ssot.AttrInt && !in.Required && in.Min != nil && *in.Min <= 0
+		When: func(in Attribute, _ attributeRuleContext) bool {
+			return in.Type == AttrInt && !in.Required && in.Min != nil && *in.Min <= 0
 		},
-		Then: func(_ ssot.Attribute, _ resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(_ Attribute, _ attributeRuleContext, out *ResolvedAttribute) {
 			out.DefaultExpr = "IntDefault"
 		},
 	},
 	{
 		Name:        RuleIdentifierSuppressesQuoting,
 		Description: "Identifier attributes suppress quoting differences in diffs.",
-		When: func(in ssot.Attribute, _ resourceAttributeRuleContext) bool {
-			return in.Type == ssot.AttrIdentifier
+		When: func(in Attribute, _ attributeRuleContext) bool {
+			return in.Type == AttrIdentifier
 		},
-		Then: func(_ ssot.Attribute, _ resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(_ Attribute, _ attributeRuleContext, out *ResolvedAttribute) {
 			out.DiffSuppressExpr = "suppressIdentifierQuoting"
 		},
 	},
 	{
 		Name:        RuleEnumValidates,
 		Description: "Enum attributes (including collection elems) validate through the SDK converter.",
-		When: func(in ssot.Attribute, ctx resourceAttributeRuleContext) bool {
-			return in.Type == ssot.AttrEnum && ctx.sdkEnumTo(in) != ""
+		When: func(in Attribute, ctx attributeRuleContext) bool {
+			return in.Type == AttrEnum && ctx.sdkEnumTo(in) != ""
 		},
-		Then: func(in ssot.Attribute, ctx resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(in Attribute, ctx attributeRuleContext, out *ResolvedAttribute) {
 			out.ValidateDiagExpr = fmt.Sprintf("sdkValidation(%s)", ctx.sdkEnumTo(in))
 		},
 	},
 	{
 		Name:        RuleEnumDescriptionListsValues,
 		Description: "Enum fields and collections of enums append enumValuesDescription to the description.",
-		When: func(in ssot.Attribute, ctx resourceAttributeRuleContext) bool {
+		When: func(in Attribute, ctx attributeRuleContext) bool {
 			if ctx.AsCollectionElem || in.Description == "" || ctx.sdkEnumAll(in) == "" {
 				return false
 			}
-			return in.Type == ssot.AttrEnum || isCollectionOfEnum(in)
+			return in.Type == AttrEnum || isCollectionOfEnum(in)
 		},
-		Then: func(in ssot.Attribute, ctx resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(in Attribute, ctx attributeRuleContext, out *ResolvedAttribute) {
 			expr := fmt.Sprintf("%s + enumValuesDescription(%s)", strconv.Quote(in.Description+" "), ctx.sdkEnumAll(in))
 			if in.AdditionalDescription != "" {
 				expr += " + " + strconv.Quote(" "+in.AdditionalDescription)
@@ -115,68 +116,85 @@ var resourceAttributeRules = []resourceAttributeRule{
 	{
 		Name:        RuleEnumFieldNormalizes,
 		Description: "Top-level enum fields normalize values in diffs via SuppressIfAny(NormalizeAndCompare).",
-		When: func(in ssot.Attribute, ctx resourceAttributeRuleContext) bool {
-			return in.Type == ssot.AttrEnum && ctx.sdkEnumTo(in) != "" && !ctx.AsCollectionElem
+		When: func(in Attribute, ctx attributeRuleContext) bool {
+			return in.Type == AttrEnum && ctx.sdkEnumTo(in) != "" && !ctx.AsCollectionElem
 		},
-		Then: func(in ssot.Attribute, ctx resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(in Attribute, ctx attributeRuleContext, out *ResolvedAttribute) {
 			out.DiffSuppressExpr = fmt.Sprintf("SuppressIfAny(NormalizeAndCompare(%s))", ctx.sdkEnumTo(in))
 		},
 	},
 	{
 		Name:        RuleCollectionOfEnumNormalizes,
 		Description: "Collections of enums (list or set) normalize values in diffs via NormalizeAndCompare on the collection field.",
-		When: func(in ssot.Attribute, ctx resourceAttributeRuleContext) bool {
+		When: func(in Attribute, ctx attributeRuleContext) bool {
 			return isCollectionOfEnum(in) && ctx.sdkEnumTo(in) != "" && !ctx.AsCollectionElem
 		},
-		Then: func(in ssot.Attribute, ctx resourceAttributeRuleContext, out *ResourceAttribute) {
+		Then: func(in Attribute, ctx attributeRuleContext, out *ResolvedAttribute) {
 			out.DiffSuppressExpr = fmt.Sprintf("NormalizeAndCompare(%s)", ctx.sdkEnumTo(in))
 		},
 	},
 }
 
-func isCollection(in ssot.Attribute) bool {
-	return in.Type == ssot.AttrList || in.Type == ssot.AttrSet
+func isCollection(in Attribute) bool {
+	return in.Type == AttrList || in.Type == AttrSet
 }
 
-func isCollectionOfEnum(in ssot.Attribute) bool {
-	return isCollection(in) && in.Elem != nil && in.Elem.Type == ssot.AttrEnum
+func isCollectionOfEnum(in Attribute) bool {
+	return isCollection(in) && in.Elem != nil && in.Elem.Type == AttrEnum
 }
 
-func enumDef(in ssot.Attribute) *ssot.Enum {
-	if in.Enum != nil {
+func enumName(in Attribute) string {
+	if in.Enum != "" {
 		return in.Enum
 	}
-	if in.Elem != nil && in.Elem.Enum != nil {
+	if in.Elem != nil && in.Elem.Enum != "" {
 		return in.Elem.Enum
 	}
-	return nil
+	if in.Type == AttrEnum && in.Name != "" {
+		return genhelpers.SnakeCaseToCamel(in.Name)
+	}
+	return ""
 }
 
-func (ctx resourceAttributeRuleContext) sdkEnumTo(in ssot.Attribute) string {
-	e := enumDef(in)
-	if e == nil || e.Name == "" {
+func enumPlural(in Attribute) string {
+	if in.EnumPlural != "" {
+		return in.EnumPlural
+	}
+	if in.Elem != nil && in.Elem.EnumPlural != "" {
+		return in.Elem.EnumPlural
+	}
+	return ""
+}
+
+// TODO [next PRs]: move enum abstraction from SDK.
+func (ctx attributeRuleContext) sdkEnumTo(in Attribute) string {
+	name := enumName(in)
+	if name == "" || ctx.ResourceName == "" {
 		return ""
 	}
-	return "sdk.To" + e.Name
+	// sdk.To<Resource><Enum>
+	return "sdk.To" + ctx.ResourceName + name
 }
 
-func (ctx resourceAttributeRuleContext) sdkEnumAll(in ssot.Attribute) string {
-	e := enumDef(in)
-	if e == nil || e.NamePlural == "" {
+// TODO [next PRs]: move enum abstraction from SDK.
+func (ctx attributeRuleContext) sdkEnumAll(in Attribute) string {
+	plural := enumPlural(in)
+	if plural == "" || ctx.ResourceName == "" {
 		return ""
 	}
-	return "sdk.All" + e.NamePlural
+	// sdk.All<Resource><EnumPlural>
+	return "sdk.All" + ctx.ResourceName + plural
 }
 
-// applyResourceAttributeRules is the dedicated processing step from written Attribute intent to ResourceAttribute schema chrome.
-func applyResourceAttributeRules(in []ssot.Attribute) []ResourceAttribute {
-	ctx := resourceAttributeRuleContext{}
-	return collections.Map(in, func(attr ssot.Attribute) ResourceAttribute { return resolveResourceAttribute(attr, ctx) })
+// applyAttributeRules is the dedicated processing step from written Attribute intent to ResolvedAttribute schema chrome.
+func applyAttributeRules(resourceName string, in []Attribute) []ResolvedAttribute {
+	ctx := attributeRuleContext{ResourceName: resourceName}
+	return collections.Map(in, func(attr Attribute) ResolvedAttribute { return resolveAttribute(attr, ctx) })
 }
 
-func resolveResourceAttribute(in ssot.Attribute, ctx resourceAttributeRuleContext) ResourceAttribute {
-	out := resourceAttributeBaseline(in, ctx)
-	for _, rule := range resourceAttributeRules {
+func resolveAttribute(in Attribute, ctx attributeRuleContext) ResolvedAttribute {
+	out := attributeBaseline(in, ctx)
+	for _, rule := range attributeRules {
 		if rule.When(in, ctx) {
 			rule.Then(in, ctx, &out)
 		}
@@ -184,14 +202,14 @@ func resolveResourceAttribute(in ssot.Attribute, ctx resourceAttributeRuleContex
 	if in.Elem != nil {
 		elemCtx := ctx
 		elemCtx.AsCollectionElem = true
-		elem := resolveResourceAttribute(*in.Elem, elemCtx)
+		elem := resolveAttribute(*in.Elem, elemCtx)
 		out.Elem = &elem
 	}
 	return out
 }
 
-func resourceAttributeBaseline(in ssot.Attribute, ctx resourceAttributeRuleContext) ResourceAttribute {
-	out := ResourceAttribute{
+func attributeBaseline(in Attribute, ctx attributeRuleContext) ResolvedAttribute {
+	out := ResolvedAttribute{
 		Name:   in.Name,
 		TfType: tfTypeFor(in.Type),
 	}
@@ -209,15 +227,15 @@ func resourceAttributeBaseline(in ssot.Attribute, ctx resourceAttributeRuleConte
 	return out
 }
 
-func tfTypeFor(t ssot.AttributeType) SchemaValueType {
+func tfTypeFor(t AttributeType) SchemaValueType {
 	switch t {
-	case ssot.AttrInt:
+	case AttrInt:
 		return SchemaTypeInt
-	case ssot.AttrBool:
+	case AttrBool:
 		return SchemaTypeBool
-	case ssot.AttrList:
+	case AttrList:
 		return SchemaTypeList
-	case ssot.AttrSet:
+	case AttrSet:
 		return SchemaTypeSet
 	default:
 		return SchemaTypeString
