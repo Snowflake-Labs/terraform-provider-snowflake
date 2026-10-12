@@ -52,4 +52,3 @@
 - [snowflake_table_constraint](./docs/resources/table_constraint)
 - [snowflake_user_password_policy_attachment](./docs/resources/user_password_policy_attachment)
 - [snowflake_user_public_keys](./docs/resources/user_public_keys)
-- [snowflake_warehouse_interactive](./docs/resources/warehouse_interactive)
