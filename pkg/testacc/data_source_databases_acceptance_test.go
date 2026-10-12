@@ -32,9 +32,16 @@ func TestAcc_Databases_BasicUseCase_DifferentFiltering(t *testing.T) {
 	databasesWithLikeModel := datasourcemodel.Databases("test").
 		WithLike(idOne.Name()).
 		WithDependsOn(databaseModel1.ResourceReference(), databaseModel2.ResourceReference(), databaseModel3.ResourceReference())
-	databasesWithStartsWithModel := datasourcemodel.Databases("test").
-		WithStartsWith(prefix).
-		WithDependsOn(databaseModel1.ResourceReference(), databaseModel2.ResourceReference(), databaseModel3.ResourceReference())
+
+	// TODO(SNOW-4275684): Update this once the issue is fixed.
+	// SHOW DATABASES STARTS WITH does not restrict the result to the prefix, so the
+	// following read tries to describe unrelated databases (including shares the test
+	// role cannot access). Adding SHOW DATABASES STARTS WITH '' WITH PRIVILEGES USAGE also doesn't help.
+	// LIKE filtering still works.
+	// databasesWithStartsWithModel := datasourcemodel.Databases("test").
+	// 	WithStartsWith(prefix).
+	// 	WithDependsOn(databaseModel1.ResourceReference(), databaseModel2.ResourceReference(), databaseModel3.ResourceReference())
+
 	databasesWithLimitModel := datasourcemodel.Databases("test").
 		WithRowsAndFrom(1, prefix).
 		WithDependsOn(databaseModel1.ResourceReference(), databaseModel2.ResourceReference(), databaseModel3.ResourceReference())
@@ -52,12 +59,13 @@ func TestAcc_Databases_BasicUseCase_DifferentFiltering(t *testing.T) {
 					resource.TestCheckResourceAttr(databasesWithLikeModel.DatasourceReference(), "databases.#", "1"),
 				),
 			},
-			{
-				Config: accconfig.FromModels(t, databaseModel1, databaseModel2, databaseModel3, databasesWithStartsWithModel),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(databasesWithLikeModel.DatasourceReference(), "databases.#", "2"),
-				),
-			},
+			// TODO(SNOW-4275684): Update this once the issue is fixed.
+			// {
+			// 	Config: accconfig.FromModels(t, databaseModel1, databaseModel2, databaseModel3, databasesWithStartsWithModel),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(databasesWithLikeModel.DatasourceReference(), "databases.#", "2"),
+			// 	),
+			// },
 			{
 				Config: accconfig.FromModels(t, databaseModel1, databaseModel2, databaseModel3, databasesWithLimitModel),
 				Check: resource.ComposeTestCheckFunc(
