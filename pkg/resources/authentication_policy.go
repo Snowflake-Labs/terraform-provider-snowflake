@@ -361,45 +361,10 @@ func CreateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 
 	req := sdk.NewCreateAuthenticationPolicyRequest(id)
 
-	// Set optionals
-	if v, ok := d.GetOk("authentication_methods"); ok {
-		authenticationMethodsRawList := expandStringList(v.(*schema.Set).List())
-		authenticationMethods := make([]sdk.AuthenticationMethods, len(authenticationMethodsRawList))
-		for i, v := range authenticationMethodsRawList {
-			option, err := sdk.ToAuthenticationMethodsOption(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			authenticationMethods[i] = sdk.AuthenticationMethods{Method: option}
-		}
-		req.WithAuthenticationMethods(authenticationMethods)
-	}
-
-	if v, ok := d.GetOk("client_types"); ok {
-		clientTypesRawList := expandStringList(v.(*schema.Set).List())
-		clientTypes := make([]sdk.ClientTypes, len(clientTypesRawList))
-		for i, v := range clientTypesRawList {
-			option, err := sdk.ToClientTypesOption(v)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			clientTypes[i] = sdk.ClientTypes{ClientType: option}
-		}
-		req.WithClientTypes(clientTypes)
-	}
-
-	if v, ok := d.GetOk("client_policy"); ok {
-		clientPolicyList := v.(*schema.Set).List()
-		if len(clientPolicyList) > 0 {
-			entries, err := toClientPolicyEntries(clientPolicyList)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			req.WithClientPolicy(entries)
-		}
-	}
-
 	if err := errors.Join(
+		setMappedValueCreateBuilder(d, "authentication_methods", req.WithAuthenticationMethods, authenticationMethodItem),
+		setMappedValueCreateBuilder(d, "client_types", req.WithClientTypes, clientTypeItem),
+		setMappedValueCreateBuilder(d, "client_policy", req.WithClientPolicy, toClientPolicyEntries),
 		attributeMappedValueCreateBuilder(d, "security_integrations", req.WithSecurityIntegrations, ToSecurityIntegrationsRequest),
 		attributeMappedValueCreateBuilder(d, "mfa_enrollment", req.WithMfaEnrollment, sdk.ToMfaEnrollmentOption),
 		stringAttributeCreateBuilder(d, "comment", req.WithComment),
@@ -568,66 +533,11 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 		id = newId
 	}
 
-	// change to authentication methods
-	if d.HasChange("authentication_methods") {
-		if v, ok := d.GetOk("authentication_methods"); ok {
-			authenticationMethods := expandStringList(v.(*schema.Set).List())
-			authenticationMethodsValues := make([]sdk.AuthenticationMethods, len(authenticationMethods))
-			for i, v := range authenticationMethods {
-				option, err := sdk.ToAuthenticationMethodsOption(v)
-				if err != nil {
-					return diag.FromErr(err)
-				}
-				authenticationMethodsValues[i] = sdk.AuthenticationMethods{Method: option}
-			}
-
-			set.WithAuthenticationMethods(authenticationMethodsValues)
-		} else {
-			unset.WithAuthenticationMethods(true)
-		}
-	}
-
-	// change to mfa enrollment
-	if d.HasChange("mfa_enrollment") {
-		if mfaEnrollmentOption, err := sdk.ToMfaEnrollmentOption(d.Get("mfa_enrollment").(string)); err == nil {
-			set.WithMfaEnrollment(mfaEnrollmentOption)
-		} else {
-			unset.WithMfaEnrollment(true)
-		}
-	}
-
-	if d.HasChange("client_types") {
-		if v, ok := d.GetOk("client_types"); ok {
-			clientTypes := expandStringList(v.(*schema.Set).List())
-			clientTypesValues := make([]sdk.ClientTypes, len(clientTypes))
-			for i, v := range clientTypes {
-				option, err := sdk.ToClientTypesOption(v)
-				if err != nil {
-					return diag.FromErr(err)
-				}
-				clientTypesValues[i] = sdk.ClientTypes{ClientType: option}
-			}
-
-			set.WithClientTypes(clientTypesValues)
-		} else {
-			unset.WithClientTypes(true)
-		}
-	}
-
-	if d.HasChange("client_policy") {
-		if v, ok := d.GetOk("client_policy"); ok {
-			clientPolicyList := v.(*schema.Set).List()
-			entries, err := toClientPolicyEntries(clientPolicyList)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			set.WithClientPolicy(entries)
-		} else {
-			unset.WithClientPolicy(true)
-		}
-	}
-
 	if err := errors.Join(
+		setValueUpdate(d, "authentication_methods", &set.AuthenticationMethods, &unset.AuthenticationMethods, authenticationMethodItem),
+		attributeMappedValueUpdate(d, "mfa_enrollment", &set.MfaEnrollment, &unset.MfaEnrollment, sdk.ToMfaEnrollmentOption),
+		setValueUpdate(d, "client_types", &set.ClientTypes, &unset.ClientTypes, clientTypeItem),
+		setValueUpdate(d, "client_policy", &set.ClientPolicy, &unset.ClientPolicy, toClientPolicyEntries),
 		stringAttributeUpdate(d, "comment", &set.Comment, &unset.Comment),
 		attributeMappedValueUpdate(d, "security_integrations", &set.SecurityIntegrations, &unset.SecurityIntegrations, ToSecurityIntegrationsRequest),
 		ToMfaPolicyRequestUpdate(d, &set.MfaPolicy, &unset.MfaPolicy),
@@ -652,6 +562,22 @@ func UpdateContextAuthenticationPolicy(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return ReadContextAuthenticationPolicy(false)(ctx, d, meta)
+}
+
+func authenticationMethodItem(v any) (sdk.AuthenticationMethods, error) {
+	option, err := sdk.ToAuthenticationMethodsOption(v.(string))
+	if err != nil {
+		return sdk.AuthenticationMethods{}, err
+	}
+	return sdk.AuthenticationMethods{Method: option}, nil
+}
+
+func clientTypeItem(v any) (sdk.ClientTypes, error) {
+	option, err := sdk.ToClientTypesOption(v.(string))
+	if err != nil {
+		return sdk.ClientTypes{}, err
+	}
+	return sdk.ClientTypes{ClientType: option}, nil
 }
 
 func ToMfaPolicyRequestUpdate(d *schema.ResourceData, set **sdk.AuthenticationPolicyMfaPolicyRequest, unset **bool) error {
@@ -985,25 +911,19 @@ func ToWorkloadIdentityPolicyRequest(value any) (sdk.AuthenticationPolicyWorkloa
 	return *workloadIdentityPolicy, nil
 }
 
-func toClientPolicyEntries(rawList []any) ([]sdk.AuthenticationPolicyClientPolicyEntry, error) {
-	entries := make([]sdk.AuthenticationPolicyClientPolicyEntry, 0, len(rawList))
-	for _, raw := range rawList {
-		m, ok := raw.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("client_policy entry: expected map, got %T", raw)
-		}
-
-		clientType, err := sdk.ToClientPolicyDriverType(m["client_type"].(string))
-		if err != nil {
-			return nil, err
-		}
-
-		entries = append(entries, sdk.AuthenticationPolicyClientPolicyEntry{
-			ClientType: clientType,
-			Params: &sdk.AuthenticationPolicyClientPolicyEntryParams{
-				MinimumVersion: sdk.Pointer(m["minimum_version"].(string)),
-			},
-		})
+func toClientPolicyEntries(v any) (sdk.AuthenticationPolicyClientPolicyEntry, error) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return sdk.AuthenticationPolicyClientPolicyEntry{}, fmt.Errorf("client_policy entry: expected map, got %T", v)
 	}
-	return entries, nil
+	clientType, err := sdk.ToClientPolicyDriverType(m["client_type"].(string))
+	if err != nil {
+		return sdk.AuthenticationPolicyClientPolicyEntry{}, err
+	}
+	return sdk.AuthenticationPolicyClientPolicyEntry{
+		ClientType: clientType,
+		Params: &sdk.AuthenticationPolicyClientPolicyEntryParams{
+			MinimumVersion: sdk.Pointer(m["minimum_version"].(string)),
+		},
+	}, nil
 }
