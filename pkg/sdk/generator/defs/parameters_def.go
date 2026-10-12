@@ -1067,12 +1067,13 @@ var (
 		Levels:      onAccount,
 		Description: "Controls whether the Workspaces editor is the default SQL editing experience for the account. Valid values are `always` and `never`.",
 	}
+	// SHOW PARAMETERS returns this default as "Medium", not the canonical "MEDIUM".
 	UserTaskManagedInitialWarehouseSize = parameterdefs.ParameterDef{
 		SqlName:      "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE",
 		Kind:         g.KindOfT[sdkcommons.WarehouseSize](),
 		Levels:       onTask,
 		Description:  "The initial size of warehouse to use for managed warehouses in the absence of history.",
-		DefaultValue: "sdk.WarehouseSizeMedium",
+		DefaultValue: `sdk.WarehouseSize("Medium")`,
 		DefaultLevel: parameterTypeSnowflakeDefault,
 	}
 	UserTaskMinimumTriggerIntervalInSeconds = parameterdefs.ParameterDef{

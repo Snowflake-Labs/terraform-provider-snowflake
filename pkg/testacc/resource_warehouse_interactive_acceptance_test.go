@@ -451,7 +451,7 @@ func TestAcc_WarehouseInteractive_Validations(t *testing.T) {
 			{
 				Config:      accconfig.FromModels(t, modelInvalidStatementTimeout),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`expected statement_timeout_in_seconds to be in the range \(0 - 604800\), got -1`),
+				ExpectError: regexp.MustCompile(`expected statement_timeout_in_seconds to be at least \(0\), got -1`),
 			},
 		},
 	})

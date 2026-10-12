@@ -459,7 +459,7 @@ func (d *DatabaseParametersAssert) HasDefaultTraceLevelValueExplicit() *Database
 }
 
 func (d *DatabaseParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit() *DatabaseParametersAssert {
-	return d.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeMedium)
+	return d.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSize("Medium"))
 }
 
 func (d *DatabaseParametersAssert) HasDefaultUserTaskMinimumTriggerIntervalInSecondsValueExplicit() *DatabaseParametersAssert {

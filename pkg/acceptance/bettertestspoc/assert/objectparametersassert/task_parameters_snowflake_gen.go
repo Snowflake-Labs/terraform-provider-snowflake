@@ -1288,7 +1288,7 @@ func (t *TaskParametersAssert) HasDefaultUseCachedResultValueExplicit() *TaskPar
 }
 
 func (t *TaskParametersAssert) HasDefaultUserTaskManagedInitialWarehouseSizeValueExplicit() *TaskParametersAssert {
-	return t.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSizeMedium)
+	return t.HasUserTaskManagedInitialWarehouseSize(sdk.WarehouseSize("Medium"))
 }
 
 func (t *TaskParametersAssert) HasDefaultUserTaskMinimumTriggerIntervalInSecondsValueExplicit() *TaskParametersAssert {
