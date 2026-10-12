@@ -5,16 +5,20 @@ package testacc
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
+	tfjson "github.com/hashicorp/terraform-json"
 	tfconfig "github.com/hashicorp/terraform-plugin-testing/config"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/assert/resourceassert"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/model"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config/providermodel"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/planchecks"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testdatatypes"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/testenvs"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1734,7 +1738,7 @@ func TestAcc_GrantPrivileges_ToDatabaseRole_WithEmptyPrivileges(t *testing.T) {
 // configuration can be corrected without state surgery.
 //
 // Snowflake reports the specific object type in the granted_on column of SHOW GRANTS (VIEW here, and
-// ICEBERG TABLE for Iceberg tables once the 2026_06 bundle is enabled - see
+// ICEBERG TABLE for Iceberg tables - see
 // https://github.com/snowflakedb/terraform-provider-snowflake/issues/5200 and the 2026_06 section of
 // SNOWFLAKE_BCR_MIGRATION_GUIDE.md). The object type from the resource id is compared against it, so a
 // mismatch means Read matches nothing, empties privileges and the plan never converges.
@@ -1788,4 +1792,100 @@ func TestAcc_GrantPrivilegesToDatabaseRole_ObjectTypeMismatch_CanBeCorrected(t *
 			},
 		},
 	})
+}
+
+// TestAcc_GrantPrivilegesToDatabaseRole_IcebergTable_GenericObjectType walks the reported
+// scenario: SHOW GRANTS reports ICEBERG TABLE, so object_type = "TABLE" never matches on Read.
+// Reference: https://github.com/snowflakedb/terraform-provider-snowflake/issues/5200
+func TestAcc_GrantPrivilegesToDatabaseRole_IcebergTable_GenericObjectType(t *testing.T) {
+	icebergTableId, databaseRoleId := setUpIcebergTableGrantTest(t)
+
+	grantModel := model.GrantPrivilegesToDatabaseRole("test", databaseRoleId.FullyQualifiedName()).
+		WithSchemaObjectPrivileges(sdk.SchemaObjectPrivilegeSelect).
+		WithOnSchemaObjectObject(sdk.ObjectTypeTable, icebergTableId.FullyQualifiedName())
+	correctedGrantModel := model.GrantPrivilegesToDatabaseRole("test", databaseRoleId.FullyQualifiedName()).
+		WithSchemaObjectPrivileges(sdk.SchemaObjectPrivilegeSelect).
+		WithOnSchemaObjectObject(sdk.ObjectTypeIcebergTable, icebergTableId.FullyQualifiedName())
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: ExternalProviderWithExactVersion("2.20.0"),
+				Config:            accconfig.FromModels(t, grantModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(grantModel.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectDrift(grantModel.ResourceReference(), "privileges", sdk.String("[SELECT]"), sdk.String("[]")),
+						planchecks.ExpectChange(grantModel.ResourceReference(), "privileges", tfjson.ActionUpdate, sdk.String("[]"), sdk.String("[SELECT]")),
+						planchecks.ExpectNoChangeOnField(grantModel.ResourceReference(), "on_schema_object.0.object_type"),
+						planchecks.ExpectNoChangeOnField(grantModel.ResourceReference(), "id"),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(grantModel.ResourceReference(), "on_schema_object.0.object_type", string(sdk.ObjectTypeTable)),
+					resource.TestCheckResourceAttr(grantModel.ResourceReference(), "privileges.#", "1"),
+					resource.TestCheckResourceAttr(grantModel.ResourceReference(), "privileges.0", string(sdk.SchemaObjectPrivilegeSelect)),
+				),
+			},
+			// Correcting object_type on the released provider: the ForceNew destroy cannot build its revoke
+			// from the emptied state, so the replacement fails before any SQL is sent.
+			{
+				ExternalProviders: ExternalProviderWithExactVersion("2.20.0"),
+				Config:            accconfig.FromModels(t, correctedGrantModel),
+				ExpectError:       regexp.MustCompile(`exactly one of\s+DatabaseRoleGrantPrivileges`),
+			},
+			// The same configuration on the current provider: the revoke is built from the resource id, the
+			// replacement succeeds, and the corrected object type matches what Snowflake reports.
+			{
+				ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+				Config:                   accconfig.FromModels(t, correctedGrantModel),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(correctedGrantModel.ResourceReference(), "on_schema_object.0.object_type", string(sdk.ObjectTypeIcebergTable)),
+					resource.TestCheckResourceAttr(correctedGrantModel.ResourceReference(), "privileges.#", "1"),
+					resource.TestCheckResourceAttr(correctedGrantModel.ResourceReference(), "privileges.0", string(sdk.SchemaObjectPrivilegeSelect)),
+				),
+			},
+		},
+	})
+}
+
+func setUpIcebergTableGrantTest(t *testing.T) (icebergTableId sdk.SchemaObjectIdentifier, databaseRoleId sdk.DatabaseObjectIdentifier) {
+	t.Helper()
+
+	awsBaseUrl := testenvs.GetOrSkipTest(t, testenvs.AwsExternalBucketUrl)
+	awsKeyId := testenvs.GetOrSkipTest(t, testenvs.AwsExternalKeyId)
+	awsSecretKey := testenvs.GetOrSkipTest(t, testenvs.AwsExternalSecretKey)
+
+	s3CompatBaseUrl := strings.Replace(awsBaseUrl, "s3://", "s3compat://", 1)
+	s3CompatEndpoint := "s3.us-west-2.amazonaws.com"
+
+	externalVolumeId, externalVolumeCleanup := testClient().ExternalVolume.CreateS3Compat(t, s3CompatBaseUrl, s3CompatEndpoint, awsKeyId, awsSecretKey)
+	t.Cleanup(externalVolumeCleanup)
+
+	db, dbCleanup := testClient().Database.CreateDatabaseWithRequest(t,
+		testClient().Database.TestParametersSet(testClient().Ids.RandomAccountObjectIdentifier()).WithExternalVolume(externalVolumeId))
+	t.Cleanup(dbCleanup)
+	schemaId := sdk.NewDatabaseObjectIdentifier(db.ID().Name(), "PUBLIC")
+
+	databaseRole, databaseRoleCleanup := testClient().DatabaseRole.CreateDatabaseRoleInDatabase(t, db.ID())
+	t.Cleanup(databaseRoleCleanup)
+
+	icebergTableId = testClient().Ids.RandomSchemaObjectIdentifierInSchema(schemaId)
+	_, icebergTableCleanup := testClient().IcebergTable.CreateWithRequest(t,
+		sdk.NewCreateIcebergTableRequest(icebergTableId, sdk.IcebergTableColumnsAndConstraintsRequest{
+			Columns: []sdk.IcebergTableColumnRequest{{Name: "ID", ColumnType: testdatatypes.DataTypeNumber}},
+		}).
+			WithCatalog(sdk.IcebergTableCatalogSnowflake).
+			WithExternalVolume(externalVolumeId).
+			WithBaseLocation("bcr_2371_grants_acceptance_test"))
+	t.Cleanup(icebergTableCleanup)
+
+	return icebergTableId, databaseRole.ID()
 }

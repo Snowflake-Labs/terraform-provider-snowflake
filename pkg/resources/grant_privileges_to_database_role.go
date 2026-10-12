@@ -860,9 +860,8 @@ func computeDatabaseRolePrivileges(id GrantPrivilegesToDatabaseRoleId, grants []
 // objectTypeMismatchDiagnostic explains the most common reason for an unconvergent grant resource: the
 // configured object type is not the one Snowflake reports for the object, so no grant is ever matched on
 // Read, privileges are emptied and every plan re-grants them. Snowflake reports the specific object type
-// (ICEBERG TABLE, VIEW, MATERIALIZED VIEW, DYNAMIC TABLE, ...) rather than a generic one, and which type
-// it reports can change with a behavior change bundle - see the 2026_06 section of
-// SNOWFLAKE_BCR_MIGRATION_GUIDE.md for migration steps.
+// (ICEBERG TABLE, VIEW, MATERIALIZED VIEW, DYNAMIC TABLE, ...) rather than a generic one. See the 2026_06
+// section of SNOWFLAKE_BCR_MIGRATION_GUIDE.md for migration steps.
 func objectTypeMismatchDiagnostic(id GrantPrivilegesToDatabaseRoleId, configuredObjectType sdk.ObjectType, mismatchedObjectTypes []sdk.ObjectType) diag.Diagnostic {
 	reported := make([]string, len(mismatchedObjectTypes))
 	for i, objectType := range mismatchedObjectTypes {
