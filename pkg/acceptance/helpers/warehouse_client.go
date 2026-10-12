@@ -217,7 +217,9 @@ func (c *WarehouseClient) CreateInteractiveWithRequest(t *testing.T, request *sd
 	ctx := context.Background()
 
 	id := request.ID()
-	err := c.client().CreateInteractive(ctx, request)
+	// CREATE INTERACTIVE WAREHOUSE switches the session onto the new warehouse. Preserve the previous
+	// warehouse so a later drop does not leave this shared test client with no current warehouse.
+	err := c.client().CreateInteractivePreservingSession(ctx, request)
 	require.NoError(t, err)
 
 	warehouse, err := c.client().ShowByID(ctx, id)

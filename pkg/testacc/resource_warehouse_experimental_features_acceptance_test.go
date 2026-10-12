@@ -89,7 +89,7 @@ func TestAcc_Experimental_WarehouseAdaptive_ShowImprovedPerformance(t *testing.T
 	expectedWarehouseQuery := fmt.Sprintf("SHOW WAREHOUSES LIKE '%[1]s' STARTS WITH '%[1]s' LIMIT 1", warehouseId.Name())
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -128,7 +128,7 @@ func TestAcc_Experimental_WarehouseAdaptive_ShowImprovedPerformance_Disabled(t *
 	expectedWarehouseQuery := fmt.Sprintf("SHOW WAREHOUSES LIKE '%s'", warehouseId.Name())
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: enabledByDefaultExperimentsDisabledProviderFactory,
+		ProtoV6ProviderFactories: adaptiveWarehouseExperimentsDisabledProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
