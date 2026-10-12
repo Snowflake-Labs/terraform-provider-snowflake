@@ -131,15 +131,19 @@ func (atc *acceptanceTestContext) initialize() error {
 		if errs := errors.Join(
 			testClient().EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(ctx),
 			testClient().EnsureEnableIdentifierFirstLoginIsSetToTrue(ctx),
+			testClient().EnsureTestUserProperties(ctx),
 			testClient().EnsureEssentialRolesExist(ctx),
 			secondaryTestClient().EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(ctx),
 			secondaryTestClient().EnsureEnableIdentifierFirstLoginIsSetToTrue(ctx),
+			secondaryTestClient().EnsureTestUserProperties(ctx),
 			secondaryTestClient().EnsureEssentialRolesExist(ctx),
 			azureTestClient().EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(ctx),
 			azureTestClient().EnsureEnableIdentifierFirstLoginIsSetToTrue(ctx),
+			azureTestClient().EnsureTestUserProperties(ctx),
 			azureTestClient().EnsureEssentialRolesExist(ctx),
 			gcpTestClient().EnsureQuotedIdentifiersIgnoreCaseIsSetToFalse(ctx),
 			gcpTestClient().EnsureEnableIdentifierFirstLoginIsSetToTrue(ctx),
+			gcpTestClient().EnsureTestUserProperties(ctx),
 			gcpTestClient().EnsureEssentialRolesExist(ctx),
 		); errs != nil {
 			return errs
