@@ -737,7 +737,11 @@ func nukeDatabases(client *sdk.Client, prefix string, suffix string) func() erro
 		// and nukeApplicationPackages). Only the kinds this sweeper can drop are handled here.
 		skip: func(object sdk.Database) bool {
 			if object.Kind == nil {
-				log.Printf("[INFO] Skipping database %s, its kind was not recognized", object.Name)
+				log.Printf("[INFO] Skipping database %s, it's kind was not recognized", object.Name)
+				return true
+			}
+			if *object.Kind == sdk.DatabaseKindImportedDatabase && strings.HasPrefix(object.Name, "ORGDATACLOUD") {
+				log.Printf("[INFO] Skipping database %s, it's an internal imported database", object.Name)
 				return true
 			}
 			return !slices.Contains([]sdk.DatabaseKind{sdk.DatabaseKindStandard, sdk.DatabaseKindImportedDatabase}, *object.Kind)
