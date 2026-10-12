@@ -58,6 +58,8 @@ var (
 	// enabledByDefaultExperimentsDisabledProviderFactory. CREATE INTERACTIVE WAREHOUSE switches the session,
 	// so these tests cannot share the default-on-disabled cache used by other resources.
 	interactiveWarehouseExperimentsDisabledProviderFactory = providerFactoryUsingCache("InteractiveWarehouseExperimentsDisabled")
+	adaptiveWarehouseProviderFactory                       = providerFactoryUsingCache("AdaptiveWarehouse")
+	adaptiveWarehouseExperimentsDisabledProviderFactory    = providerFactoryUsingCache("AdaptiveWarehouseExperimentsDisabled")
 	explicitAccountAdminRoleProviderFactory                = providerFactoryUsingCache("ExplicitAccountAdminRole")
 	userEnableDefaultWorkloadIdentityProviderFactory       = providerFactoryUsingCache("UserEnableDefaultWorkloadIdentity")
 	s3StageProviderFactory                                 = providerFactoryUsingCache("StageExternalS3")

@@ -136,7 +136,7 @@ func TestAcc_WarehouseAdaptive_BasicUseCase(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -263,7 +263,7 @@ func TestAcc_WarehouseAdaptive_CompleteUseCase(t *testing.T) {
 		WithStatementTimeoutInSeconds(86400)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -317,7 +317,7 @@ func TestAcc_WarehouseAdaptive_Import_WrongWarehouseType(t *testing.T) {
 	adaptiveModel := model.WarehouseAdaptiveWithId(adaptiveId)
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -367,7 +367,7 @@ import {
 `, standardRef, adaptiveRef, id.Name())
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			// removed blocks require Terraform 1.7 or later
 			tfversion.RequireAbove(tfversion.Version1_7_0),
@@ -455,7 +455,7 @@ func TestAcc_WarehouseAdaptive_ExternalTypeChange(t *testing.T) {
 	ref := warehouseModel.ResourceReference()
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
@@ -508,7 +508,7 @@ func TestAcc_WarehouseAdaptive_ExternalTypeChangeToInteractive(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: adaptiveWarehouseProviderFactory,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.RequireAbove(tfversion.Version1_5_0),
 		},
