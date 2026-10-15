@@ -1,5 +1,11 @@
 package sdk
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
+
 func init() {
 	id := sharesTestIdAccountObjectIdentifier
 
@@ -127,4 +133,68 @@ func init() {
 			func(opts *DescribeShareOptions) { opts.name = externalShareId },
 			`DESCRIBE SHARE %s`, externalShareId.FullyQualifiedName(),
 		)
+}
+
+func Test_parseShareRecipients(t *testing.T) {
+	testCases := []struct {
+		Name   string
+		Value  string
+		Result []AccountIdentifier
+		Total  int
+	}{
+		{Name: "empty string", Value: "", Result: []AccountIdentifier{}},
+		{Name: "single org.account", Value: "ORG.ACC1", Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC1")}},
+		{
+			Name:  "multiple org.account",
+			Value: "ORG.ACC1, ORG.ACC2,ORG.ACC3",
+			Result: []AccountIdentifier{
+				NewAccountIdentifier("ORG", "ACC1"), NewAccountIdentifier("ORG", "ACC2"), NewAccountIdentifier("ORG", "ACC3"),
+			},
+		},
+		{
+			Name:  "truncated list: marker is not a recipient and gives the total",
+			Value: "SOME_ORG.ACCOUNT_A,SOME_ORG.ACCOUNT_B,SOME_ORG.ACCOUNT_C,... (4 TOTAL)",
+			Result: []AccountIdentifier{
+				NewAccountIdentifier("SOME_ORG", "ACCOUNT_A"), NewAccountIdentifier("SOME_ORG", "ACCOUNT_B"), NewAccountIdentifier("SOME_ORG", "ACCOUNT_C"),
+			},
+			Total: 4,
+		},
+		{
+			Name:  "account locator does not discard the other recipients",
+			Value: "ORG.ACC1, XY12345, ORG.ACC2",
+			Result: []AccountIdentifier{
+				NewAccountIdentifier("ORG", "ACC1"), NewAccountIdentifierFromAccountLocator("XY12345"), NewAccountIdentifier("ORG", "ACC2"),
+			},
+		},
+		{
+			Name:   "more than two parts keep the rest as account name",
+			Value:  "ORG.ACC.EXTRA",
+			Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC.EXTRA")},
+		},
+		{Name: "empty entries are skipped", Value: "ORG.ACC1,,", Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC1")}},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			ids, total := parseShareRecipients(tc.Value)
+			require.Equal(t, tc.Result, ids)
+			require.Equal(t, tc.Total, total)
+		})
+	}
+}
+
+func Test_shareRow_convert_truncatedRecipients(t *testing.T) {
+	share, err := shareRow{Kind: "OUTBOUND", Name: "S", To: "ORG.ACC1,ORG.ACC2,ORG.ACC3,... (4 TOTAL)"}.convert()
+	require.NoError(t, err)
+	require.Len(t, share.To, 3)
+	require.Equal(t, 4, share.ToTotal)
+}
+
+func Test_showShareTargetAccountsOptions_sql(t *testing.T) {
+	query, err := structToSQL(&showShareTargetAccountsOptions{name: "SOME_SHARE"})
+	require.NoError(t, err)
+	require.Equal(t, `SELECT TARGET_ACCOUNTS FROM SNOWFLAKE.ACCOUNT_USAGE.SHARES WHERE DELETED_ON IS NULL AND NAME = 'SOME_SHARE' ORDER BY MODIFIED_ON DESC LIMIT 1`, query)
+
+	query, err = structToSQL(&showShareTargetAccountsOptions{name: `it's`})
+	require.NoError(t, err)
+	require.Contains(t, query, `NAME = 'it\'s'`)
 }
