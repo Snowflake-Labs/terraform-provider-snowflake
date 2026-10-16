@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	accconfig "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/acceptance/bettertestspoc/config"
 	r "github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/resources"
@@ -657,6 +658,76 @@ func TestAcc_UserProgrammaticAccessToken_CompleteUseCase_Rotating(t *testing.T) 
 						HasRotatedTokenNameNotEmpty().
 						HasUserString(user.ID().Name()),
 					assertTokenNotRotated,
+				),
+			},
+		},
+	})
+}
+
+func TestAcc_UserProgrammaticAccessToken_RotatingWithExpireRotatedTokenAfterHoursExceedingRemainingLifetime(t *testing.T) {
+	user, userCleanup := testClient().User.CreateUser(t)
+	t.Cleanup(userCleanup)
+
+	id := testClient().Ids.RandomAccountObjectIdentifier()
+
+	modelWithKeeper := model.UserProgrammaticAccessToken("test", id.Name(), user.ID().Name()).
+		WithDaysToExpiry(1).
+		WithKeeper("key1=value1")
+	modelRotated := model.UserProgrammaticAccessToken("test", id.Name(), user.ID().Name()).
+		WithDaysToExpiry(1).
+		WithKeeper("key2=value2").
+		WithExpireRotatedTokenAfterHours(168)
+
+	var token string
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckUserProgrammaticAccessTokenDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				Config: accconfig.FromModels(t, modelWithKeeper),
+				Check: resource.TestCheckResourceAttrWith(modelWithKeeper.ResourceReference(), "token", func(value string) error {
+					token = value
+					return nil
+				}),
+			},
+			// 168 hours exceeds the remaining lifetime of the token (< 24 hours), so the provider must omit it
+			{
+				Config: accconfig.FromModels(t, modelRotated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(modelRotated.ResourceReference(), plancheck.ResourceActionUpdate),
+						planchecks.ExpectComputed(modelRotated.ResourceReference(), "token", true),
+						planchecks.ExpectComputed(modelRotated.ResourceReference(), "rotated_token_name", true),
+					},
+				},
+				Check: assertThat(
+					t,
+					resourceassert.UserProgrammaticAccessTokenResource(t, modelRotated.ResourceReference()).
+						HasRotatedTokenNameNotEmpty(),
+					assert.Check(resource.TestCheckResourceAttrWith(modelRotated.ResourceReference(), "token", func(value string) error {
+						if value == "" || value == token {
+							return fmt.Errorf("token was not rotated")
+						}
+						return nil
+					})),
+					// the old secret must stay valid until (about) the end of its lifetime, not be revoked
+					assert.Check(resource.TestCheckResourceAttrWith(modelRotated.ResourceReference(), "rotated_token_name", func(value string) error {
+						if value == "" {
+							return fmt.Errorf("rotated_token_name is empty")
+						}
+						rotated := testClient().User.ShowProgrammaticAccessToken(t, user.ID(), sdk.NewAccountObjectIdentifier(value))
+						if rotated.Status != sdk.ProgrammaticAccessTokenStatusActive {
+							return fmt.Errorf("the rotated token is not active, status: %s", rotated.Status)
+						}
+						if !rotated.ExpiresAt.After(time.Now()) {
+							return fmt.Errorf("the rotated token is already expired: %s", rotated.ExpiresAt)
+						}
+						return nil
+					})),
 				),
 			},
 		},

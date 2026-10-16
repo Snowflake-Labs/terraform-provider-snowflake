@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
@@ -64,7 +65,7 @@ var userProgrammaticAccessTokenSchema = map[string]*schema.Schema{
 	"expire_rotated_token_after_hours": {
 		Type:             schema.TypeInt,
 		Optional:         true,
-		Description:      "This field is only used when the token is rotated by changing the `keeper` field. Sets the expiration time of the existing token secret to expire after the specified number of hours. You can set this to a value of 0 to expire the current token secret immediately.",
+		Description:      "This field is only used when the token is rotated by changing the `keeper` field. Sets the expiration time of the existing token secret to expire after the specified number of hours. A positive value greater than or equal to the existing token's remaining lifetime is omitted from the rotation, so Snowflake's default applies (24 hours, or the remaining lifetime if shorter). You can set this to a value of 0 to expire the current token secret immediately.",
 		Default:          IntDefault,
 		ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
 	},
@@ -316,15 +317,32 @@ func UpdateUserProgrammaticAccessToken(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	var warnings diag.Diagnostics
 	o, n := d.GetChange("keeper")
 	if shouldRotateToken(o.(string), n.(string), d.GetRawPlan().AsValueMap()["keeper"].IsKnown()) {
 		request := sdk.NewRotateUserProgrammaticAccessTokenRequest(resourceId.userName, resourceId.tokenName)
 		if v := d.Get("expire_rotated_token_after_hours").(int); v != IntDefault {
-			request.WithExpireRotatedTokenAfterHours(v)
+			currentToken, err := client.Users.ShowProgrammaticAccessTokenByNameSafely(ctx, resourceId.userName, resourceId.tokenName)
+			if err != nil {
+				d.Partial(true)
+				return diag.FromErr(err)
+			}
+			// Snowflake rejects values greater than the remaining lifetime of the token being rotated out.
+			remaining := time.Until(currentToken.ExpiresAt)
+			if v == 0 || float64(v) < remaining.Hours() {
+				request.WithExpireRotatedTokenAfterHours(v)
+			} else {
+				warnings = append(warnings, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "expire_rotated_token_after_hours was not applied",
+					Detail:   fmt.Sprintf("expire_rotated_token_after_hours (%d) is not less than the remaining token lifetime (%s), so it was omitted and Snowflake's default applies.", v, remaining.Round(time.Minute)),
+				})
+			}
 		}
 
 		token, err := client.Users.RotateProgrammaticAccessToken(ctx, request)
 		if err != nil {
+			d.Partial(true)
 			return diag.FromErr(err)
 		}
 		errs := errors.Join(
@@ -336,7 +354,7 @@ func UpdateUserProgrammaticAccessToken(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	return ReadUserProgrammaticAccessToken(false)(ctx, d, meta)
+	return append(warnings, ReadUserProgrammaticAccessToken(false)(ctx, d, meta)...)
 }
 
 func DeleteUserProgrammaticAccessToken(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
