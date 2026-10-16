@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/helpers"
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/provider"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/schemas"
 	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/sdk"
@@ -173,17 +175,8 @@ func ReadShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 	if err := d.Set("comment", share.Comment); err != nil {
 		return diag.FromErr(err)
 	}
-	accounts := make([]string, len(share.To))
-	for i, accountIdentifier := range share.To {
-		accounts[i] = accountIdentifier.Name()
-	}
-
+	recipients := share.To
 	var diags diag.Diagnostics
-	currentAccount := d.Get("accounts")
-	var currentAccounts []string
-	if currentAccount != nil {
-		currentAccounts = expandStringList(currentAccount.([]any))
-	}
 	// SHOW SHARES lists at most three recipients and reports the rest only as "... (N TOTAL)".
 	if share.ToTotal > len(share.To) {
 		targetAccounts, err := client.Shares.ShowTargetAccounts(ctx, id)
@@ -195,15 +188,16 @@ func ReadShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 					"Recipients that are not listed are missing from the state and planned as additions. Error: " + err.Error(),
 			})
 		} else {
-			usage := make([]string, len(targetAccounts))
-			for i, accountIdentifier := range targetAccounts {
-				usage[i] = accountIdentifier.Name()
-			}
-			accounts = reconcileShareRecipients(currentAccounts, accounts, usage, share.ToTotal)
+			// ACCOUNT_USAGE.SHARES can be up to 3 hours behind; SHOW SHARES is real time, so a recipient added since the
+			// view was last refreshed may be among the listed three but not in the view yet.
+			recipients = collections.UniqueBy(append(slices.Clone(share.To), targetAccounts...), sdk.AccountIdentifier.FullyQualifiedName)
 		}
 	}
+	accounts := collections.Map(recipients, sdk.AccountIdentifier.Name)
 
+	currentAccount := d.Get("accounts")
 	if currentAccount != nil {
+		currentAccounts := expandStringList(currentAccount.([]any))
 		// reorder the accounts so they match the order in the config
 		// this is to avoid unnecessary diffs
 		accounts = reorderStringList(currentAccounts, accounts)
@@ -213,72 +207,6 @@ func ReadShare(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagn
 	}
 
 	return diags
-}
-
-// reconcileShareRecipients builds the full recipient list of a share whose SHOW SHARES output is truncated.
-//
-//   - visible: the recipients SHOW SHARES lists (at most three; real time).
-//   - usage: all recipients from SNOWFLAKE.ACCOUNT_USAGE.SHARES (complete, but up to 3 hours behind).
-//   - total: the recipient count SHOW SHARES reports ("... (N TOTAL)"; real time).
-//   - expected: the accounts in the state, i.e. what Terraform last applied.
-//
-// When ACCOUNT_USAGE is current, the union of visible and usage has exactly total entries and is returned as is.
-// The real-time total corrects the window after a change that ACCOUNT_USAGE does not show yet: recipients that were
-// added are taken from expected (as many as are missing), recipients that were removed are dropped (those that are
-// neither visible nor expected first). Matching ignores case.
-func reconcileShareRecipients(expected []string, visible []string, usage []string, total int) []string {
-	seen := make(map[string]struct{})
-	isVisible := make(map[string]struct{})
-	result := make([]string, 0, total)
-	for _, account := range visible {
-		key := strings.ToUpper(account)
-		isVisible[key] = struct{}{}
-		if _, ok := seen[key]; !ok {
-			seen[key] = struct{}{}
-			result = append(result, account)
-		}
-	}
-	for _, account := range usage {
-		key := strings.ToUpper(account)
-		if _, ok := seen[key]; !ok {
-			seen[key] = struct{}{}
-			result = append(result, account)
-		}
-	}
-	isExpected := make(map[string]struct{}, len(expected))
-	for _, account := range expected {
-		isExpected[strings.ToUpper(account)] = struct{}{}
-	}
-
-	if len(result) < total {
-		for _, account := range expected {
-			if len(result) == total {
-				break
-			}
-			key := strings.ToUpper(account)
-			if _, ok := seen[key]; !ok {
-				seen[key] = struct{}{}
-				result = append(result, account)
-			}
-		}
-	}
-
-	if len(result) > total {
-		excess := len(result) - total
-		filtered := make([]string, 0, len(result))
-		for _, account := range result {
-			key := strings.ToUpper(account)
-			_, visibleOk := isVisible[key]
-			_, expectedOk := isExpected[key]
-			if excess > 0 && !visibleOk && !expectedOk {
-				excess--
-				continue
-			}
-			filtered = append(filtered, account)
-		}
-		result = filtered
-	}
-	return result
 }
 
 func accountIdentifiersFromSlice(accounts []string) []sdk.AccountIdentifier {

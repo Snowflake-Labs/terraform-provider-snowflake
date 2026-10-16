@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Snowflake-Labs/terraform-provider-snowflake/pkg/internal/collections"
 )
 
 func (v *Share) ExternalID() ExternalObjectIdentifier {
@@ -16,42 +18,33 @@ func (v *Share) ExternalID() ExternalObjectIdentifier {
 // has more than three recipients, e.g. "ORG.A,ORG.B,ORG.C,... (4 TOTAL)".
 var shareRecipientsTruncationRegexp = regexp.MustCompile(`^\.\.\. \((\d+) TOTAL\)$`)
 
-// additionalConvert maps the "to" column of SHOW SHARES manually, because the column is not a plain list of
-// "<organization_name>.<account_name>" values: for more than three recipients Snowflake lists only the first three
-// and appends a "... (N TOTAL)" marker. Parsing the whole column strictly used to fail on that marker, which left
-// Share.To empty and made snowflake_share.accounts show up as a diff on every plan.
+// additionalConvert maps the "to" column of SHOW SHARES manually, because for more than three recipients Snowflake
+// lists only the first three and appends a "... (N TOTAL)" marker, which is not an account identifier.
 func (r shareRow) additionalConvert(s *Share) error {
-	s.To, s.ToTotal = parseShareRecipients(r.To)
+	to, total, err := parseShareRecipients(r.To)
+	if err != nil {
+		return err
+	}
+	s.To, s.ToTotal = to, total
 	return nil
 }
 
-// parseShareRecipients parses the "to" column of SHOW SHARES entry by entry, so one entry that is not in the
-// "<organization_name>.<account_name>" form does not discard the others. The returned total is the number of
-// recipients Snowflake reports when the column is truncated, and 0 when it lists all of them.
-func parseShareRecipients(value string) ([]AccountIdentifier, int) {
+// parseShareRecipients parses a comma-separated list of "<organization_name>.<account_name>" recipients. The
+// truncation marker can only be the last element; the returned total is the count it reports, and 0 without it.
+func parseShareRecipients(value string) ([]AccountIdentifier, int, error) {
 	items := ParseCommaSeparatedStringArray(value, false)
-	ids := make([]AccountIdentifier, 0, len(items))
 	total := 0
-	for _, item := range items {
-		if item == "" {
-			continue
-		}
-		if match := shareRecipientsTruncationRegexp.FindStringSubmatch(item); match != nil {
+	if n := len(items); n > 0 {
+		if match := shareRecipientsTruncationRegexp.FindStringSubmatch(items[n-1]); match != nil {
 			total, _ = strconv.Atoi(match[1])
-			continue
+			items = items[:n-1]
 		}
-		if id, err := ParseAccountIdentifier(item); err == nil {
-			ids = append(ids, id)
-			continue
-		}
-		parts := strings.SplitN(item, ".", 2)
-		if len(parts) == 1 {
-			ids = append(ids, NewAccountIdentifierFromAccountLocator(strings.Trim(parts[0], `"`)))
-			continue
-		}
-		ids = append(ids, NewAccountIdentifier(parts[0], parts[1]))
 	}
-	return ids, total
+	ids, err := collections.MapErr(items, ParseAccountIdentifier)
+	if err != nil {
+		return nil, 0, err
+	}
+	return ids, total, nil
 }
 
 func (r *shareDetailsRow) additionalConvert(s *ShareInfo) error {
@@ -80,15 +73,16 @@ func (s *shares) ShowTargetAccounts(ctx context.Context, id AccountObjectIdentif
 	if err != nil {
 		return nil, err
 	}
-	var row shareTargetAccountsRow
-	if err := s.client.queryOne(ctx, &row, query); err != nil {
+	var rows []shareTargetAccountsRow
+	if err := s.client.query(ctx, &rows, query); err != nil {
 		return nil, err
 	}
-	if !row.TargetAccounts.Valid {
+	// A share created within the view's latency has no row yet.
+	if len(rows) == 0 || !rows[0].TargetAccounts.Valid {
 		return []AccountIdentifier{}, nil
 	}
-	ids, _ := parseShareRecipients(row.TargetAccounts.String)
-	return ids, nil
+	ids, _, err := parseShareRecipients(rows[0].TargetAccounts.String)
+	return ids, err
 }
 
 func (s *shares) DescribeProvider(ctx context.Context, id AccountObjectIdentifier) ([]ShareInfo, error) {

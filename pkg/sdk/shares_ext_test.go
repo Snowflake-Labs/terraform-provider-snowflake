@@ -143,9 +143,9 @@ func Test_parseShareRecipients(t *testing.T) {
 		Total  int
 	}{
 		{Name: "empty string", Value: "", Result: []AccountIdentifier{}},
-		{Name: "single org.account", Value: "ORG.ACC1", Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC1")}},
+		{Name: "single account", Value: "ORG.ACC1", Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC1")}},
 		{
-			Name:  "multiple org.account",
+			Name:  "multiple accounts",
 			Value: "ORG.ACC1, ORG.ACC2,ORG.ACC3",
 			Result: []AccountIdentifier{
 				NewAccountIdentifier("ORG", "ACC1"), NewAccountIdentifier("ORG", "ACC2"), NewAccountIdentifier("ORG", "ACC3"),
@@ -159,27 +159,20 @@ func Test_parseShareRecipients(t *testing.T) {
 			},
 			Total: 4,
 		},
-		{
-			Name:  "account locator does not discard the other recipients",
-			Value: "ORG.ACC1, XY12345, ORG.ACC2",
-			Result: []AccountIdentifier{
-				NewAccountIdentifier("ORG", "ACC1"), NewAccountIdentifierFromAccountLocator("XY12345"), NewAccountIdentifier("ORG", "ACC2"),
-			},
-		},
-		{
-			Name:   "more than two parts keep the rest as account name",
-			Value:  "ORG.ACC.EXTRA",
-			Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC.EXTRA")},
-		},
-		{Name: "empty entries are skipped", Value: "ORG.ACC1,,", Result: []AccountIdentifier{NewAccountIdentifier("ORG", "ACC1")}},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			ids, total := parseShareRecipients(tc.Value)
+			ids, total, err := parseShareRecipients(tc.Value)
+			require.NoError(t, err)
 			require.Equal(t, tc.Result, ids)
 			require.Equal(t, tc.Total, total)
 		})
 	}
+
+	t.Run("invalid entry is an error", func(t *testing.T) {
+		_, _, err := parseShareRecipients("ORG.ACC1,ACC2")
+		require.Error(t, err)
+	})
 }
 
 func Test_shareRow_convert_truncatedRecipients(t *testing.T) {
