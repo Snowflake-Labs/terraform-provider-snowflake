@@ -47,6 +47,14 @@ provider "snowflake" {
 
 No configuration changes are required for existing configurations.
 
+### *(bug fix)* `snowflake_user_programmatic_access_token` caps `expire_rotated_token_after_hours` at the remaining lifetime
+
+Rotating a programmatic access token failed when `expire_rotated_token_after_hours` was higher than the hours left on the current secret. Snowflake rejects that value.
+
+On rotation, the provider now caps a positive value at the remaining whole hours and emits a warning during apply. A value equal to those remaining hours is sent unchanged. When less than one hour remains, a positive value is omitted so the existing secret keeps its current expiry instead of being revoked immediately. `0` still expires the current secret immediately.
+
+The configured value stays in state. Only the value sent to Snowflake is adjusted. No configuration changes are required.
+
 ### *(bug fix)* `snowflake_share` reads every account of a share with more than three accounts
 
 `SHOW SHARES` lists at most three accounts in its `to` column and appends `... (N TOTAL)` for the rest. Since v2.19.0, reading a [`snowflake_share`](https://registry.terraform.io/providers/snowflakedb/snowflake/latest/docs/resources/share) with more than three accounts failed to parse that column and set `accounts` to an empty list, so `terraform plan` proposed adding every configured account on every run.

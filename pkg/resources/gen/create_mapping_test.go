@@ -14,7 +14,6 @@ func Test_ComputePoolCreateMappings_renderCreateFuncs(t *testing.T) {
 	require.True(t, model.Hooks.ParseIdFromConfig.Generate)
 	require.True(t, model.Hooks.NewCreateRequest.Generate)
 	require.True(t, model.Hooks.ApplyCreateOptionals.Generate)
-	require.False(t, model.Hooks.ApplySetUnset.Generate)
 	require.Equal(t, []string{"name"}, model.IdConfigFields())
 	require.Equal(t, "for_application", model.Attributes[0].Name)
 	require.Equal(t, "accountObjectIdentifierAttributeCreateBuilder", model.Attributes[0].CreateOptionalCall.Helper)
@@ -55,6 +54,26 @@ func Test_ComputePoolCreateMappings_renderCreateFuncs(t *testing.T) {
 `, renderTemplate(t, "generatedApplyCreateOptionals", model))
 }
 
+func Test_ExternalVolumeCreateMappings_renderCreateFuncs(t *testing.T) {
+	model := ModelFromInputObject(ResourceObject{Object: defs.ExternalVolumeObject}, nil, nil)
+	require.True(t, model.Hooks.ParseIdFromConfig.Generate)
+	require.False(t, model.Hooks.NewCreateRequest.Generate)
+	require.True(t, model.Hooks.ApplyCreateOptionals.Generate)
+	require.Equal(t, []string{"name", "allow_writes", "comment"}, defs.ExternalVolumeObject.ShowOutputKeys())
+	require.Equal(t, `func externalVolumeParseIdFromConfig(d *tfschema.ResourceData) (sdk.AccountObjectIdentifier, error) {
+	return sdk.NewAccountObjectIdentifier(d.Get("name").(string)), nil
+}
+`, renderTemplate(t, "generatedParseIdFromConfig", model))
+	require.Equal(t, "req, err := externalVolumeNewCreateRequestExt(d, id)\n", renderTemplate(t, "newCreateRequest", model))
+	require.Equal(t, `func externalVolumeApplyCreateOptionals(d *tfschema.ResourceData, request *sdk.CreateExternalVolumeRequest) error {
+	return errors.Join(
+		stringAttributeCreateBuilder(d, "comment", request.WithComment),
+		booleanStringAttributeCreateBuilder(d, "allow_writes", request.WithAllowWrites),
+	)
+}
+`, renderTemplate(t, "generatedApplyCreateOptionals", model))
+}
+
 func Test_SchemaCreateMappings_stayExt(t *testing.T) {
 	model := ModelFromInputObject(ResourceObject{Object: defs.Schema}, nil, nil)
 	require.False(t, model.Hooks.ParseIdFromConfig.Generate)
@@ -69,6 +88,7 @@ func Test_SchemaCreateMappings_stayExt(t *testing.T) {
 	for _, attr := range model.Attributes {
 		require.Nil(t, attr.CreateConstructorArg)
 		require.Nil(t, attr.CreateOptionalCall)
+		require.Nil(t, attr.UpdateCall)
 	}
 }
 

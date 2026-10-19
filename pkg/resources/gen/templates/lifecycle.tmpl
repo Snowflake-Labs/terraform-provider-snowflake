@@ -57,6 +57,7 @@ func Read{{ .Name }}Func(withExternalChangesMarking bool) tfschema.ReadContextFu
 {{ template "parametersDetailsFromRaw" . -}}
 {{ template "setParametersFields" . -}}
 {{ template "handleExternalChanges" . }}
+{{ template "handleExternalChangesInDescribe" . }}
 {{ template "setStateToValuesFromConfig" . -}}
 		errs := errors.Join(
 {{ template "showOutputSet" . -}}
@@ -67,9 +68,17 @@ func Read{{ .Name }}Func(withExternalChangesMarking bool) tfschema.ReadContextFu
 {{ template "setConfigFields" . }}
 		)
 		if errs != nil {
+{{ if and .Hooks.HandleExternalChangesInDescribe.Present .Hooks.DescribeInSdk.Present -}}
+			return append(diags, diag.FromErr(errs)...)
+{{ else -}}
 			return diag.FromErr(errs)
+{{ end }}
 		}
+{{ if and .Hooks.HandleExternalChangesInDescribe.Present .Hooks.DescribeInSdk.Present -}}
+		return diags
+{{ else -}}
 		return nil
+{{ end }}
 	}
 }
 
@@ -97,4 +106,8 @@ func Update{{ .Name }}(ctx context.Context, d *tfschema.ResourceData, meta any) 
 {{- if .Hooks.ApplyCreateOptionals.Generate }}
 
 {{ template "generatedApplyCreateOptionals" . }}
+{{- end }}
+{{- if .Hooks.ApplySetUnset.Generate }}
+
+{{ template "generatedApplySetUnset" . }}
 {{- end }}

@@ -5,7 +5,7 @@ import `pkg/sdk` or any meaningful logic package.
 
 Generators consume ssot; they do not all consume `defs.All()` the same way. Resource generation uses every object in
 `All()`. SHOW/DESCRIBE schema generation, resource config model builders, resource assertions, resource show output
-assertions, Snowflake object assertions, and SDK paired structs are opt-in per object ([Generators](#generators)). More
+assertions, Snowflake object assertions, object and resource parameters assertions, and SDK paired structs are opt-in per object ([Generators](#generators)). More
 generators will follow. Ultimately, all the generators should default to using ssot and `defs.All()`.
 
 ### Object
@@ -33,6 +33,10 @@ Identity (`Name`, `IdType`, ...) is separate from `Attributes`.
   argument (int or enum only). The resource identifier is not an attribute. A generated `ParseIdFromConfig` builds it
   from `IdType`: `name` for an account object, `database` and `name` for a database object, and `database`, `schema`,
   and `name` for a schema object.
+- `UpdateMapping` - the update helper from `pkg/resources/resource_helpers_update.go` used by a generated
+  `ApplySetUnset`. Use a `SetOnlyMapping` constant (`IntAttributeUpdateSetOnlyBuilder`), a `SetUnsetMapping` constant
+  (`StringAttributeUpdateBuilder`, ...), or `ListValueUpdate("<mapperFunc>")`. An attribute with no mapping is left out
+  of set/unset.
 - `StoredAsText` - the db column is text, and the plain kind stays the semantic type. For a bool, the paired-struct
   generator calls `BoolFromText`. A bool without the mark is still db `bool`. Other generators ignore the mark.
   See [PairedStructs](../../sdk/generator/README.md#pairedstructs).
@@ -85,6 +89,15 @@ enable nothing.
   `bool`. `ObjectAssertDescribe(WithNoIdentifiableObject())` suppresses the fetch constructor when `Describe` returns a
   slice and the row has no `ID()`. `WithNoIdentifiableObject()` is a setting of object-assertion describe, not its own
   generator.
+- `WithObjectParametersAssert()` - Snowflake object parameters assertions (
+  `make generate-snowflake-object-parameters-assertions`).
+  See [that section](../../acceptance/bettertestspoc/README.md#adding-new-snowflake-object-parameters-assertions).
+  Parameters come from the [catalog](defs/parameters.go) entries for the object's `ParameterLevel()`, not from
+  `Attributes`. Constants are `sdk.<Name>Parameter`.
+- `WithResourceParametersAssert()` - resource parameters assertions (`make generate-resource-parameters-assertions`).
+  See [that section](../../acceptance/bettertestspoc/README.md#adding-new-resource-parameters-assertions).
+  Parameters come from the same catalog entries, and constants are `sdk.<Name>Parameter`. The two switches are
+  independent. Leave the handwritten entry while only one of them is opted in.
 - `WithSdk(SdkShow(), SdkDescribe())` - SDK paired structs (`make generate-sdk`).
   See [PairedStructs](../../sdk/generator/README.md#pairedstructs). Fields come
   from [SHOW and DESCRIBE](#show-and-describe) `Columns`, not from `Attributes`. `OptionalInDb` is live for the mapped
@@ -166,8 +179,10 @@ Until a piece has moved, do not assume it is already in ssot:
 - An object absent from `All()` still enters through the generator's old list.
 - Parameters are not `Attributes` yet. A model builder or resource assertion that needs them still joins
   `ParameterDefsForLevel`.
-- SDK defs still own the query struct, ShowByID filtering, `DescriptionMappingKind`, and every operation that is not the
-  paired-struct field chain. CREATE, ALTER, DROP, and parameters are not generated from `Columns`.
+- When `SdkShow()` or `SdkDescribe()` is on, that Show or Describe method comes from the option. The query struct,
+  ShowByID filtering, and `DescriptionMappingKind` are part of it. An object with the setting off keeps the handwritten
+  call. CREATE, ALTER, DROP, parameters, and every other operation stay in the SDK def. They are not generated from
+  `Columns`.
 - `SkipFields`, `ManualFields`, `TypeOverrides`, and `UsedAsListEntry` have no ssot equivalent yet.
 - `ResourceHooks` do not yet generate the whole lifecycle, the SDK calls, or the mapping. A missing step stays an ext
   call, or panics through `Unimplemented`, until that hook is implemented. See [Resource generator](#resource-generator).
@@ -251,8 +266,8 @@ The skip is not permission to leave the object on the list forever. A repeated s
 `ResourceAssertionModels` and `ModelBuilderModels` skip a reflected name and do not panic on a repeated ssot name. A
 repeat for an object that ssot does not emit stays. Do not delete it.
 
-SDK paired structs have no second object list. The SDK def calls `ShowPairedStructs` / `DescribePairedStructs` when the
-setting is on, and keeps the handwritten field chain when it is off.
+SDK paired structs have no second object list. The SDK def calls `ShowOperationFromObject` / `DescribeOperationFromObject`
+when the setting is on, and keeps the handwritten Show or Describe call when it is off.
 
 ### Parameters
 
@@ -262,7 +277,8 @@ Parameter types live in [parameter.go](parameter.go). Catalog entries live in [d
 
 ### Later
 
-The SDK field chain can come from `Columns` when `SdkShow()` or `SdkDescribe()` is passed to `WithSdk()`. The def keeps
-the query struct, ShowByID filtering, and `DescriptionMappingKind`. A handwritten field chain is still the source when
-the matching setting is off; keep that chain in sync with `Columns`.
+The SDK field chain comes from `Columns` when `SdkShow()` or `SdkDescribe()` is passed to `WithSdk()`. That option also
+supplies the Show or Describe method: the query struct, ShowByID filtering, and `DescriptionMappingKind`. A handwritten
+field chain, and a handwritten Show or Describe call, are still the source when the matching setting is off. Keep that
+chain in sync with `Columns`.
 See [PairedStructs](../../sdk/generator/README.md#pairedstructs).

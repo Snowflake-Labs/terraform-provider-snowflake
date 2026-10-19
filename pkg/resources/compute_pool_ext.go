@@ -90,24 +90,6 @@ func computePoolSetConfigFieldsExt(d *schema.ResourceData, computePool *sdk.Comp
 	)
 }
 
-func computePoolApplySetUnsetExt(d *schema.ResourceData) (*computePoolAlterRequestsExt, error) {
-	set, unset := sdk.NewComputePoolSetRequest(), sdk.NewComputePoolUnsetRequest()
-	errs := errors.Join(
-		// name, application, instance_family are handled by ForceNew.
-		// initially_suspended is ignored after creation.
-		intAttributeUpdateSetOnly(d, "min_nodes", &set.MinNodes),
-		intAttributeUpdateSetOnly(d, "max_nodes", &set.MaxNodes),
-		intAttributeWithSpecialDefaultUpdate(d, "auto_suspend_secs", &set.AutoSuspendSecs, &unset.AutoSuspendSecs),
-		booleanStringAttributeUpdate(d, "auto_resume", &set.AutoResume, &unset.AutoResume),
-		listValueUpdate(d, "backup_instance_families", &set.BackupInstanceFamilies, &unset.BackupInstanceFamilies, toComputePoolBackupInstanceFamily),
-		stringAttributeUpdate(d, "comment", &set.Comment, &unset.Comment),
-	)
-	if errs != nil {
-		return nil, errs
-	}
-	return &computePoolAlterRequestsExt{set: set, unset: unset}, nil
-}
-
 func computePoolSetFieldsNotSetByReadExt(d *schema.ResourceData, id sdk.AccountObjectIdentifier, computePool *sdk.ComputePool) error {
 	if computePool.Application != nil {
 		if err := d.Set("for_application", computePool.Application.FullyQualifiedName()); err != nil {
@@ -162,7 +144,7 @@ func computePoolDescribeInSdkExt(ctx context.Context, meta any, id sdk.AccountOb
 	return client.ComputePools.Describe(ctx, id)
 }
 
-func computePoolAlterSetInSdkExt(ctx context.Context, meta any, id sdk.AccountObjectIdentifier, reqs *computePoolAlterRequestsExt) error {
+func computePoolAlterSetInSdkExt(ctx context.Context, _ *schema.ResourceData, meta any, id sdk.AccountObjectIdentifier, reqs *computePoolAlterRequestsExt) error {
 	if reflect.DeepEqual(*reqs.set, *sdk.NewComputePoolSetRequest()) {
 		return nil
 	}
