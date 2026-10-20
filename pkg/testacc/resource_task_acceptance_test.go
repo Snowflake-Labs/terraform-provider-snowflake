@@ -1974,6 +1974,56 @@ func TestAcc_Task_UpdateAfterExternally(t *testing.T) {
 	})
 }
 
+func TestAcc_Task_UpdateChildInQuotedDatabase(t *testing.T) {
+	databaseId := testClient().Ids.RandomAccountObjectIdentifierContaining(" mixed")
+	_, databaseCleanup := testClient().Database.CreateDatabaseWithParametersSetWithId(t, databaseId)
+	t.Cleanup(databaseCleanup)
+	schema, schemaCleanup := testClient().Schema.CreateSchemaInDatabase(t, databaseId)
+	t.Cleanup(schemaCleanup)
+	rootId := testClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+	childId := testClient().Ids.RandomSchemaObjectIdentifierInSchema(schema.ID())
+
+	// The database requires quoting, while the generated schema and task names are uppercase.
+	rootModel := model.TaskWithId("root", rootId, true, "SELECT 1").WithScheduleMinutes(60)
+	steps := make([]resource.TestStep, 0, 2)
+	for i, statement := range []string{"SELECT 1", "SELECT 2"} {
+		childModel := model.TaskWithId("child", childId, true, statement).
+			WithAfterValue(configvariable.SetVariable(configvariable.StringVariable(rootId.FullyQualifiedName())))
+		step := resource.TestStep{
+			ConfigDirectory: ConfigurationDirectory("TestAcc_Task/with_task_dependency"),
+			ConfigVariables: config.ConfigVariablesFromModels(t, "tasks", rootModel, childModel),
+			Check: assertThat(
+				t,
+				resourceassert.TaskResource(t, childModel.ResourceReference()).
+					HasStartedString(r.BooleanTrue).
+					HasAfterIdentifier(rootId).
+					HasSqlStatementString(statement),
+				objectassert.Task(t, rootId).HasState(sdk.TaskStateStarted),
+				objectassert.Task(t, childId).
+					HasState(sdk.TaskStateStarted).
+					HasDefinition(statement).
+					HasTaskRelations(sdk.TaskRelations{Predecessors: []sdk.SchemaObjectIdentifier{rootId}}),
+			),
+		}
+		if i > 0 {
+			step.ConfigPlanChecks.PreApply = []plancheck.PlanCheck{
+				plancheck.ExpectResourceAction(childModel.ResourceReference(), plancheck.ResourceActionUpdate),
+				plancheck.ExpectResourceAction(rootModel.ResourceReference(), plancheck.ResourceActionNoop),
+			}
+		}
+		steps = append(steps, step)
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		CheckDestroy: CheckDestroy(t, resources.Task),
+		Steps:        steps,
+	})
+}
+
 func TestAcc_Task_issue2207(t *testing.T) {
 	rootId := testClient().Ids.RandomSchemaObjectIdentifier()
 	childId := testClient().Ids.RandomSchemaObjectIdentifier()
