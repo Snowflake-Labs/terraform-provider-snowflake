@@ -8,7 +8,9 @@ func All() []ssot.Object {
 		ExternalVolumeObject,
 		Schema,
 		AuthenticationPolicy,
+		CatalogIntegrationAwsGlue,
 		CatalogIntegrationIcebergRest,
+		CatalogIntegrationObjectStorage,
 		CatalogIntegrationOpenCatalog,
 		Warehouse,
 	}

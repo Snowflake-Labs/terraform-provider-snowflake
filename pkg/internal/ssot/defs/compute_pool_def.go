@@ -213,6 +213,7 @@ var ComputePool = ssot.Object{
 				ssot.SdkShowOptionalLimitFrom(),
 			),
 			ssot.SdkDescribe(),
+			ssot.SdkDrop(ssot.SdkDropSafelyHook()),
 		),
 	},
 	ResourceHooks: []ssot.ResourceHookOption{
@@ -220,6 +221,7 @@ var ComputePool = ssot.Object{
 		ssot.WithNewCreateRequest(ssot.Generated()),
 		ssot.WithApplyCreateOptionals(ssot.Generated()),
 		ssot.WithApplySetUnset(ssot.Generated()),
+		ssot.WithDropSafelyInSdk(ssot.Generated()),
 	},
 	Attributes: []ssot.Attribute{
 		ComputePoolAttrs.ForApplication,

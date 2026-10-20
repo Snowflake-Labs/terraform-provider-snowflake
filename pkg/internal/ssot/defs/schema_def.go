@@ -61,7 +61,7 @@ var Schema = ssot.Object{
 		ssot.WithSchema(ssot.SchemaShow(), ssot.SchemaDescribe()),
 		ssot.WithModel(),
 		ssot.WithResourceAssert(),
-		ssot.WithShowOutputAssert(ssot.ShowOutputShow()),
+		ssot.WithShowOutputAssert(ssot.ShowOutputShow(), ssot.ShowOutputDescribe()),
 		ssot.WithObjectAssert(
 			ssot.ObjectAssertShow(),
 			ssot.ObjectAssertDescribe(ssot.WithNoIdentifiableObject()),
@@ -80,6 +80,7 @@ var Schema = ssot.Object{
 				ssot.SdkDescribeMapping(ssot.SdkDescriptionMappingSlice),
 				ssot.SdkDescribeQueryStructName("DescribeSchema"),
 			),
+			ssot.SdkDrop(ssot.SdkDropCascadeRestrict()),
 		),
 		ssot.WithObjectParametersAssert(),
 		ssot.WithResourceParametersAssert(),
@@ -128,5 +129,6 @@ var Schema = ssot.Object{
 		ssot.WithParametersOutputSchema(ssot.Generated()),
 		ssot.WithParametersFieldNames(ssot.Generated()),
 		ssot.WithParametersCustomDiff(ssot.Generated()),
+		ssot.WithDropSafelyInSdk(ssot.Generated()),
 	},
 }
