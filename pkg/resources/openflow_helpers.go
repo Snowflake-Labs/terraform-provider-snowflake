@@ -267,6 +267,18 @@ func waitForOpenflowConnectorStopped(ctx context.Context, client *sdk.Client, id
 		})
 }
 
+// waitForOpenflowConnectorRunning waits for START to finish. waitForOpenflowConnectorReady would not do,
+// since it also accepts the STOPPED a connector reports until START has taken effect.
+func waitForOpenflowConnectorRunning(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {
+	return waitForOpenflowObject(ctx, openflowConnectorKind, id.Name(), timeout,
+		connectorStatus(ctx, client, id),
+		openflowWait[sdk.OpenflowConnectorStatus]{
+			done:   []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusRunning},
+			failed: []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusStartFailed},
+			goal:   "it to run",
+		})
+}
+
 // waitForOpenflowConnectorTerminated waits for TERMINATE to finish, which DROP requires: Snowflake refuses
 // DROP from any status other than DELETED.
 func waitForOpenflowConnectorTerminated(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {

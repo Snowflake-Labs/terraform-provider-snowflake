@@ -23,6 +23,9 @@ resource "snowflake_openflow_connector" "from_stage" {
     stage = snowflake_stage.example.fully_qualified_name
     path  = "connectors/postgres"
   }
+
+  # changing this loads the bundle again as a new version of the same connector, rather than recreating it
+  version_trigger = "1"
 }
 
 # uploading the bundle yourself, then creating the connector from it. Snowflake reads config.json from the
