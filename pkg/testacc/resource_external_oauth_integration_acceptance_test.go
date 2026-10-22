@@ -763,3 +763,39 @@ resource "snowflake_external_oauth_integration" "test" {
 }
 `, name, issuer)
 }
+func TestAcc_ExternalOauthIntegration_scopeDelimiterSetForNonCustomTypeFailsEarly(t *testing.T) {
+	m := func() map[string]config.Variable {
+		return map[string]config.Variable{
+			"comment":                                         config.StringVariable("foo"),
+			"enabled":                                         config.BoolVariable(true),
+			"external_oauth_allowed_roles_list":               config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_any_role_mode":                    config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationAnyRoleModeOptionDisable)),
+			"external_oauth_audience_list":                    config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_blocked_roles_list":               config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_issuer":                           config.StringVariable(random.String()),
+			"external_oauth_jws_keys_url":                     config.SetVariable(config.StringVariable("foo")),
+			"external_oauth_rsa_public_key":                   config.StringVariable("foo"),
+			"external_oauth_rsa_public_key_2":                 config.StringVariable("foo"),
+			"external_oauth_scope_delimiter":                  config.StringVariable(","),
+			"external_oauth_scope_mapping_attribute":          config.StringVariable("foo"),
+			"external_oauth_snowflake_user_mapping_attribute": config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationSnowflakeUserMappingAttributeOptionEmailAddress)),
+			"external_oauth_token_user_mapping_claim":         config.SetVariable(config.StringVariable("foo")),
+			"name":                config.StringVariable("foo"),
+			"external_oauth_type": config.StringVariable(string(sdk.ExternalOauthSecurityIntegrationTypeOptionAzure)),
+		}
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.RequireAbove(tfversion.Version1_5_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: ConfigurationDirectory("TestAcc_ExternalOauthIntegration/completeWithJwsKeysUrlAndAllowedRolesList"),
+				ConfigVariables: m(),
+				ExpectError:     regexp.MustCompile("Error: external_oauth_scope_delimiter can only be set for external_oauth_type = CUSTOM"),
+			},
+		},
+	})
+}
