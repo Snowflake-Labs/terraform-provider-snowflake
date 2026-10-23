@@ -529,7 +529,7 @@ func TestAcc_OpenflowConnector_VersionTrigger(t *testing.T) {
 				Check: assertThat(
 					t,
 					resourceassert.OpenflowConnectorResource(t, ref).
-						HasNoVersionTrigger(),
+						HasVersionTriggerEmpty(),
 					assert.Check(lastVersionUnchanged),
 				),
 			},

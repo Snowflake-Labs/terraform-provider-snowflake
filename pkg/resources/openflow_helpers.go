@@ -268,10 +268,25 @@ func waitForOpenflowConnectorStopped(ctx context.Context, client *sdk.Client, id
 }
 
 // waitForOpenflowConnectorRunning waits for START to finish. waitForOpenflowConnectorReady would not do,
-// since it also accepts the STOPPED a connector reports until START has taken effect.
+// since it also accepts the STOPPED a connector reports until START has taken effect. A connector that
+// can't start, such as one missing required parameters, goes from STARTING back to STOPPED without
+// reporting START_FAILED, so a return to STOPPED after leaving it fails the wait.
 func waitForOpenflowConnectorRunning(ctx context.Context, client *sdk.Client, id sdk.SchemaObjectIdentifier, timeout time.Duration) error {
+	currentStatus := connectorStatus(ctx, client, id)
+	leftStopped := false
 	return waitForOpenflowObject(ctx, openflowConnectorKind, id.Name(), timeout,
-		connectorStatus(ctx, client, id),
+		func() (sdk.OpenflowConnectorStatus, error) {
+			status, err := currentStatus()
+			if err != nil {
+				return status, err
+			}
+			if status != sdk.OpenflowConnectorStatusStopped {
+				leftStopped = true
+			} else if leftStopped {
+				return status, fmt.Errorf("it returned to %s without running", sdk.OpenflowConnectorStatusStopped)
+			}
+			return status, nil
+		},
 		openflowWait[sdk.OpenflowConnectorStatus]{
 			done:   []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusRunning},
 			failed: []sdk.OpenflowConnectorStatus{sdk.OpenflowConnectorStatusStartFailed},
